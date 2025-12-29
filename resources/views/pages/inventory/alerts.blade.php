@@ -85,6 +85,8 @@
                                         <th>Produto</th>
                                         <th>Categoria</th>
                                         <th>Estoque Atual</th>
+                                        <th>Reservado</th>
+                                        <th>Disponível</th>
                                         <th>Estoque Mínimo</th>
                                         <th>Diferença</th>
                                         <th>Status</th>
@@ -110,6 +112,12 @@
                                                 <span class="badge badge-{{ $item->quantity <= 0 ? 'danger' : 'warning' }}">
                                                     {{ $item->quantity }}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-info">{{ $item->reserved_quantity }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold">{{ $item->available_quantity }}</span>
                                             </td>
                                             <td>
                                                 <span class="badge badge-info">{{ $item->min_quantity }}</span>
@@ -217,6 +225,8 @@
                                         <th>Produto</th>
                                         <th>Categoria</th>
                                         <th>Estoque Atual</th>
+                                        <th>Reservado</th>
+                                        <th>Disponível</th>
                                         <th>Estoque Máximo</th>
                                         <th>Excesso</th>
                                         <th>Status</th>
@@ -240,6 +250,12 @@
                                             <td>{{ $item->product->category->name ?? 'N/A' }}</td>
                                             <td>
                                                 <span class="badge badge-info">{{ $item->quantity }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-info">{{ $item->reserved_quantity }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold">{{ $item->available_quantity }}</span>
                                             </td>
                                             <td>
                                                 <span class="badge badge-secondary">{{ $item->max_quantity }}</span>

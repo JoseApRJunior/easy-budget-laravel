@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\Actions\Inventory\ReserveProductStockAction;
 use App\Actions\Inventory\UpdateProductStockAction;
 use App\Models\Product;
 use App\Repositories\InventoryRepository;
@@ -21,7 +22,8 @@ class InventoryManagementService extends AbstractBaseService
     public function __construct(
         protected InventoryRepository $inventoryRepository,
         protected ProductRepository $productRepository,
-        private UpdateProductStockAction $updateStockAction
+        private UpdateProductStockAction $updateStockAction,
+        private ReserveProductStockAction $reserveStockAction
     ) {
         parent::__construct($inventoryRepository);
     }
@@ -40,6 +42,8 @@ class InventoryManagementService extends AbstractBaseService
                 'highStockProducts' => $stats['high_stock_items_count'],
                 'outOfStockProducts' => $stats['out_of_stock_items_count'],
                 'totalInventoryValue' => $stats['total_inventory_value'],
+                'reservedItemsCount' => $stats['reserved_items_count'],
+                'totalReservedQuantity' => $stats['total_reserved_quantity'],
                 'lowStockItems' => $this->inventoryRepository->getLowStockItems(5),
                 'highStockItems' => $this->inventoryRepository->getHighStockItems(5),
                 'recentMovements' => \App\Models\InventoryMovement::with(['product', 'user'])->latest()->take(5)->get(),
@@ -239,12 +243,12 @@ class InventoryManagementService extends AbstractBaseService
     }
 
     /**
-     * Busca um produto pelo SKU.
+     * Busca um produto pelo SKU com inventário carregado.
      */
     public function getProductBySku(string $sku): ServiceResult
     {
         return $this->safeExecute(function () use ($sku) {
-            $product = $this->productRepository->findBySku($sku);
+            $product = $this->productRepository->findBySku($sku, ['inventory']);
             if (!$product) {
                 throw new Exception("Produto com SKU {$sku} não encontrado.");
             }
@@ -271,10 +275,11 @@ class InventoryManagementService extends AbstractBaseService
                             'sku' => $inventory->product->sku,
                             'produto' => $inventory->product->name,
                             'categoria' => $inventory->product->category->name ?? 'N/A',
-                            'quantidade' => $inventory->quantity,
+                            'estoque' => $inventory->quantity,
+                            'reservado' => $inventory->reserved_quantity,
+                            'disponível' => $inventory->available_quantity,
                             'estoque_min' => $inventory->min_quantity,
-                            'estoque_max' => $inventory->max_quantity,
-                            'status' => $inventory->quantity <= $inventory->min_quantity ? 'Baixo' : ($inventory->quantity >= $inventory->max_quantity && $inventory->max_quantity > 0 ? 'Alto' : 'Normal'),
+                            'status' => ($inventory->quantity - $inventory->reserved_quantity) <= $inventory->min_quantity ? 'Baixo' : ($inventory->quantity >= $inventory->max_quantity && $inventory->max_quantity > 0 ? 'Alto' : 'Normal'),
                         ];
                     })->toArray();
                     break;
@@ -319,9 +324,11 @@ class InventoryManagementService extends AbstractBaseService
                         return [
                             'sku' => $inventory->product->sku,
                             'produto' => $inventory->product->name,
-                            'quantidade_atual' => $inventory->quantity,
+                            'estoque' => $inventory->quantity,
+                            'reservado' => $inventory->reserved_quantity,
+                            'disponível' => $inventory->available_quantity,
                             'estoque_mínimo' => $inventory->min_quantity,
-                            'necessidade' => max(0, $inventory->min_quantity - $inventory->quantity),
+                            'necessidade' => max(0, $inventory->min_quantity - ($inventory->quantity - $inventory->reserved_quantity)),
                         ];
                     })->toArray();
                     break;
@@ -397,9 +404,54 @@ class InventoryManagementService extends AbstractBaseService
     }
 
     /**
-     * Ajusta o estoque de um produto pelo SKU.
+     * Ajusta o estoque para uma quantidade específica.
      */
-    public function setStock(string $sku, int $quantity, string $reason): ServiceResult
+    public function setStock(string $sku, int $newQuantity, string $reason): ServiceResult
+    {
+        return $this->safeExecute(function () use ($sku, $newQuantity, $reason) {
+            $product = $this->productRepository->findBySku($sku);
+            if (!$product) {
+                throw new Exception("Produto não encontrado.");
+            }
+
+            return $this->updateStockAction->execute($product, $newQuantity, 'adjustment', $reason);
+        });
+    }
+
+    /**
+     * Reserva uma quantidade de estoque para um produto.
+     */
+    public function reserveStock(string $sku, int $quantity): ServiceResult
+    {
+        return $this->safeExecute(function () use ($sku, $quantity) {
+            $product = $this->productRepository->findBySku($sku);
+            if (!$product) {
+                throw new Exception("Produto não encontrado.");
+            }
+
+            return $this->reserveStockAction->reserve($product, $quantity);
+        });
+    }
+
+    /**
+     * Libera uma quantidade reservada de estoque.
+     */
+    public function releaseStock(string $sku, int $quantity): ServiceResult
+    {
+        return $this->safeExecute(function () use ($sku, $quantity) {
+            $product = $this->productRepository->findBySku($sku);
+            if (!$product) {
+                throw new Exception("Produto não encontrado.");
+            }
+
+            return $this->reserveStockAction->release($product, $quantity);
+        });
+    }
+
+    /**
+     * Confirma a reserva, transformando-a em saída física.
+     */
+    public function confirmReservation(string $sku, int $quantity, string $reason = 'Reserva confirmada'): ServiceResult
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
@@ -407,7 +459,7 @@ class InventoryManagementService extends AbstractBaseService
                 throw new Exception("Produto não encontrado.");
             }
 
-            return $this->updateStockAction->execute($product, $quantity, 'adjustment', $reason);
+            return $this->reserveStockAction->confirm($product, $quantity, $this->updateStockAction, $reason);
         });
     }
 
@@ -450,25 +502,4 @@ class InventoryManagementService extends AbstractBaseService
         });
     }
 
-    /**
-     * Adiciona estoque a um produto pelo ID.
-     */
-    public function addStockById(int $id, int $quantity, string $reason): ServiceResult
-    {
-        return $this->safeExecute(function () use ($id, $quantity, $reason) {
-            $product = Product::findOrFail($id);
-            return $this->updateStockAction->execute($product, $quantity, 'in', $reason);
-        });
-    }
-
-    /**
-     * Remove estoque de um produto pelo ID.
-     */
-    public function removeStockById(int $id, int $quantity, string $reason): ServiceResult
-    {
-        return $this->safeExecute(function () use ($id, $quantity, $reason) {
-            $product = Product::findOrFail($id);
-            return $this->updateStockAction->execute($product, $quantity, 'out', $reason);
-        });
-    }
 }

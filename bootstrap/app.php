@@ -5,7 +5,10 @@ use App\Http\Middleware\MonitoringMiddleware;
 use App\Http\Middleware\OptimizeAuthUser;
 use App\Http\Middleware\ProviderMiddleware;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,7 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Providers\BladeDirectiveServiceProvider::class,
         App\Providers\BackupServiceProvider::class,
     ])
-    ->withMiddleware(function (Middleware $middleware): void {
+    ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'provider' => ProviderMiddleware::class,
             'admin' => AdminMiddleware::class,
@@ -30,46 +33,42 @@ return Application::configure(basePath: dirname(__DIR__))
             'optimize.auth' => OptimizeAuthUser::class,
         ]);
 
-        // Adicionar middleware de otimização ao grupo web
         $middleware->web(append: [
-            \App\Http\Middleware\OptimizeAuthUser::class,
+            OptimizeAuthUser::class,
         ]);
 
-        // Trust Cloudflare proxies for correct URL generation
-        $middleware->trustProxies(
-            '*', // Trust all proxies (for Cloudflare)
-            30 // Trust X-Forwarded-* headers
-        );
-
+        $middleware->trustProxies('*', 30);
     })
-    ->withExceptions(function (\Illuminate\Foundation\Configuration\Exceptions $exceptions) {
-        // Renderização global de exceções para uma experiência de usuário limpa
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
-            // Se for uma requisição que espera JSON (API), o Laravel já trata bem,
-            // mas podemos customizar se necessário.
+    ->withExceptions(function (Exceptions $exceptions) {
 
-            // Para requisições Web, se não for uma exceção de validação ou autorização (que o Laravel já trata)
-            if (!$request->expectsJson() &&
-                !$e instanceof \Illuminate\Validation\ValidationException &&
-                !$e instanceof \Illuminate\Auth\Access\AuthorizationException &&
-                !$e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
-
-                // Logamos o erro detalhadamente uma única vez aqui
-                \Illuminate\Support\Facades\Log::error('Exceção Global:', [
+        // 1. Reportar o erro (Lógica de Log)
+        $exceptions->report(function (\Throwable $e) {
+            try {
+                Log::error('Exceção Global:', [
                     'message' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'url' => $request->fullUrl(),
-                    'user_id' => auth()->id(),
+                    'url' => request()->fullUrl(),
+                    'user_id' => auth()->id() ?? 'Convidado',
                 ]);
-
-                // Redirecionamos o usuário de volta com uma mensagem amigável
-                return back()->withInput()->with('error', 'Ops! Ocorreu um erro inesperado. Nossa equipe já foi notificada.');
+            } catch (\Throwable $logError) {
+                error_log('Falha crítica no log: '.$logError->getMessage());
             }
         });
 
-        // Configuração de reporte (opcional)
-        $exceptions->report(function (\Throwable $e) {
-            // Aqui você poderia integrar com Sentry, Flare, etc.
+        // 2. Renderizar a resposta (Lógica de UI)
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if (! $request->expectsJson() &&
+                ! $e instanceof \Illuminate\Validation\ValidationException &&
+                ! $e instanceof \Illuminate\Auth\Access\AuthorizationException &&
+                ! $e instanceof \Illuminate\Auth\AuthenticationException &&
+                ! $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+
+                if ($request->isMethod('GET')) {
+                    return response()->view('errors.500', ['exception' => $e], 500);
+                }
+
+                return back()->withInput()->with('error', 'Ops! Ocorreu um erro inesperado. Nossa equipe já foi notificada.');
+            }
         });
     })->create();

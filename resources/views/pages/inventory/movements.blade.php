@@ -1,43 +1,33 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Movimentações de Estoque')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="mb-4">
-        <h3 class="mb-2">
-            <i class="bi bi-arrow-left-right me-2"></i>
-            Movimentações de Estoque
-        </h3>
-        <p class="text-muted mb-3">Histórico completo de movimentações de estoque</p>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
-                <li class="breadcrumb-item active">Movimentações</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container-fluid py-1">
+    <x-page-header
+        title="Movimentações de Estoque"
+        icon="arrow-left-right"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Movimentações' => '#'
+        ]">
+        <p class="text-muted mb-0">Histórico completo de movimentações de estoque</p>
+    </x-page-header>
 
     <!-- Filtros -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">Filtros</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
+                    <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                 </div>
                 <div class="card-body">
                     <form method="GET" action="{{ route('provider.inventory.movements') }}">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="product_id">Produto</label>
-                                    <select name="product_id" id="product_id" class="form-control select2">
+                                    <select name="product_id" id="product_id" class="form-select tom-select">
                                         <option value="">Todos os Produtos</option>
                                         @foreach($products as $product)
                                         <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
@@ -50,7 +40,7 @@
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="type">Tipo</label>
-                                    <select name="type" id="type" class="form-control">
+                                    <select name="type" id="type" class="form-select tom-select">
                                         <option value="">Todos</option>
                                         <option value="entry" {{ request('type') == 'entry' ? 'selected' : '' }}>Entrada</option>
                                         <option value="exit" {{ request('type') == 'exit' ? 'selected' : '' }}>Saída</option>
@@ -72,17 +62,10 @@
                                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-primary btn-block">
-                                            <i class="fas fa-search"></i> Filtrar
-                                        </button>
-                                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-secondary btn-block">
-                                            <i class="fas fa-times"></i> Limpar
-                                        </a>
-                                    </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <div class="d-flex gap-2 flex-nowrap w-100">
+                                    <x-button type="submit" icon="search" label="Filtrar" class="w-100" />
+                                    <x-button type="link" :href="route('provider.inventory.movements')" variant="secondary" icon="x" label="Limpar" class="w-100" />
                                 </div>
                             </div>
                         </div>
@@ -93,337 +76,255 @@
     </div>
 
     <!-- Resumo -->
-    <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="card bg-success">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_entries'], 2, ',', '.') }}</h4>
-                            <p>Total de Entradas</p>
-                            <small class="text-white-50">{{ $summary['count_entries'] }} movimentações</small>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-plus-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold">TOTAL ENTRADAS</h6>
                     </div>
+                    <h3 class="mb-1 fw-bold">{{ number_format($summary['total_entries'], 0, ',', '.') }}</h3>
+                    <small class="text-muted">{{ $summary['count_entries'] }} movimentações</small>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-danger">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_exits'], 2, ',', '.') }}</h4>
-                            <p>Total de Saídas</p>
-                            <small class="text-white-50">{{ $summary['count_exits'] }} movimentações</small>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-dash-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold">TOTAL SAÍDAS</h6>
                     </div>
+                    <h3 class="mb-1 fw-bold">{{ number_format($summary['total_exits'], 0, ',', '.') }}</h3>
+                    <small class="text-muted">{{ $summary['count_exits'] }} movimentações</small>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ $movements->total() }}</h4>
-                            <p>Total de Movimentações</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-arrow-left-right text-white" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold">MOVIMENTAÇÕES</h6>
                     </div>
+                    <h3 class="mb-1 fw-bold">{{ $movements->total() }}</h3>
+                    <small class="text-muted">No período selecionado</small>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-warning">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['balance'], 2, ',', '.') }}</h4>
-                            <p>Saldo do Período</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-warning bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-calculator text-white" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold">SALDO PERÍODO</h6>
                     </div>
+                    <h3 class="mb-1 fw-bold">{{ number_format($summary['balance'], 0, ',', '.') }}</h3>
+                    <small class="text-muted">Entradas - Saídas</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-3">
-        <div class="col-lg-3 col-6">
-            <div class="card bg-secondary">
+    <!-- Gráficos -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h6 class="mb-0 fw-bold">Distribuição por Tipo (Qtd. Movimentos)</h6>
+                </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_adjustments'], 2, ',', '.') }}</h4>
-                            <p>Ajustes</p>
-                            <small class="text-white-50">{{ $summary['count_adjustments'] }} movimentações</small>
-                        </div>
-                    </div>
+                    <div style="height: 200px;"><canvas id="movementTypesChart"></canvas></div>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_reservations'], 2, ',', '.') }}</h4>
-                            <p>Reservas</p>
-                            <small class="text-white-50">{{ $summary['count_reservations'] }} movimentações</small>
-                        </div>
-                    </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent">
+                    <h6 class="mb-0 fw-bold">Volumes por Tipo (Somatório de Qtd.)</h6>
                 </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-dark">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_cancellations'], 2, ',', '.') }}</h4>
-                            <p>Cancelamentos</p>
-                            <small class="text-white-50">{{ $summary['count_cancellations'] }} movimentações</small>
-                        </div>
-                    </div>
+                    <div style="height: 200px;"><canvas id="movementTotalsChart"></canvas></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Tabela de Movimentações -->
-    <div class="row">
-        <div class="col-12">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Distribuição por Tipo (Quantidade de Movimentações)</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container"><canvas id="movementTypesChart" style="max-height: 200px;"></canvas></div>
-                        </div>
-                    </div>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-8">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-list-ul me-2"></i>Registros de Movimentação
+                        <span class="text-muted small">({{ $movements->total() }} registros)</span>
+                    </h5>
                 </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Volumes por Tipo (Somatório de Quantidades)</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container"><canvas id="movementTotalsChart" style="max-height: 200px;"></canvas></div>
-                        </div>
-                    </div>
+                <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+                    <x-button type="link" :href="route('provider.inventory.export-movements', request()->all())" variant="success" icon="file-earmark-excel" label="Exportar Excel" size="sm" />
                 </div>
             </div>
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-md-8">
-                            <h5 class="mb-0">
-                                <i class="bi bi-list-ul me-2"></i>Movimentações de Estoque
-                                <span class="text-muted">({{ $movements->total() }} registros)</span>
-                            </h5>
-                        </div>
-                        <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
-                            <a href="{{ route('provider.inventory.export-movements') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Exportar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if($movements->count() > 0)
-                    <!-- Desktop View -->
-                    <div class="table-responsive d-none d-md-block">
-                        <table class="table modern-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Data/Hora</th>
-                                    <th>Produto</th>
-                                    <th>SKU</th>
-                                    <th>Tipo</th>
-                                    <th>Quantidade</th>
-                                    <th>Saldo Anterior</th>
-                                    <th>Saldo Atual</th>
-                                    <th>Motivo</th>
-                                    <th>Referência</th>
-                                    <th>Usuário</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($movements as $movement)
-                                <tr>
-                                    <td>{{ $movement->created_at->format('d/m/Y H:i') }}</td>
-                                    <td>
-                                        <a href="{{ route('provider.products.show', $movement->product->sku) }}" class="text-decoration-none">
-                                            {{ $movement->product->name }}
-                                        </a>
-                                    </td>
-                                    <td>{{ $movement->product->sku }}</td>
-                                    <td>
-                                        @if($movement->type === 'entry')
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-plus"></i> Entrada
-                                        </span>
-                                        @elseif($movement->type === 'exit')
-                                        <span class="badge badge-danger">
-                                            <i class="fas fa-minus"></i> Saída
-                                        </span>
-                                        @elseif($movement->type === 'adjustment')
-                                        <span class="badge badge-warning">
-                                            <i class="fas fa-tools"></i> Ajuste
-                                        </span>
-                                        @elseif($movement->type === 'reservation')
-                                        <span class="badge badge-info">
-                                            <i class="fas fa-lock"></i> Reserva
-                                        </span>
-                                        @elseif($movement->type === 'cancellation')
-                                        <span class="badge badge-secondary">
-                                            <i class="fas fa-undo"></i> Cancelamento
-                                        </span>
-                                        @else
-                                        <span class="badge badge-light">
-                                            {{ ucfirst($movement->type) }}
-                                        </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($movement->type === 'entry')
-                                        <span class="text-success">+{{ number_format($movement->quantity, 2, ',', '.') }}</span>
-                                        @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
-                                        <span class="text-danger">-{{ number_format($movement->quantity, 2, ',', '.') }}</span>
-                                        @else
-                                        {{ number_format($movement->quantity, 2, ',', '.') }}
-                                        @endif
-                                    </td>
-                                    <td>{{ number_format($movement->previous_quantity, 2, ',', '.') }}</td>
-                                    <td>
-                                        @php
-                                        $currentQuantity = $movement->previous_quantity;
-                                        if ($movement->type === 'entry') {
-                                        $currentQuantity += $movement->quantity;
-                                        } elseif ($movement->type === 'exit' || $movement->type === 'subtraction') {
-                                        $currentQuantity -= $movement->quantity;
-                                        }
-                                        @endphp
-                                        {{ number_format($currentQuantity, 2, ',', '.') }}
-                                    </td>
-                                    <td>
-                                        <small>{{ Str::limit($movement->reason, 50) }}</small>
-                                        @if(strlen($movement->reason) > 50)
-                                        <button type="button" class="btn btn-xs btn-link" data-toggle="modal" data-target="#reasonModal{{ $movement->id }}">
-                                            Ver mais
-                                        </button>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($movement->reference_type && $movement->reference_id)
-                                        @if($movement->reference_type === 'budget')
-                                        <a href="{{ route('budgets.show', $movement->reference_id) }}" class="btn btn-xs btn-info">
-                                            Orçamento #{{ $movement->reference_id }}
-                                        </a>
-                                        @elseif($movement->reference_type === 'service')
-                                        <a href="{{ route('services.show', $movement->reference_id) }}" class="btn btn-xs btn-info">
-                                            Serviço #{{ $movement->reference_id }}
-                                        </a>
-                                        @else
-                                        {{ ucfirst($movement->reference_type) }} #{{ $movement->reference_id }}
-                                        @endif
-                                        @else
-                                        <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <small>{{ $movement->user->name ?? 'Sistema' }}</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Mais Ações
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.products.show', $movement->product->sku) }}">
-                                                        <i class="bi bi-eye me-2"></i>Visualizar Produto
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.movements', ['product_id' => $movement->product_id]) }}">
-                                                        <i class="bi bi-list me-2"></i>Ver Movimentações
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.adjust', $movement->product->sku) }}">
-                                                        <i class="bi bi-sliders me-2"></i>Ajustar Estoque
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.entry', $movement->product->sku) }}">
-                                                        <i class="bi bi-plus me-2"></i>Entrada de Estoque
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.exit', $movement->product->sku) }}">
-                                                        <i class="bi bi-dash me-2"></i>Saída de Estoque
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <!-- Modal para motivo completo -->
-                                @if(strlen($movement->reason) > 50)
-                                <div class="modal fade" id="reasonModal{{ $movement->id }}" tabindex="-1" role="dialog">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Motivo Completo</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>{{ $movement->reason }}</p>
-                                                <small class="text-muted">
-                                                    Registrado em: {{ $movement->created_at->format('d/m/Y H:i') }}
-                                                </small>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+        </div>
+        <div class="card-body p-0">
+            @if($movements->count() > 0)
+            <!-- Desktop View -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Produto</th>
+                            <th>SKU</th>
+                            <th>Tipo</th>
+                            <th class="text-center">Quantidade</th>
+                            <th class="text-center">Saldo Ant.</th>
+                            <th class="text-center">Saldo Atual</th>
+                            <th>Motivo</th>
+                            <th>Usuário</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($movements as $movement)
+                        <tr>
+                            <td class="small">{{ $movement->created_at->format('d/m/Y H:i') }}</td>
+                            <td>
+                                <a href="{{ route('provider.products.show', $movement->product->sku) }}" class="text-decoration-none fw-bold">
+                                    {{ $movement->product->name }}
+                                </a>
+                            </td>
+                            <td><span class="text-code">{{ $movement->product->sku }}</span></td>
+                            <td>
+                                @php
+                                    $badgeClass = match($movement->type) {
+                                        'entry' => 'success',
+                                        'exit' => 'danger',
+                                        'adjustment' => 'warning',
+                                        'reservation' => 'info',
+                                        'cancellation' => 'dark',
+                                        default => 'secondary'
+                                    };
+                                    $typeLabel = match($movement->type) {
+                                        'entry' => 'Entrada',
+                                        'exit' => 'Saída',
+                                        'adjustment' => 'Ajuste',
+                                        'reservation' => 'Reserva',
+                                        'cancellation' => 'Cancel.',
+                                        default => ucfirst($movement->type)
+                                    };
+                                    $icon = match($movement->type) {
+                                        'entry' => 'plus-circle',
+                                        'exit' => 'dash-circle',
+                                        'adjustment' => 'sliders',
+                                        'reservation' => 'lock',
+                                        'cancellation' => 'arrow-counterclockwise',
+                                        default => 'dot'
+                                    };
+                                @endphp
+                                <span class="badge bg-{{ $badgeClass }}">
+                                    <i class="bi bi-{{ $icon }} me-1"></i> {{ $typeLabel }}
+                                </span>
+                            </td>
+                            <td class="text-center fw-bold">
+                                @if($movement->type === 'entry')
+                                <span class="text-success">+{{ number_format($movement->quantity, 0, ',', '.') }}</span>
+                                @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
+                                <span class="text-danger">-{{ number_format($movement->quantity, 0, ',', '.') }}</span>
+                                @else
+                                {{ number_format($movement->quantity, 0, ',', '.') }}
                                 @endif
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex justify-content-center">
-                        {{ $movements->appends(request()->except('page'))->links() }}
-                    </div>
-                    @else
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> Nenhuma movimentação encontrada com os filtros aplicados.
-                    </div>
-                    @endif
-                </div>
+                            </td>
+                            <td class="text-center text-muted">{{ number_format($movement->previous_quantity, 0, ',', '.') }}</td>
+                            <td class="text-center fw-bold">
+                                @php
+                                $currentQuantity = $movement->previous_quantity;
+                                if ($movement->type === 'entry') {
+                                    $currentQuantity += $movement->quantity;
+                                } elseif ($movement->type === 'exit' || $movement->type === 'subtraction') {
+                                    $currentQuantity -= $movement->quantity;
+                                }
+                                @endphp
+                                {{ number_format($currentQuantity, 0, ',', '.') }}
+                            </td>
+                            <td>
+                                <small class="text-muted" title="{{ $movement->reason }}">
+                                    {{ Str::limit($movement->reason, 30) }}
+                                </small>
+                            </td>
+                            <td>
+                                <small>{{ $movement->user->name ?? 'Sistema' }}</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="{{ route('provider.products.show', $movement->product->sku) }}"><i class="bi bi-eye me-2"></i>Ver Produto</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('provider.inventory.adjust', $movement->product->sku) }}"><i class="bi bi-sliders me-2"></i>Ajustar Estoque</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('provider.inventory.entry', $movement->product->sku) }}"><i class="bi bi-plus me-2"></i>Entrada</a></li>
+                                        <li><a class="dropdown-item" href="{{ route('provider.inventory.exit', $movement->product->sku) }}"><i class="bi bi-dash me-2"></i>Saída</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
+
+            <!-- Mobile View -->
+            <div class="d-md-none">
+                @foreach($movements as $movement)
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small text-muted">{{ $movement->created_at->format('d/m/Y H:i') }}</span>
+                        @php
+                            $badgeClass = match($movement->type) {
+                                'entry' => 'success',
+                                'exit' => 'danger',
+                                'adjustment' => 'warning',
+                                default => 'secondary'
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $badgeClass }}">{{ ucfirst($movement->type) }}</span>
+                    </div>
+                    <h6 class="mb-1 fw-bold">{{ $movement->product->name }}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">SKU: {{ $movement->product->sku }}</span>
+                        <span class="fw-bold {{ $movement->type === 'entry' ? 'text-success' : ($movement->type === 'exit' ? 'text-danger' : '') }}">
+                            {{ $movement->type === 'entry' ? '+' : ($movement->type === 'exit' ? '-' : '') }}{{ number_format($movement->quantity, 0, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="p-3">
+                {{ $movements->appends(request()->except('page'))->links() }}
+            </div>
+            @else
+            <div class="text-center py-5">
+                <i class="bi bi-info-circle text-muted mb-3" style="font-size: 3rem;"></i>
+                <p class="text-muted">Nenhuma movimentação encontrada com os filtros aplicados.</p>
+                <a href="{{ route('provider.inventory.movements') }}" class="btn btn-primary">Limpar Filtros</a>
+            </div>
+            @endif
         </div>
     </div>
 </div>
 @endsection
 
 @section('scripts')
-<script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: 'Selecione um produto',
-            allowClear: true
-        });
-    });
-</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -431,7 +332,8 @@
         var typesLabels = ['Entradas', 'Saídas', 'Ajustes', 'Reservas', 'Cancelamentos'];
         var typesCounts = [s.count_entries || 0, s.count_exits || 0, s.count_adjustments || 0, s.count_reservations || 0, s.count_cancellations || 0];
         var totalsValues = [s.total_entries || 0, s.total_exits || 0, s.total_adjustments || 0, s.total_reservations || 0, s.total_cancellations || 0];
-        var colors = ['#198754', '#dc3545', '#6c757d', '#0dcaf0', '#343a40'];
+        var colors = ['#198754', '#dc3545', '#ffc107', '#0dcaf0', '#212529'];
+        
         var ctx1 = document.getElementById('movementTypesChart');
         if (ctx1) {
             new Chart(ctx1, {
@@ -450,15 +352,18 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
+                            position: 'right',
                             labels: {
-                                usePointStyle: true
+                                usePointStyle: true,
+                                padding: 20,
+                                font: { size: 11 }
                             }
                         }
                     }
                 }
             });
         }
+        
         var ctx2 = document.getElementById('movementTotalsChart');
         if (ctx2) {
             new Chart(ctx2, {
@@ -468,21 +373,19 @@
                     datasets: [{
                         label: 'Quantidade',
                         data: totalsValues,
-                        backgroundColor: colors
+                        backgroundColor: colors,
+                        borderRadius: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            display: false
-                        }
+                        legend: { display: false }
                     },
                     scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
@@ -490,3 +393,4 @@
     });
 </script>
 @endsection
+

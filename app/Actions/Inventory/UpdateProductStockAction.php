@@ -52,8 +52,19 @@ class UpdateProductStockAction
             // Calcula a nova quantidade baseada no tipo
             $newQuantity = match ($type) {
                 'in' => $previousQuantity + $quantity,
-                'out' => $previousQuantity - $quantity,
-                'adjustment' => $quantity,
+                'out' => (function() use ($previousQuantity, $quantity, $inventory) {
+                    $new = $previousQuantity - $quantity;
+                    if ($new < $inventory->reserved_quantity) {
+                        throw new Exception("Não é possível reduzir o estoque abaixo da quantidade reservada ({$inventory->reserved_quantity}). Disponível para saída: " . ($previousQuantity - $inventory->reserved_quantity));
+                    }
+                    return $new;
+                })(),
+                'adjustment' => (function() use ($quantity, $inventory) {
+                    if ($quantity < $inventory->reserved_quantity) {
+                        throw new Exception("O novo estoque ({$quantity}) não pode ser menor que a quantidade reservada ({$inventory->reserved_quantity}).");
+                    }
+                    return $quantity;
+                })(),
                 default => throw new Exception("Tipo de movimentação inválido: {$type}"),
             };
 

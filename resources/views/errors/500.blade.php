@@ -1,6 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
+
+<style>
+    .bi-exclamation-triangle {
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+
     <div class="container-fluid py-1">
         <div class="row justify-content-center">
             <div class="col-md-8">
@@ -15,10 +27,16 @@
                             problema.
                         </p>
 
-                        @if (isset($error) && app()->environment('local'))
-                            <div class="alert alert-danger">
+                        @if (isset($exception) && app()->environment('local'))
+                            <div class="alert alert-danger text-start">
                                 <h6>Detalhes do erro (apenas em desenvolvimento):</h6>
-                                <pre class="text-error">{{ $error->getMessage() }}</pre>
+                                <pre class="text-error mb-0">{{ $exception->getMessage() }}</pre>
+                                <p class="mt-2 mb-0 small text-muted"><strong>Arquivo:</strong> {{ $exception->getFile() }}:{{ $exception->getLine() }}</p>
+                            </div>
+                        @elseif (isset($error) && app()->environment('local'))
+                            <div class="alert alert-danger text-start">
+                                <h6>Detalhes do erro (apenas em desenvolvimento):</h6>
+                                <pre class="text-error mb-0">{{ $error->getMessage() }}</pre>
                             </div>
                         @endif
 

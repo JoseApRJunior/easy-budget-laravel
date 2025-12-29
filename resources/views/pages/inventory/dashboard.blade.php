@@ -4,103 +4,124 @@
 
 @section('content')
 <div class="container-fluid py-1">
-    <x-page-header
-        title="Dashboard de Inventário"
-        icon="speedometer2"
-        :breadcrumb-items="[
-            'Inventário' => route('provider.inventory.dashboard')
-        ]">
-        <p class="text-muted mb-0">Visão geral do estoque e movimentações</p>
-    </x-page-header>
+    <!-- Cabeçalho -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="flex-grow-1">
+                <h1 class="h4 h3-md mb-1">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    <span class="d-none d-sm-inline">Dashboard de Inventário</span>
+                    <span class="d-sm-none">Inventário</span>
+                </h1>
+            </div>
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Dashboard de Inventário
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <p class="text-muted mb-0 small">Visão geral do seu estoque e movimentações com atalhos de gestão.</p>
+    </div>
 
     <!-- Ações Rápidas -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-transparent">
-                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Ações Rápidas</h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0 pt-3 pb-0">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-lightning-charge me-2 text-warning"></i>Ações Rápidas</h6>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
-                        <x-button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" />
-                        <x-button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" />
-                        <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" />
-                        <x-button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" />
-                        <x-button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" />
+                        <x-button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" size="sm" />
+                        <x-button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" size="sm" />
+                        <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" size="sm" />
+                        <x-button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" size="sm" />
+                        <x-button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" size="sm" />
+                        <x-button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" size="sm" />
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Cards de Resumo -->
+    <!-- Cards de Métricas -->
     <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $totalProducts }}</h4>
-                    <p class="mb-0">Total de Produtos</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index') }}" class="text-white text-decoration-none">
-                        Ver Detalhes <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $lowStockProducts }}</h4>
-                    <p class="mb-0">Estoque Baixo</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-white text-decoration-none">
-                        Ver Produtos <i class="bi bi-arrow-right"></i>
-                    </a>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">TOTAL PRODUTOS</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold">{{ $totalProducts }}</h3>
+                    <a href="{{ route('provider.inventory.index') }}" class="text-primary small text-decoration-none">Ver todos <i class="bi bi-chevron-right ms-1"></i></a>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $highStockProducts }}</h4>
-                    <p class="mb-0">Estoque Alto</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index', ['status' => 'high']) }}" class="text-white text-decoration-none">
-                        Ver Produtos <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $outOfStockProducts }}</h4>
-                    <p class="mb-0">Sem Estoque</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-white text-decoration-none">
-                        Ver Produtos <i class="bi bi-arrow-right"></i>
-                    </a>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-warning bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">ESTOQUE BAIXO</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold text-warning">{{ $lowStockProducts }}</h3>
+                    <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-warning small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">R$ {{ number_format($totalInventoryValue, 2, ',', '.') }}</h4>
-                    <p class="mb-0">Valor Total do Estoque</p>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-x-circle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">SEM ESTOQUE</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold text-danger">{{ $outOfStockProducts }}</h3>
+                    <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-danger small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
                 </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index') }}" class="text-white text-decoration-none">
-                        Ver Inventário <i class="bi bi-arrow-right"></i>
-                    </a>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-bookmark-check text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">PRODUTOS RESERVADOS</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold text-info">{{ $reservedItemsCount }}</h3>
+                    <div class="text-muted small">Total: {{ $totalReservedQuantity }} unidades</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 bg-success bg-gradient text-white">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold text-uppercase">Valor em Estoque</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold">R$ {{ number_format($totalInventoryValue, 2, ',', '.') }}</h3>
+                    <p class="text-white text-opacity-75 small-text mb-0">Custo total aproximado.</p>
                 </div>
             </div>
         </div>

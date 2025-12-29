@@ -34,14 +34,17 @@ class RecordInventoryMovementAction
         ?int $referenceId = null,
         ?string $referenceType = null
     ): InventoryMovement {
-        $newQuantity = ($type === 'in') 
-            ? $previousQuantity + $quantity 
-            : (($type === 'out') ? $previousQuantity - $quantity : $quantity);
+        $newQuantity = match ($type) {
+            'in' => $previousQuantity + $quantity,
+            'out' => $previousQuantity - $quantity,
+            'adjustment' => $quantity,
+            default => $previousQuantity,
+        };
 
         return InventoryMovement::create([
             'tenant_id' => $product->tenant_id,
             'product_id' => $product->id,
-            'type' => $type,
+            'type' => $type === 'in' ? 'entry' : ($type === 'out' ? 'exit' : 'adjustment'),
             'quantity' => $quantity,
             'previous_quantity' => $previousQuantity,
             'new_quantity' => $newQuantity,

@@ -17,8 +17,8 @@
     <div class="row">
         <div class="col-12">
             <!-- Filtros -->
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-transparent">
+            <div class="card mb-4">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                 </div>
                 <div class="card-body">
@@ -26,14 +26,14 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="search" class="form-label">Buscar</label>
+                                    <label for="search">Buscar</label>
                                     <input type="text" class="form-control" id="search" name="search"
                                         value="{{ request('search') }}" placeholder="Nome ou SKU do produto">
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="category" class="form-label">Categoria</label>
+                                    <label for="category">Categoria</label>
                                     <select name="category" id="category" class="form-select tom-select">
                                         <option value="">Todas as Categorias</option>
                                         @foreach($categories as $category)
@@ -47,7 +47,7 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="status" class="form-label">Status do Estoque</label>
+                                    <label for="status">Status do Estoque</label>
                                     <select name="status" id="status" class="form-select tom-select">
                                         <option value="">Todos</option>
                                         <option value="sufficient" {{ request('status') == 'sufficient' ? 'selected' : '' }}>Estoque OK</option>
@@ -68,8 +68,8 @@
             </div>
 
             <!-- Tabela de Inventário -->
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-transparent">
+            <div class="card">
+                <div class="card-header">
                     <div class="row align-items-center">
                         <div class="col-12 col-md-8">
                             <h5 class="mb-0">
@@ -92,6 +92,8 @@
                                     <th>SKU</th>
                                     <th>Categoria</th>
                                     <th class="text-center">Quantidade</th>
+                                    <th class="text-center">Reservado</th>
+                                    <th class="text-center">Disponível</th>
                                     <th class="text-center">Mínimo</th>
                                     <th>Valor Unit.</th>
                                     <th>Valor Total</th>
@@ -127,6 +129,12 @@
                                         <td class="text-center">
                                             <span class="badge badge-{{ $statusClass }}">{{ $currentQuantity }}</span>
                                         </td>
+                                        <td class="text-center">
+                                            <span class="text-info">{{ $inventory->reserved_quantity }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="fw-bold">{{ $inventory->available_quantity }}</span>
+                                        </td>
                                         <td class="text-center">{{ $minQuantity }}</td>
                                         <td>R$ {{ number_format($unitValue, 2, ',', '.') }}</td>
                                         <td><strong>R$ {{ number_format($totalValue, 2, ',', '.') }}</strong></td>
@@ -156,7 +164,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center text-muted">
+                                        <td colspan="11" class="text-center text-muted">
                                             <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
                                             <br>
                                             Nenhum produto encontrado no inventário.
@@ -198,7 +206,21 @@
                                 </div>
                                 <div class="mb-2">
                                     <small class="text-muted">Categoria:</small> {{ $product->category->name ?? 'Sem Categoria' }}<br>
-                                    <small class="text-muted">Quantidade:</small> <span class="badge bg-{{ $statusClass }}">{{ $currentQuantity }}</span> / Mín: {{ $minQuantity }}<br>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Estoque</small>
+                                            <span class="badge bg-{{ $statusClass }}">{{ $currentQuantity }}</span>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Reservado</small>
+                                            <span class="text-info">{{ $inventory->reserved_quantity }}</span>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted d-block">Disponível</small>
+                                            <span class="fw-bold">{{ $inventory->available_quantity }}</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Mínimo:</small> {{ $minQuantity }}<br>
                                     <small class="text-muted">Valor Total:</small> <strong>R$ {{ number_format($totalValue, 2, ',', '.') }}</strong>
                                 </div>
                                 <div class="action-btn-group">

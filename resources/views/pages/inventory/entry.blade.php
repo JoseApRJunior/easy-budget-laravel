@@ -57,7 +57,12 @@
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
                             <strong>Produto:</strong> {{ $product->name }}<br>
-                            <strong>SKU:</strong> {{ $product->sku }}
+                            <strong>SKU:</strong> {{ $product->sku }}<br>
+                            <div class="mt-2">
+                                <strong>Estoque Físico:</strong> <span class="badge bg-primary">{{ $product->inventory->quantity ?? 0 }}</span>
+                                <strong class="ms-3">Reservado:</strong> <span class="badge bg-info">{{ $product->inventory->reserved_quantity ?? 0 }}</span>
+                                <strong class="ms-3">Disponível:</strong> <span class="badge bg-success">{{ $product->inventory->available_quantity ?? 0 }}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="card-footer">

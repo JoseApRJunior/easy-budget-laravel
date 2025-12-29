@@ -152,11 +152,11 @@ class Product extends Model
     /**
      * Controle de inventário do produto.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductInventory>
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\ProductInventory>
      */
-    public function inventory(): HasMany
+    public function inventory(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasMany(ProductInventory::class);
+        return $this->hasOne(ProductInventory::class);
     }
 
     /**

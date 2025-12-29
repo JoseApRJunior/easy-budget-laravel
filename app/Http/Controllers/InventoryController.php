@@ -34,7 +34,7 @@ class InventoryController extends Controller
         $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getDashboardData();
 
-        return view('pages.inventory.dashboard', $result->getData());
+        return view('pages.inventory.dashboard', (array) $result->getData());
     }
 
     /**
@@ -45,7 +45,7 @@ class InventoryController extends Controller
         $this->authorize('viewAny', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getIndexData($request->all());
 
-        return view('pages.inventory.index', $result->getData());
+        return view('pages.inventory.index', (array) $result->getData());
     }
 
     /**
@@ -56,18 +56,18 @@ class InventoryController extends Controller
         $this->authorize('viewMovements', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getMovementsData($request->all());
 
-        return view('pages.inventory.movements', $result->getData());
+        return view('pages.inventory.movements', (array) $result->getData());
     }
 
     /**
      * Giro de estoque
      */
-    public function stockTurnover(Request $request): View|RedirectResponse
+    public function stockTurnover(Request $request): View
     {
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
 
-        return view('pages.inventory.stock-turnover', $result->getData());
+        return view('pages.inventory.stock-turnover', (array) $result->getData());
     }
 
     /**
@@ -78,7 +78,7 @@ class InventoryController extends Controller
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
 
-        return view('pages.inventory.most-used', $result->getData());
+        return view('pages.inventory.most-used', (array) $result->getData());
     }
 
     /**
@@ -89,7 +89,7 @@ class InventoryController extends Controller
         $this->authorize('manageAlerts', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getAlertsData();
 
-        return view('pages.inventory.alerts', $result->getData());
+        return view('pages.inventory.alerts', (array) $result->getData());
     }
 
     /**
@@ -100,7 +100,7 @@ class InventoryController extends Controller
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getReportData($request->all());
 
-        return view('pages.inventory.report', $result->getData());
+        return view('pages.inventory.report', (array) $result->getData());
     }
 
     /**

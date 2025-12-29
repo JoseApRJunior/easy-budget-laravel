@@ -21,7 +21,11 @@
                             <i class="bi bi-info-circle me-2"></i>
                             <strong>Produto:</strong> {{ $product->name }}<br>
                             <strong>SKU:</strong> {{ $product->sku }}<br>
-                            <strong>Estoque Atual:</strong> <span class="badge bg-primary">{{ $inventory->quantity ?? 0 }}</span>
+                            <div class="mt-2">
+                                <strong>Estoque Físico:</strong> <span class="badge bg-primary">{{ $inventory->quantity ?? 0 }}</span>
+                                <strong class="ms-3">Reservado:</strong> <span class="badge bg-info">{{ $inventory->reserved_quantity ?? 0 }}</span>
+                                <strong class="ms-3">Disponível:</strong> <span class="badge bg-success">{{ $inventory->available_quantity ?? 0 }}</span>
+                            </div>
                         </div>
 
                         <div class="row">

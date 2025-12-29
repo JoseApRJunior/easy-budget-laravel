@@ -100,7 +100,7 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['low_stock']) && $filters['low_stock']) {
-            $query->whereColumn('quantity', '<=', 'min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
         }
 
         if (isset($filters['high_stock']) && $filters['high_stock']) {
@@ -112,7 +112,7 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['custom_sufficient']) && $filters['custom_sufficient']) {
-            $query->whereColumn('quantity', '>', 'min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) > min_quantity');
         }
 
         if (! empty($filters['category'])) {
@@ -168,7 +168,7 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['low_stock']) && $filters['low_stock']) {
-            $query->whereColumn('quantity', '<=', 'min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
         }
 
         if (isset($filters['high_stock']) && $filters['high_stock']) {
@@ -180,7 +180,7 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['custom_sufficient']) && $filters['custom_sufficient']) {
-            $query->whereColumn('quantity', '>', 'min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) > min_quantity');
         }
 
         if (! empty($filters['category'])) {
@@ -215,7 +215,7 @@ class InventoryRepository extends AbstractTenantRepository
     public function getLowStockItems(int $limit = 10): Collection
     {
         return $this->model
-            ->whereColumn('quantity', '<=', 'min_quantity')
+            ->whereRaw('(quantity - reserved_quantity) <= min_quantity')
             ->with('product')
             ->limit($limit)
             ->get();
@@ -224,7 +224,7 @@ class InventoryRepository extends AbstractTenantRepository
     public function getLowStockCount(): int
     {
         return $this->model
-            ->whereColumn('quantity', '<=', 'min_quantity')
+            ->whereRaw('(quantity - reserved_quantity) <= min_quantity')
             ->count();
     }
 
@@ -252,7 +252,7 @@ class InventoryRepository extends AbstractTenantRepository
     public function getOutOfStockItems(int $limit = 10): Collection
     {
         return $this->model
-            ->where('quantity', '<=', 0)
+            ->whereRaw('(quantity - reserved_quantity) <= 0')
             ->with('product')
             ->limit($limit)
             ->get();
@@ -269,7 +269,7 @@ class InventoryRepository extends AbstractTenantRepository
     public function getOutOfStockCount(): int
     {
         return $this->model
-            ->where('quantity', '<=', 0)
+            ->whereRaw('(quantity - reserved_quantity) <= 0')
             ->count();
     }
 
@@ -279,6 +279,8 @@ class InventoryRepository extends AbstractTenantRepository
         $lowStock = $this->getLowStockCount();
         $highStock = $this->getHighStockCount();
         $outOfStock = $this->getOutOfStockCount();
+        $totalReserved = $this->model->sum('reserved_quantity');
+        $reservedItemsCount = $this->model->where('reserved_quantity', '>', 0)->count();
 
         $totalValue = $this->model
             ->join('products', 'product_inventory.product_id', '=', 'products.id')
@@ -291,6 +293,8 @@ class InventoryRepository extends AbstractTenantRepository
             'high_stock_items_count' => $highStock,
             'out_of_stock_items_count' => $outOfStock,
             'total_inventory_value' => $totalValue,
+            'total_reserved_quantity' => $totalReserved,
+            'reserved_items_count' => $reservedItemsCount,
         ];
     }
 }

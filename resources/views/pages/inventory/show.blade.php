@@ -47,18 +47,30 @@
                                     class="bi bi-clipboard-data text-white"></i></div>
                             <div>
                                 <h6 class="text-muted mb-1">Estoque</h6>
-                                <h5 class="mb-0">Qtd: {{ $inventory->quantity ?? 0 }}</h5>
+                                <h5 class="mb-0">Total: {{ $inventory->quantity ?? 0 }}</h5>
                             </div>
                         </div>
-                        <div class="row text-center">
-                            <div class="col">
-                                <div class="border rounded p-3">
+                        <div class="row text-center g-2">
+                            <div class="col-6">
+                                <div class="border rounded p-2">
+                                    <div class="text-muted small">Reservado</div>
+                                    <div class="h6 mb-0 text-info">{{ $inventory->reserved_quantity ?? 0 }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-2">
+                                    <div class="text-muted small">Disponível</div>
+                                    <div class="h6 mb-0 fw-bold">{{ $inventory->available_quantity ?? 0 }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-2">
                                     <div class="text-muted small">Mín</div>
                                     <div class="h6 mb-0">{{ $inventory->min_quantity ?? 0 }}</div>
                                 </div>
                             </div>
-                            <div class="col">
-                                <div class="border rounded p-3">
+                            <div class="col-6">
+                                <div class="border rounded p-2">
                                     <div class="text-muted small">Máx</div>
                                     <div class="h6 mb-0">{{ $inventory->max_quantity ?? '-' }}</div>
                                 </div>

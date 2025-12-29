@@ -7,19 +7,19 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
                         <div class="mb-4">
-                            <i class="bi bi-shield-x text-danger" style="font-size: 4rem;"></i>
+                            <i class="bi bi-search text-info" style="font-size: 4rem;"></i>
                         </div>
-                        <h2 class="card-title text-muted mb-3">Acesso não permitido</h2>
+                        <h2 class="card-title text-muted mb-3">404 | Página não encontrada</h2>
                         <p class="card-text text-muted mb-4">
-                            Você não tem permissão para acessar esta página.
+                            A página que você está procurando não existe ou foi movida.
                         </p>
 
                         <div class="d-flex justify-content-center gap-3">
                             <a href="{{ route('home') }}" class="btn btn-primary">
                                 <i class="bi bi-house me-2"></i>Voltar ao Início
                             </a>
-                            <a href="{{ route('login') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Fazer Login
+                            <a href="{{ route('support') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-question-circle me-2"></i>Suporte
                             </a>
                         </div>
                     </div>

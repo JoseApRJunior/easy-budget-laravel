@@ -44,6 +44,7 @@ class ProductInventory extends Model
         'tenant_id',
         'product_id',
         'quantity',
+        'reserved_quantity',
         'min_quantity',
         'max_quantity',
     ];
@@ -55,6 +56,7 @@ class ProductInventory extends Model
      */
     protected $attributes = [
         'quantity' => 0,
+        'reserved_quantity' => 0,
         'min_quantity' => 0,
         'max_quantity' => null,
     ];
@@ -68,11 +70,36 @@ class ProductInventory extends Model
         'tenant_id' => 'integer',
         'product_id' => 'integer',
         'quantity' => 'integer',
+        'reserved_quantity' => 'integer',
         'min_quantity' => 'integer',
         'max_quantity' => 'integer',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get available quantity (physical quantity - reserved quantity).
+     */
+    public function getAvailableQuantityAttribute(): int
+    {
+        return max(0, $this->quantity - $this->reserved_quantity);
+    }
+
+    /**
+     * Check if the product has low stock.
+     */
+    public function isLowStock(): bool
+    {
+        return $this->available_quantity <= $this->min_quantity;
+    }
+
+    /**
+     * Check if the product has high stock.
+     */
+    public function isHighStock(): bool
+    {
+        return $this->max_quantity > 0 && $this->quantity >= $this->max_quantity;
+    }
 
     /**
      * Regras de validação para o modelo ProductInventory.
@@ -140,7 +167,7 @@ class ProductInventory extends Model
      */
     public function scopeLowStock($query)
     {
-        return $query->whereRaw('quantity <= min_quantity');
+        return $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
     }
 
     /**
@@ -155,22 +182,6 @@ class ProductInventory extends Model
     }
 
     // ==================== MÉTODOS DE NEGÓCIO ====================
-
-    /**
-     * Verifica se o produto está com estoque baixo.
-     */
-    public function isLowStock(): bool
-    {
-        return $this->quantity <= $this->min_quantity;
-    }
-
-    /**
-     * Verifica se o produto está com estoque alto.
-     */
-    public function isHighStock(): bool
-    {
-        return $this->max_quantity && $this->quantity >= $this->max_quantity;
-    }
 
     /**
      * Verifica se o produto está dentro da faixa ideal de estoque.

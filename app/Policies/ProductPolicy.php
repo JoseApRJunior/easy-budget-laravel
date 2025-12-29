@@ -75,7 +75,7 @@ class ProductPolicy
             return false;
         }
 
-        return $user->hasPermission('manage-inventory');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-inventory');
     }
 
     /**
@@ -83,7 +83,7 @@ class ProductPolicy
      */
     public function viewReports(User $user): bool
     {
-        return $user->hasPermission('manage-inventory') || $user->hasPermission('view-inventory-reports');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-inventory') || $user->hasPermission('view-inventory-reports');
     }
 
     /**
@@ -91,7 +91,7 @@ class ProductPolicy
      */
     public function viewMovements(User $user): bool
     {
-        return $user->hasPermission('manage-inventory') || $user->hasPermission('view-inventory');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-inventory') || $user->hasPermission('view-inventory');
     }
 
     /**
@@ -99,6 +99,6 @@ class ProductPolicy
      */
     public function manageAlerts(User $user): bool
     {
-        return $user->hasPermission('manage-inventory') || $user->hasPermission('view-inventory-alerts');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-inventory') || $user->hasPermission('view-inventory-alerts');
     }
 }

@@ -131,7 +131,7 @@ return [
 
     'cookie' => env(
         'SESSION_COOKIE',
-        Str::slug(env('APP_NAME', 'laravel')).'-session-'.md5(env('APP_KEY'))
+        Str::slug(env('APP_NAME', 'laravel')).'-session-'.md5((string) env('APP_KEY'))
     ),
 
     /*

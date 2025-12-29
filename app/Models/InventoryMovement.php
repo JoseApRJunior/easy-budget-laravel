@@ -50,6 +50,7 @@ class InventoryMovement extends Model
         'reason',
         'reference_id',
         'reference_type',
+        'user_id',
     ];
 
     /**
@@ -98,10 +99,10 @@ class InventoryMovement extends Model
     }
 
     /**
-     * Get the user that created the InventoryMovement.
+     * Get the user who performed the movement.
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class);
+        return $this->belongsTo(User::class);
     }
 }
