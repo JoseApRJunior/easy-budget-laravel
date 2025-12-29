@@ -10,7 +10,7 @@
 <div class="container-fluid py-1">
     <x-page-header
         title="Inventário"
-        icon="boxes"
+        icon="archive"
         :breadcrumb-items="[
             'Inventário' => route('provider.inventory.dashboard'),
             'Listar' => '#'
@@ -19,88 +19,88 @@
     </x-page-header>
 
     <!-- Resumo de Inventário -->
-    <div class="row g-3 mb-4">
+    @if($hasResults)
+    <div class="row mb-4">
         <div class="col-12 col-sm-6 col-md-4 col-xl">
             <div class="card h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-primary text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total</h6>
                     </div>
-                    <h3 class="mb-1 fw-bold">{{ $hasResults ? number_format($stats['total_items'] ?? 0, 0, ',', '.') : '-' }}</h3>
-                    <p class="text-muted small mb-0">
-                        {{ $hasResults ? 'Produtos' : 'Busque' }}
-                    </p>
+                    <h5 class="mb-0 fw-bold">{{ number_format($stats['total_items'] ?? 0, 0, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-xl">
             <div class="card h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-success text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total</h6>
                     </div>
-                    <h3 class="mb-1 fw-bold text-success">{{ $hasResults ? 'R$ ' . number_format($stats['total_inventory_value'] ?? 0, 2, ',', '.') : '-' }}</h3>
-                    <p class="text-muted small mb-0">
-                        {{ $hasResults ? 'Valor em estoque' : 'Busque' }}
-                    </p>
+                    <h5 class="mb-0 fw-bold text-success">R$ {{ number_format($stats['total_inventory_value'] ?? 0, 2, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-xl">
             <div class="card h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-check-circle text-white" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-success text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-check-circle" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
                     </div>
-                    <h3 class="mb-1 fw-bold text-success">{{ $hasResults ? number_format($stats['sufficient_stock_items_count'] ?? 0, 0, ',', '.') : '-' }}</h3>
-                    <p class="text-muted small mb-0">
-                        {{ $hasResults ? 'Itens regulares' : 'Busque' }}
-                    </p>
+                    <h5 class="mb-0 fw-bold">{{ number_format($stats['sufficient_stock_items_count'] ?? 0, 0, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-xl">
             <div class="card h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-warning text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Baixo</h6>
                     </div>
-                    <h3 class="mb-1 fw-bold text-warning">{{ $hasResults ? number_format($stats['low_stock_items_count'] ?? 0, 0, ',', '.') : '-' }}</h3>
-                    <p class="text-muted small mb-0">
-                        {{ $hasResults ? 'Abaixo do mín.' : 'Busque' }}
-                    </p>
+                    <h5 class="mb-0 fw-bold">{{ number_format($stats['low_stock_items_count'] ?? 0, 0, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-md-4 col-xl">
             <div class="card h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-x-circle text-white" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-danger text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-x-circle" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
                     </div>
-                    <h3 class="mb-1 fw-bold text-danger">{{ $hasResults ? number_format($stats['out_of_stock_items_count'] ?? 0, 0, ',', '.') : '-' }}</h3>
-                    <p class="text-muted small mb-0">
-                        {{ $hasResults ? 'Esgotados' : 'Busque' }}
-                    </p>
+                    <h5 class="mb-0 fw-bold">{{ number_format($stats['out_of_stock_items_count'] ?? 0, 0, ',', '.') }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-info text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-percent" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Taxa Uso</h6>
+                    </div>
+                    <h5 class="mb-0 fw-bold">{{ number_format($stats['usage_rate'] ?? 0, 1, ',', '.') }}%</h5>
                 </div>
             </div>
         </div>
     </div>
+    @endif
 
     <div class="row">
         <div class="col-12">
@@ -114,16 +114,16 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="search">Buscar</label>
+                                    <label for="search">Buscar Produto</label>
                                     <input type="text" class="form-control" id="search" name="search"
-                                        value="{{ request('search') }}" placeholder="Nome ou SKU do produto">
+                                        value="{{ request('search') }}" placeholder="Nome ou SKU">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="category">Categoria</label>
                                     <select name="category" id="category" class="form-select tom-select">
-                                        <option value="">Todas as Categorias</option>
+                                        <option value="">Todas</option>
                                         @foreach($categories as $category)
                                             @if($category->parent_id === null)
                                                 @if($category->children->isEmpty())
@@ -147,11 +147,11 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <label for="status">Status</label>
                                     <select name="status" id="status" class="form-select tom-select">
-                                        <option value="">Todos os Status</option>
+                                        <option value="">Todos</option>
                                         <option value="sufficient" {{ request('status') == 'sufficient' ? 'selected' : '' }}>Estoque OK</option>
                                         <option value="low" {{ request('status') == 'low' ? 'selected' : '' }}>Estoque Baixo</option>
                                         <option value="out" {{ request('status') == 'out' ? 'selected' : '' }}>Sem Estoque</option>
@@ -159,9 +159,11 @@
                                 </div>
                             </div>
                             <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <x-button type="submit" icon="search" label="Filtrar" variant="primary" />
-                                    <x-button type="link" :href="route('provider.inventory.index')" variant="secondary" icon="x" label="Limpar" />
+                                <div class="d-flex gap-2 flex-wrap justify-content-between align-items-center">
+                                    <div class="d-flex gap-2">
+                                        <x-button type="submit" variant="primary" icon="search" label="Buscar" id="btnFilterInventory" />
+                                        <x-button type="link" :href="route('provider.inventory.index')" variant="secondary" icon="x-circle" label="Limpar" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -181,12 +183,17 @@
                                     <span class="d-sm-none">Inventário</span>
                                 </span>
                                 <span class="text-muted" style="font-size: 0.875rem;">
+                                    @if ($inventories instanceof \Illuminate\Pagination\LengthAwarePaginator)
                                     ({{ $inventories->total() }})
+                                    @else
+                                    ({{ count($inventories) }})
+                                    @endif
                                 </span>
                             </h5>
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                                <x-button type="link" :href="route('provider.inventory.movements')" variant="outline-primary" size="sm" icon="clock-history" label="Histórico" />
                                 <div class="dropdown">
                                     <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
@@ -210,17 +217,17 @@
                 </div>
                 <div class="card-body p-0">
                     <!-- Desktop View -->
-                    <div class="desktop-view">
+                    <div class="desktop-view d-none d-lg-block">
                         <div class="table-responsive">
-                            <table class="table modern-table mb-0">
-                                <thead>
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light text-muted small text-uppercase">
                                     <tr>
-                                        <th>Produto</th>
+                                        <th class="ps-4">Produto</th>
                                         <th class="text-center">Estoque</th>
                                         <th class="text-center">Disponível</th>
                                         <th class="text-end">Valor Total</th>
                                         <th class="text-center">Status</th>
-                                        <th class="text-center">Ações</th>
+                                        <th class="text-center pe-4" style="width: 220px;">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -228,20 +235,20 @@
                                         @php
                                             $product = $inventory->product;
                                             $currentQuantity = $inventory->quantity;
+                                            $availableQuantity = $inventory->available_quantity;
                                             $minQuantity = $inventory->min_quantity;
                                             $unitValue = $product->price;
                                             $totalValue = $currentQuantity * $unitValue;
 
                                             // Status seguindo o padrão de produtos (badge-active, badge-inactive, badge-deleted)
-                                            $statusClass = $currentQuantity <= 0 ? 'badge-inactive' : ($currentQuantity <= $minQuantity ? 'badge-deleted' : 'badge-active');
-                                            $statusLabel = $currentQuantity <= 0 ? 'Sem Estoque' : ($currentQuantity <= $minQuantity ? 'Estoque Baixo' : 'Estoque OK');
+                                            // Usando quantidade disponível para bater com os filtros do repositório
+                                            $statusClass = $availableQuantity <= 0 ? 'badge-inactive' : ($availableQuantity <= $minQuantity ? 'badge-deleted' : 'badge-active');
+                                            $statusLabel = $availableQuantity <= 0 ? 'Sem Estoque' : ($availableQuantity <= $minQuantity ? 'Estoque Baixo' : 'Estoque OK');
                                         @endphp
                                         <tr>
-                                            <td>
+                                            <td class="ps-4">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-light rounded p-2 me-2 d-none d-lg-block">
-                                                        <i class="bi bi-box text-secondary"></i>
-                                                    </div>
+                                                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="rounded me-3 shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
                                                     <div>
                                                         <div class="fw-bold text-dark">{{ $product->name }}</div>
                                                         <div class="d-flex align-items-center gap-2">
@@ -274,20 +281,19 @@
                                                     {{ $statusLabel }}
                                                 </span>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="text-center pe-4">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Ver Detalhes" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="plus-lg" title="Entrada de Estoque" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="dash-lg" title="Saída de Estoque" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" title="Ajustar Estoque" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.movements', ['product_id' => $product->id])" variant="primary" icon="clock-history" title="Ver Histórico" size="sm" />
+                                                    <x-button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
+                                                    <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" title="Entrada" size="sm" />
+                                                    <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" title="Saída" size="sm" />
+                                                    <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center py-5 text-muted">
-                                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
                                                 @if($hasResults)
                                                     Nenhum item de inventário encontrado para os filtros aplicados.
                                                 @else
@@ -302,61 +308,65 @@
                     </div>
 
                     <!-- Mobile View -->
-                    <div class="mobile-view">
+                    <div class="mobile-view d-lg-none">
                         <div class="list-group list-group-flush">
                             @forelse($inventories as $inventory)
                                 @php
                                     $product = $inventory->product;
                                     $currentQuantity = $inventory->quantity;
+                                    $availableQuantity = $inventory->available_quantity;
                                     $minQuantity = $inventory->min_quantity;
 
                                     // Status seguindo o padrão de produtos (badge-active, badge-inactive, badge-deleted)
-                                    $statusClass = $currentQuantity <= 0 ? 'badge-inactive' : ($currentQuantity <= $minQuantity ? 'badge-deleted' : 'badge-active');
-                                    $statusLabel = $currentQuantity <= 0 ? 'Sem Estoque' : ($currentQuantity <= $minQuantity ? 'Estoque Baixo' : 'Estoque OK');
+                                    // Usando quantidade disponível para bater com os filtros do repositório
+                                    $statusClass = $availableQuantity <= 0 ? 'badge-inactive' : ($availableQuantity <= $minQuantity ? 'badge-deleted' : 'badge-active');
+                                    $statusLabel = $availableQuantity <= 0 ? 'Sem Estoque' : ($availableQuantity <= $minQuantity ? 'Estoque Baixo' : 'Estoque OK');
                                 @endphp
                                 <div class="list-group-item py-3">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <div class="fw-bold text-dark">{{ $product->name }}</div>
-                                            <small class="text-muted text-code">{{ $product->sku }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="rounded me-2 shadow-sm" style="width: 35px; height: 35px; object-fit: cover;">
+                                            <div>
+                                                <div class="fw-bold text-dark small">{{ $product->name }}</div>
+                                                <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $product->sku }}</small>
+                                            </div>
                                         </div>
-                                        <span class="modern-badge {{ $statusClass }}" style="font-size: 0.7rem;">
+                                        <span class="modern-badge {{ $statusClass }}" style="font-size: 0.65rem;">
                                             {{ $statusLabel }}
                                         </span>
                                     </div>
 
-                                    <div class="row g-2 mb-3">
+                                    <div class="row g-2 mb-3 bg-light rounded p-2 mx-0">
                                         <div class="col-4 text-center">
-                                            <small class="text-muted d-block small text-uppercase">Total</small>
-                                            <span class="fw-bold">{{ number_format($currentQuantity, 0, ',', '.') }}</span>
+                                            <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Total</small>
+                                            <span class="fw-bold small">{{ number_format($currentQuantity, 0, ',', '.') }}</span>
+                                        </div>
+                                        <div class="col-4 text-center border-start border-end">
+                                            <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Reserv.</small>
+                                            <span class="text-info small">{{ number_format($inventory->reserved_quantity, 0, ',', '.') }}</span>
                                         </div>
                                         <div class="col-4 text-center">
-                                            <small class="text-muted d-block small text-uppercase">Reserv.</small>
-                                            <span class="text-info">{{ number_format($inventory->reserved_quantity, 0, ',', '.') }}</span>
-                                        </div>
-                                        <div class="col-4 text-center">
-                                            <small class="text-muted d-block small text-uppercase">Dispon.</small>
-                                            <span class="fw-bold text-primary">{{ number_format($inventory->available_quantity, 0, ',', '.') }}</span>
+                                            <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Dispon.</small>
+                                            <span class="fw-bold text-primary small">{{ number_format($inventory->available_quantity, 0, ',', '.') }}</span>
                                         </div>
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <small class="text-muted d-block small text-uppercase">Valor Total</small>
-                                            <span class="fw-bold">R$ {{ number_format($currentQuantity * $product->price, 2, ',', '.') }}</span>
+                                            <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Valor Total</small>
+                                            <span class="fw-bold small">R$ {{ number_format($currentQuantity * $product->price, 2, ',', '.') }}</span>
                                         </div>
                                         <div class="action-btn-group d-flex gap-1">
-                                               <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" size="sm" title="Ver" />
-                                               <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="plus-lg" size="sm" title="Entrada" />
-                                               <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="dash-lg" size="sm" title="Saída" />
+                                               <x-button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" size="sm" title="Ver Inventário" />
+                                               <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" size="sm" title="Entrada" />
+                                               <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" size="sm" title="Saída" />
                                                <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
-                                               <x-button type="link" :href="route('provider.inventory.movements', ['product_id' => $product->id])" variant="primary" icon="clock-history" size="sm" title="Histórico" />
                                            </div>
                                     </div>
                                 </div>
                             @empty
                                 <div class="p-4 text-center text-muted">
-                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                    <i class="bi bi-inbox mb-2 opacity-25" style="font-size: 2rem;"></i>
                                     <br>
                                     @if($hasResults)
                                         Nenhum item encontrado para os filtros aplicados.

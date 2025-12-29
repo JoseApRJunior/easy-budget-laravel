@@ -40,6 +40,7 @@ class InventoryManagementService extends AbstractBaseService
 
             return [
                 'totalProducts' => $stats['total_items'],
+                'sufficientStockProducts' => $stats['sufficient_stock_items_count'],
                 'lowStockProducts' => $stats['low_stock_items_count'],
                 'highStockProducts' => $stats['high_stock_items_count'],
                 'outOfStockProducts' => $stats['out_of_stock_items_count'],
@@ -60,10 +61,11 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             return [
-                'inventories' => new LengthAwarePaginator([], 0, 15),
+                'inventories' => new LengthAwarePaginator([], 0, 10),
                 'stats' => [
                     'total_items' => 0,
                     'total_inventory_value' => 0,
+                    'sufficient_stock_items_count' => 0,
                     'low_stock_items_count' => 0,
                     'out_of_stock_items_count' => 0,
                 ],
@@ -102,6 +104,32 @@ class InventoryManagementService extends AbstractBaseService
     }
 
     /**
+     * Obtém dados para a listagem de movimentações com estado inicial vazio.
+     */
+    public function getEmptyMovementsData(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            return [
+                'movements' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
+                'products' => \App\Models\Product::all(),
+                'summary' => [
+                    'total_entries' => 0,
+                    'count_entries' => 0,
+                    'total_exits' => 0,
+                    'count_exits' => 0,
+                    'total_adjustments' => 0,
+                    'count_adjustments' => 0,
+                    'total_reservations' => 0,
+                    'count_reservations' => 0,
+                    'total_cancellations' => 0,
+                    'count_cancellations' => 0,
+                    'balance' => 0,
+                ],
+            ];
+        });
+    }
+
+    /**
      * Obtém dados de movimentações de inventário.
      */
     public function getMovementsData(array $filters = []): ServiceResult
@@ -109,26 +137,11 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($filters) {
             $query = \App\Models\InventoryMovement::with(['product', 'user']);
 
-            $hasFilters = ! empty($filters['product_id']) ||
-                          ! empty($filters['search']) ||
-                          ! empty($filters['sku']) ||
-                          ! empty($filters['type']) ||
-                          ! empty($filters['start_date']) ||
-                          ! empty($filters['end_date']);
-
-            if (! $hasFilters) {
-                return [
-                    'movements' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $filters['per_page'] ?? 10),
-                    'products' => \App\Models\Product::all(),
-                    'summary' => [
-                        'total_entries' => 0, 'count_entries' => 0,
-                        'total_exits' => 0, 'count_exits' => 0,
-                        'total_adjustments' => 0, 'count_adjustments' => 0,
-                        'total_reservations' => 0, 'count_reservations' => 0,
-                        'total_cancellations' => 0, 'count_cancellations' => 0,
-                        'balance' => 0,
-                    ],
-                ];
+            // Validação de datas
+            if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
+                if ($filters['start_date'] > $filters['end_date']) {
+                    throw new Exception('A data inicial não pode ser maior que a data final.');
+                }
             }
 
             if (! empty($filters['product_id'])) {
@@ -146,7 +159,7 @@ class InventoryManagementService extends AbstractBaseService
                 }
             }
 
-            if (! empty($filters['type'])) {
+            if (! empty($filters['type']) && $filters['type'] !== 'all') {
                 $query->where('type', $filters['type']);
             }
 
@@ -192,14 +205,42 @@ class InventoryManagementService extends AbstractBaseService
     }
 
     /**
+     * Obtém detalhes de uma movimentação específica.
+     */
+    public function getMovementDetails(int $id): ServiceResult
+    {
+        return $this->safeExecute(function () use ($id) {
+            $movement = \App\Models\InventoryMovement::with(['product.inventory', 'user'])->find($id);
+
+            if (!$movement) {
+                throw new Exception("Movimentação #{$id} não encontrada.");
+            }
+
+            return [
+                'movement' => $movement,
+                'product' => $movement->product,
+                'user' => $movement->user,
+            ];
+        });
+    }
+
+    /**
      * Obtém dados de giro de estoque.
      */
     public function getStockTurnoverData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $startDate = $filters['start_date'] ?? now()->subMonths(1)->format('Y-m-d');
+            // Validação de datas
+            if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
+                if ($filters['start_date'] > $filters['end_date']) {
+                    throw new Exception('A data inicial não pode ser maior que a data final.');
+                }
+            }
+
+            $startDate = $filters['start_date'] ?? now()->startOfMonth()->format('Y-m-d');
             $endDate = $filters['end_date'] ?? now()->format('Y-m-d');
             $categoryId = $filters['category_id'] ?? null;
+            $search = $filters['search'] ?? null;
 
             $query = \App\Models\Product::query()
                 ->select('products.*')
@@ -208,6 +249,13 @@ class InventoryManagementService extends AbstractBaseService
 
             if ($categoryId) {
                 $query->where('category_id', $categoryId);
+            }
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
             }
 
             $products = $query->get()->map(function ($product) use ($startDate, $endDate) {
@@ -239,13 +287,33 @@ class InventoryManagementService extends AbstractBaseService
             });
             $averageTurnover = $totalProducts > 0 ? $totalTurnover / $totalProducts : 0;
 
+            $paginatedProducts = $query->paginate($filters['per_page'] ?? 10);
+            $paginatedProducts->getCollection()->transform(function ($product) use ($startDate, $endDate) {
+                $movements = \App\Models\InventoryMovement::where('product_id', $product->id)
+                    ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+                $totalEntries = (clone $movements)->where('type', 'entry')->sum('quantity');
+                $totalExits = (clone $movements)->where('type', 'exit')->sum('quantity');
+
+                $currentStock = $product->inventory->quantity ?? 0;
+                $initialStock = $currentStock - $totalEntries + $totalExits;
+                $averageStock = ($initialStock + $currentStock) / 2;
+
+                $product->total_entries = $totalEntries;
+                $product->total_exits = $totalExits;
+                $product->average_stock = $averageStock > 0 ? $averageStock : 1;
+
+                return $product;
+            });
+
             return [
-                'stockTurnover' => $query->paginate($filters['per_page'] ?? 15),
+                'stockTurnover' => $paginatedProducts,
                 'categories' => \App\Models\Category::all(),
                 'filters' => [
                     'start_date' => $startDate,
                     'end_date' => $endDate,
                     'category_id' => $categoryId,
+                    'search' => $search,
                 ],
                 'reportData' => [
                     'total_products' => $totalProducts,
@@ -263,6 +331,13 @@ class InventoryManagementService extends AbstractBaseService
     public function getMostUsedProductsData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
+            // Validação de datas
+            if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
+                if ($filters['start_date'] > $filters['end_date']) {
+                    throw new Exception('A data inicial não pode ser maior que a data final.');
+                }
+            }
+
             $startDate = $filters['start_date'] ?? now()->subMonths(1)->format('Y-m-d');
             $endDate = $filters['end_date'] ?? now()->format('Y-m-d');
 
@@ -312,8 +387,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             return [
-                'lowStockProducts' => $this->inventoryRepository->getPaginated(['low_stock' => true], 15),
-                'highStockProducts' => $this->inventoryRepository->getPaginated(['high_stock' => true], 15),
+                'lowStockProducts' => $this->inventoryRepository->getPaginated(['low_stock' => true], 10),
+                'highStockProducts' => $this->inventoryRepository->getPaginated(['high_stock' => true], 10),
             ];
         });
     }
@@ -339,23 +414,29 @@ class InventoryManagementService extends AbstractBaseService
     public function getReportData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            $type = $filters['type'] ?? 'summary';
+            // Validação de datas
+            if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
+                if ($filters['start_date'] > $filters['end_date']) {
+                    throw new Exception('A data inicial não pode ser maior que a data final.');
+                }
+            }
+
+            $reportType = $filters['report_type'] ?? $filters['type'] ?? 'summary';
             $startDate = $filters['start_date'] ?? null;
             $endDate = $filters['end_date'] ?? null;
 
             $reportData = [];
 
-            switch ($type) {
+            switch ($reportType) {
                 case 'summary':
-                    $reportData = $this->inventoryRepository->getPaginated([], 1000)->map(function ($inventory) {
+                    $reportData = $this->inventoryRepository->getPaginated($filters, 1000)->map(function ($inventory) {
                         return [
                             'sku' => $inventory->product->sku,
                             'produto' => $inventory->product->name,
                             'categoria' => $inventory->product->category->name ?? 'N/A',
-                            'estoque' => $inventory->quantity,
-                            'reservado' => $inventory->reserved_quantity,
-                            'disponível' => $inventory->available_quantity,
+                            'quantidade' => $inventory->quantity,
                             'estoque_min' => $inventory->min_quantity,
+                            'estoque_max' => $inventory->max_quantity ?? '-',
                             'status' => ($inventory->quantity - $inventory->reserved_quantity) <= $inventory->min_quantity ? 'Baixo' : ($inventory->quantity >= $inventory->max_quantity && $inventory->max_quantity > 0 ? 'Alto' : 'Normal'),
                         ];
                     })->toArray();
@@ -375,7 +456,14 @@ class InventoryManagementService extends AbstractBaseService
                             'data' => $m->created_at->format('d/m/Y H:i'),
                             'sku' => $m->product->sku,
                             'produto' => $m->product->name,
-                            'tipo' => $m->type === 'entry' ? 'Entrada' : ($m->type === 'exit' ? 'Saída' : 'Ajuste'),
+                            'tipo' => match ($m->type) {
+                                'entry' => 'Entrada',
+                                'exit' => 'Saída',
+                                'adjustment' => 'Ajuste',
+                                'reservation' => 'Reserva',
+                                'cancellation' => 'Cancel.',
+                                default => ucfirst($m->type)
+                            },
                             'quantidade' => $m->quantity,
                             'usuario' => $m->user->name ?? 'N/A',
                             'motivo' => $m->reason ?? '-',
@@ -384,7 +472,7 @@ class InventoryManagementService extends AbstractBaseService
                     break;
 
                 case 'valuation':
-                    $reportData = $this->inventoryRepository->getPaginated([], 1000)->map(function ($inventory) {
+                    $reportData = $this->inventoryRepository->getPaginated($filters, 1000)->map(function ($inventory) {
                         $price = $inventory->product->price ?? 0;
 
                         return [
@@ -397,26 +485,26 @@ class InventoryManagementService extends AbstractBaseService
                     })->toArray();
                     break;
 
+                case 'low_stock':
                 case 'low-stock':
-                    $reportData = $this->inventoryRepository->getPaginated(['low_stock' => true], 1000)->map(function ($inventory) {
+                    $filters['low_stock'] = true;
+                    $reportData = $this->inventoryRepository->getPaginated($filters, 1000)->map(function ($inventory) {
+                        $diff = $inventory->min_quantity - ($inventory->quantity - $inventory->reserved_quantity);
+
                         return [
                             'sku' => $inventory->product->sku,
                             'produto' => $inventory->product->name,
-                            'estoque' => $inventory->quantity,
-                            'reservado' => $inventory->reserved_quantity,
-                            'disponível' => $inventory->available_quantity,
+                            'quantidade_atual' => $inventory->quantity,
                             'estoque_mínimo' => $inventory->min_quantity,
-                            'necessidade' => max(0, $inventory->min_quantity - ($inventory->quantity - $inventory->reserved_quantity)),
+                            'necessidade' => max(0, $diff),
                         ];
                     })->toArray();
                     break;
             }
 
             return [
-                'type' => $type,
-                'startDate' => $startDate,
-                'endDate' => $endDate,
                 'reportData' => $reportData,
+                'filters' => $filters,
             ];
         });
     }

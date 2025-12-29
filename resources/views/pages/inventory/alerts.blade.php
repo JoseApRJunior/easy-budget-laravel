@@ -5,19 +5,15 @@
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
-    <div class="mb-4">
-        <h3 class="mb-2">
-            <i class="bi bi-bell me-2"></i>
-            Alertas de Estoque
-        </h3>
+    <x-page-header
+        title="Alertas de Estoque"
+        icon="bell"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Alertas' => '#'
+        ]">
         <p class="text-muted mb-3">Produtos com estoque baixo ou alto que requerem atenção</p>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Alertas</li>
-            </ol>
-        </nav>
-    </div>
+    </x-page-header>
 
     <!-- Resumo dos Alertas -->
     <div class="row">
@@ -349,7 +345,7 @@
                                 <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="btn btn-warning">
                                     <i class="fas fa-list"></i> Ver Todos os Produtos com Baixo Estoque
                                 </a>
-                                <button class="btn btn-success" onclick="alert('Funcionalidade de geração de pedido de compra em desenvolvimento')">
+                                <button class="btn btn-success" onclick="window.easyAlert ? easyAlert.info('Funcionalidade de geração de pedido de compra em desenvolvimento') : alert('Funcionalidade de geração de pedido de compra em desenvolvimento')">
                                     <i class="fas fa-shopping-cart"></i> Gerar Pedido de Compra
                                 </button>
                             </div>
@@ -360,7 +356,7 @@
                                 <a href="{{ route('provider.inventory.index', ['status' => 'high']) }}" class="btn btn-info">
                                     <i class="fas fa-list"></i> Ver Todos os Produtos com Alto Estoque
                                 </a>
-                                <button class="btn btn-warning" onclick="alert('Funcionalidade de promoção de vendas em desenvolvimento')">
+                                <button class="btn btn-warning" onclick="window.easyAlert ? easyAlert.info('Funcionalidade de promoção de vendas em desenvolvimento') : alert('Funcionalidade de promoção de vendas em desenvolvimento')">
                                     <i class="fas fa-tag"></i> Criar Promoção de Vendas
                                 </button>
                             </div>

@@ -4,18 +4,15 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Ajustar Estoque</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.index') }}">Produtos</a></li>
-                    <li class="breadcrumb-item active">Ajustar Estoque</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+    <x-page-header
+        title="Ajustar Estoque"
+        icon="plus-slash-minus"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Produtos' => route('provider.inventory.index'),
+            'Ajustar Estoque' => '#'
+        ]">
+    </x-page-header>
 
     <div class="row">
         <div class="col-md-8">
@@ -241,7 +238,11 @@ $(document).ready(function() {
         var currentStock = {{ $inventory->quantity ?? 0 }};
         
         if (adjustmentType === 'subtraction' && quantity > currentStock) {
-            alert('Atenção: A quantidade a remover é maior que o estoque atual!');
+            if (window.easyAlert) {
+                window.easyAlert.warning('Atenção: A quantidade a remover é maior que o estoque atual!');
+            } else {
+                alert('Atenção: A quantidade a remover é maior que o estoque atual!');
+            }
         }
     });
 

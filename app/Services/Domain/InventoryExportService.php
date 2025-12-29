@@ -6,12 +6,12 @@ namespace App\Services\Domain;
 
 use App\Services\Domain\Abstracts\AbstractExportService;
 use Illuminate\Support\Collection;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InventoryExportService extends AbstractExportService
 {
     private string $exportType = 'inventory';
+
     private array $customHeaders = [];
 
     public function setExportType(string $type, array $headers = []): void
@@ -22,22 +22,22 @@ class InventoryExportService extends AbstractExportService
 
     protected function getHeaders(): array
     {
-        if (!empty($this->customHeaders)) {
+        if (! empty($this->customHeaders)) {
             return $this->customHeaders;
         }
 
         return match ($this->exportType) {
-            'movements' => ['Data', 'SKU', 'Produto', 'Tipo', 'Quantidade', 'Usuário', 'Motivo'],
+            'movements', 'report_movements' => ['Data', 'SKU', 'Produto', 'Tipo', 'Quantidade', 'Usuário', 'Motivo'],
             'stock_turnover' => ['Produto', 'SKU', 'Categoria', 'Entradas', 'Saídas', 'Estoque Médio'],
             'most_used' => ['Produto', 'SKU', 'Categoria', 'Uso Total', 'Uso Médio Diário', 'Valor Total'],
             'report_summary' => ['SKU', 'Produto', 'Categoria', 'Qtd Atual', 'Mínimo', 'Máximo', 'Status'],
             'report_valuation' => ['SKU', 'Produto', 'Qtd Atual', 'Preço Unit.', 'Valor Total'],
             'report_low_stock' => ['SKU', 'Produto', 'Qtd Atual', 'Mínimo', 'Necessidade'],
-            default => ['Produto', 'SKU', 'Categoria', 'Qtd Atual', 'Qtd Mínima', 'Qtd Máxima'],
+            default => ['Produto', 'SKU', 'Categoria', 'Preço', 'Estoque', 'Situação', 'Data Criação'],
         };
     }
 
-    protected function mapData(object $item): array
+    protected function mapData(mixed $item): array
     {
         // Se o item for um array, converte para objeto para manter compatibilidade com mapData
         if (is_array($item)) {
@@ -45,14 +45,21 @@ class InventoryExportService extends AbstractExportService
         }
 
         return match ($this->exportType) {
-            'movements' => [
-                $item->data ?? '',
-                $item->sku ?? '',
-                $item->produto ?? '',
-                $item->tipo ?? '',
-                $item->quantidade ?? 0,
-                $item->usuario ?? '',
-                $item->motivo ?? '',
+            'movements', 'report_movements' => [
+                $item->data ?? (isset($item->created_at) ? $item->created_at->format('d/m/Y H:i') : ''),
+                $item->sku ?? $item->product->sku ?? '',
+                $item->produto ?? $item->product->name ?? '',
+                $item->tipo ?? match ($item->type ?? '') {
+                    'entry' => 'Entrada',
+                    'exit' => 'Saída',
+                    'adjustment' => 'Ajuste',
+                    'reservation' => 'Reserva',
+                    'cancellation' => 'Cancel.',
+                    default => ucfirst($item->type ?? '')
+                },
+                $item->quantidade ?? $item->quantity ?? 0,
+                $item->usuario ?? $item->user->name ?? 'N/A',
+                $item->motivo ?? $item->reason ?? '-',
             ],
             'stock_turnover' => [
                 $item->name ?? '',
@@ -60,15 +67,15 @@ class InventoryExportService extends AbstractExportService
                 $item->category->name ?? 'N/A',
                 $item->total_entries ?? 0,
                 $item->total_exits ?? 0,
-                number_format((float)($item->average_stock ?? 0), 2, ',', '.'),
+                number_format((float) ($item->average_stock ?? 0), 2, ',', '.'),
             ],
             'most_used' => [
                 $item->name ?? '',
                 $item->sku ?? '',
                 $item->category ?? 'N/A',
                 $item->total_usage ?? 0,
-                number_format((float)($item->average_usage ?? 0), 2, ',', '.'),
-                'R$ ' . number_format((float)($item->total_value ?? 0), 2, ',', '.'),
+                number_format((float) ($item->average_usage ?? 0), 2, ',', '.'),
+                'R$ '.number_format((float) ($item->total_value ?? 0), 2, ',', '.'),
             ],
             'report_summary' => [
                 $item->sku ?? '',
@@ -97,9 +104,10 @@ class InventoryExportService extends AbstractExportService
                 $item->product->name ?? '',
                 $item->product->sku ?? '',
                 $item->product->category->name ?? 'N/A',
-                $item->quantity ?? 0,
-                $item->min_quantity ?? 0,
-                $item->max_quantity ?? '-',
+                'R$ '.number_format((float) ($item->product->price ?? 0), 2, ',', '.'),
+                (string) ($item->quantity ?? 0),
+                ! is_null($item->product->deleted_at ?? null) ? 'Deletado' : (($item->product->active ?? true) ? 'Ativo' : 'Inativo'),
+                isset($item->product->created_at) ? $item->product->created_at->format('d/m/Y H:i:s') : '',
             ],
         };
     }
@@ -109,6 +117,7 @@ class InventoryExportService extends AbstractExportService
         if ($format === 'pdf') {
             return $this->exportToPdf($items, $fileName);
         }
+
         return $this->exportToExcel($items, $format, $fileName);
     }
 
@@ -120,9 +129,10 @@ class InventoryExportService extends AbstractExportService
     protected function getPdfData(Collection $items): array
     {
         return [
+            'company' => $this->getCompanyData(),
             'title' => $this->getExportTitle(),
             'headers' => $this->getHeaders(),
-            'items' => $items->map(fn($item) => $this->mapData($item))->toArray(),
+            'items' => $items->map(fn ($item) => $this->mapData($item))->toArray(),
             'generated_at' => now()->format('d/m/Y H:i'),
         ];
     }

@@ -193,15 +193,12 @@
                                 </small>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('provider.products.show', $movement->product->sku) }}"
-                                       class="btn btn-info btn-sm" title="Ver Produto">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('provider.inventory.adjust', $movement->product->sku) }}"
-                                       class="btn btn-secondary btn-sm" title="Ajustar Estoque">
-                                        <i class="bi bi-sliders"></i>
-                                    </a>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="primary" icon="chevron-right" title="Ver Detalhes da Movimentação" size="sm" />
+                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
+                                    <x-button type="link" :href="route('provider.inventory.entry', $movement->product->sku)" variant="success" icon="arrow-down-circle" title="Entrada" size="sm" />
+                                    <x-button type="link" :href="route('provider.inventory.exit', $movement->product->sku)" variant="warning" icon="arrow-up-circle" title="Saída" size="sm" />
+                                    <x-button type="link" :href="route('provider.inventory.adjust', $movement->product->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
                                 </div>
                             </td>
                         </tr>
@@ -221,25 +218,53 @@
                                 'entry' => 'success',
                                 'exit' => 'danger',
                                 'adjustment' => 'warning',
+                                'reservation' => 'info',
+                                'cancellation' => 'secondary',
                                 default => 'secondary'
                             };
+                            $typeLabel = match($movement->type) {
+                                'entry' => 'Entrada',
+                                'exit' => 'Saída',
+                                'adjustment' => 'Ajuste',
+                                'reservation' => 'Reserva',
+                                'cancellation' => 'Cancel.',
+                                default => ucfirst($movement->type)
+                            };
+                            $icon = match($movement->type) {
+                                'entry' => 'plus-circle',
+                                'exit' => 'dash-circle',
+                                'adjustment' => 'sliders',
+                                'reservation' => 'lock',
+                                'cancellation' => 'arrow-counterclockwise',
+                                default => 'dot'
+                            };
                         @endphp
-                        <span class="badge bg-{{ $badgeClass }}">{{ ucfirst($movement->type) }}</span>
+                        <span class="badge bg-{{ $badgeClass }}">
+                            <i class="bi bi-{{ $icon }} me-1"></i> {{ $typeLabel }}
+                        </span>
                     </div>
                     <h6 class="mb-1 fw-bold">{{ $movement->product->name }}</h6>
+                    @if($movement->reason)
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-chat-left-text me-1"></i> {{ $movement->reason }}
+                        </div>
+                    @endif
                     <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="fw-bold {{ $movement->type === 'entry' ? 'text-success' : ($movement->type === 'exit' ? 'text-danger' : '') }}">
-                            {{ $movement->type === 'entry' ? '+' : ($movement->type === 'exit' ? '-' : '') }}{{ number_format($movement->quantity, 0, ',', '.') }}
+                        <span class="fw-bold {{ $movement->type === 'entry' ? 'text-success' : ($movement->type === 'exit' || $movement->type === 'subtraction' ? 'text-danger' : '') }}">
+                            @if($movement->type === 'entry')
+                                +{{ number_format($movement->quantity, 0, ',', '.') }}
+                            @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
+                                -{{ number_format($movement->quantity, 0, ',', '.') }}
+                            @else
+                                {{ number_format($movement->quantity, 0, ',', '.') }}
+                            @endif
                         </span>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('provider.products.show', $movement->product->sku) }}"
-                               class="btn btn-info btn-sm" title="Ver Produto">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a href="{{ route('provider.inventory.adjust', $movement->product->sku) }}"
-                               class="btn btn-secondary btn-sm" title="Ajustar Estoque">
-                                <i class="bi bi-sliders"></i>
-                            </a>
+                        <div class="d-flex gap-1">
+                            <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="primary" icon="chevron-right" title="Ver Detalhes da Movimentação" size="sm" />
+                            <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
+                            <x-button type="link" :href="route('provider.inventory.entry', $movement->product->sku)" variant="success" icon="arrow-down-circle" title="Entrada" size="sm" />
+                            <x-button type="link" :href="route('provider.inventory.exit', $movement->product->sku)" variant="warning" icon="arrow-up-circle" title="Saída" size="sm" />
+                            <x-button type="link" :href="route('provider.inventory.adjust', $movement->product->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
                         </div>
                     </div>
                 </div>
@@ -249,9 +274,13 @@
             @else
             <div class="text-center py-5">
                 <i class="bi bi-search text-muted mb-3" style="font-size: 3rem;"></i>
-                <p class="text-muted">Utilize os filtros acima para pesquisar movimentações.</p>
-                @if(request()->anyFilled(['search', 'type', 'start_date', 'end_date']))
-                    <a href="{{ route('provider.inventory.movements') }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+                @if(empty(request()->query()))
+                    <p class="text-muted">Utilize os filtros acima para pesquisar as movimentações de estoque.</p>
+                @else
+                    <p class="text-muted">Nenhuma movimentação encontrada para os filtros selecionados.</p>
+                    @if(request()->anyFilled(['search', 'type', 'start_date', 'end_date', 'product_id', 'sku']))
+                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-outline-secondary btn-sm">Limpar Filtros</a>
+                    @endif
                 @endif
             </div>
             @endif
@@ -266,7 +295,52 @@
         @endif
     </div>
 </div>
+@endsection
 
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filtersFormMovements');
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+
+    form.addEventListener('submit', function(e) {
+            if (startDate.value && endDate.value) {
+                if (startDate.value > endDate.value) {
+                    e.preventDefault();
+                    if (window.easyAlert) {
+                        window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    startDate.focus();
+                }
+            }
+        });
+
+        startDate.addEventListener('change', function() {
+            if (this.value && endDate.value && this.value > endDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                this.value = '';
+            }
+        });
+
+        endDate.addEventListener('change', function() {
+            if (this.value && startDate.value && this.value < startDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
+                } else {
+                    alert('A data final não pode ser menor que a data inicial.');
+                }
+                this.value = '';
+            }
+        });
+});
+</script>
 @endsection
 
 @push('scripts')

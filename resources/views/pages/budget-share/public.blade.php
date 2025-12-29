@@ -322,14 +322,27 @@ function approveBudget() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Orçamento aprovado com sucesso!');
-                location.reload();
+                if (window.easyAlert) {
+                    window.easyAlert.success('Orçamento aprovado com sucesso!');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert('Orçamento aprovado com sucesso!');
+                    location.reload();
+                }
             } else {
-                alert('Erro ao aprovar orçamento: ' + data.message);
+                if (window.easyAlert) {
+                    window.easyAlert.error('Erro ao aprovar orçamento: ' + data.message);
+                } else {
+                    alert('Erro ao aprovar orçamento: ' + data.message);
+                }
             }
         })
         .catch(error => {
-            alert('Erro ao processar solicitação');
+            if (window.easyAlert) {
+                window.easyAlert.error('Erro ao processar solicitação');
+            } else {
+                alert('Erro ao processar solicitação');
+            }
         });
     }
 }
@@ -360,15 +373,27 @@ document.getElementById('commentForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Comentário enviado com sucesso!');
+            if (window.easyAlert) {
+                window.easyAlert.success('Comentário enviado com sucesso!');
+            } else {
+                alert('Comentário enviado com sucesso!');
+            }
             bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
             this.reset();
         } else {
-            alert('Erro ao enviar comentário: ' + data.message);
+            if (window.easyAlert) {
+                window.easyAlert.error('Erro ao enviar comentário: ' + data.message);
+            } else {
+                alert('Erro ao enviar comentário: ' + data.message);
+            }
         }
     })
     .catch(error => {
-        alert('Erro ao processar solicitação');
+        if (window.easyAlert) {
+            window.easyAlert.error('Erro ao processar solicitação');
+        } else {
+            alert('Erro ao processar solicitação');
+        }
     });
 });
 

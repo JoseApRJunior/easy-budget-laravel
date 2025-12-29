@@ -22,8 +22,9 @@ class CategoryExportService extends AbstractExportService
         return 'Relatório de Categorias';
     }
 
-    protected function mapData(object $category): array
+    protected function mapData(mixed $category): array
     {
+        /** @var object $category */
         $createdAt = $category->created_at ? $category->created_at->format('d/m/Y H:i:s') : '';
         $updatedAt = $category->updated_at ? $category->updated_at->format('d/m/Y H:i:s') : '';
         $categoryName = $category->parent_id && $category->parent ? $category->parent->name : $category->name;

@@ -21,7 +21,7 @@ abstract class AbstractExportService
     /**
      * Formata os dados de um item para uma linha do Excel/PDF.
      */
-    abstract protected function mapData(object $item): array;
+    abstract protected function mapData(mixed $item): array;
 
     /**
      * Exporta dados para Excel ou CSV.
@@ -43,7 +43,9 @@ abstract class AbstractExportService
 
         $this->applyExcelStyles($sheet, $row);
 
-        $fileNameWithExt = "{$fileName}.{$format}";
+        $cleanFileName = str_replace(['/', '\\', '.', ' '], '_', $fileName);
+        $fileNameWithExt = "{$cleanFileName}.{$format}";
+
         $contentType = $format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
         return \response()->streamDownload(function () use ($spreadsheet, $format) {
@@ -73,6 +75,8 @@ abstract class AbstractExportService
     public function exportToPdf(Collection $items, string $fileName = 'export', string $orientation = 'A4'): StreamedResponse
     {
         $html = $this->generateHtmlForPdf($items);
+        $cleanFileName = str_replace(['/', '\\', '.', ' '], '_', $fileName);
+        $fileNameWithExt = "{$cleanFileName}.pdf";
 
         return \response()->streamDownload(function () use ($html, $orientation) {
             $mpdf = new Mpdf([
@@ -85,7 +89,7 @@ abstract class AbstractExportService
             ]);
             $mpdf->WriteHTML($html);
             echo $mpdf->Output('', 'S');
-        }, "{$fileName}.pdf", [
+        }, $fileNameWithExt, [
             'Content-Type' => 'application/pdf',
         ]);
     }
@@ -99,11 +103,13 @@ abstract class AbstractExportService
         $viewName = $this->getPdfViewName();
 
         if ($viewName && view()->exists($viewName)) {
-            return view($viewName, array_merge($this->getPdfData($items), [
+            $pdfData = $this->getPdfData($items);
+
+            return view($viewName, array_merge([
                 'items' => $items,
                 'title' => $this->getExportTitle(),
                 'headers' => $this->getHeaders(),
-            ]))->render();
+            ], $pdfData))->render();
         }
 
         return $this->generateFallbackHtml($items);

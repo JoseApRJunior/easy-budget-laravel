@@ -275,7 +275,11 @@
                         // Validate quantity doesn't exceed original
                         if (currentQuantity > originalQuantity) {
                             this.value = originalQuantity;
-                            alert('A quantidade não pode exceder a quantidade original do orçamento');
+                            if (window.easyAlert) {
+                                window.easyAlert.warning('A quantidade não pode exceder a quantidade original do orçamento');
+                            } else {
+                                alert('A quantidade não pode exceder a quantidade original do orçamento');
+                            }
                         }
 
                         updateSelectedTotal();
@@ -295,13 +299,21 @@
 
                     if (totalSelected === 0) {
                         e.preventDefault();
-                        alert('Por favor, selecione pelo menos um item para faturar.');
+                        if (window.easyAlert) {
+                            window.easyAlert.error('Por favor, selecione pelo menos um item para faturar.');
+                        } else {
+                            alert('Por favor, selecione pelo menos um item para faturar.');
+                        }
                         return;
                     }
 
                     if (totalSelected > remainingBalance) {
                         e.preventDefault();
-                        alert('O total selecionado excede o saldo disponível do orçamento.');
+                        if (window.easyAlert) {
+                            window.easyAlert.error('O total selecionado excede o saldo disponível do orçamento.');
+                        } else {
+                            alert('O total selecionado excede o saldo disponível do orçamento.');
+                        }
                         return;
                     }
 

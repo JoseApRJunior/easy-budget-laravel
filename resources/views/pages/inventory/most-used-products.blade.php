@@ -4,17 +4,14 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Produtos Mais Usados</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
-                    <li class="breadcrumb-item active">Produtos Mais Usados</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+    <x-page-header
+        title="Produtos Mais Usados"
+        icon="star"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Produtos Mais Usados' => '#'
+        ]">
+    </x-page-header>
 
     <!-- Filtros -->
     <div class="row">

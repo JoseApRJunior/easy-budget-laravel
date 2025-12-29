@@ -100,7 +100,8 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['low_stock']) && $filters['low_stock']) {
-            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity')
+                ->whereRaw('(quantity - reserved_quantity) > 0');
         }
 
         if (isset($filters['out_of_stock']) && $filters['out_of_stock']) {
@@ -172,7 +173,8 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['low_stock']) && $filters['low_stock']) {
-            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity')
+                ->whereRaw('(quantity - reserved_quantity) > 0');
         }
 
         if (isset($filters['out_of_stock']) && $filters['out_of_stock']) {
@@ -295,7 +297,8 @@ class InventoryRepository extends AbstractTenantRepository
         }
 
         if (isset($filters['low_stock']) && $filters['low_stock']) {
-            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
+            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity')
+                ->whereRaw('(quantity - reserved_quantity) > 0');
         }
 
         if (isset($filters['out_of_stock']) && $filters['out_of_stock']) {
@@ -323,9 +326,9 @@ class InventoryRepository extends AbstractTenantRepository
         // Clonar para os diferentes contadores
         $total = (clone $query)->count();
         $lowStock = (clone $query)->whereRaw('(quantity - reserved_quantity) <= min_quantity')->whereRaw('(quantity - reserved_quantity) > 0')->count();
-        $highStock = (clone $query)->whereNotNull('max_quantity')->whereColumn('quantity', '>=', 'max_quantity')->count();
         $outOfStock = (clone $query)->whereRaw('(quantity - reserved_quantity) <= 0')->count();
         $sufficientStock = (clone $query)->whereRaw('(quantity - reserved_quantity) > min_quantity')->count();
+        $highStock = (clone $query)->whereNotNull('max_quantity')->whereColumn('quantity', '>=', 'max_quantity')->count();
         $totalReserved = (clone $query)->sum('reserved_quantity');
         $reservedItemsCount = (clone $query)->where('reserved_quantity', '>', 0)->count();
 

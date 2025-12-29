@@ -68,18 +68,47 @@ class InventoryController extends Controller
     public function movements(Request $request): View|RedirectResponse
     {
         $this->authorize('viewMovements', \App\Models\Product::class);
-        $result = $this->inventoryManagementService->getMovementsData($request->all());
+
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyMovementsData();
+        } else {
+            $result = $this->inventoryManagementService->getMovementsData($request->all());
+        }
+
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
 
         return view('pages.inventory.movements', (array) $result->getData());
     }
 
     /**
+     * Exibir detalhes de uma movimentação específica
+     */
+    public function movementShow(int $id): View|RedirectResponse
+    {
+        $this->authorize('viewMovements', \App\Models\Product::class);
+        $result = $this->inventoryManagementService->getMovementDetails($id);
+
+        if ($result->isError()) {
+            return redirect()->route('provider.inventory.movements')->with('error', $result->getMessage());
+        }
+
+        return view('pages.inventory.movements.show', (array) $result->getData());
+    }
+
+    /**
      * Giro de estoque
      */
-    public function stockTurnover(Request $request): View
+    public function stockTurnover(Request $request): View|RedirectResponse
     {
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
+
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
 
         return view('pages.inventory.stock-turnover', (array) $result->getData());
     }
@@ -87,10 +116,14 @@ class InventoryController extends Controller
     /**
      * Produtos mais usados
      */
-    public function mostUsedProducts(Request $request): View
+    public function mostUsedProducts(Request $request): View|RedirectResponse
     {
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
+
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
 
         return view('pages.inventory.most-used', (array) $result->getData());
     }
@@ -107,12 +140,35 @@ class InventoryController extends Controller
     }
 
     /**
+     * Exportar inventário do Index
+     */
+    public function exportIndex(Request $request)
+    {
+        $this->authorize('viewAny', Product::class);
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
+
+        $filterDto = InventoryFilterDTO::fromRequest($request->all());
+        $filterDto->perPage = 10000; // Pegar todos os registros para exportação
+
+        $result = $this->inventoryManagementService->getIndexData($filterDto);
+        $data = collect($result->getData()['inventories']->items());
+
+        $this->inventoryExportService->setExportType('inventory');
+
+        return $this->inventoryExportService->export($data, $format, 'inventario_geral');
+    }
+
+    /**
      * Relatório de inventário
      */
-    public function report(Request $request): View
+    public function report(Request $request): View|RedirectResponse
     {
         $this->authorize('viewReports', \App\Models\Product::class);
         $result = $this->inventoryManagementService->getReportData($request->all());
+
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
 
         return view('pages.inventory.report', (array) $result->getData());
     }
@@ -123,10 +179,22 @@ class InventoryController extends Controller
     public function export(Request $request)
     {
         $this->authorize('viewReports', \App\Models\Product::class);
-        $format = $request->input('type', 'xlsx');
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
         $reportType = $request->input('report_type', 'summary');
 
-        $result = $this->inventoryManagementService->getReportData($request->all());
+        // Se report_type for igual ao format (devido ao uso de 'type' em ambos), tenta buscar do request explicitamente
+        if ($reportType === $format && $request->has('report_type')) {
+            $reportType = $request->input('report_type');
+        } elseif ($reportType === $format) {
+            // Caso padrão se houver ambiguidade
+            $reportType = 'summary';
+        }
+
+        // Garantir que o report_type seja passado corretamente para o serviço
+        $filters = $request->all();
+        $filters['report_type'] = $reportType;
+
+        $result = $this->inventoryManagementService->getReportData($filters);
         $data = collect($result->getData()['reportData']);
 
         $this->inventoryExportService->setExportType('report_'.$reportType);
@@ -140,7 +208,7 @@ class InventoryController extends Controller
     public function exportMovements(Request $request)
     {
         $this->authorize('viewMovements', \App\Models\Product::class);
-        $format = $request->input('type', 'xlsx');
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
 
         $result = $this->inventoryManagementService->getMovementsData($request->all());
         // Pegar todos os registros sem paginação para exportação
@@ -160,7 +228,7 @@ class InventoryController extends Controller
     public function exportStockTurnover(Request $request)
     {
         $this->authorize('viewReports', \App\Models\Product::class);
-        $format = $request->input('type', 'xlsx');
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
 
         // Pegar todos os registros sem paginação para exportação
         $filters = $request->all();
@@ -179,7 +247,7 @@ class InventoryController extends Controller
     public function exportMostUsed(Request $request)
     {
         $this->authorize('viewReports', \App\Models\Product::class);
-        $format = $request->input('type', 'xlsx');
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
 
         $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
         $data = collect($result->getData()['products']);

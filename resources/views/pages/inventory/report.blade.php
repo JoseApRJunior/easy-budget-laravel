@@ -5,23 +5,15 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-clipboard-data me-2"></i>
-                    <span class="d-none d-sm-inline">Relatório de Inventário</span>
-                    <span class="d-sm-none">Inventário</span>
-                </h1>
-                <p class="text-muted mb-0">Resumo e detalhes conforme filtros aplicados</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.index') }}">Estoque</a></li>
-                    <li class="breadcrumb-item active">Relatório</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header
+            title="Relatório de Inventário"
+            icon="clipboard-data"
+            :breadcrumb-items="[
+                'Estoque' => route('provider.inventory.index'),
+                'Relatório' => '#'
+            ]">
+            <p class="text-muted mb-0">Resumo e detalhes conforme filtros aplicados</p>
+        </x-page-header>
 
         <!-- Card de Filtros -->
         <div class="card mb-4">
@@ -157,4 +149,50 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const form = startDate ? startDate.closest('form') : null;
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (startDate.value && endDate.value && startDate.value > endDate.value) {
+                e.preventDefault();
+                if (window.easyAlert) {
+                    window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                startDate.focus();
+            }
+        });
+
+        startDate.addEventListener('change', function() {
+            if (this.value && endDate.value && this.value > endDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                this.value = '';
+            }
+        });
+
+        endDate.addEventListener('change', function() {
+            if (this.value && startDate.value && this.value < startDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
+                } else {
+                    alert('A data final não pode ser menor que a data inicial.');
+                }
+                this.value = '';
+            }
+        });
+    }
+});
+</script>
 @endsection

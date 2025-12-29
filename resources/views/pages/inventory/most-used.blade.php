@@ -4,17 +4,14 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Produtos Mais Utilizados</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Produtos Mais Utilizados</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+    <x-page-header
+        title="Produtos Mais Utilizados"
+        icon="star"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Produtos Mais Utilizados' => '#'
+        ]">
+    </x-page-header>
 
     <!-- Filtros -->
     <div class="row">
@@ -284,4 +281,50 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const form = startDate ? startDate.closest('form') : null;
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (startDate.value && endDate.value && startDate.value > endDate.value) {
+                e.preventDefault();
+                if (window.easyAlert) {
+                    window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                startDate.focus();
+            }
+        });
+
+        startDate.addEventListener('change', function() {
+            if (this.value && endDate.value && this.value > endDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                this.value = '';
+            }
+        });
+
+        endDate.addEventListener('change', function() {
+            if (this.value && startDate.value && this.value < startDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
+                } else {
+                    alert('A data final não pode ser menor que a data inicial.');
+                }
+                this.value = '';
+            }
+        });
+    }
+});
+</script>
 @endsection

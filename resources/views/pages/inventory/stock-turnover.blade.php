@@ -5,13 +5,13 @@
 @section('content')
 <div class="container-fluid py-1">
     <x-page-header
-        title="Relatório de Giro de Estoque"
+        title="Giro de Estoque"
         icon="graph-up"
         :breadcrumb-items="[
-            'Inventário' => route('provider.inventory.dashboard'),
+            'Inventário' => route('provider.inventory.index'),
             'Giro de Estoque' => '#'
         ]">
-        <p class="text-muted mb-0">Análise de movimentação e giro de produtos</p>
+        <p class="text-muted small">Análise de movimentação e giro de produtos</p>
     </x-page-header>
 
     <!-- Filtros -->
@@ -38,9 +38,15 @@
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
+                                    <label for="search">Buscar Produto</label>
+                                    <input type="text" name="search" id="search" class="form-control" placeholder="Nome ou SKU..." value="{{ $filters['search'] ?? '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
                                     <label for="category_id">Categoria</label>
                                     <select name="category_id" id="category_id" class="form-select tom-select">
-                                        <option value="">Todas as Categorias</option>
+                                        <option value="">Todas</option>
                                         @foreach($categories as $category)
                                             <option value="{{ $category->id }}" {{ $filters['category_id'] == $category->id ? 'selected' : '' }}>
                                                 {{ $category->name }}
@@ -49,10 +55,12 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <div class="d-flex gap-2 flex-nowrap w-100">
-                                    <x-button type="submit" icon="search" label="Filtrar" class="w-100" />
-                                    <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x" label="Limpar" class="w-100" />
+                            <div class="col-12">
+                                <div class="d-flex gap-2 flex-wrap justify-content-between align-items-center">
+                                    <div class="d-flex gap-2">
+                                        <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
+                                        <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x-circle" label="Limpar" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -133,13 +141,29 @@
                     </h5>
                 </div>
                 <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
-                    <x-button type="link" :href="route('provider.inventory.export-stock-turnover', request()->all())" variant="success" icon="file-earmark-excel" label="Exportar Excel" size="sm" />
+                    <div class="dropdown">
+                        <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx'])) }}">
+                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf'])) }}">
+                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="card-body p-0">
             @if($stockTurnover->count() > 0)
-                <div class="table-responsive">
+                <div class="table-responsive d-none d-md-block">
                     <table class="table modern-table mb-0">
                         <thead>
                             <tr>
@@ -160,29 +184,35 @@
                                 @php
                                     $turnover = $item->average_stock > 0 ? $item->total_exits / $item->average_stock : 0;
                                     $classification = '';
+                                    $classificationFull = '';
                                     $classificationColor = '';
                                     
                                     if ($turnover >= 12) {
-                                        $classification = 'Muito Alto';
+                                        $classification = 'MA';
+                                        $classificationFull = 'Muito Alto';
                                         $classificationColor = 'success';
                                     } elseif ($turnover >= 6) {
-                                        $classification = 'Alto';
+                                        $classification = 'A';
+                                        $classificationFull = 'Alto';
                                         $classificationColor = 'info';
                                     } elseif ($turnover >= 3) {
-                                        $classification = 'Médio';
+                                        $classification = 'M';
+                                        $classificationFull = 'Médio';
                                         $classificationColor = 'warning';
                                     } elseif ($turnover >= 1) {
-                                        $classification = 'Baixo';
+                                        $classification = 'B';
+                                        $classificationFull = 'Baixo';
                                         $classificationColor = 'danger';
                                     } else {
-                                        $classification = 'Muito Baixo';
+                                        $classification = 'MB';
+                                        $classificationFull = 'Muito Baixo';
                                         $classificationColor = 'dark';
                                     }
                                 @endphp
                                 <tr>
                                     <td><span class="text-code">{{ $item->sku }}</span></td>
                                     <td>
-                                        <a href="{{ route('provider.products.show', $item->sku) }}" class="text-decoration-none fw-bold">
+                                        <a href="{{ route('provider.inventory.show', $item->sku) }}" class="text-decoration-none fw-bold">
                                             {{ $item->name }}
                                         </a>
                                     </td>
@@ -205,19 +235,15 @@
                                         {{ number_format($turnover, 2, ',', '.') }}
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-{{ $classificationColor }}">
+                                        <span class="badge bg-{{ $classificationColor }}" data-bs-toggle="tooltip" title="{{ $classificationFull }}">
                                             {{ $classification }}
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-light border dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                <i class="bi bi-three-dots"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item" href="{{ route('provider.inventory.movements', ['product_id' => $item->id]) }}"><i class="bi bi-list me-2"></i>Ver Movimentações</a></li>
-                                                <li><a class="dropdown-item" href="{{ route('provider.inventory.adjust', $item->sku) }}"><i class="bi bi-sliders me-2"></i>Ajustar Estoque</a></li>
-                                            </ul>
+                                        <div class="d-flex justify-content-center gap-1">
+                                            <x-button type="link" :href="route('provider.inventory.show', $item->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.movements', ['product_id' => $item->id])" variant="primary" icon="clock-history" title="Ver Movimentações" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
                                         </div>
                                     </td>
                                 </tr>
@@ -225,44 +251,133 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="p-3">
-                    {{ $stockTurnover->appends(request()->except('page'))->links() }}
+
+                <!-- Versão Mobile (Cards) -->
+                <div class="d-md-none">
+                    @foreach($stockTurnover as $item)
+                        @php
+                            $turnover = $item->average_stock > 0 ? $item->total_exits / $item->average_stock : 0;
+                            $classification = '';
+                            $classificationFull = '';
+                            $classificationColor = '';
+                            
+                            if ($turnover >= 12) {
+                                $classification = 'MA';
+                                $classificationFull = 'Muito Alto';
+                                $classificationColor = 'success';
+                            } elseif ($turnover >= 6) {
+                                $classification = 'A';
+                                $classificationFull = 'Alto';
+                                $classificationColor = 'info';
+                            } elseif ($turnover >= 3) {
+                                $classification = 'M';
+                                $classificationFull = 'Médio';
+                                $classificationColor = 'warning';
+                            } elseif ($turnover >= 1) {
+                                $classification = 'B';
+                                $classificationFull = 'Baixo';
+                                $classificationColor = 'danger';
+                            } else {
+                                $classification = 'MB';
+                                $classificationFull = 'Muito Baixo';
+                                $classificationColor = 'dark';
+                            }
+                        @endphp
+                        <div class="p-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ $item->name }}</h6>
+                                    <small class="text-muted">{{ $item->sku }} | {{ $item->category->name ?? 'N/A' }}</small>
+                                </div>
+                                <span class="badge bg-{{ $classificationColor }}" data-bs-toggle="tooltip" title="{{ $classificationFull }}">{{ $classification }}</span>
+                            </div>
+                            
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Estoque Atual</small>
+                                    <span class="fw-bold">{{ number_format($item->inventory->quantity ?? 0, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Giro</small>
+                                    <span class="fw-bold">{{ number_format($turnover, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block text-success">Entradas (+)</small>
+                                    <span class="text-success">{{ number_format($item->total_entries, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block text-danger">Saídas (-)</small>
+                                    <span class="text-danger">{{ number_format($item->total_exits, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <x-button type="link" :href="route('provider.inventory.show', $item->sku)" variant="info" icon="eye" label="Ver" size="sm" class="flex-grow-1" />
+                                <x-button type="link" :href="route('provider.inventory.movements', ['product_id' => $item->id])" variant="primary" icon="clock-history" label="Movim." size="sm" class="flex-grow-1" />
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
+                
+                @if($stockTurnover->hasPages())
+                    <div class="mt-2 mb-2">
+                        @include('partials.components.paginator', [
+                            'p' => $stockTurnover->appends(request()->except('page')),
+                            'show_info' => true
+                        ])
+                    </div>
+                @endif
 
                 <!-- Legenda e Dicas -->
                 <div class="p-4 border-top bg-light bg-opacity-50">
                     <div class="row g-4">
-                        <div class="col-md-6">
-                            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-1"></i> Classificação do Giro</h6>
+                        <div class="col-md-7">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-1"></i> Legenda de Classificação</h6>
                             <div class="d-flex flex-wrap gap-2">
-                                <div class="p-2 border rounded bg-white" style="flex: 1; min-width: 120px;">
-                                    <span class="badge bg-success mb-1">Muito Alto</span>
+                                <div class="p-2 border rounded bg-white flex-grow-1" style="min-width: 120px;">
+                                    <span class="badge bg-success mb-1">MA</span>
+                                    <div class="small fw-bold">Muito Alto</div>
                                     <div class="small text-muted">≥ 12x no período</div>
                                 </div>
-                                <div class="p-2 border rounded bg-white" style="flex: 1; min-width: 120px;">
-                                    <span class="badge bg-info mb-1">Alto</span>
+                                <div class="p-2 border rounded bg-white flex-grow-1" style="min-width: 120px;">
+                                    <span class="badge bg-info mb-1">A</span>
+                                    <div class="small fw-bold">Alto</div>
                                     <div class="small text-muted">6-11x no período</div>
                                 </div>
-                                <div class="p-2 border rounded bg-white" style="flex: 1; min-width: 120px;">
-                                    <span class="badge bg-warning mb-1">Médio</span>
+                                <div class="p-2 border rounded bg-white flex-grow-1" style="min-width: 120px;">
+                                    <span class="badge bg-warning mb-1">M</span>
+                                    <div class="small fw-bold">Médio</div>
                                     <div class="small text-muted">3-5x no período</div>
                                 </div>
-                                <div class="p-2 border rounded bg-white" style="flex: 1; min-width: 120px;">
-                                    <span class="badge bg-danger mb-1">Baixo</span>
+                                <div class="p-2 border rounded bg-white flex-grow-1" style="min-width: 120px;">
+                                    <span class="badge bg-danger mb-1">B</span>
+                                    <div class="small fw-bold">Baixo</div>
                                     <div class="small text-muted">1-2x no período</div>
+                                </div>
+                                <div class="p-2 border rounded bg-white flex-grow-1" style="min-width: 120px;">
+                                    <span class="badge bg-dark mb-1">MB</span>
+                                    <div class="small fw-bold">Muito Baixo</div>
+                                    <div class="small text-muted">< 1x no período</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb me-1"></i> Dicas de Gestão</h6>
-                            <div class="small">
-                                <ul class="mb-0 ps-3">
-                                    <li class="mb-1"><strong>Giro Alto:</strong> Revise frequências de reposição para evitar rupturas.</li>
-                                    <li class="mb-1"><strong>Giro Médio:</strong> Monitore regularmente e ajuste níveis conforme demanda.</li>
-                                    <li class="mb-1"><strong>Giro Baixo:</strong> Avalie promoções ou redução de pedidos para liberar capital.</li>
-                                    <li><strong>Sem Giro:</strong> Avalie se o produto deve permanecer no portfólio.</li>
-                                </ul>
+                            <div class="card border-0 shadow-none bg-transparent">
+                                <div class="card-body p-0 small">
+                                    <div class="d-flex mb-2">
+                                        <i class="bi bi-check2-circle text-success me-2"></i>
+                                        <span><strong>MA / A:</strong> Produtos com alta saída. Garanta estoque para não perder vendas.</span>
+                                    </div>
+                                    <div class="d-flex mb-2">
+                                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                        <span><strong>M:</strong> Desempenho equilibrado. Mantenha os níveis atuais.</span>
+                                    </div>
+                                    <div class="d-flex">
+                                        <i class="bi bi-graph-down text-danger me-2"></i>
+                                        <span><strong>B / MB:</strong> Baixa saída. Evite excesso de estoque e capital parado.</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -281,8 +396,48 @@
 
 @section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Scripts específicos se necessário
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const form = startDate ? startDate.closest('form') : null;
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (startDate.value && endDate.value && startDate.value > endDate.value) {
+                e.preventDefault();
+                if (window.easyAlert) {
+                    window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                startDate.focus();
+            }
+        });
+
+        startDate.addEventListener('change', function() {
+            if (this.value && endDate.value && this.value > endDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                } else {
+                    alert('A data inicial não pode ser maior que a data final.');
+                }
+                this.value = '';
+            }
+        });
+
+        endDate.addEventListener('change', function() {
+            if (this.value && startDate.value && this.value < startDate.value) {
+                if (window.easyAlert) {
+                    window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
+                } else {
+                    alert('A data final não pode ser menor que a data inicial.');
+                }
+                this.value = '';
+            }
+        });
+    }
+
+    // Scripts específicos se necessário
+});
 </script>
 @endsection

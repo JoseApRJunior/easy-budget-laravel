@@ -387,11 +387,13 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/dashboard', [InventoryController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/movements', [InventoryController::class, 'movements'])->name('movements');
+        Route::get('/movements/{id}', [InventoryController::class, 'movementShow'])->name('movements.show');
         Route::get('/stock-turnover', [InventoryController::class, 'stockTurnover'])->name('stock-turnover');
         Route::get('/most-used', [InventoryController::class, 'mostUsedProducts'])->name('most-used');
         Route::get('/alerts', [InventoryController::class, 'alerts'])->name('alerts');
         Route::get('/report', [InventoryController::class, 'report'])->name('report');
         Route::get('/export', [InventoryController::class, 'export'])->name('export');
+        Route::get('/export-index', [InventoryController::class, 'exportIndex'])->name('export-index');
         Route::get('/export-movements', [InventoryController::class, 'exportMovements'])->name('export-movements');
         Route::get('/export-stock-turnover', [InventoryController::class, 'exportStockTurnover'])->name('export-stock-turnover');
         Route::get('/export-most-used', [InventoryController::class, 'exportMostUsed'])->name('export-most-used');

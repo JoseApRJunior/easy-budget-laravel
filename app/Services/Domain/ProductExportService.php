@@ -21,8 +21,9 @@ class ProductExportService extends AbstractExportService
         return 'Relatório de Produtos';
     }
 
-    protected function mapData(object $product): array
+    protected function mapData(mixed $product): array
     {
+        /** @var object $product */
         $createdAt = $product->created_at ? $product->created_at->format('d/m/Y H:i:s') : '';
         $price = 'R$ '.number_format((float) $product->price, 2, ',', '.');
 
