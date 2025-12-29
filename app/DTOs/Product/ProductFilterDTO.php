@@ -21,7 +21,7 @@ readonly class ProductFilterDTO extends AbstractDTO
         public ?float $min_price = null,
         public ?float $max_price = null,
         public bool $all = false,
-        public int $per_page = 15,
+        public int $per_page = 10,
     ) {}
 
     /**

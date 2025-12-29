@@ -6,13 +6,15 @@ namespace App\Services\Application;
 
 use App\Actions\Inventory\ReserveProductStockAction;
 use App\Actions\Inventory\UpdateProductStockAction;
-use App\Models\Product;
+use App\DTOs\Inventory\InventoryFilterDTO;
+use App\Models\Category;
+use App\Models\InventoryMovement;
 use App\Repositories\InventoryRepository;
 use App\Repositories\ProductRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Exception;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Serviço para gestão de inventário e estoque.
@@ -46,7 +48,27 @@ class InventoryManagementService extends AbstractBaseService
                 'totalReservedQuantity' => $stats['total_reserved_quantity'],
                 'lowStockItems' => $this->inventoryRepository->getLowStockItems(5),
                 'highStockItems' => $this->inventoryRepository->getHighStockItems(5),
-                'recentMovements' => \App\Models\InventoryMovement::with(['product', 'user'])->latest()->take(5)->get(),
+                'recentMovements' => InventoryMovement::with(['product', 'user'])->latest()->take(5)->get(),
+            ];
+        });
+    }
+
+    /**
+     * Obtém dados para a listagem principal de inventário com estado inicial vazio.
+     */
+    public function getEmptyIndexData(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            return [
+                'inventories' => new LengthAwarePaginator([], 0, 15),
+                'stats' => [
+                    'total_items' => 0,
+                    'total_inventory_value' => 0,
+                    'low_stock_items_count' => 0,
+                    'out_of_stock_items_count' => 0,
+                ],
+                'categories' => Category::whereNull('parent_id')->with('children')->get(),
+                'filters' => [],
             ];
         });
     }
@@ -54,14 +76,27 @@ class InventoryManagementService extends AbstractBaseService
     /**
      * Obtém dados para a listagem principal de inventário.
      */
-    public function getIndexData(array $filters = []): ServiceResult
+    public function getIndexData(InventoryFilterDTO $filterDto): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters) {
-            $perPage = (int) ($filters['per_page'] ?? 15);
+        return $this->safeExecute(function () use ($filterDto) {
+            $filters = $filterDto->toFilterArray();
+            $perPage = $filterDto->per_page;
+
+            // Mapeamento de status amigável para filtros do repositório
+            if (! empty($filters['status'])) {
+                match ($filters['status']) {
+                    'low' => $filters['low_stock'] = true,
+                    'out' => $filters['out_of_stock'] = true,
+                    'sufficient' => $filters['custom_sufficient'] = true,
+                    default => null
+                };
+            }
+
             return [
                 'inventories' => $this->inventoryRepository->getPaginated($filters, $perPage),
-                'stats' => $this->inventoryRepository->getStatistics(),
-                'categories' => \App\Models\Category::all(),
+                'stats' => $this->inventoryRepository->getStatistics($filters),
+                'categories' => Category::whereNull('parent_id')->with('children')->get(),
+                'filters' => $filterDto->toDisplayArray(),
             ];
         });
     }
@@ -74,46 +109,86 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($filters) {
             $query = \App\Models\InventoryMovement::with(['product', 'user']);
 
-            if (!empty($filters['product_id'])) {
-                $query->where('product_id', $filters['product_id']);
+            $hasFilters = ! empty($filters['product_id']) ||
+                          ! empty($filters['search']) ||
+                          ! empty($filters['sku']) ||
+                          ! empty($filters['type']) ||
+                          ! empty($filters['start_date']) ||
+                          ! empty($filters['end_date']);
+
+            if (! $hasFilters) {
+                return [
+                    'movements' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $filters['per_page'] ?? 10),
+                    'products' => \App\Models\Product::all(),
+                    'summary' => [
+                        'total_entries' => 0, 'count_entries' => 0,
+                        'total_exits' => 0, 'count_exits' => 0,
+                        'total_adjustments' => 0, 'count_adjustments' => 0,
+                        'total_reservations' => 0, 'count_reservations' => 0,
+                        'total_cancellations' => 0, 'count_cancellations' => 0,
+                        'balance' => 0,
+                    ],
+                ];
             }
 
-            if (!empty($filters['type'])) {
+            if (! empty($filters['product_id'])) {
+                $query->where('product_id', $filters['product_id']);
+            } elseif (! empty($filters['search'])) {
+                $search = $filters['search'];
+                $query->whereHas('product', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('sku', 'like', "%{$search}%");
+                });
+            } elseif (! empty($filters['sku'])) {
+                $product = \App\Models\Product::where('sku', $filters['sku'])->first();
+                if ($product) {
+                    $query->where('product_id', $product->id);
+                }
+            }
+
+            if (! empty($filters['type'])) {
                 $query->where('type', $filters['type']);
             }
 
-            if (!empty($filters['start_date'])) {
+            if (! empty($filters['start_date'])) {
                 $query->whereDate('created_at', '>=', $filters['start_date']);
             }
 
-            if (!empty($filters['end_date'])) {
+            if (! empty($filters['end_date'])) {
                 $query->whereDate('created_at', '<=', $filters['end_date']);
             }
 
-            $movements = $query->latest()->paginate($filters['per_page'] ?? 15);
-
-            // Calcula o resumo
-            $summaryQuery = clone $query;
-            $summary = [
-                'total_entries' => (clone $summaryQuery)->where('type', 'entry')->sum('quantity'),
-                'count_entries' => (clone $summaryQuery)->where('type', 'entry')->count(),
-                'total_exits' => (clone $summaryQuery)->where('type', 'exit')->sum('quantity'),
-                'count_exits' => (clone $summaryQuery)->where('type', 'exit')->count(),
-                'total_adjustments' => (clone $summaryQuery)->where('type', 'adjustment')->sum('quantity'),
-                'count_adjustments' => (clone $summaryQuery)->where('type', 'adjustment')->count(),
-                'total_reservations' => (clone $summaryQuery)->where('type', 'reservation')->sum('quantity'),
-                'count_reservations' => (clone $summaryQuery)->where('type', 'reservation')->count(),
-                'total_cancellations' => (clone $summaryQuery)->where('type', 'cancellation')->sum('quantity'),
-                'count_cancellations' => (clone $summaryQuery)->where('type', 'cancellation')->count(),
-            ];
-            $summary['balance'] = $summary['total_entries'] - $summary['total_exits'];
+            $movements = $query->latest()->paginate($filters['per_page'] ?? 10);
 
             return [
                 'movements' => $movements,
                 'products' => \App\Models\Product::all(),
-                'summary' => $summary,
+                'summary' => $this->calculateMovementSummary($query),
             ];
         });
+    }
+
+    /**
+     * Calcula o resumo de movimentações baseado em uma query.
+     */
+    public function calculateMovementSummary($query): array
+    {
+        $summaryQuery = clone $query;
+        $summary = [
+            'total_entries' => (clone $summaryQuery)->where('type', 'entry')->sum('quantity'),
+            'count_entries' => (clone $summaryQuery)->where('type', 'entry')->count(),
+            'total_exits' => (clone $summaryQuery)->where('type', 'exit')->sum('quantity'),
+            'count_exits' => (clone $summaryQuery)->where('type', 'exit')->count(),
+            'total_adjustments' => (clone $summaryQuery)->where('type', 'adjustment')->sum('quantity'),
+            'count_adjustments' => (clone $summaryQuery)->where('type', 'adjustment')->count(),
+            'total_reservations' => (clone $summaryQuery)->where('type', 'reservation')->sum('quantity'),
+            'count_reservations' => (clone $summaryQuery)->where('type', 'reservation')->count(),
+            'total_cancellations' => (clone $summaryQuery)->where('type', 'cancellation')->sum('quantity'),
+            'count_cancellations' => (clone $summaryQuery)->where('type', 'cancellation')->count(),
+        ];
+        $summary['balance'] = $summary['total_entries'] - $summary['total_exits'];
+
+        return $summary;
     }
 
     /**
@@ -137,29 +212,29 @@ class InventoryManagementService extends AbstractBaseService
 
             $products = $query->get()->map(function ($product) use ($startDate, $endDate) {
                 $movements = \App\Models\InventoryMovement::where('product_id', $product->id)
-                    ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                    ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
                 $totalEntries = (clone $movements)->where('type', 'entry')->sum('quantity');
                 $totalExits = (clone $movements)->where('type', 'exit')->sum('quantity');
-                
+
                 // Cálculo simplificado de estoque médio: (estoque inicial + estoque final) / 2
                 // Para simplificar ainda mais, vamos usar o estoque atual como aproximação se não tivermos dados históricos precisos
                 $currentStock = $product->inventory->quantity ?? 0;
                 $initialStock = $currentStock - $totalEntries + $totalExits;
                 $averageStock = ($initialStock + $currentStock) / 2;
-                
+
                 $product->total_entries = $totalEntries;
                 $product->total_exits = $totalExits;
                 $product->average_stock = $averageStock > 0 ? $averageStock : 1; // Evita divisão por zero
-                
+
                 return $product;
             });
 
             $totalProducts = $products->count();
             $totalEntries = $products->sum('total_entries');
             $totalExits = $products->sum('total_exits');
-            
-            $totalTurnover = $products->sum(function($p) {
+
+            $totalTurnover = $products->sum(function ($p) {
                 return $p->average_stock > 0 ? $p->total_exits / $p->average_stock : 0;
             });
             $averageTurnover = $totalProducts > 0 ? $totalTurnover / $totalProducts : 0;
@@ -177,7 +252,7 @@ class InventoryManagementService extends AbstractBaseService
                     'total_entries' => $totalEntries,
                     'total_exits' => $totalExits,
                     'average_turnover' => $averageTurnover,
-                ]
+                ],
             ];
         });
     }
@@ -193,7 +268,7 @@ class InventoryManagementService extends AbstractBaseService
 
             $movements = \App\Models\InventoryMovement::selectRaw('product_id, SUM(quantity) as total_usage')
                 ->where('type', 'exit')
-                ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+                ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
                 ->groupBy('product_id')
                 ->orderByDesc('total_usage')
                 ->with(['product.category', 'product.inventory'])
@@ -204,6 +279,7 @@ class InventoryManagementService extends AbstractBaseService
 
             $products = $movements->map(function ($m) use ($totalUsageAll, $days) {
                 $p = $m->product;
+
                 return [
                     'id' => $p->id,
                     'sku' => $p->sku,
@@ -224,7 +300,7 @@ class InventoryManagementService extends AbstractBaseService
                 'filters' => [
                     'start_date' => $startDate,
                     'end_date' => $endDate,
-                ]
+                ],
             ];
         });
     }
@@ -248,10 +324,11 @@ class InventoryManagementService extends AbstractBaseService
     public function getProductBySku(string $sku): ServiceResult
     {
         return $this->safeExecute(function () use ($sku) {
-            $product = $this->productRepository->findBySku($sku, ['inventory']);
-            if (!$product) {
+            $product = $this->productRepository->findBySku($sku, ['inventory', 'inventoryMovements.user']);
+            if (! $product) {
                 throw new Exception("Produto com SKU {$sku} não encontrado.");
             }
+
             return $product;
         });
     }
@@ -292,7 +369,7 @@ class InventoryManagementService extends AbstractBaseService
                     if ($endDate) {
                         $query->whereDate('created_at', '<=', $endDate);
                     }
-                    
+
                     $reportData = $query->latest()->get()->map(function ($m) {
                         return [
                             'data' => $m->created_at->format('d/m/Y H:i'),
@@ -309,12 +386,13 @@ class InventoryManagementService extends AbstractBaseService
                 case 'valuation':
                     $reportData = $this->inventoryRepository->getPaginated([], 1000)->map(function ($inventory) {
                         $price = $inventory->product->price ?? 0;
+
                         return [
                             'sku' => $inventory->product->sku,
                             'produto' => $inventory->product->name,
                             'quantidade' => $inventory->quantity,
-                            'preço_unitário' => 'R$ ' . number_format($price, 2, ',', '.'),
-                            'valor_total' => 'R$ ' . number_format($inventory->quantity * $price, 2, ',', '.'),
+                            'preço_unitário' => 'R$ '.number_format($price, 2, ',', '.'),
+                            'valor_total' => 'R$ '.number_format($inventory->quantity * $price, 2, ',', '.'),
                         ];
                     })->toArray();
                     break;
@@ -350,8 +428,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->updateStockAction->execute($product, $quantity, 'in', $reason);
@@ -365,8 +443,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
             $product = $this->productRepository->find($productId);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->updateStockAction->execute($product, $quantity, 'in', $reason);
@@ -380,8 +458,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->updateStockAction->execute($product, $quantity, 'out', $reason);
@@ -395,8 +473,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
             $product = $this->productRepository->find($productId);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->updateStockAction->execute($product, $quantity, 'out', $reason);
@@ -410,8 +488,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $newQuantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->updateStockAction->execute($product, $newQuantity, 'adjustment', $reason);
@@ -425,8 +503,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $quantity) {
             $product = $this->productRepository->findBySku($sku);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->reserveStockAction->reserve($product, $quantity);
@@ -440,8 +518,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $quantity) {
             $product = $this->productRepository->findBySku($sku);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->reserveStockAction->release($product, $quantity);
@@ -455,8 +533,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($sku, $quantity, $reason) {
             $product = $this->productRepository->findBySku($sku);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->reserveStockAction->confirm($product, $quantity, $this->updateStockAction, $reason);
@@ -470,8 +548,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($productId, $quantity, $reason) {
             $product = $this->productRepository->find($productId);
-            if (!$product) {
-                throw new Exception("Produto não encontrado.");
+            if (! $product) {
+                throw new Exception('Produto não encontrado.');
             }
 
             return $this->updateStockAction->execute($product, $quantity, 'adjustment', $reason);
@@ -486,7 +564,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($productId, $requestedQuantity) {
             $inventory = $this->inventoryRepository->findByProduct($productId);
 
-            if (!$inventory) {
+            if (! $inventory) {
                 return [
                     'available' => false,
                     'quantity' => 0,
@@ -501,5 +579,4 @@ class InventoryManagementService extends AbstractBaseService
             ];
         });
     }
-
 }

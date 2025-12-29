@@ -103,6 +103,10 @@ class InventoryRepository extends AbstractTenantRepository
             $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
         }
 
+        if (isset($filters['out_of_stock']) && $filters['out_of_stock']) {
+            $query->whereRaw('(quantity - reserved_quantity) <= 0');
+        }
+
         if (isset($filters['high_stock']) && $filters['high_stock']) {
             $query->whereColumn('quantity', '>=', 'max_quantity');
         }
@@ -169,6 +173,10 @@ class InventoryRepository extends AbstractTenantRepository
 
         if (isset($filters['low_stock']) && $filters['low_stock']) {
             $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
+        }
+
+        if (isset($filters['out_of_stock']) && $filters['out_of_stock']) {
+            $query->whereRaw('(quantity - reserved_quantity) <= 0');
         }
 
         if (isset($filters['high_stock']) && $filters['high_stock']) {
@@ -273,16 +281,55 @@ class InventoryRepository extends AbstractTenantRepository
             ->count();
     }
 
-    public function getStatistics(): array
+    public function getStatistics(array $filters = []): array
     {
-        $total = $this->model->count();
-        $lowStock = $this->getLowStockCount();
-        $highStock = $this->getHighStockCount();
-        $outOfStock = $this->getOutOfStockCount();
-        $totalReserved = $this->model->sum('reserved_quantity');
-        $reservedItemsCount = $this->model->where('reserved_quantity', '>', 0)->count();
+        $query = $this->model->newQuery();
+        $this->applyFilters($query, $filters);
 
-        $totalValue = $this->model
+        // Filtros específicos de inventory (reutilizando a lógica do getPaginated)
+        if (! empty($filters['search'])) {
+            $query->whereHas('product', function ($q) use ($filters) {
+                $q->where('name', 'like', "%{$filters['search']}%")
+                    ->orWhere('sku', 'like', "%{$filters['search']}%");
+            });
+        }
+
+        if (isset($filters['low_stock']) && $filters['low_stock']) {
+            $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
+        }
+
+        if (isset($filters['out_of_stock']) && $filters['out_of_stock']) {
+            $query->whereRaw('(quantity - reserved_quantity) <= 0');
+        }
+
+        if (isset($filters['high_stock']) && $filters['high_stock']) {
+            $query->whereColumn('quantity', '>=', 'max_quantity');
+        }
+
+        if (isset($filters['quantity'])) {
+            $query->where('quantity', $filters['quantity']);
+        }
+
+        if (isset($filters['custom_sufficient']) && $filters['custom_sufficient']) {
+            $query->whereRaw('(quantity - reserved_quantity) > min_quantity');
+        }
+
+        if (! empty($filters['category'])) {
+            $query->whereHas('product', function ($q) use ($filters) {
+                $q->where('category_id', $filters['category']);
+            });
+        }
+
+        // Clonar para os diferentes contadores
+        $total = (clone $query)->count();
+        $lowStock = (clone $query)->whereRaw('(quantity - reserved_quantity) <= min_quantity')->whereRaw('(quantity - reserved_quantity) > 0')->count();
+        $highStock = (clone $query)->whereNotNull('max_quantity')->whereColumn('quantity', '>=', 'max_quantity')->count();
+        $outOfStock = (clone $query)->whereRaw('(quantity - reserved_quantity) <= 0')->count();
+        $sufficientStock = (clone $query)->whereRaw('(quantity - reserved_quantity) > min_quantity')->count();
+        $totalReserved = (clone $query)->sum('reserved_quantity');
+        $reservedItemsCount = (clone $query)->where('reserved_quantity', '>', 0)->count();
+
+        $totalValue = (clone $query)
             ->join('products', 'product_inventory.product_id', '=', 'products.id')
             ->selectRaw('SUM(product_inventory.quantity * products.price) as total')
             ->value('total') ?? 0;
@@ -290,9 +337,10 @@ class InventoryRepository extends AbstractTenantRepository
         return [
             'total_items' => $total,
             'low_stock_items_count' => $lowStock,
+            'sufficient_stock_items_count' => $sufficientStock,
             'high_stock_items_count' => $highStock,
             'out_of_stock_items_count' => $outOfStock,
-            'total_inventory_value' => $totalValue,
+            'total_inventory_value' => (float) $totalValue,
             'total_reserved_quantity' => $totalReserved,
             'reserved_items_count' => $reservedItemsCount,
         ];

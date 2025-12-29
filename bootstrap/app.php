@@ -4,11 +4,15 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\MonitoringMiddleware;
 use App\Http\Middleware\OptimizeAuthUser;
 use App\Http\Middleware\ProviderMiddleware;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -48,8 +52,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'url' => request()->fullUrl(),
-                    'user_id' => auth()->id() ?? 'Convidado',
+                    'url' => app()->bound('request') ? request()->fullUrl() : 'N/A',
+                    'user_id' => app()->bound('auth') ? auth()->id() : 'Convidado',
                 ]);
             } catch (\Throwable $logError) {
                 error_log('Falha crítica no log: '.$logError->getMessage());
@@ -59,10 +63,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // 2. Renderizar a resposta (Lógica de UI)
         $exceptions->render(function (\Throwable $e, Request $request) {
             if (! $request->expectsJson() &&
-                ! $e instanceof \Illuminate\Validation\ValidationException &&
-                ! $e instanceof \Illuminate\Auth\Access\AuthorizationException &&
-                ! $e instanceof \Illuminate\Auth\AuthenticationException &&
-                ! $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                ! $e instanceof ValidationException &&
+                ! $e instanceof AuthorizationException &&
+                ! $e instanceof AuthenticationException &&
+                ! $e instanceof NotFoundHttpException) {
 
                 if ($request->isMethod('GET')) {
                     return response()->view('errors.500', ['exception' => $e], 500);

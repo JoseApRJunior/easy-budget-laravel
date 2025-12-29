@@ -30,13 +30,13 @@
                         @if (isset($exception) && app()->environment('local'))
                             <div class="alert alert-danger text-start">
                                 <h6>Detalhes do erro (apenas em desenvolvimento):</h6>
-                                <pre class="text-error mb-0">{{ $exception->getMessage() }}</pre>
+                                <pre class="text-error mb-0 text-wrap lh-base">{{ $exception->getMessage() }}</pre>
                                 <p class="mt-2 mb-0 small text-muted"><strong>Arquivo:</strong> {{ $exception->getFile() }}:{{ $exception->getLine() }}</p>
                             </div>
                         @elseif (isset($error) && app()->environment('local'))
                             <div class="alert alert-danger text-start">
                                 <h6>Detalhes do erro (apenas em desenvolvimento):</h6>
-                                <pre class="text-error mb-0">{{ $error->getMessage() }}</pre>
+                                <pre class="text-error mb-0 text-wrap lh-base">{{ $exception->getMessage() }}</pre>
                             </div>
                         @endif
 

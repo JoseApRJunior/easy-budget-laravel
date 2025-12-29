@@ -32,6 +32,7 @@
     <script defer src="{{ asset('assets/js/cep-lookup.js') }}?v={{ filemtime(public_path('assets/js/cep-lookup.js')) }}"></script>
 
     @stack('scripts')
+    @yield('scripts')
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

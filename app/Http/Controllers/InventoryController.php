@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Inventory\InventoryFilterDTO;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Models\Product;
 use App\Services\Application\InventoryManagementService;
 use App\Services\Domain\InventoryExportService;
 use Illuminate\Contracts\View\View;
@@ -31,7 +33,7 @@ class InventoryController extends Controller
      */
     public function dashboard(): View|RedirectResponse
     {
-        $this->authorize('viewAny', \App\Models\Product::class);
+        $this->authorize('viewAny', Product::class);
         $result = $this->inventoryManagementService->getDashboardData();
 
         return view('pages.inventory.dashboard', (array) $result->getData());
@@ -42,8 +44,20 @@ class InventoryController extends Controller
      */
     public function index(Request $request): View|RedirectResponse
     {
-        $this->authorize('viewAny', \App\Models\Product::class);
-        $result = $this->inventoryManagementService->getIndexData($request->all());
+        $this->authorize('viewAny', Product::class);
+
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyIndexData();
+        } else {
+            // Se houver qualquer parâmetro (mesmo que vazio, vindo do form de filtro), processa a busca
+            $filterDto = InventoryFilterDTO::fromRequest($request->all());
+            $result = $this->inventoryManagementService->getIndexData($filterDto);
+        }
+
+        if ($result->isError()) {
+            return $this->redirectError('provider.inventory.dashboard', 'Erro ao carregar inventário: '.$result->getMessage());
+        }
 
         return view('pages.inventory.index', (array) $result->getData());
     }
@@ -115,8 +129,9 @@ class InventoryController extends Controller
         $result = $this->inventoryManagementService->getReportData($request->all());
         $data = collect($result->getData()['reportData']);
 
-        $this->inventoryExportService->setExportType('report_' . $reportType);
-        return $this->inventoryExportService->export($data, $format, 'relatorio_inventario_' . $reportType);
+        $this->inventoryExportService->setExportType('report_'.$reportType);
+
+        return $this->inventoryExportService->export($data, $format, 'relatorio_inventario_'.$reportType);
     }
 
     /**
@@ -135,6 +150,7 @@ class InventoryController extends Controller
         $data = collect($result->getData()['movements']->items());
 
         $this->inventoryExportService->setExportType('movements');
+
         return $this->inventoryExportService->export($data, $format, 'movimentacoes_estoque');
     }
 
@@ -153,6 +169,7 @@ class InventoryController extends Controller
         $data = collect($result->getData()['stockTurnover']->items());
 
         $this->inventoryExportService->setExportType('stock_turnover');
+
         return $this->inventoryExportService->export($data, $format, 'giro_estoque');
     }
 
@@ -168,13 +185,14 @@ class InventoryController extends Controller
         $data = collect($result->getData()['products']);
 
         $this->inventoryExportService->setExportType('most_used');
+
         return $this->inventoryExportService->export($data, $format, 'produtos_mais_usados');
     }
 
     /**
      * Exibir detalhes de inventário de um produto
      */
-    public function show($sku): View|RedirectResponse
+    public function show(Request $request, $sku): View|RedirectResponse
     {
         $result = $this->inventoryManagementService->getProductBySku($sku);
 
@@ -185,7 +203,20 @@ class InventoryController extends Controller
         $product = $result->getData();
         $this->authorize('view', $product);
 
-        return view('pages.inventory.show', ['product' => $product]);
+        $movementsQuery = $product->inventoryMovements();
+        $summary = $this->inventoryManagementService->calculateMovementSummary($movementsQuery);
+
+        $movements = $movementsQuery
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('pages.inventory.show', [
+            'product' => $product,
+            'inventory' => $product->inventory,
+            'movements' => $movements,
+            'summary' => $summary,
+        ]);
     }
 
     /**
@@ -231,7 +262,7 @@ class InventoryController extends Controller
 
         if ($entryResult->isSuccess()) {
             return redirect()
-                ->route('provider.inventory.index')
+                ->back()
                 ->with('success', 'Estoque adicionado com sucesso!');
         }
 
@@ -283,7 +314,7 @@ class InventoryController extends Controller
 
         if ($result->isSuccess()) {
             return redirect()
-                ->route('provider.inventory.index')
+                ->back()
                 ->with('success', 'Estoque removido com sucesso!');
         }
 
@@ -337,7 +368,7 @@ class InventoryController extends Controller
 
         if ($result->isSuccess()) {
             return redirect()
-                ->route('provider.inventory.index')
+                ->back()
                 ->with('success', 'Estoque ajustado com sucesso!');
         }
 

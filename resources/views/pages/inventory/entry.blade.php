@@ -4,18 +4,63 @@
 
 @section('content')
 <div class="container-fluid py-1">
+    <x-page-header
+        title="Entrada de Estoque"
+        icon="arrow-down"
+        :breadcrumb-items="[
+            'Inventário' => route('provider.inventory.index'),
+            $product->name => route('provider.products.edit', $product->id),
+            'Entrada' => '#'
+        ]">
+        <p class="text-muted mb-0">Registrar entrada de estoque físico</p>
+    </x-page-header>
+
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="bi bi-arrow-down text-success me-2"></i>
-                        Entrada de Estoque - {{ $product->name }}
-                    </h3>
-                </div>
+            <div class="card shadow-sm border-0">
                 <form action="{{ route('provider.inventory.entry.store', $product->sku) }}" method="POST">
                     @csrf
                     <div class="card-body">
+                        <!-- Informações do Produto -->
+                        <div class="alert alert-info border-0 shadow-sm mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                                <h6 class="mb-0">Informações do Produto</h6>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <small class="text-muted d-block">Produto</small>
+                                    <a href="{{ route('provider.products.edit', $product->id) }}" class="fw-bold text-primary text-decoration-none">
+                                        {{ $product->name }}
+                                        <i class="bi bi-box-arrow-up-right ms-1 small"></i>
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">SKU</small>
+                                    <span class="badge bg-light text-dark border">{{ $product->sku }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block text-end">Categoria</small>
+                                    <span class="text-muted d-block text-end small">{{ $product->category->name ?? 'Sem categoria' }}</span>
+                                </div>
+                            </div>
+                            <hr class="my-2 opacity-10">
+                            <div class="row g-3 text-center">
+                                <div class="col-4">
+                                    <small class="text-muted d-block mb-1">Físico</small>
+                                    <span class="badge bg-primary w-100 py-2 fs-6">{{ $product->inventory->quantity ?? 0 }}</span>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block mb-1">Reservado</small>
+                                    <span class="badge bg-info w-100 py-2 fs-6 text-white">{{ $product->inventory->reserved_quantity ?? 0 }}</span>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block mb-1">Disponível</small>
+                                    <span class="badge bg-success w-100 py-2 fs-6">{{ $product->inventory->available_quantity ?? 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
@@ -53,30 +98,25 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Produto:</strong> {{ $product->name }}<br>
-                            <strong>SKU:</strong> {{ $product->sku }}<br>
-                            <div class="mt-2">
-                                <strong>Estoque Físico:</strong> <span class="badge bg-primary">{{ $product->inventory->quantity ?? 0 }}</span>
-                                <strong class="ms-3">Reservado:</strong> <span class="badge bg-info">{{ $product->inventory->reserved_quantity ?? 0 }}</span>
-                                <strong class="ms-3">Disponível:</strong> <span class="badge bg-success">{{ $product->inventory->available_quantity ?? 0 }}</span>
-                            </div>
+                <div class="mt-4">
+                    <div class="row align-items-center g-3">
+                        <div class="col-12 col-md-auto order-2 order-md-1">
+                            <x-back-button index-route="provider.inventory.index" class="w-100 w-md-auto px-md-3" />
                         </div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-success">
-                                <i class="bi bi-check me-1"></i> Confirmar Entrada
+                        <div class="col-12 col-md text-center d-none d-md-block order-md-2">
+                            <!-- Espaçador central para alinhar com o padrão show -->
+                        </div>
+                        <div class="col-12 col-md-auto order-1 order-md-3">
+                            <button type="submit" class="btn btn-success w-100 px-4">
+                                <i class="bi bi-check-lg me-1"></i> Confirmar Entrada
                             </button>
-                            <a href="{{ route('provider.inventory.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-x me-1"></i> Cancelar
-                            </a>
                         </div>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
