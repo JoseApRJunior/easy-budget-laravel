@@ -108,32 +108,26 @@ class InventoryObserver
 
     /**
      * Handle the "created" event for any observed model.
-     * Quando um item é adicionado a um serviço ou orçamento.
+     * Quando um item é adicionado a um serviço.
      */
-    public function created(Budget|Service|ServiceItem|BudgetItem $model): void
+    public function created(Budget|Service|ServiceItem $model): void
     {
-        // Apenas processar ServiceItem e BudgetItem
+        // Apenas processar ServiceItem
         if ($model instanceof ServiceItem) {
             $this->handleServiceItemCreated($model);
-        } elseif ($model instanceof BudgetItem) {
-            $this->handleBudgetItemCreated($model);
         }
-        // Budget e Service não precisam de ação no created
     }
 
     /**
      * Handle the "deleted" event for any observed model.
-     * Quando um item é removido de um serviço ou orçamento.
+     * Quando um item é removido de um serviço.
      */
-    public function deleted(Budget|Service|ServiceItem|BudgetItem $model): void
+    public function deleted(Budget|Service|ServiceItem $model): void
     {
-        // Apenas processar ServiceItem e BudgetItem
+        // Apenas processar ServiceItem
         if ($model instanceof ServiceItem) {
             $this->handleServiceItemDeleted($model);
-        } elseif ($model instanceof BudgetItem) {
-            $this->handleBudgetItemDeleted($model);
         }
-        // Budget e Service não precisam de ação no deleted
     }
 
     /**
@@ -202,47 +196,6 @@ class InventoryObserver
         }
     }
 
-    /**
-     * Handle the BudgetItem "created" event.
-     * Quando um item é adicionado a um orçamento.
-     */
-    protected function handleBudgetItemCreated(BudgetItem $budgetItem): void
-    {
-        $budget = $budgetItem->budget;
-
-        // Se o orçamento estiver aprovado, reservar do estoque
-        if ($budget->status->value === BudgetStatus::APPROVED->value) {
-            $this->inventoryService->reserveProduct(
-                $budgetItem->product_id,
-                $budgetItem->quantity,
-                'Reserva automática - Orçamento: '.$budget->code,
-                BudgetItem::class,
-                $budgetItem->id,
-                $budget->tenant_id,
-            );
-        }
-    }
-
-    /**
-     * Handle the BudgetItem "deleted" event.
-     * Quando um item é removido de um orçamento.
-     */
-    protected function handleBudgetItemDeleted(BudgetItem $budgetItem): void
-    {
-        $budget = $budgetItem->budget;
-
-        // Se o orçamento estava aprovado, liberar reserva
-        if ($budget->status->value === BudgetStatus::APPROVED->value) {
-            $this->inventoryService->releaseReservation(
-                $budgetItem->product_id,
-                $budgetItem->quantity,
-                'Liberação de reserva - Remoção do Orçamento: '.$budget->code,
-                BudgetItem::class,
-                $budgetItem->id,
-                $budget->tenant_id,
-            );
-        }
-    }
 
     /**
      * Devolve itens do orçamento ao estoque
@@ -250,17 +203,8 @@ class InventoryObserver
     protected function returnBudgetItemsToInventory(Budget $budget): void
     {
         try {
-            foreach ($budget->items as $item) {
-                if ($item->product_id) {
-                    $this->inventoryService->releaseReservation(
-                        $item->product_id,
-                        $item->quantity,
-                        'Cancelamento de orçamento - Código: '.$budget->code,
-                        Budget::class,
-                        $budget->id,
-                        $budget->tenant_id,
-                    );
-                }
+            foreach ($budget->services as $service) {
+                $this->returnServiceItemsToInventory($service);
             }
         } catch (\Exception $e) {
             Log::error('Erro ao devolver itens do orçamento ao estoque', [
@@ -276,16 +220,18 @@ class InventoryObserver
     protected function reserveBudgetItemsFromInventory(Budget $budget): void
     {
         try {
-            foreach ($budget->items as $item) {
-                if ($item->product_id) {
-                    $this->inventoryService->reserveProduct(
-                        $item->product_id,
-                        $item->quantity,
-                        'Aprovação de orçamento - Código: '.$budget->code,
-                        Budget::class,
-                        $budget->id,
-                        $budget->tenant_id,
-                    );
+            foreach ($budget->services as $service) {
+                foreach ($service->serviceItems as $item) {
+                    if ($item->product_id) {
+                        $this->inventoryService->reserveProduct(
+                            $item->product_id,
+                            $item->quantity,
+                            'Aprovação de orçamento - Código: '.$budget->code,
+                            ServiceItem::class,
+                            $item->id,
+                            $budget->tenant_id,
+                        );
+                    }
                 }
             }
         } catch (\Exception $e) {

@@ -219,14 +219,6 @@ class Budget extends Model
     }
 
     /**
-     * Get the budget items for the Budget.
-     */
-    public function items(): HasMany
-    {
-        return $this->hasMany(BudgetItem::class);
-    }
-
-    /**
      * Get the budget versions for the Budget.
      */
     public function versions(): HasMany
@@ -400,42 +392,24 @@ class Budget extends Model
     }
 
     /**
-     * Calcula o total do orçamento baseado nos itens.
+     * Calcula o total do orçamento baseado nos serviços e seus itens.
      */
     public function calculateTotals(): array
     {
-        $subtotal = $this->items->sum(function ($item) {
-            return $item->quantity * $item->unit_price;
-        });
+        $subtotal = $this->services->sum('total');
 
-        $discountTotal = $this->items->sum(function ($item) {
-            $itemTotal = $item->quantity * $item->unit_price;
+        // No novo modelo, descontos e impostos são tratados dentro de cada Serviço/Item
+        // Mas se houver um desconto global no orçamento, aplicamos aqui
+        $discountTotal = (float) ($this->discount ?? 0.0);
 
-            return $itemTotal * ($item->discount_percentage / 100);
-        });
-
-        // Aplicar desconto global se houver
-        if ($this->global_discount_percentage > 0) {
-            $globalDiscount = $subtotal * ($this->global_discount_percentage / 100);
-            $discountTotal += $globalDiscount;
-        }
-
-        $taxesTotal = $this->items->sum(function ($item) {
-            $itemTotal = $item->quantity * $item->unit_price;
-            $itemDiscount = $itemTotal * ($item->discount_percentage / 100);
-            $itemSubtotal = $itemTotal - $itemDiscount;
-
-            return $itemSubtotal * ($item->tax_percentage / 100);
-        });
-
-        $grandTotal = ($subtotal - $discountTotal) + $taxesTotal;
+        $grandTotal = $subtotal - $discountTotal;
 
         return [
             'subtotal' => $subtotal,
             'discount_total' => $discountTotal,
-            'taxes_total' => $taxesTotal,
+            'taxes_total' => 0, // Impostos agora estão embutidos no total do serviço
             'grand_total' => $grandTotal,
-            'items_count' => $this->items->count(),
+            'services_count' => $this->services->count(),
         ];
     }
 
@@ -569,11 +543,17 @@ class Budget extends Model
         $newBudget->current_version_id = null;
         $newBudget->save();
 
-        // Duplicar itens
-        foreach ($this->items as $item) {
-            $newItem = $item->replicate();
-            $newItem->budget_id = $newBudget->id;
-            $newItem->save();
+        // Duplicar serviços e seus itens
+        foreach ($this->services as $service) {
+            $newService = $service->replicate();
+            $newService->budget_id = $newBudget->id;
+            $newService->save();
+
+            foreach ($service->serviceItems as $item) {
+                $newItem = $item->replicate();
+                $newItem->service_id = $newService->id;
+                $newItem->save();
+            }
         }
 
         // Criar versão inicial

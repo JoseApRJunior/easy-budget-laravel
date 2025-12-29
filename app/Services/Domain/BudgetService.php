@@ -21,8 +21,8 @@ class BudgetService extends AbstractBaseService
 {
     public function __construct(
         BudgetRepository $budgetRepository,
-        private readonly BudgetItemRepository $budgetItemRepository,
         private readonly ServiceRepository $serviceRepository,
+        private readonly \App\Repositories\ServiceItemRepository $itemRepository,
         private readonly BudgetCodeGeneratorService $codeGeneratorService,
     ) {
         parent::__construct($budgetRepository);
@@ -107,11 +107,41 @@ class BudgetService extends AbstractBaseService
                 // Cria o orçamento usando o repositório
                 $budget = $this->repository->createFromDTO($finalDto);
 
-                // Cria os itens usando o repositório de itens
-                if (! empty($dto->items)) {
-                    foreach ($dto->items as $itemDto) {
-                        /** @var BudgetItemDTO $itemDto */
-                        $this->budgetItemRepository->createFromDTO($itemDto, $budget->id);
+                // No novo modelo hierárquico, criamos Serviços vinculados
+                if (! empty($dto->services)) {
+                    foreach ($dto->services as $serviceDto) {
+                        /** @var \App\DTOs\Service\ServiceDTO $serviceDto */
+
+                        // Garante o vínculo com o orçamento criado
+                        $finalServiceDto = new \App\DTOs\Service\ServiceDTO(
+                            budget_id: $budget->id,
+                            category_id: $serviceDto->category_id,
+                            status: $serviceDto->status,
+                            code: $serviceDto->code,
+                            description: $serviceDto->description,
+                            discount: $serviceDto->discount,
+                            total: $serviceDto->total,
+                            due_date: $serviceDto->due_date,
+                            reason: $serviceDto->reason,
+                            items: $serviceDto->items,
+                            tenant_id: $budget->tenant_id
+                        );
+
+                        // Cria o serviço usando o repository correspondente
+                        $service = $this->serviceRepository->createFromDTO($finalServiceDto);
+
+                        // Cria os itens do serviço usando seu repositório especializado
+                        if (! empty($serviceDto->items)) {
+                            foreach ($serviceDto->items as $itemDto) {
+                                /** @var \App\DTOs\Service\ServiceItemDTO $itemDto */
+                                // O Repositório de itens de serviço deve ser o ServiceItemRepository
+                                if ($this->serviceRepository instanceof \App\Repositories\ServiceRepository) {
+                                    // Assumindo que o ServiceRepository tem acesso ou injeta o ServiceItemRepository
+                                    // Mas aqui usamos o repositório injetado no construtor
+                                    $this->itemRepository->createFromDTO($itemDto, $service->id);
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -140,12 +170,40 @@ class BudgetService extends AbstractBaseService
                 // Atualiza o orçamento principal usando DTO
                 $this->repository->updateFromDTO($budget->id, $dto);
 
-                // Atualiza os itens: remove antigos e insere novos (estratégia simples)
-                if (isset($dto->items)) {
-                    $this->budgetItemRepository->deleteByBudgetId($budget->id);
-                    foreach ($dto->items as $itemDto) {
-                        /** @var BudgetItemDTO $itemDto */
-                        $this->budgetItemRepository->createFromDTO($itemDto, $budget->id);
+                // Atualiza os serviços: estratégia de sincronização completa
+                if (isset($dto->services)) {
+                    // Remove serviços e itens órfãos vinculados a este orçamento
+                    $oldServices = $budget->services;
+                    foreach ($oldServices as $oldService) {
+                        $oldService->serviceItems()->delete();
+                        $oldService->delete();
+                    }
+
+                    // Recria a hierarquia completa
+                    foreach ($dto->services as $serviceDto) {
+                        /** @var \App\DTOs\Service\ServiceDTO $serviceDto */
+                        $finalServiceDto = new \App\DTOs\Service\ServiceDTO(
+                            budget_id: $budget->id,
+                            category_id: $serviceDto->category_id,
+                            status: $serviceDto->status,
+                            code: $serviceDto->code,
+                            description: $serviceDto->description,
+                            discount: $serviceDto->discount,
+                            total: $serviceDto->total,
+                            due_date: $serviceDto->due_date,
+                            reason: $serviceDto->reason,
+                            items: $serviceDto->items,
+                            tenant_id: $budget->tenant_id
+                        );
+
+                        $service = $this->serviceRepository->createFromDTO($finalServiceDto);
+
+                        if (! empty($serviceDto->items)) {
+                            foreach ($serviceDto->items as $itemDto) {
+                                /** @var \App\DTOs\Service\ServiceItemDTO $itemDto */
+                                $this->itemRepository->createFromDTO($itemDto, $service->id);
+                            }
+                        }
                     }
                 }
 
@@ -233,8 +291,11 @@ class BudgetService extends AbstractBaseService
                 return ServiceResult::error('Orçamento não encontrado.');
             }
 
-            // Remove itens antes de excluir o orçamento (ou depende de cascade delete no DB)
-            $this->budgetItemRepository->deleteByBudgetId($budget->id);
+            // Remove serviços e seus itens antes de excluir o orçamento
+            foreach ($budget->services as $service) {
+                $service->serviceItems()->delete();
+                $service->delete();
+            }
 
             return $this->repository->delete($budget->id)
                 ? ServiceResult::success(null, 'Orçamento excluído com sucesso.')

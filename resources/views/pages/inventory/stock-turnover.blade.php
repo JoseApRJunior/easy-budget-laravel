@@ -136,8 +136,8 @@
             <div class="row align-items-center">
                 <div class="col-12 col-md-8">
                     <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-list-ul me-2"></i>Análise de Giro por Produto
-                        <span class="text-muted small">({{ $stockTurnover->total() }} produtos)</span>
+                        <i class="bi bi-list-ul me-2"></i>Giro de Produtos
+                        <span class="text-muted small">({{ $stockTurnover->total() }} itens)</span>
                     </h5>
                 </div>
                 <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
@@ -242,7 +242,9 @@
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1">
                                             <x-button type="link" :href="route('provider.inventory.show', $item->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
-                                            <x-button type="link" :href="route('provider.inventory.movements', ['product_id' => $item->id])" variant="primary" icon="clock-history" title="Ver Movimentações" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.entry', $item->sku)" variant="success" icon="arrow-down-circle" title="Entrada" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.exit', $item->sku)" variant="warning" icon="arrow-up-circle" title="Saída" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="primary" icon="clock-history" title="Ver Movimentações" size="sm" />
                                             <x-button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
                                         </div>
                                     </td>
@@ -311,9 +313,11 @@
                                 </div>
                             </div>
                             
-                            <div class="d-flex gap-2">
+                            <div class="d-flex flex-wrap gap-2">
                                 <x-button type="link" :href="route('provider.inventory.show', $item->sku)" variant="info" icon="eye" label="Ver" size="sm" class="flex-grow-1" />
-                                <x-button type="link" :href="route('provider.inventory.movements', ['product_id' => $item->id])" variant="primary" icon="clock-history" label="Movim." size="sm" class="flex-grow-1" />
+                                <x-button type="link" :href="route('provider.inventory.entry', $item->sku)" variant="success" icon="arrow-down-circle" label="Entrada" size="sm" class="flex-grow-1" />
+                                <x-button type="link" :href="route('provider.inventory.exit', $item->sku)" variant="warning" icon="arrow-up-circle" label="Saída" size="sm" class="flex-grow-1" />
+                                <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="primary" icon="clock-history" label="Movim." size="sm" class="flex-grow-1" />
                             </div>
                         </div>
                     @endforeach

@@ -202,19 +202,19 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                             <li>
                                 <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-movements', ['product_id' => $product->id, 'format' => 'xlsx']) }}">
+                                    href="{{ route('provider.inventory.export-movements', ['sku' => $product->sku, 'format' => 'xlsx']) }}">
                                     <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-movements', ['product_id' => $product->id, 'format' => 'pdf']) }}">
+                                    href="{{ route('provider.inventory.export-movements', ['sku' => $product->sku, 'format' => 'pdf']) }}">
                                     <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
                                 </a>
                             </li>
                         </ul>
                     </div>
-                    <a href="{{ route('provider.inventory.movements', ['product_id' => $product->id]) }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-list-ul me-1"></i>Ver Tudo
                     </a>
                 </div>

@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Produtos Mais Utilizados')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid py-1">
     <x-page-header
         title="Produtos Mais Utilizados"
         icon="star"
@@ -11,43 +11,35 @@
             'Inventário' => route('provider.inventory.dashboard'),
             'Produtos Mais Utilizados' => '#'
         ]">
+        <p class="text-muted small">Análise de produtos com maior frequência de saída no período</p>
     </x-page-header>
 
     <!-- Filtros -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h3 class="card-title">Filtros</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
+                    <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                 </div>
                 <div class="card-body">
                     <form method="GET" action="{{ route('provider.inventory.most-used') }}">
-                        <div class="row">
-                            <div class="col-md-4">
+                        <div class="row g-3">
+                            <div class="col-md-5">
                                 <div class="form-group">
                                     <label for="start_date">Data Inicial</label>
                                     <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $filters['start_date'] ?? '' }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-5">
                                 <div class="form-group">
                                     <label for="end_date">Data Final</label>
                                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $filters['end_date'] ?? '' }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-search"></i> Filtrar
-                                        </button>
-                                    </div>
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
+                                    <x-button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x-circle" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -57,161 +49,173 @@
         </div>
     </div>
 
+    @php
+        $totalUsage = $summary['total_usage'] ?? 0;
+        $totalValue = $summary['total_value'] ?? 0;
+        $averageUsage = $summary['average_usage'] ?? 0;
+        $analyzedCount = $summary['total_products'] ?? 0;
+    @endphp
+
     <!-- Resumo do Período -->
-    <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ isset($products) ? $products->count() : 0 }}</h4>
-                            <p>Produtos Analisados</p>
+    <div class="row mb-4">
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-info text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Analisados</h6>
                     </div>
+                    <h5 class="mb-0 fw-bold">{{ number_format($analyzedCount, 0, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
 
-        @php
-            $totalUsage = isset($products) ? $products->sum('total_usage') : 0;
-            $totalValue = isset($products) ? $products->sum('total_value') : 0;
-            $averageUsage = isset($products) ? $products->avg('total_usage') : 0;
-        @endphp
-
-        <div class="col-lg-3 col-6">
-            <div class="card bg-success">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ $totalUsage }}</h4>
-                            <p>Total de Saídas</p>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-success text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-arrow-up-circle" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Saídas</h6>
                     </div>
+                    <h5 class="mb-0 fw-bold">{{ number_format($totalUsage, 0, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-6">
-            <div class="card bg-warning">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>R$ {{ number_format($totalValue, 2, ',', '.') }}</h4>
-                            <p>Valor Total</p>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-warning text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total</h6>
                     </div>
+                    <h5 class="mb-0 fw-bold text-warning">R$ {{ number_format($totalValue, 2, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-3 col-6">
-            <div class="card bg-primary">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($averageUsage, 1) }}</h4>
-                            <p>Média de Uso</p>
+        <div class="col-12 col-sm-6 col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-primary text-white me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-graph-up" style="font-size: 0.9rem;"></i>
                         </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Média Uso</h6>
                     </div>
+                    <h5 class="mb-0 fw-bold text-primary">{{ number_format($averageUsage, 1, ',', '.') }}</h5>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Tabela de Produtos Mais Utilizados -->
-    <div class="row mt-4">
+    <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Produtos Mais Utilizados</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('provider.inventory.dashboard') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-arrow-left"></i> Voltar
-                        </a>
+            <div class="card shadow-sm border-0">
+                <div class="card-header  py-3">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-lg-8 mb-2 mb-lg-0">
+                            <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                                <span class="me-2">
+                                    <i class="bi bi-list-ul me-1"></i>
+                                    <span class="d-none d-sm-inline">Produtos Mais Utilizados</span>
+                                    <span class="d-sm-none">Mais Utilizados</span>
+                                </span>
+                                <span class="text-muted" style="font-size: 0.875rem;">
+                                    ({{ $products->total() }})
+                                </span>
+                            </h5>
+                        </div>
+                        <div class="col-12 col-lg-4 mt-2 mt-lg-0 text-lg-end">
+                            <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                                <div class="dropdown">
+                                    <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
+                                                <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf'])) }}">
+                                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     @if(isset($products) && $products->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead>
+                        <!-- Desktop View -->
+                        <div class="table-responsive d-none d-lg-block">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class=" text-muted small text-uppercase">
                                     <tr>
-                                        <th>Posição</th>
-                                        <th>SKU</th>
+                                        <th class="ps-4">Pos.</th>
                                         <th>Produto</th>
-                                        <th>Categoria</th>
-                                        <th>Quantidade Utilizada</th>
-                                        <th>Valor Total</th>
-                                        <th>% do Total</th>
-                                        <th>Estoque Atual</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
+                                        <th class="text-center">Quantidade</th>
+                                        <th class="text-end">Valor Total</th>
+                                        <th class="text-center">% do Total</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center pe-4">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($products as $index => $product)
+                                        @php
+                                            $statusClass = $product['current_stock'] <= 0 ? 'badge-inactive' : ($product['current_stock'] <= $product['min_quantity'] ? 'badge-deleted' : 'badge-active');
+                                            $statusLabel = $product['current_stock'] <= 0 ? 'Sem Estoque' : ($product['current_stock'] <= $product['min_quantity'] ? 'Estoque Baixo' : 'Estoque OK');
+                                        @endphp
                                         <tr>
-                                            <td>
-                                                <span class="badge badge-primary">
-                                                    #{{ $index + 1 }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $product['sku'] }}</td>
-                                            <td>{{ $product['name'] }}</td>
-                                            <td>{{ $product['category'] ?? 'N/A' }}</td>
-                                            <td>
-                                                <strong>{{ $product['total_usage'] }}</strong>
-                                                <br>
-                                                <small class="text-muted">
-                                                    Média: {{ number_format($product['average_usage'], 2) }}/dia
-                                                </small>
+                                            <td class="ps-4">
+                                                <span class="badge bg-light text-primary border shadow-sm">#{{ $index + 1 }}</span>
                                             </td>
                                             <td>
-                                                R$ {{ number_format($product['total_value'], 2, ',', '.') }}
-                                                <br>
-                                                <small class="text-muted">
-                                                    Unit: R$ {{ number_format($product['unit_price'], 2, ',', '.') }}
-                                                </small>
-                                            </td>
-                                            <td>
-                                                <div class="progress">
-                                                    <div class="progress-bar" role="progressbar" 
-                                                         style="width: {{ $product['percentage_of_total'] }}%"
-                                                         aria-valuenow="{{ $product['percentage_of_total'] }}" 
-                                                         aria-valuemin="0" aria-valuemax="100">
-                                                        {{ number_format($product['percentage_of_total'], 1) }}%
-                                                    </div>
+                                                <div class="fw-bold text-dark">{{ $product['name'] }}</div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <small class="text-muted text-code" style="font-size: 0.7rem;">{{ $product['sku'] }}</small>
+                                                    <span class="badge bg-light text-muted border-0 p-0" style="font-size: 0.7rem;">• {{ $product['category'] ?? 'Geral' }}</span>
                                                 </div>
                                             </td>
-                                            <td>
-                                                <span class="badge badge-{{ $product['current_stock'] > 0 ? 'success' : 'danger' }}">
-                                                    {{ $product['current_stock'] }}
+                                            <td class="text-center">
+                                                <div class="fw-bold text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</div>
+                                                <div class="small text-muted" style="font-size: 0.7rem;">{{ number_format($product['average_usage'], 2, ',', '.') }}/dia</div>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="fw-bold text-dark">R$ {{ number_format($product['total_value'], 2, ',', '.') }}</div>
+                                                <div class="small text-muted" style="font-size: 0.7rem;">R$ {{ number_format($product['unit_price'], 2, ',', '.') }} un.</div>
+                                            </td>
+                                            <td class="text-center" style="min-width: 120px;">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
+                                                        <div class="progress-bar" role="progressbar"
+                                                             style="width: {{ $product['percentage_of_total'] }}%"
+                                                             aria-valuenow="{{ $product['percentage_of_total'] }}"
+                                                             aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                    <small class="fw-bold text-muted">{{ number_format($product['percentage_of_total'], 1, ',', '.') }}%</small>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="modern-badge {{ $statusClass }}">
+                                                    {{ $statusLabel }}
                                                 </span>
-                                                @if($product['current_stock'] <= $product['min_quantity'])
-                                                    <i class="fas fa-exclamation-triangle text-warning" title="Estoque baixo"></i>
-                                                @endif
                                             </td>
-                                            <td>
-                                                @if($product['current_stock'] <= 0)
-                                                    <span class="badge badge-danger">Sem Estoque</span>
-                                                @elseif($product['current_stock'] <= $product['min_quantity'])
-                                                    <span class="badge badge-warning">Estoque Baixo</span>
-                                                @else
-                                                    <span class="badge badge-success">OK</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <a href="{{ route('provider.inventory.show', $product['id']) }}" 
-                                                       class="btn btn-sm btn-info" 
-                                                       title="Ver Produto">
-                                                        <i class="fas fa-box"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.inventory.movements', ['product_id' => $product['id']]) }}" 
-                                                       class="btn btn-sm btn-primary" 
-                                                       title="Ver Movimentações">
-                                                        <i class="fas fa-list"></i>
-                                                    </a>
+                                            <td class="text-center pe-4">
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" size="sm" />
+                                                    <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" size="sm" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -220,63 +224,140 @@
                             </table>
                         </div>
 
-                        <!-- Análise de Curva ABC -->
-                        <div class="mt-4">
-                            <h5>Análise de Curva ABC:</h5>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="alert alert-success">
-                                        <strong>Classe A (80%):</strong> 
-                                        @php
-                                            $classA = $products->filter(function($product) {
-                                                return $product['percentage_of_total'] >= 5;
-                                            });
-                                        @endphp
-                                        {{ $classA->count() }} produtos ({{ number_format($classA->sum('percentage_of_total'), 1) }}% do total)
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="alert alert-warning">
-                                        <strong>Classe B (15%):</strong> 
-                                        @php
-                                            $classB = $products->filter(function($product) {
-                                                return $product['percentage_of_total'] >= 1 && $product['percentage_of_total'] < 5;
-                                            });
-                                        @endphp
-                                        {{ $classB->count() }} produtos ({{ number_format($classB->sum('percentage_of_total'), 1) }}% do total)
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="alert alert-info">
-                                        <strong>Classe C (5%):</strong> 
-                                        @php
-                                            $classC = $products->filter(function($product) {
-                                                return $product['percentage_of_total'] < 1;
-                                            });
-                                        @endphp
-                                        {{ $classC->count() }} produtos ({{ number_format($classC->sum('percentage_of_total'), 1) }}% do total)
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Mobile View -->
+                        <div class="mobile-view d-lg-none">
+                            <div class="list-group list-group-flush">
+                                @foreach($products as $index => $product)
+                                    @php
+                                        $statusClass = $product['current_stock'] <= 0 ? 'badge-inactive' : ($product['current_stock'] <= $product['min_quantity'] ? 'badge-deleted' : 'badge-active');
+                                        $statusLabel = $product['current_stock'] <= 0 ? 'Sem Estoque' : ($product['current_stock'] <= $product['min_quantity'] ? 'Estoque Baixo' : 'Estoque OK');
+                                    @endphp
+                                    <div class="list-group-item py-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-light text-primary border shadow-sm me-2">#{{ $index + 1 }}</span>
+                                                <div>
+                                                    <div class="fw-bold text-dark small">{{ $product['name'] }}</div>
+                                                    <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $product['sku'] }}</small>
+                                                </div>
+                                            </div>
+                                            <span class="modern-badge {{ $statusClass }}" style="font-size: 0.65rem;">
+                                                {{ $statusLabel }}
+                                            </span>
+                                        </div>
 
-                        <!-- Período Analisado -->
-                        <div class="mt-4">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Período analisado:</strong> 
-                                {{ \Carbon\Carbon::parse($filters['start_date'])->format('d/m/Y') }} 
-                                até {{ \Carbon\Carbon::parse($filters['end_date'])->format('d/m/Y') }}
-                                ({{ \Carbon\Carbon::parse($filters['start_date'])->diffInDays(\Carbon\Carbon::parse($filters['end_date'])) + 1 }} dias)
+                                        <div class="row g-2 mb-3 bg-light rounded p-2 mx-0">
+                                            <div class="col-4 text-center">
+                                                <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Qtd Saídas</small>
+                                                <span class="fw-bold small text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="col-4 text-center border-start border-end">
+                                                <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">% Total</small>
+                                                <span class="fw-bold small">{{ number_format($product['percentage_of_total'], 1, ',', '.') }}%</span>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Estoque</small>
+                                                <span class="fw-bold small">{{ number_format($product['current_stock'], 0, ',', '.') }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Valor Total</small>
+                                                <span class="fw-bold small">R$ {{ number_format($product['total_value'], 2, ',', '.') }}</span>
+                                            </div>
+                                            <div class="action-btn-group d-flex gap-1">
+                                                <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" size="sm" title="Ver Produto" />
+                                                <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" size="sm" title="Ver Movimentações" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @else
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i>
-                            Nenhum produto encontrado com os filtros aplicados.
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                            Nenhum produto encontrado com os filtros aplicados para este período.
                         </div>
                     @endif
                 </div>
+
+                @if($products->hasPages())
+                        @include('partials.components.paginator', [
+                            'p' => $products->appends(request()->query()),
+                            'show_info' => true
+                        ])
+                @endif
+
+                <!-- Análise de Curva ABC -->
+                <div class="p-5 border-top">
+                            <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                <i class="bi bi-pie-chart me-2"></i> Análise de Curva ABC
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="card h-100 bg-success bg-opacity-10 border-0 shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <strong class="text-success small text-uppercase">Classe A (80%)</strong>
+                                                <span class="badge bg-success text-white">Forte</span>
+                                            </div>
+                                            <h5 class="mb-1 fw-bold text-dark">{{ $summary['abc_analysis']['class_a']['count'] }} produtos</h5>
+                                            <div class="text-muted small">{{ number_format($summary['abc_analysis']['class_a']['percentage'], 1, ',', '.') }}% do volume total</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card h-100 bg-warning bg-opacity-10 border-0 shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <strong class="text-warning small text-uppercase">Classe B (15%)</strong>
+                                                <span class="badge bg-warning text-white">Médio</span>
+                                            </div>
+                                            <h5 class="mb-1 fw-bold text-dark">{{ $summary['abc_analysis']['class_b']['count'] }} produtos</h5>
+                                            <div class="text-muted small">{{ number_format($summary['abc_analysis']['class_b']['percentage'], 1, ',', '.') }}% do volume total</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card h-100 bg-info bg-opacity-10 border-0 shadow-sm">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <strong class="text-info small text-uppercase">Classe C (5%)</strong>
+                                                <span class="badge bg-info text-white">Baixo</span>
+                                            </div>
+                                            <h5 class="mb-1 fw-bold text-dark">{{ $summary['abc_analysis']['class_c']['count'] }} produtos</h5>
+                                            <div class="text-muted small">{{ number_format($summary['abc_analysis']['class_c']['percentage'], 1, ',', '.') }}% do volume total</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info border-0 shadow-sm mb-0 mt-4 d-flex align-items-center">
+                                <i class="bi bi-info-circle fs-5 me-3"></i>
+                                <div>
+                                    <strong>Período analisado:</strong>
+                                    {{ \Carbon\Carbon::parse($filters['start_date'])->format('d/m/Y') }}
+                                    até {{ \Carbon\Carbon::parse($filters['end_date'])->format('d/m/Y') }}
+                                    <span class="text-muted ms-1">({{ \Carbon\Carbon::parse($filters['start_date'])->diffInDays(\Carbon\Carbon::parse($filters['end_date'])) + 1 }} dias)</span>
+                                </div>
+                            </div>
+                        </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="mt-4 pb-2">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-md-auto">
+                <x-back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
+            </div>
+            <div class="col-12 col-md text-center d-none d-md-block">
+                <small class="text-muted">
+                    Análise gerada em: {{ now()->format('d/m/Y H:i') }}
+                </small>
             </div>
         </div>
     </div>

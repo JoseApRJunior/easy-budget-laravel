@@ -24,6 +24,9 @@
                 @if(request('product_id'))
                     <input type="hidden" name="product_id" value="{{ request('product_id') }}">
                 @endif
+                @if(request('sku'))
+                    <input type="hidden" name="sku" value="{{ request('sku') }}">
+                @endif
                 <div class="row g-3">
                     <div class="col-md-3">
                         <div class="form-group">

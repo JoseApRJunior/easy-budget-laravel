@@ -341,18 +341,39 @@ class InventoryManagementService extends AbstractBaseService
             $startDate = $filters['start_date'] ?? now()->subMonths(1)->format('Y-m-d');
             $endDate = $filters['end_date'] ?? now()->format('Y-m-d');
 
-            $movements = \App\Models\InventoryMovement::selectRaw('product_id, SUM(quantity) as total_usage')
+            $movementsQuery = \App\Models\InventoryMovement::selectRaw('product_id, SUM(quantity) as total_usage')
                 ->where('type', 'exit')
                 ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
                 ->groupBy('product_id')
                 ->orderByDesc('total_usage')
-                ->with(['product.category', 'product.inventory'])
-                ->get();
+                ->with(['product.category', 'product.inventory']);
 
-            $totalUsageAll = $movements->sum('total_usage');
+            // Pegamos o total geral para cálculo de porcentagem e resumo
+            $summaryData = \App\Models\InventoryMovement::selectRaw('SUM(quantity) as total_usage, COUNT(DISTINCT product_id) as total_products')
+                ->where('type', 'exit')
+                ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+                ->first();
+
+            $totalUsageAll = $summaryData->total_usage ?? 0;
+            $totalProductsAll = $summaryData->total_products ?? 0;
+
+            // Para o valor total, precisamos de uma query um pouco mais complexa ou somar depois
+            // Como os produtos podem ter preços diferentes, vamos somar o valor total de uso
+            $totalValueAll = \App\Models\InventoryMovement::join('products', 'inventory_movements.product_id', '=', 'products.id')
+                ->where('inventory_movements.type', 'exit')
+                ->whereBetween('inventory_movements.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+                ->sum(\DB::raw('inventory_movements.quantity * products.price'));
+
+            $allMovements = $movementsQuery->get();
+            $classA = $allMovements->filter(fn($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 5);
+            $classB = $allMovements->filter(fn($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 1 && ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) < 5);
+            $classC = $allMovements->filter(fn($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) < 1);
+
+            $paginatedMovements = $movementsQuery->paginate($filters['per_page'] ?? 10);
+
             $days = max(1, now()->parse($startDate)->diffInDays(now()->parse($endDate)));
 
-            $products = $movements->map(function ($m) use ($totalUsageAll, $days) {
+            $paginatedMovements->getCollection()->transform(function ($m) use ($totalUsageAll, $days) {
                 $p = $m->product;
 
                 return [
@@ -371,7 +392,27 @@ class InventoryManagementService extends AbstractBaseService
             });
 
             return [
-                'products' => $products,
+                'products' => $paginatedMovements,
+                'summary' => [
+                    'total_usage' => $totalUsageAll,
+                    'total_value' => $totalValueAll,
+                    'total_products' => $totalProductsAll,
+                    'average_usage' => $totalProductsAll > 0 ? $totalUsageAll / $totalProductsAll : 0,
+                    'abc_analysis' => [
+                        'class_a' => [
+                            'count' => $classA->count(),
+                            'percentage' => $totalUsageAll > 0 ? ($classA->sum('total_usage') / $totalUsageAll) * 100 : 0,
+                        ],
+                        'class_b' => [
+                            'count' => $classB->count(),
+                            'percentage' => $totalUsageAll > 0 ? ($classB->sum('total_usage') / $totalUsageAll) * 100 : 0,
+                        ],
+                        'class_c' => [
+                            'count' => $classC->count(),
+                            'percentage' => $totalUsageAll > 0 ? ($classC->sum('total_usage') / $totalUsageAll) * 100 : 0,
+                        ],
+                    ],
+                ],
                 'filters' => [
                     'start_date' => $startDate,
                     'end_date' => $endDate,
