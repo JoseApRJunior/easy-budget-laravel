@@ -94,20 +94,7 @@ class BudgetHierarchyTest extends TestCase
             ->post(route('provider.budgets.store'), $payload);
 
         $response->assertStatus(302);
-        \Illuminate\Support\Facades\Log::info("Test Debug", [
-            'status' => $response->status(),
-            'error' => session('error'),
-            'errors' => session('errors') ? session('errors')->getMessages() : null,
-            'location' => $response->headers->get('Location'),
-        ]);
         $budget = Budget::first();
-        if ($response->status() !== 201 && $response->status() !== 302 || !$budget) {
-            dd([
-                'status' => $response->status(),
-                'session' => session()->all(),
-                'headers' => $response->headers->all(),
-            ]);
-        }
         $this->assertNotNull($budget);
         $this->assertEquals(2, $budget->services()->count());
         $this->assertEquals(3, ServiceItem::count());

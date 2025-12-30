@@ -20,6 +20,8 @@ readonly class ProductFilterDTO extends AbstractDTO
         public ?string $category = null,
         public ?float $min_price = null,
         public ?float $max_price = null,
+        public ?string $start_date = null,
+        public ?string $end_date = null,
         public bool $all = false,
         public int $per_page = 10,
     ) {}
@@ -36,6 +38,8 @@ readonly class ProductFilterDTO extends AbstractDTO
             category: $data['category'] ?? null,
             min_price: isset($data['min_price']) && $data['min_price'] !== '' ? CurrencyHelper::unformat($data['min_price']) : null,
             max_price: isset($data['max_price']) && $data['max_price'] !== '' ? CurrencyHelper::unformat($data['max_price']) : null,
+            start_date: $data['start_date'] ?? null,
+            end_date: $data['end_date'] ?? null,
             all: filter_var($data['all'] ?? false, FILTER_VALIDATE_BOOLEAN),
             per_page: (int) ($data['per_page'] ?? 10),
         );
@@ -71,6 +75,14 @@ readonly class ProductFilterDTO extends AbstractDTO
 
         if ($this->max_price !== null) {
             $filters['max_price'] = $this->max_price;
+        }
+
+        if ($this->start_date !== null) {
+            $filters['start_date'] = $this->start_date;
+        }
+
+        if ($this->end_date !== null) {
+            $filters['end_date'] = $this->end_date;
         }
 
         if ($this->all) {

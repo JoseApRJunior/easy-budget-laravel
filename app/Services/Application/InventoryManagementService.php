@@ -146,8 +146,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($filters) {
             // Normalizar datas
-            $filters['start_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null);
-            $filters['end_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null);
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date'] ?? null);
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date'] ?? null);
 
             $query = \App\Models\InventoryMovement::with(['product', 'user']);
 
@@ -255,8 +255,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($filters) {
             // Normalizar datas
-            $filters['start_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null);
-            $filters['end_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null);
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date'] ?? null);
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date'] ?? null);
 
             // Validação de datas
             if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
@@ -360,8 +360,8 @@ class InventoryManagementService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($filters) {
             // Normalizar datas
-            $startDate = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null);
-            $endDate = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null);
+            $startDate = \App\Helpers\DateHelper::parseDate($filters['start_date'] ?? null);
+            $endDate = \App\Helpers\DateHelper::parseDate($filters['end_date'] ?? null);
 
             $filters['start_date'] = $startDate;
             $filters['end_date'] = $endDate;
@@ -496,8 +496,8 @@ class InventoryManagementService extends AbstractBaseService
             $reportType = $filters['report_type'] ?? $filters['type'] ?? 'summary';
 
             // Normalizar datas
-            $startDate = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null);
-            $endDate = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null);
+            $startDate = \App\Helpers\DateHelper::parseDate($filters['start_date'] ?? null);
+            $endDate = \App\Helpers\DateHelper::parseDate($filters['end_date'] ?? null);
 
             // Atualizar filtros com as datas normalizadas
             $filters['start_date'] = $startDate;

@@ -45,7 +45,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Data Inicial <span class="text-danger">*</span></label>
+                                <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Período Inicial <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="start_date" name="start_date"
                                     value="{{ $startDate ?? '' }}" placeholder="DD/MM/AAAA"
                                     data-mask="00/00/0000" >
@@ -53,7 +53,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Data Final <span class="text-danger">*</span></label>
+                                <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Período Final <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="end_date" name="end_date"
                                     value="{{ $endDate ?? '' }}" placeholder="DD/MM/AAAA"
                                     data-mask="00/00/0000" >

@@ -376,9 +376,9 @@
                                 <i class="bi bi-info-circle fs-5 me-3"></i>
                                 <div>
                                     <strong>Período analisado:</strong>
-                                    {{ \Carbon\Carbon::parse($filters['start_date'])->format('d/m/Y') }}
-                                    até {{ \Carbon\Carbon::parse($filters['end_date'])->format('d/m/Y') }}
-                                    <span class="text-muted ms-1">({{ \Carbon\Carbon::parse($filters['start_date'])->diffInDays(\Carbon\Carbon::parse($filters['end_date'])) + 1 }} dias)</span>
+                                    {{ \App\Helpers\DateHelper::toCarbon($filters['start_date'])->format('d/m/Y') }}
+                                    até {{ \App\Helpers\DateHelper::toCarbon($filters['end_date'])->format('d/m/Y') }}
+                                    <span class="text-muted ms-1">({{ \App\Helpers\DateHelper::toCarbon($filters['start_date'])->diffInDays(\App\Helpers\DateHelper::toCarbon($filters['end_date'])) + 1 }} dias)</span>
                                 </div>
                             </div>
                         </div>

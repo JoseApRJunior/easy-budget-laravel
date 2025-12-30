@@ -123,10 +123,10 @@ class ServiceService extends AbstractBaseService
                 $this->repository->updateFromDTO($service->id, $dto);
 
                 if (isset($dto->items)) {
-                    $service->items()->delete();
+                    $service->serviceItems()->delete();
                     foreach ($dto->items as $itemDto) {
                         /** @var ServiceItemDTO $itemDto */
-                        $service->items()->create($itemDto->toArray());
+                        $service->serviceItems()->create($itemDto->toArray());
                     }
                 }
 

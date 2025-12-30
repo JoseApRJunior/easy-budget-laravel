@@ -32,7 +32,14 @@
 
 O padrão de relatórios deve seguir a estrutura de filtros com estado inicial vazio, onde os dados só são carregados após a aplicação de filtros.
 
+#### Padrão de Estilização (CSS)
+- **Labels de Filtro:** Sempre utilizar as classes `form-label small fw-bold text-muted text-uppercase`.
+- **Cabeçalhos de Tabela (`<th>`):** Para manter a consistência, utilizar as classes `small fw-bold text-muted text-uppercase`.
+
 #### Padrão de Filtros de Data
+- **Labels Sugeridas:**
+  - Para listagens de registros (Ex: Produtos, Categorias): **"Cadastro Inicial"** e **"Cadastro Final"**.
+  - Para relatórios de movimentação/fluxo (Ex: Estoque, Financeiro): **"Período Inicial"** e **"Período Final"**.
 - **Input:** Utilizar `type="text"` com máscara `DD/MM/AAAA`.
 - **Placeholder:** Sempre usar `placeholder="DD/MM/AAAA"`.
 - **Validação:** Implementar validação via JavaScript para garantir que a Data Inicial não seja maior que a Data Final.

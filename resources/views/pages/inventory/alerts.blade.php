@@ -8,6 +8,7 @@
     <x-page-header
         title="Alertas de Estoque"
         icon="bell"
+        icon-color="danger"
         :breadcrumb-items="[
             'Inventário' => route('provider.inventory.dashboard'),
             'Alertas' => '#'
@@ -21,15 +22,15 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning text-white me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-exclamation-triangle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-danger shadow-sm text-white me-3" style="width: 45px; height: 45px;">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 1.25rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold">{{ number_format($lowStockProducts->total(), 0, ',', '.') }}</h5>
-                        <a href="#low-stock-section" class="btn btn-sm btn-outline-warning border-0 p-0">
-                            <i class="bi bi-arrow-down-circle"></i>
+                        <h5 class="mb-0 fw-bold display-6">{{ number_format($lowStockProducts->total(), 0, ',', '.') }}</h5>
+                        <a href="#low-stock-section" class="btn btn-link text-danger p-0" title="Ver detalhes">
+                            <i class="bi bi-arrow-down-circle fs-4"></i>
                         </a>
                     </div>
                 </div>
@@ -40,15 +41,15 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info text-white me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-arrow-up-circle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-primary shadow-sm text-white me-3" style="width: 45px; height: 45px;">
+                            <i class="bi bi-arrow-up-circle" style="font-size: 1.25rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Alto</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold">{{ number_format($highStockProducts->total(), 0, ',', '.') }}</h5>
-                        <a href="#high-stock-section" class="btn btn-sm btn-outline-info border-0 p-0">
-                            <i class="bi bi-arrow-up-circle"></i>
+                        <h5 class="mb-0 fw-bold display-6">{{ number_format($highStockProducts->total(), 0, ',', '.') }}</h5>
+                        <a href="#high-stock-section" class="btn btn-link text-primary p-0" title="Ver detalhes">
+                            <i class="bi bi-arrow-up-circle fs-4"></i>
                         </a>
                     </div>
                 </div>
@@ -62,7 +63,7 @@
             <div class="row align-items-center">
                 <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                     <h5 class="mb-0 d-flex align-items-center flex-wrap text-body">
-                        <span class="me-2">
+                        <span class="me-2 ">
                             <i class="bi bi-exclamation-triangle me-1"></i>
                             <span class="d-none d-sm-inline">Estoque Baixo</span>
                             <span class="d-sm-none">Baixo</span>
@@ -101,14 +102,14 @@
                         <table class="modern-table table mb-0">
                             <thead>
                                 <tr>
-                                    <th width="60"><i class="bi bi-box" aria-hidden="true"></i></th>
-                                    <th>Produto</th>
-                                    <th>Categoria</th>
-                                    <th class="text-center">Estoque Atual</th>
-                                    <th class="text-center">Mínimo</th>
-                                    <th class="text-center">Diferença</th>
-                                    <th class="text-center" width="120">Status</th>
-                                    <th class="text-center" width="150">Ações</th>
+                                    <th width="60"><i class="bi bi-box " aria-hidden="true"></i></th>
+                                    <th class="small text-uppercase">Produto</th>
+                                    <th class=" text-uppercase">Categoria</th>
+                                    <th class="text-center  text-uppercase">Estoque Atual</th>
+                                    <th class="text-center  text-uppercase">Mínimo</th>
+                                    <th class="text-center  text-uppercase">Diferença</th>
+                                    <th class="text-center  text-uppercase" width="120">Status</th>
+                                    <th class="text-center  text-uppercase" width="150">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -123,7 +124,7 @@
                                     @endphp
                                     <tr>
                                         <td>
-                                            <div class="item-icon">
+                                            <div class="item-icon bg-danger shadow-sm text-white">
                                                 <i class="bi bi-box-seam"></i>
                                             </div>
                                         </td>
@@ -139,7 +140,7 @@
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="fw-bold {{ $item->quantity <= 0 ? 'text-danger' : 'text-warning' }}">
+                                            <div class="fw-bold {{ $item->quantity <= 0 ? 'text-danger' : 'text-danger' }}">
                                                 {{ number_format($item->quantity, 0, ',', '.') }}
                                             </div>
                                         </td>
@@ -183,7 +184,7 @@
                             <div class="list-group-item py-3">
                                 <div class="d-flex align-items-start">
                                     <div class="me-3 mt-1">
-                                        <div class="avatar-circle bg-light text-muted" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <div class="avatar-circle bg-danger shadow-sm text-white" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-box-seam"></i>
                                         </div>
                                     </div>
@@ -201,7 +202,7 @@
                                         <div class="row g-2 mb-3 bg-light rounded p-2 mx-0 mt-2">
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Atual</small>
-                                                <span class="fw-bold small {{ $item->quantity <= 0 ? 'text-danger' : 'text-warning' }}">{{ number_format($item->quantity, 0, ',', '.') }}</span>
+                                                <span class="fw-bold small {{ $item->quantity <= 0 ? 'text-danger' : 'text-danger' }}">{{ number_format($item->quantity, 0, ',', '.') }}</span>
                                             </div>
                                             <div class="col-4 text-center border-start border-end">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Mínimo</small>
@@ -234,7 +235,7 @@
             @else
                 <div class="text-center py-5">
                     <div class="mb-3">
-                        <div class="avatar-circle bg-light text-success mx-auto" style="width: 80px; height: 80px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
+                        <div class="avatar-circle bg-success shadow-sm text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
                             <i class="bi bi-check-circle"></i>
                         </div>
                     </div>
@@ -253,7 +254,7 @@
             <div class="row align-items-center">
                 <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                     <h5 class="mb-0 d-flex align-items-center flex-wrap text-body">
-                        <span class="me-2">
+                        <span class="me-2 ">
                             <i class="bi bi-arrow-up-circle me-1"></i>
                             <span class="d-none d-sm-inline">Estoque Alto (Excesso)</span>
                             <span class="d-sm-none">Excesso</span>
@@ -292,14 +293,14 @@
                         <table class="modern-table table mb-0">
                             <thead>
                                 <tr>
-                                    <th width="60"><i class="bi bi-box" aria-hidden="true"></i></th>
-                                    <th>Produto</th>
-                                    <th>Categoria</th>
-                                    <th class="text-center">Estoque Atual</th>
-                                    <th class="text-center">Máximo</th>
-                                    <th class="text-center">Excesso</th>
-                                    <th class="text-center" width="120">Status</th>
-                                    <th class="text-center" width="150">Ações</th>
+                                    <th width="60"><i class="bi bi-box " aria-hidden="true"></i></th>
+                                    <th class=" text-uppercase">Produto</th>
+                                    <th class=" text-uppercase">Categoria</th>
+                                    <th class="text-center  text-uppercase">Estoque Atual</th>
+                                    <th class="text-center  text-uppercase">Máximo</th>
+                                    <th class="text-center  text-uppercase">Excesso</th>
+                                    <th class="text-center  text-uppercase" width="120">Status</th>
+                                    <th class="text-center  text-uppercase" width="150">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -314,7 +315,7 @@
                                     @endphp
                                     <tr>
                                         <td>
-                                            <div class="item-icon">
+                                            <div class="item-icon bg-primary shadow-sm text-white">
                                                 <i class="bi bi-box-seam"></i>
                                             </div>
                                         </td>
@@ -330,7 +331,7 @@
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="fw-bold text-info">
+                                            <div class="fw-bold text-primary">
                                                 {{ number_format($item->quantity, 0, ',', '.') }}
                                             </div>
                                         </td>
@@ -338,7 +339,7 @@
                                             {{ number_format($item->max_quantity, 0, ',', '.') }}
                                         </td>
                                         <td class="text-center">
-                                            <span class="text-info fw-bold">
+                                            <span class="text-primary fw-bold">
                                                 +{{ number_format($excess, 0, ',', '.') }}
                                             </span>
                                         </td>
@@ -374,7 +375,7 @@
                             <div class="list-group-item py-3">
                                 <div class="d-flex align-items-start">
                                     <div class="me-3 mt-1">
-                                        <div class="avatar-circle bg-light text-muted" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <div class="avatar-circle bg-primary shadow-sm text-white" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                             <i class="bi bi-box-seam"></i>
                                         </div>
                                     </div>
@@ -392,7 +393,7 @@
                                         <div class="row g-2 mb-3 bg-light rounded p-2 mx-0 mt-2">
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Atual</small>
-                                                <span class="fw-bold small text-info">{{ number_format($item->quantity, 0, ',', '.') }}</span>
+                                                <span class="fw-bold small text-primary">{{ number_format($item->quantity, 0, ',', '.') }}</span>
                                             </div>
                                             <div class="col-4 text-center border-start border-end">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Máximo</small>
@@ -400,7 +401,7 @@
                                             </div>
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Excesso</small>
-                                                <span class="fw-bold text-info small">+{{ number_format($excess, 0, ',', '.') }}</span>
+                                                <span class="fw-bold text-primary small">+{{ number_format($excess, 0, ',', '.') }}</span>
                                             </div>
                                         </div>
 
@@ -425,8 +426,8 @@
             @else
                 <div class="text-center py-5">
                     <div class="mb-3">
-                        <div class="avatar-circle bg-light text-info mx-auto" style="width: 80px; height: 80px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-info-circle"></i>
+                        <div class="avatar-circle border border-primary shadow-sm text-primary mx-auto" style="width: 80px; height: 80px; font-size: 2rem; display: flex; align-items: center; justify-content: center; background: rgba(13, 110, 253, 0.1);">
+                            <i class="bi bi-check-circle"></i>
                         </div>
                     </div>
                     <h5 class="fw-bold text-body">Tudo em ordem!</h5>

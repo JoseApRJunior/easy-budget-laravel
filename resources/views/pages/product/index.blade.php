@@ -26,7 +26,7 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="search">Buscar</label>
+                                    <label for="search" class="form-label small fw-bold text-muted text-uppercase">Buscar</label>
                                     <input type="text" class="form-control" id="search" name="search"
                                         value="{{ old('search', $filters['search'] ?? '') }}"
                                         placeholder="Nome, SKU ou Descrição">
@@ -34,7 +34,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="category">Categoria</label>
+                                    <label for="category" class="form-label small fw-bold text-muted text-uppercase">Categoria</label>
                                     <select class="form-select tom-select" id="category" name="category">
                                         <option value="">Todas as categorias</option>
                                         @foreach ($categories as $category)
@@ -65,7 +65,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="active">Status</label>
+                                    <label for="active" class="form-label small fw-bold text-muted text-uppercase">Status</label>
                                     <select class="form-select tom-select" id="active" name="active">
                                         @php($selectedActive = $filters['active'] ?? '1')
                                         <option value="1" {{ $selectedActive === '1' ? 'selected' : '1' }}>
@@ -82,7 +82,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="per_page" class="text-nowrap">Por página</label>
+                                    <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por página</label>
                                     <select class="form-select tom-select" id="per_page" name="per_page">
                                         @php($pp = (int) ($filters['per_page'] ?? 10))
                                         <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
@@ -93,7 +93,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="deleted">Registros</label>
+                                    <label for="deleted" class="form-label small fw-bold text-muted text-uppercase">Registros</label>
                                     <select name="deleted" id="deleted" class="form-select tom-select">
                                         @php($selectedDeleted = $filters['deleted'] ?? 'current')
                                         <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : 'current' }}>
@@ -110,7 +110,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="min_price">Preço Mínimo</label>
+                                    <label for="min_price" class="form-label small fw-bold text-muted text-uppercase">Preço Mínimo</label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
                                         <input type="text" class="form-control currency-brl" id="min_price"
@@ -122,7 +122,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="max_price">Preço Máximo</label>
+                                    <label for="max_price" class="form-label small fw-bold text-muted text-uppercase">Preço Máximo</label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
                                         <input type="text" class="form-control currency-brl" id="max_price"
@@ -134,7 +134,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="start_date">Data Inicial</label>
+                                    <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro Inicial</label>
                                     <input type="text" class="form-control" id="start_date" name="start_date"
                                         value="{{ old('start_date', $filters['start_date'] ?? '') }}"
                                         placeholder="DD/MM/AAAA" data-mask="00/00/0000">
@@ -142,7 +142,7 @@
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
-                                    <label for="end_date">Data Final</label>
+                                    <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro Final</label>
                                     <input type="text" class="form-control" id="end_date" name="end_date"
                                         value="{{ old('end_date', $filters['end_date'] ?? '') }}"
                                         placeholder="DD/MM/AAAA" data-mask="00/00/0000">
