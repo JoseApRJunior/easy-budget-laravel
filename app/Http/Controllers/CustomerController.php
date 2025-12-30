@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Customer\CustomerDTO;
+use App\DTOs\Customer\CustomerFilterDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Requests\CustomerUpdateRequest;
+use App\Services\Domain\CustomerExportService;
 use App\Services\Domain\CustomerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -23,6 +25,7 @@ class CustomerController extends Controller
 {
     public function __construct(
         private CustomerService $customerService,
+        private CustomerExportService $customerExportService,
     ) {}
 
     /**
@@ -32,16 +35,20 @@ class CustomerController extends Controller
     {
         $this->authorize('viewAny', \App\Models\Customer::class);
 
-        $filters = $request->only(['search', 'status', 'type', 'area_of_activity_id', 'deleted', 'cep']);
-        $perPage = (int) ($filters['per_page'] ?? 10);
-        $allowedPerPage = [10, 20, 50];
-
-        if (! in_array($perPage, $allowedPerPage, true)) {
-            $perPage = 10;
+        if (empty($request->query())) {
+            // Inicialmente a lista começa vazia, seguindo o padrão de Category e Product
+            $filters = [
+                'active' => 'active',
+                'deleted' => 'current',
+                'per_page' => 10,
+            ];
+            $result = $this->emptyResult();
+        } else {
+            $filterDTO = CustomerFilterDTO::fromRequest($request->all());
+            $result = $this->customerService->getFilteredCustomers($filterDTO);
+            $filters = $filterDTO->toViewArray();
         }
-        $filters['per_page'] = $perPage;
 
-        $result = $this->customerService->getFilteredCustomers($filters);
         $areasOfActivity = $this->customerService->getAreasOfActivity()->getData() ?? [];
 
         return $this->view('pages.customer.index', $result, 'customers', [
@@ -75,7 +82,7 @@ class CustomerController extends Controller
     {
         $this->authorize('create', \App\Models\Customer::class);
 
-        $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
+        $dto = CustomerDTO::fromRequest($request->validated());
         $result = $this->customerService->createCustomer($dto);
 
         return $this->redirectWithServiceResult(
@@ -136,7 +143,7 @@ class CustomerController extends Controller
     {
         $this->authorize('update', $customer);
 
-        $dto = \App\DTOs\Customer\CustomerDTO::fromRequest($request->validated());
+        $dto = CustomerDTO::fromRequest($request->validated());
         $result = $this->customerService->updateCustomer((int) $customer->id, $dto);
 
         return $this->redirectWithServiceResult(
@@ -172,10 +179,7 @@ class CustomerController extends Controller
         $result = $this->customerService->toggleStatus((int) $customer->id);
 
         if ($request->ajax() || $request->expectsJson()) {
-            return response()->json([
-                'success' => $result->isSuccess(),
-                'message' => $result->getMessage(),
-            ], $result->isSuccess() ? 200 : 400);
+            return $this->jsonResponse($result);
         }
 
         return $this->redirectWithServiceResult(
@@ -230,12 +234,11 @@ class CustomerController extends Controller
     {
         $this->authorize('viewAny', \App\Models\Customer::class);
 
-        $filters = $request->only(['search', 'type', 'status', 'area_of_activity_id', 'deleted', 'cep']);
-
-        $result = $this->customerService->getFilteredCustomers($filters);
+        $filterDTO = CustomerFilterDTO::fromRequest($request->all());
+        $result = $this->customerService->getFilteredCustomers($filterDTO);
 
         if (! $result->isSuccess()) {
-            return response()->json(['error' => $result->getMessage()], 400);
+            return $this->jsonResponse($result);
         }
 
         /** @var \Illuminate\Pagination\LengthAwarePaginator $customers */
@@ -244,10 +247,13 @@ class CustomerController extends Controller
         $data = collect($customers->items())->map(function ($customer) {
             $commonData = $customer->commonData;
             $contact = $customer->contact;
+            $address = $customer->address;
+
+            $name = $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '').' '.($commonData->last_name ?? ''))) : 'Nome não informado';
 
             return [
                 'id' => $customer->id,
-                'customer_name' => $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '').' '.($commonData->last_name ?? ''))) : 'Nome não informado',
+                'customer_name' => $name,
                 'cpf' => $commonData->cpf ?? '',
                 'cnpj' => $commonData->cnpj ?? '',
                 'email' => $contact->email_personal ?? '',
@@ -261,7 +267,7 @@ class CustomerController extends Controller
             ];
         });
 
-        return response()->json(['data' => $data]);
+        return $this->jsonSuccess($data);
     }
 
     /**
@@ -275,37 +281,35 @@ class CustomerController extends Controller
 
         $result = $this->customerService->searchForAutocomplete($query);
 
-        if (! $result->isSuccess()) {
-            return response()->json([
-                'error' => $result->getMessage(),
-            ], 400);
-        }
-
-        return response()->json([
-            'suggestions' => $result->getData(),
-        ]);
+        return $this->jsonResponse($result);
     }
 
     /**
      * Exportar clientes.
      */
-    public function export(Request $request): \Illuminate\Http\JsonResponse
+    public function export(Request $request)
     {
-        $this->authorize('export', \App\Models\Customer::class);
+        $this->authorize('viewAny', \App\Models\Customer::class);
 
-        $filters = $request->only(['search', 'status', 'type']);
+        $filterDTO = CustomerFilterDTO::fromRequest($request->all());
+        $result = $this->customerService->getFilteredCustomers($filterDTO, false);
 
-        $result = $this->customerService->exportCustomers($filters);
-
-        if (! $result->isSuccess()) {
-            return response()->json([
-                'error' => $result->getMessage(),
-            ], 400);
+        if ($result->isError()) {
+            return $this->redirectError('provider.customers.index', 'Erro ao buscar clientes para exportação.');
         }
 
-        return response()->json([
-            'data' => $result->getData(),
-        ]);
+        $format = $request->get('format', 'xlsx');
+
+        if ($format === 'pdf') {
+            return $this->customerExportService->exportToPdf(
+                $result->getData(),
+                'clientes',
+                'A4-L',
+                $filterDTO->toViewArray()
+            );
+        }
+
+        return $this->customerExportService->exportToExcel($result->getData(), $format);
     }
 
     /**

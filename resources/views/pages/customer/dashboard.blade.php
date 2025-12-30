@@ -32,85 +32,85 @@
     $total = $stats['total_customers'] ?? 0;
     $active = $stats['active_customers'] ?? 0;
     $inactive = $stats['inactive_customers'] ?? 0;
+    $deleted = $stats['deleted_customers'] ?? 0;
     $recent = $stats['recent_customers'] ?? collect();
     $activeWithStats = $stats['active_with_stats'] ?? collect();
     $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
     @endphp
 
     <!-- Cards de Métricas -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-3">
-                            <i class="bi bi-people-fill"></i>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-5-custom">
+            <div class="card border-0 shadow-sm h-100 bg-primary bg-gradient text-white">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-people-fill text-white" style="font-size: 0.9rem;"></i>
                         </div>
-                        <div>
-                            <div class="text-uppercase small fw-bold text-muted mb-1">Total de Clientes</div>
-                            <h3 class="mb-0 fw-bold text-dark">{{ $total }}</h3>
-                        </div>
+                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">TOTAL</h6>
                     </div>
-                    <p class="text-muted small mb-0">
-                        Total de clientes cadastrados.
-                    </p>
+                    <h3 class="mb-1 fw-bold">{{ $total }}</h3>
+                    <p class="text-white text-opacity-75 small-text mb-0">Ativos e inativos.</p>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-xl-5-custom">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="avatar-circle bg-success bg-opacity-10 text-success me-3">
-                            <i class="bi bi-check-circle-fill"></i>
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-check-circle-fill text-white" style="font-size: 0.9rem;"></i>
                         </div>
-                        <div>
-                            <div class="text-uppercase small fw-bold text-muted mb-1">Clientes Ativos</div>
-                            <h3 class="mb-0 fw-bold text-dark">{{ $active }}</h3>
-                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">ATIVOS</h6>
                     </div>
-                    <p class="text-muted small mb-0">
-                        Prontos para propostas e serviços.
-                    </p>
+                    <h3 class="mb-1 fw-bold text-success">{{ $active }}</h3>
+                    <p class="text-muted small-text mb-0">Disponíveis para uso.</p>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-xl-5-custom">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="avatar-circle bg-secondary bg-opacity-10 text-secondary me-3">
-                            <i class="bi bi-pause-circle-fill"></i>
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-secondary bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-pause-circle-fill text-white" style="font-size: 0.9rem;"></i>
                         </div>
-                        <div>
-                            <div class="text-uppercase small fw-bold text-muted mb-1">Clientes Inativos</div>
-                            <h3 class="mb-0 fw-bold text-dark">{{ $inactive }}</h3>
-                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">INATIVOS</h6>
                     </div>
-                    <p class="text-muted small mb-0">
-                        Marcados para controle interno.
-                    </p>
+                    <h3 class="mb-1 fw-bold text-secondary">{{ $inactive }}</h3>
+                    <p class="text-muted small-text mb-0">Suspensos temporariamente.</p>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-12 col-md-6 col-xl-5-custom">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="avatar-circle bg-info bg-opacity-10 text-info me-3">
-                            <i class="bi bi-graph-up-arrow"></i>
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-trash3-fill text-white" style="font-size: 0.9rem;"></i>
                         </div>
-                        <div>
-                            <div class="text-uppercase small fw-bold text-muted mb-1">Taxa de Atividade</div>
-                            <h3 class="mb-0 fw-bold text-dark">{{ $activityRate }}%</h3>
-                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">DELETADOS</h6>
                     </div>
-                    <p class="text-muted small mb-0">
-                        Engajamento da base cadastrada.
-                    </p>
+                    <h3 class="mb-1 fw-bold text-danger">{{ $deleted }}</h3>
+                    <p class="text-muted small-text mb-0">Na lixeira.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-5-custom">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-graph-up-arrow text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold">TAXA USO</h6>
+                    </div>
+                    <h3 class="mb-1 fw-bold text-info">{{ $activityRate }}%</h3>
+                    <p class="text-muted small-text mb-0">Percentual de ativos.</p>
                 </div>
             </div>
         </div>
@@ -121,8 +121,8 @@
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent border-0 py-3">
-                    <h5 class="mb-0 fw-bold text-dark">
-                        <i class="bi bi-clock-history me-2 text-primary"></i>
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
                         <span class="d-none d-sm-inline">Clientes Recentes</span>
                         <span class="d-sm-none">Recentes</span>
                     </h5>
@@ -135,11 +135,11 @@
                             <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="text-uppercase small fw-bold text-muted">Cliente</th>
-                                        <th class="text-uppercase small fw-bold text-muted">E-mail</th>
-                                        <th class="text-uppercase small fw-bold text-muted">Telefone</th>
-                                        <th class="text-uppercase small fw-bold text-muted">Cadastrado em</th>
-                                        <th class="text-center text-uppercase small fw-bold text-muted">Ações</th>
+                                        <th>Cliente</th>
+                                        <th>E-mail</th>
+                                        <th>Telefone</th>
+                                        <th>Cadastrado em</th>
+                                        <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -163,20 +163,16 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar-circle-sm bg-light text-primary me-2">
-                                                    <i class="bi bi-person"></i>
-                                                </div>
-                                                <span class="fw-bold text-dark">{{ $name }}</span>
+                                                <i class="bi bi-person me-2 text-muted"></i>
+                                                <span>{{ $name }}</span>
                                             </div>
                                         </td>
                                         <td class="text-muted">{{ $email ?? '—' }}</td>
                                         <td class="text-muted">{{ $phone ?? '—' }}</td>
                                         <td class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</td>
                                         <td class="text-center">
-                                            <a href="{{ route('provider.customers.show', $customer) }}"
-                                                class="btn btn-sm btn-light border text-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                            <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                                variant="secondary" outline size="sm" icon="eye" />
                                         </td>
                                     </tr>
                                     @endforeach
@@ -201,7 +197,7 @@
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-person text-muted me-2 mt-1"></i>
                                     <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-2">{{ $name }}</div>
+                                        <div class="fw-semibold mb-1">{{ $name }}</div>
                                         <small
                                             class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</small>
                                     </div>
@@ -255,16 +251,9 @@
                     </h6>
                 </div>
                 <div class="card-body d-grid gap-2">
-                    <a href="{{ route('provider.customers.create') }}" class="btn btn-sm btn-success">
-                        <i class="bi bi-person-plus me-2"></i>Novo Cliente
-                    </a>
-                    <a href="{{ route('provider.customers.index') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-people me-2"></i>Listar Clientes
-                    </a>
-                    <a href="{{ route('provider.customers.index', ['deleted' => 'only']) }}"
-                        class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-archive me-2"></i>Ver Deletados
-                    </a>
+                    <x-button type="link" :href="route('provider.customers.create')" variant="success" size="sm" icon="person-plus" label="Novo Cliente" />
+                    <x-button type="link" :href="route('provider.customers.index')" variant="primary" outline size="sm" icon="people" label="Listar Clientes" />
+                    <x-button type="link" :href="route('provider.customers.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletados" />
                 </div>
             </div>
         </div>
@@ -273,23 +262,22 @@
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
-                        <h5 class="mb-0 fw-bold text-dark">
-                            <i class="bi bi-graph-up me-2 text-primary"></i>
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>
                             Clientes com Maior Atividade
                         </h5>
-                        <small class="text-uppercase small fw-bold text-muted">Top 10 Clientes Ativos</small>
                     </div>
                     <div class="card-body p-0">
                         @if ($activeWithStats->isNotEmpty())
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="modern-table table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="ps-4 text-uppercase small fw-bold text-muted">Cliente</th>
-                                        <th class="text-center text-uppercase small fw-bold text-muted">Orçamentos</th>
-                                        <th class="text-center text-uppercase small fw-bold text-muted">Faturas</th>
-                                        <th class="text-center text-uppercase small fw-bold text-muted">Engajamento</th>
-                                        <th class="text-end pe-4 text-uppercase small fw-bold text-muted">Ações</th>
+                                        <th class="ps-4">Cliente</th>
+                                        <th class="text-center">Orçamentos</th>
+                                        <th class="text-center">Faturas</th>
+                                        <th class="text-center">Engajamento</th>
+                                        <th class="text-end pe-4">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -303,8 +291,13 @@
                                     @endphp
                                     <tr>
                                         <td class="ps-4">
-                                            <div class="fw-bold text-dark">{{ $name }}</div>
-                                            <small class="text-muted">ID: #{{ $customer->id }}</small>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-person me-2 text-muted"></i>
+                                                <div>
+                                                    <div class="fw-bold">{{ $name }}</div>
+                                                    <small class="text-muted">ID: #{{ $customer->id }}</small>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-3">
@@ -326,9 +319,8 @@
                                             </div>
                                         </td>
                                         <td class="text-end pe-4">
-                                            <a href="{{ route('provider.customers.show', $customer) }}" class="btn btn-sm btn-light border text-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                            <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                                variant="secondary" outline size="sm" icon="eye" />
                                         </td>
                                     </tr>
                                     @endforeach

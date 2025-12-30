@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\DTOs\Customer\CustomerDTO;
+use App\DTOs\Customer\CustomerFilterDTO;
+use App\DTOs\Customer\CustomerInteractionDTO;
 use App\Enums\OperationStatus;
 use App\Models\Customer;
 use App\Repositories\AreaOfActivityRepository;
@@ -106,7 +108,7 @@ class CustomerService extends AbstractBaseService
     public function toggleStatus(int $id): ServiceResult
     {
         return $this->safeExecute(function () use ($id) {
-            $customer = $this->customerRepository->findById($id);
+            $customer = $this->customerRepository->find($id);
 
             if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
@@ -135,7 +137,7 @@ class CustomerService extends AbstractBaseService
     public function deleteCustomer(int $id): ServiceResult
     {
         return $this->safeExecute(function () use ($id) {
-            $customer = $this->customerRepository->findById($id);
+            $customer = $this->customerRepository->find($id);
 
             if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
@@ -194,19 +196,11 @@ class CustomerService extends AbstractBaseService
     /**
      * Obtém clientes filtrados com paginação opcional.
      */
-    public function getFilteredCustomers(array $filters, bool $paginate = true): ServiceResult
+    public function getFilteredCustomers(CustomerFilterDTO $filterDTO, bool $paginate = true): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters, $paginate) {
-            $perPage = (int) ($filters['per_page'] ?? 15);
-
-            // Preparar filtros para o repository
-            $showOnlyTrashed = ($filters['deleted'] ?? '') === 'only';
-
-            if ($showOnlyTrashed) {
-                $filters['deleted'] = 'only';
-            } else {
-                unset($filters['deleted']);
-            }
+        return $this->safeExecute(function () use ($filterDTO, $paginate) {
+            $filters = $filterDTO->toFilterArray();
+            $perPage = $filterDTO->per_page;
 
             if ($paginate) {
                 $customers = $this->customerRepository->getPaginated($filters, $perPage);
@@ -273,18 +267,16 @@ class CustomerService extends AbstractBaseService
     /**
      * Cria interação com cliente.
      */
-    public function createInteraction(int $customerId, array $data): ServiceResult
+    public function createInteraction(int $customerId, CustomerInteractionDTO $dto): ServiceResult
     {
-        return $this->safeExecute(function () use ($customerId, $data) {
-            $customer = $this->customerRepository->findById($customerId);
+        return $this->safeExecute(function () use ($customerId, $dto) {
+            $customer = $this->customerRepository->find($customerId);
 
             if (! $customer) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Cliente não encontrado');
             }
 
-            $interaction = $this->interactionService->createInteraction($customer, $data, $this->authUser());
-
-            return $this->success($interaction, 'Interação criada com sucesso');
+            return $this->interactionService->createInteraction($customer, $dto, $this->authUser());
         }, 'Erro ao criar interação.');
     }
 
@@ -315,9 +307,10 @@ class CustomerService extends AbstractBaseService
     /**
      * Exporta clientes com base nos filtros.
      */
-    public function exportCustomers(array $filters): ServiceResult
+    public function exportCustomers(CustomerFilterDTO $filterDTO): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters) {
+        return $this->safeExecute(function () use ($filterDTO) {
+            $filters = $filterDTO->toFilterArray();
             $customers = $this->customerRepository->getFiltered($filters);
 
             // Aqui você poderia integrar com um Excel export service
@@ -398,10 +391,13 @@ class CustomerService extends AbstractBaseService
 
     private function validateCanDelete(int $customerId): ServiceResult
     {
-        $hasBudgets = $this->customerRepository->hasBudgets($customerId);
+        $validation = $this->customerRepository->canDelete($customerId);
 
-        if ($hasBudgets) {
-            return $this->error(OperationStatus::CONFLICT, 'Cliente possui orçamentos cadastrados e não pode ser removido.');
+        if (! ($validation['canDelete'] ?? false)) {
+            return $this->error(
+                OperationStatus::CONFLICT,
+                $validation['reason'] ?? 'Cliente possui vínculos e não pode ser removido.'
+            );
         }
 
         return $this->success();

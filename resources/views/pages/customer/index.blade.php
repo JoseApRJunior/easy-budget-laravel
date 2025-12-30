@@ -33,88 +33,128 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="search" class="text-uppercase small fw-bold text-muted">Buscar</label>
+                                        <label for="search" class="form-label small fw-bold text-muted text-uppercase">Buscar</label>
                                         <input type="text" class="form-control" id="search" name="search"
                                             value="{{ $filters['search'] ?? '' }}" placeholder="Nome, e-mail ou documento">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="status" class="text-uppercase small fw-bold text-muted">Status</label>
-                                        <select class="form-control" id="status" name="status">
-                                            <option value="">Todos</option>
-                                            <option value="active"
-                                                {{ ($filters['status'] ?? '') === 'active' ? 'selected' : '' }}>
-                                                Ativo</option>
-                                            <option value="inactive"
-                                                {{ ($filters['status'] ?? '') === 'inactive' ? 'selected' : '' }}>Inativo
-                                            </option>
-                                        </select>
-                                    </div>
+                               <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="active" class="form-label small fw-bold text-muted text-uppercase">Status</label>
+                                    <select class="form-select tom-select" id="active" name="active">
+                                        @php($selectedActive = $filters['active'] ?? 'active')
+                                        <option value="active" {{ $selectedActive === 'active' ? 'selected' : '' }}>
+                                            Ativo
+                                        </option>
+                                        <option value="inactive" {{ $selectedActive === 'inactive' ? 'selected' : '' }}>
+                                            Inativo
+                                        </option>
+                                        <option value="all" {{ $selectedActive === 'all' ? 'selected' : '' }}>
+                                            Todos
+                                        </option>
+                                    </select>
                                 </div>
-                                <div class="col-md-3">
+                            </div>
+                                <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="type" class="text-uppercase small fw-bold text-muted">Tipo</label>
-                                        <select class="form-control" id="type" name="type">
-                                            <option value="">Todos</option>
-                                            <option value="pf"
-                                                {{ ($filters['type'] ?? '') === 'pf' ? 'selected' : '' }}>
+                                        <label for="type" class="form-label small fw-bold text-muted text-uppercase">Tipo</label>
+                                        <select class="form-select tom-select" id="type" name="type">
+                                            <option value="">Todos os tipos</option>
+                                            <option value="individual"
+                                                {{ ($filters['type'] ?? '') === 'individual' ? 'selected' : '' }}>
                                                 Pessoa Física
                                             </option>
-                                            <option value="pj"
-                                                {{ ($filters['type'] ?? '') === 'pj' ? 'selected' : '' }}>
-                                                Pessoa
-                                                Jurídica</option>
+                                            <option value="company"
+                                                {{ ($filters['type'] ?? '') === 'company' ? 'selected' : '' }}>
+                                                Pessoa Jurídica</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="area_of_activity_id" class="text-uppercase small fw-bold text-muted">Área de Atuação</label>
-                                        <select class="form-control" id="area_of_activity_id" name="area_of_activity_id">
-                                            <option value="">Todas</option>
+                                        <label for="area_of_activity" class="form-label small fw-bold text-muted text-uppercase">Área de Atuação</label>
+                                        <select class="form-select tom-select" id="area_of_activity" name="area_of_activity">
+                                            <option value="">Todas as áreas</option>
                                             @isset($areas_of_activity)
                                                 @foreach ($areas_of_activity as $area)
-                                                    <option value="{{ $area->id }}"
-                                                        {{ (string) ($filters['area_of_activity_id'] ?? '') === (string) $area->id ? 'selected' : '' }}>
+                                                    <option value="{{ $area->slug }}"
+                                                        {{ (string) ($filters['area_of_activity'] ?? '') === (string) $area->slug ? 'selected' : '' }}>
                                                         {{ $area->name }}</option>
                                                 @endforeach
                                             @endisset
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="deleted" class="text-uppercase small fw-bold text-muted">Registros</label>
-                                        <select class="form-control" id="deleted" name="deleted">
-                                            <option value="">Atuais</option>
-                                            <option value="only"
-                                                {{ ($filters['deleted'] ?? '') === 'only' ? 'selected' : '' }}>
-                                                Deletados</option>
-                                        </select>
-                                    </div>
+                                <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="deleted" class="form-label small fw-bold text-muted text-uppercase">Status de Exclusão</label>
+                                    <select name="deleted" id="deleted" class="form-select tom-select">
+                                        @php($selectedDeleted = $filters['deleted'] ?? 'current')
+                                        <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
+                                            Atuais
+                                        </option>
+                                        <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
+                                            Deletados
+                                        </option>
+                                        <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>
+                                            Todos
+                                        </option>
+                                    </select>
                                 </div>
-                                <div class="col-md-3">
+                            </div>
+                                <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="cep" class="text-uppercase small fw-bold text-muted">CEP (Proximidade)</label>
+                                        <label for="cep" class="form-label small fw-bold text-muted text-uppercase">CEP (Proximidade)</label>
                                         <input type="text" class="form-control" id="cep" name="cep"
-                                            value="{{ $filters['cep'] ?? '' }}" placeholder="00000-000">
+                                            value="{{ $filters['cep'] ?? '' }}" placeholder="00000-000" data-mask="00000-000">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="start_date" class="text-uppercase small fw-bold text-muted">Data Inicial</label>
+                                        <label for="cpf" class="form-label small fw-bold text-muted text-uppercase">CPF</label>
+                                        <input type="text" class="form-control" id="cpf" name="cpf"
+                                            value="{{ $filters['cpf'] ?? '' }}" placeholder="000.000.000-00" data-mask="000.000.000-00">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="cnpj" class="form-label small fw-bold text-muted text-uppercase">CNPJ</label>
+                                        <input type="text" class="form-control" id="cnpj" name="cnpj"
+                                            value="{{ $filters['cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" data-mask="00.000.000/0000-00">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="phone" class="form-label small fw-bold text-muted text-uppercase">Telefone</label>
+                                        <input type="text" class="form-control" id="phone" name="phone"
+                                            value="{{ $filters['phone'] ?? '' }}" placeholder="(00) 00000-0000" data-mask="(00) 00000-0000">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro inicial</label>
                                         <input type="text" class="form-control" id="start_date" name="start_date"
-                                            value="{{ old('start_date', $filters['start_date'] ?? '') }}"
+                                            value="{{ $filters['start_date'] ?? '' }}"
                                             placeholder="DD/MM/AAAA" data-mask="00/00/0000">
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="end_date" class="text-uppercase small fw-bold text-muted">Data Final</label>
+                                        <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro final</label>
                                         <input type="text" class="form-control" id="end_date" name="end_date"
-                                            value="{{ old('end_date', $filters['end_date'] ?? '') }}"
+                                            value="{{ $filters['end_date'] ?? '' }}"
                                             placeholder="DD/MM/AAAA" data-mask="00/00/0000">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por página</label>
+                                        <select class="form-select tom-select" id="per_page" name="per_page">
+                                            @php($pp = (int) ($filters['per_page'] ?? 10))
+                                            <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
+                                            <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
+                                            <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="col-12">
@@ -156,12 +196,27 @@
                                     </h5>
                                 </div>
                                 <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                                    <div class="d-flex justify-content-start justify-content-lg-end">
-                                        <a href="{{ route('provider.customers.create') }}" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-plus" aria-hidden="true"></i>
-                                            <span class="ms-1">Novo</span>
-                                        </a>
-                                    </div>
+                                    <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+                    <div class="dropdown">
+                        <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar"
+                            class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ route('provider.customers.export', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
+                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ route('provider.customers.export', array_merge(request()->query(), ['format' => 'pdf'])) }}">
+                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <x-button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" />
+                </div>
                                 </div>
                             </div>
                         </div>
@@ -199,20 +254,14 @@
                                             </div>
                                         </a>
                                     @empty
-                                        <div class="text-center py-5">
-                                            <div class="mb-3">
-                                                <div class="avatar-circle bg-secondary shadow-sm text-white mx-auto" style="width: 60px; height: 60px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="bi bi-people"></i>
-                                                </div>
-                                            </div>
-                                            <h5 class="fw-bold text-body">Nenhum cliente encontrado</h5>
-                                            <p class="text-muted mx-auto px-3" style="max-width: 400px;">
-                                                @if (($filters['deleted'] ?? '') === 'only')
-                                                    Não foram encontrados clientes deletados com os filtros aplicados.
-                                                @else
-                                                    Não encontramos clientes registrados que correspondam aos filtros utilizados.
-                                                @endif
-                                            </p>
+                                        <div class="p-4 text-center text-muted">
+                                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                            <br>
+                                            @if (($filters['deleted'] ?? '') === 'only')
+                                                Nenhum cliente deletado encontrado.
+                                            @else
+                                                Nenhum cliente encontrado.
+                                            @endif
                                         </div>
                                     @endforelse
                                 </div>
@@ -224,14 +273,14 @@
                                 <table class="modern-table table mb-0">
                                     <thead>
                                         <tr>
-                                            <th width="60"><i class="bi bi-person" aria-hidden="true"></i></th>
-                                            <th class="small text-uppercase text-muted">Cliente</th>
-                                            <th class="small text-uppercase text-muted">Documento</th>
-                                            <th class="small text-uppercase text-muted">E-mail</th>
-                                            <th class="small text-uppercase text-muted">Telefone</th>
-                                            <th class="small text-uppercase text-muted">Cadastro</th>
-                                            <th class="small text-uppercase text-muted">Status</th>
-                                            <th class="small text-uppercase text-muted text-center text-nowrap">Ações</th>
+                                            <th><i class="bi bi-person" aria-hidden="true"></i></th>
+                                            <th>Cliente</th>
+                                            <th>Documento</th>
+                                            <th class="text-nowrap">E-mail</th>
+                                            <th class="text-nowrap">Telefone</th>
+                                            <th class="text-nowrap">Cadastro</th>
+                                            <th class="text-nowrap">Status</th>
+                                            <th class="text-center">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -262,10 +311,10 @@
                                                     @if ($customer->commonData)
                                                         @if ($customer->commonData->isCompany())
                                                             <span
-                                                                class="text-code">{{ $customer->commonData->cnpj ?? 'N/A' }}</span>
+                                                                class="text-code">{{ \App\Helpers\MaskHelper::formatCNPJ($customer->commonData->cnpj) }}</span>
                                                         @else
                                                             <span
-                                                                class="text-code">{{ $customer->commonData->cpf ?? 'N/A' }}</span>
+                                                                class="text-code">{{ \App\Helpers\MaskHelper::formatCPF($customer->commonData->cpf) }}</span>
                                                         @endif
                                                     @else
                                                         <span class="text-muted">N/A</span>
@@ -280,69 +329,53 @@
                                                 </td>
                                                 <td>
                                                     @if ($customer->contact)
-                                                        {{ $customer->contact->phone_personal ?? ($customer->contact->phone_business ?? 'N/A') }}
+                                                        {{ \App\Helpers\MaskHelper::formatPhone($customer->contact->phone_personal ?? $customer->contact->phone_business) }}
                                                     @else
                                                         <span class="text-muted">N/A</span>
                                                     @endif
                                                 </td>
                                                 <td>{{ $customer->created_at->format('d/m/Y') }}</td>
-                                                <td>
+                                                <td class="text-nowrap">
                                                     <span class="modern-badge {{ $customer->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
                                                         {{ $customer->status === 'active' ? 'Ativo' : 'Inativo' }}
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td class="text-center">
                                                     <div class="action-btn-group">
                                                         @if ($customer->deleted_at)
-                                                            <form action="{{ route('provider.customers.restore', $customer->id) }}" method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" class="btn btn-success" title="Restaurar">
-                                                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                                                </button>
-                                                            </form>
+                                                            <x-button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
+                                                            <x-button variant="success" icon="arrow-counterclockwise"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#restoreModal"
+                                                                    data-restore-url="{{ route('provider.customers.restore', $customer->id) }}"
+                                                                    data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
+                                                                    title="Restaurar" />
                                                         @else
-                                                            <a href="{{ route('provider.customers.show', $customer->id) }}" class="action-btn action-btn-view" title="Visualizar">
-                                                                <i class="bi bi-eye-fill"></i>
-                                                            </a>
-                                                            <a href="{{ route('provider.customers.edit', $customer->id) }}" class="action-btn action-btn-edit" title="Editar">
-                                                                <i class="bi bi-pencil-fill"></i>
-                                                            </a>
-                                                            <form action="{{ route('provider.customers.toggle-status', $customer->id) }}" method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('PATCH')
-                                                                <button type="submit" class="action-btn {{ $customer->status === 'active' ? 'action-btn-warning' : 'action-btn-success' }}" title="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}">
-                                                                    <i class="bi bi-{{ $customer->status === 'active' ? 'slash-circle' : 'check-lg' }}"></i>
-                                                                </button>
-                                                            </form>
-                                                            <button type="button" class="action-btn action-btn-delete"
-                                                                    data-id="{{ $customer->id }}"
-                                                                    data-name="{{ $customer->name ?? $customer->company_name }}"
-                                                                    onclick="handleDelete(this)"
-                                                                    title="Excluir">
-                                                                <i class="bi bi-trash-fill"></i>
-                                                            </button>
+                                                            <x-button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
+                                                            <x-button type="link" :href="route('provider.customers.edit', $customer->id)" icon="pencil-square" title="Editar" />
+
+                                                            <x-button variant="danger" icon="trash"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#deleteModal"
+                                                                    data-delete-url="{{ route('provider.customers.destroy', $customer->id) }}"
+                                                                    data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
+                                                                    title="Excluir" />
                                                         @endif
                                                     </div>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8">
-                                                    <div class="text-center py-5">
-                                                        <div class="mb-3">
-                                                            <div class="avatar-circle bg-secondary shadow-sm text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
-                                                                <i class="bi bi-people"></i>
-                                                            </div>
-                                                        </div>
-                                                        <h5 class="fw-bold text-body">Nenhum cliente encontrado</h5>
-                                                        <p class="text-muted mx-auto" style="max-width: 400px;">
-                                                            @if (($filters['deleted'] ?? '') === 'only')
-                                                                Não foram encontrados clientes deletados com os filtros aplicados.
-                                                            @else
-                                                                Não encontramos clientes registrados que correspondam aos filtros utilizados.
-                                                            @endif
-                                                        </p>
-                                                    </div>
+                                                <td colspan="8" class="text-center text-muted">
+                                                    <i class="bi bi-inbox mb-2" aria-hidden="true" style="font-size: 2rem;"></i>
+                                                    <br>
+                                                    @if (($filters['deleted'] ?? '') === 'only')
+                                                        Nenhum cliente deletado encontrado.
+                                                        <br>
+                                                        <small>Você ainda não deletou nenhum cliente.</small>
+                                                    @else
+                                                        Nenhum cliente encontrado.
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforelse
@@ -375,6 +408,28 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger">Excluir</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Restauração -->
+            <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            Tem certeza de que deseja restaurar o cliente <strong id="restoreCustomerName"></strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <form id="restoreForm" action="#" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success">Restaurar</button>
                             </form>
                         </div>
                     </div>

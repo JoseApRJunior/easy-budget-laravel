@@ -517,6 +517,41 @@ $startDate = DateHelper::parseBirthDate($filters['start_date'] ?? null);
 
 ---
 
+---
+
+## 👥 Refatoração do Módulo de Clientes (CONCLUÍDO)
+
+### Objetivo
+
+Modernizar o módulo de clientes para utilizar os novos padrões arquiteturais do sistema: DTOs, ServiceResult, Service Layer e tipagem estrita.
+
+### Tarefas Concluídas
+
+#### 1. Estrutura de DTOs
+- [x] Criar `CustomerDTO` para transferência de dados de criação e atualização.
+- [x] Criar `CustomerFilterDTO` para padronizar filtros de busca e listagem.
+- [x] Criar `CustomerInteractionDTO` para registro de interações.
+- [x] Criar `AddressDTO` e `ContactDTO` para sub-entidades.
+
+#### 2. Service Layer
+- [x] Refatorar `CustomerService` para usar DTOs e retornar `ServiceResult`.
+- [x] Implementar `AddressService` e `ContactService` seguindo o padrão.
+- [x] Integrar `CustomerInteractionService` com os novos padrões.
+- [x] Implementar métodos de busca avançada e estatísticas no Service.
+
+#### 3. Controllers
+- [x] Refatorar `CustomerController` (Web) para usar DTOs e `ServiceResult`.
+- [x] Refatorar `CustomerApiController` (API) para usar DTOs e `ServiceResult`.
+- [x] Padronizar retornos JSON usando os helpers da classe base `Controller`.
+- [x] Garantir que todas as permissões sejam validadas via Policies.
+
+#### 4. Repositories
+- [x] Garantir que `CustomerRepository` suporte operações baseadas em DTO.
+- [x] Validar isolamento de tenant em todas as consultas.
+- [x] Implementar filtros de data padronizados.
+
+---
+
 ## 🔄 Sistema de Reservas de Estoque (PENDENTE)
 
 ### Objetivo

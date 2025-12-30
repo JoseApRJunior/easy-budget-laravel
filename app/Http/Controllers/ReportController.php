@@ -664,8 +664,24 @@ class ReportController extends Controller
             return response()->json(['error' => 'Nenhum cliente encontrado'], 404);
         }
 
+        // Get provider data for header
+        /** @var User $user */
+        $user = auth()->user();
+        $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+        $companyName = $provider && $provider->commonData ? ($provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name)) : $user->name;
+
         // Prepare data for Excel
         $excelData = [];
+        
+        // Header Info
+        $excelData[] = ['RELATÓRIO DE CLIENTES'];
+        $excelData[] = ['Empresa:', $companyName];
+        $excelData[] = ['Gerado em:', now()->format('d/m/Y H:i:s')];
+        $excelData[] = ['Gerado por:', $user->name];
+        $excelData[] = ['Total de Registros:', $customers->count()];
+        $excelData[] = []; // Empty row
+        
+        // Table Header
         $excelData[] = ['Nome/Razão Social', 'CPF/CNPJ', 'E-mail Pessoal', 'E-mail Comercial', 'Telefone Pessoal', 'Telefone Comercial', 'Data Cadastro'];
 
         foreach ($customers as $customer) {
@@ -698,7 +714,15 @@ class ReportController extends Controller
         // Set data
         $sheet->fromArray($excelData, null, 'A1');
 
-        // Format header row
+        // Style Main Title
+        $sheet->mergeCells('A1:G1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Style labels
+        $sheet->getStyle('A2:A5')->getFont()->setBold(true);
+
+        // Format table header row (now at row 7)
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -714,7 +738,7 @@ class ReportController extends Controller
             ],
         ];
 
-        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A7:G7')->applyFromArray($headerStyle);
 
         // Auto-size columns
         foreach (range('A', 'G') as $column) {

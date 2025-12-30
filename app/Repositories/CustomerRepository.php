@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\DTOs\Customer\CustomerDTO;
 use App\Models\Address;
+use App\Models\AreaOfActivity;
 use App\Models\BusinessData;
 use App\Models\CommonData;
 use App\Models\Contact;
@@ -228,19 +229,39 @@ class CustomerRepository extends AbstractTenantRepository
             $query->where('status', $filters['status']);
         }
 
+        if (! empty($filters['area_of_activity'])) {
+            $areaSlug = $filters['area_of_activity'];
+            $query->whereHas('commonData.areaOfActivity', function ($q) use ($areaSlug) {
+                $q->where('slug', $areaSlug);
+            });
+        }
+
         if (! empty($filters['search'])) {
-            $searchTerm = $filters['search'];
-            $query->where(function ($q) use ($searchTerm) {
-                $q->whereHas('commonData', function ($q) use ($searchTerm) {
+            $searchTerm = (string) $filters['search'];
+            $cleanSearch = preg_replace('/[^0-9]/', '', $searchTerm);
+
+            $query->where(function ($q) use ($searchTerm, $cleanSearch) {
+                $q->whereHas('commonData', function ($q) use ($searchTerm, $cleanSearch) {
                     $q->where('company_name', 'like', "%{$searchTerm}%")
                         ->orWhere('first_name', 'like', "%{$searchTerm}%")
                         ->orWhere('last_name', 'like', "%{$searchTerm}%")
                         ->orWhere('cpf', 'like', "%{$searchTerm}%")
                         ->orWhere('cnpj', 'like', "%{$searchTerm}%");
-                })->orWhereHas('contact', function ($q) use ($searchTerm) {
-                    $q->where('email', 'like', "%{$searchTerm}%")
-                        ->orWhere('phone', 'like', "%{$searchTerm}%")
-                        ->orWhere('cellphone', 'like', "%{$searchTerm}%");
+
+                    if (! empty($cleanSearch)) {
+                        $q->orWhere('cpf', 'like', "%{$cleanSearch}%")
+                            ->orWhere('cnpj', 'like', "%{$cleanSearch}%");
+                    }
+                })->orWhereHas('contact', function ($q) use ($searchTerm, $cleanSearch) {
+                    $q->where('email_personal', 'like', "%{$searchTerm}%")
+                        ->orWhere('email_business', 'like', "%{$searchTerm}%")
+                        ->orWhere('phone_personal', 'like', "%{$searchTerm}%")
+                        ->orWhere('phone_business', 'like', "%{$searchTerm}%");
+
+                    if (! empty($cleanSearch)) {
+                        $q->orWhere('phone_personal', 'like', "%{$cleanSearch}%")
+                            ->orWhere('phone_business', 'like', "%{$cleanSearch}%");
+                    }
                 });
             });
         }
@@ -257,7 +278,7 @@ class CustomerRepository extends AbstractTenantRepository
      *                                         - search: termo de busca em nome, email, CPF/CNPJ, razão social
      *                                         - type: 'pessoa_fisica' ou 'pessoa_juridica'
      *                                         - status: status do cliente
-     *                                         - area_of_activity_id: ID da área de atuação
+     *                                         - area_of_activity: slug da área de atuação
      *                                         - profession_id: ID da profissão
      *                                         - per_page: número de itens por página
      *                                         - deleted: 'only' para mostrar apenas clientes deletados
@@ -291,23 +312,35 @@ class CustomerRepository extends AbstractTenantRepository
 
         // Busca avançada em relações (customizado para Customer)
         if (! empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
+            $search = (string) $filters['search'];
+            $cleanSearch = preg_replace('/[^0-9]/', '', $search);
+
+            $query->where(function ($q) use ($search, $cleanSearch) {
                 if (is_numeric($search)) {
                     $q->where('id', (int) $search);
                 }
 
-                $q->orWhereHas('commonData', function ($cq) use ($search) {
+                $q->orWhereHas('commonData', function ($cq) use ($search, $cleanSearch) {
                     $cq->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%")
                         ->orWhere('cpf', 'like', "%{$search}%")
                         ->orWhere('cnpj', 'like', "%{$search}%");
-                })->orWhereHas('contact', function ($cq) use ($search) {
+
+                    if (! empty($cleanSearch)) {
+                        $cq->orWhere('cpf', 'like', "%{$cleanSearch}%")
+                            ->orWhere('cnpj', 'like', "%{$cleanSearch}%");
+                    }
+                })->orWhereHas('contact', function ($cq) use ($search, $cleanSearch) {
                     $cq->where('email_personal', 'like', "%{$search}%")
                         ->orWhere('email_business', 'like', "%{$search}%")
                         ->orWhere('phone_personal', 'like', "%{$search}%")
                         ->orWhere('phone_business', 'like', "%{$search}%");
+
+                    if (! empty($cleanSearch)) {
+                        $cq->orWhere('phone_personal', 'like', "%{$cleanSearch}%")
+                            ->orWhere('phone_business', 'like', "%{$cleanSearch}%");
+                    }
                 });
             });
         }
@@ -321,10 +354,10 @@ class CustomerRepository extends AbstractTenantRepository
         }
 
         // Filtro por área de atuação
-        if (! empty($filters['area_of_activity_id'])) {
-            $areaId = $filters['area_of_activity_id'];
-            $query->whereHas('commonData', function ($q) use ($areaId) {
-                $q->where('area_of_activity_id', $areaId);
+        if (! empty($filters['area_of_activity'])) {
+            $areaSlug = $filters['area_of_activity'];
+            $query->whereHas('commonData.areaOfActivity', function ($q) use ($areaSlug) {
+                $q->where('slug', $areaSlug);
             });
         }
 
@@ -333,6 +366,31 @@ class CustomerRepository extends AbstractTenantRepository
             $cepPrefix = substr(preg_replace('/[^0-9]/', '', $filters['cep']), 0, 5);
             $query->whereHas('address', function ($q) use ($cepPrefix) {
                 $q->where('cep', 'like', $cepPrefix.'%');
+            });
+        }
+
+        // Filtro por CPF
+        if (! empty($filters['cpf'])) {
+            $cpf = preg_replace('/[^0-9]/', '', $filters['cpf']);
+            $query->whereHas('commonData', function ($q) use ($cpf) {
+                $q->where('cpf', 'like', "%{$cpf}%");
+            });
+        }
+
+        // Filtro por CNPJ
+        if (! empty($filters['cnpj'])) {
+            $cnpj = preg_replace('/[^0-9]/', '', $filters['cnpj']);
+            $query->whereHas('commonData', function ($q) use ($cnpj) {
+                $q->where('cnpj', 'like', "%{$cnpj}%");
+            });
+        }
+
+        // Filtro por Telefone
+        if (! empty($filters['phone'])) {
+            $phone = preg_replace('/[^0-9]/', '', $filters['phone']);
+            $query->whereHas('contact', function ($q) use ($phone) {
+                $q->where('phone_personal', 'like', "%{$phone}%")
+                    ->orWhere('phone_business', 'like', "%{$phone}%");
             });
         }
 
@@ -364,18 +422,32 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function findBySearch(string $search, int $limit = 10): Collection
     {
+        $cleanSearch = preg_replace('/[^0-9]/', '', $search);
+
         return $this->model->newQuery()
             ->where('status', 'active')
-            ->where(function ($q) use ($search) {
-                $q->whereHas('commonData', function ($cq) use ($search) {
+            ->where(function ($q) use ($search, $cleanSearch) {
+                $q->whereHas('commonData', function ($cq) use ($search, $cleanSearch) {
                     $cq->where('first_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('company_name', 'like', "%{$search}%")
                         ->orWhere('cpf', 'like', "%{$search}%")
                         ->orWhere('cnpj', 'like', "%{$search}%");
-                })->orWhereHas('contact', function ($cq) use ($search) {
+
+                    if (! empty($cleanSearch)) {
+                        $cq->orWhere('cpf', 'like', "%{$cleanSearch}%")
+                            ->orWhere('cnpj', 'like', "%{$cleanSearch}%");
+                    }
+                })->orWhereHas('contact', function ($cq) use ($search, $cleanSearch) {
                     $cq->where('email_personal', 'like', "%{$search}%")
-                        ->orWhere('email_business', 'like', "%{$search}%");
+                        ->orWhere('email_business', 'like', "%{$search}%")
+                        ->orWhere('phone_personal', 'like', "%{$search}%")
+                        ->orWhere('phone_business', 'like', "%{$search}%");
+
+                    if (! empty($cleanSearch)) {
+                        $cq->orWhere('phone_personal', 'like', "%{$cleanSearch}%")
+                            ->orWhere('phone_business', 'like', "%{$cleanSearch}%");
+                    }
                 });
             })
             ->with(['commonData', 'contact'])
@@ -457,6 +529,7 @@ class CustomerRepository extends AbstractTenantRepository
             'total_customers' => (clone $baseQuery)->count(),
             'active_customers' => (clone $baseQuery)->where('status', 'active')->count(),
             'inactive_customers' => (clone $baseQuery)->where('status', 'inactive')->count(),
+            'deleted_customers' => (clone $baseQuery)->onlyTrashed()->count(),
             'recent_customers' => (clone $baseQuery)->latest()
                 ->limit(5)
                 ->with(['commonData', 'contact'])
@@ -490,6 +563,13 @@ class CustomerRepository extends AbstractTenantRepository
         return DB::transaction(function () use ($data) {
             $tenantId = $data['tenant_id'];
 
+            // Resolve area_of_activity_id from slug if provided
+            $areaId = $data['area_of_activity_id'] ?? null;
+            if (! empty($data['area_of_activity_slug'])) {
+                $area = AreaOfActivity::where('slug', $data['area_of_activity_slug'])->first();
+                $areaId = $area ? $area->id : $areaId;
+            }
+
             // 1. Criar CommonData
             $commonData = CommonData::create([
                 'tenant_id' => $tenantId,
@@ -502,7 +582,7 @@ class CustomerRepository extends AbstractTenantRepository
                 'cnpj' => $data['cnpj'] ?? null,
                 'company_name' => $data['company_name'] ?? null,
                 'description' => $data['description'] ?? null,
-                'area_of_activity_id' => $data['area_of_activity_id'] ?? null,
+                'area_of_activity_id' => $areaId,
                 'profession_id' => $data['profession_id'] ?? null,
             ]);
 
@@ -565,6 +645,13 @@ class CustomerRepository extends AbstractTenantRepository
     public function updateWithRelations(Customer $customer, array $data): ?Customer
     {
         return DB::transaction(function () use ($customer, $data) {
+            // Resolve area_of_activity_id from slug if provided
+            $areaId = $data['area_of_activity_id'] ?? ($customer->commonData?->area_of_activity_id);
+            if (! empty($data['area_of_activity_slug'])) {
+                $area = AreaOfActivity::where('slug', $data['area_of_activity_slug'])->first();
+                $areaId = $area ? $area->id : $areaId;
+            }
+
             // Atualizar CommonData
             if ($customer->commonData) {
                 $customer->commonData->update([
@@ -576,7 +663,7 @@ class CustomerRepository extends AbstractTenantRepository
                     'cnpj' => $data['cnpj'] ?? $customer->commonData->cnpj,
                     'company_name' => $data['company_name'] ?? $customer->commonData->company_name,
                     'description' => $data['description'] ?? $customer->commonData->description,
-                    'area_of_activity_id' => $data['area_of_activity_id'] ?? $customer->commonData->area_of_activity_id,
+                    'area_of_activity_id' => $areaId,
                     'profession_id' => $data['profession_id'] ?? $customer->commonData->profession_id,
                 ]);
             }

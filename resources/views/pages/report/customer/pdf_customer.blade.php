@@ -18,39 +18,54 @@
                 <!-- Coluna da Esquerda - Informações da Empresa -->
                 <td style="width: 50%; vertical-align: top;">
                     <div class="company-info">
-                        @php
-                            $provider = auth()->user()->provider;
-                            $commonData = $provider?->commonData;
-                            $contact = $provider?->contact;
-                            $address = $provider?->address;
-                        @endphp
-                        <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
-                            {{ $commonData?->company_name ?: ($commonData?->first_name . ' ' . $commonData?->last_name) ?: 'Empresa' }}
-                        </h2>
-                        <div class="company-details">
-                            @if($address)
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">➤</span>
-                                <span>{{ $address->address }}, {{ $address->address_number }} - {{ $address->neighborhood }}, {{ $address->city }}/{{ $address->state }}</span>
+                        @if($provider && $provider->commonData)
+                            <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
+                                {{ $provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name) }}
+                            </h2>
+                            <div class="company-details">
+                                @if($provider->address)
+                                    <div style="margin-bottom: 5px; font-size: 11px;">
+                                        <span style="margin-right: 8px;">➤</span>
+                                        <span>
+                                            {{ $provider->address->address }}, {{ $provider->address->address_number }}
+                                            @if($provider->address->complement) - {{ $provider->address->complement }} @endif
+                                            <br>
+                                            {{ $provider->address->neighborhood }} - {{ $provider->address->city }}/{{ $provider->address->state }}
+                                        </span>
+                                    </div>
+                                @endif
+                                <div style="margin-bottom: 5px; font-size: 11px;">
+                                    <span style="margin-right: 8px;">⚑</span>
+                                    <span>
+                                        @if($provider->commonData->cnpj)
+                                            CNPJ: {{ \App\Helpers\DocumentHelper::formatCnpj($provider->commonData->cnpj) }}
+                                        @elseif($provider->commonData->cpf)
+                                            CPF: {{ \App\Helpers\DocumentHelper::formatCpf($provider->commonData->cpf) }}
+                                        @endif
+                                    </span>
+                                </div>
+                                @if($provider->contact)
+                                    <div style="margin-bottom: 5px; font-size: 11px;">
+                                        <span style="margin-right: 8px;">☎</span>
+                                        <span>{{ $provider->contact->phone_personal ?: $provider->contact->phone_business }}</span>
+                                    </div>
+                                    <div style="margin-bottom: 5px; font-size: 11px;">
+                                        <span style="margin-right: 8px;">✉</span>
+                                        <span>{{ $provider->contact->email_personal ?: $provider->contact->email_business }}</span>
+                                    </div>
+                                @endif
                             </div>
-                            @endif
-                            @if($commonData)
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">⚑</span>
-                                <span>@if($commonData->cnpj)CNPJ: {{ format_cnpj($commonData->cnpj) }}@elseif($commonData->cpf)CPF: {{ format_cpf($commonData->cpf) }}@endif</span>
+                        @else
+                            <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
+                                {{ auth()->user()->name }}
+                            </h2>
+                            <div class="company-details">
+                                <div style="margin-bottom: 5px; font-size: 11px;">
+                                    <span style="margin-right: 8px;">✉</span>
+                                    <span>{{ auth()->user()->email }}</span>
+                                </div>
                             </div>
-                            @endif
-                            @if($contact)
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">☎</span>
-                                <span>{{ format_phone($contact->phone_business ?: $contact->phone_personal) }}</span>
-                            </div>
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">✉</span>
-                                <span>{{ $contact->email_business ?: $contact->email_personal ?: auth()->user()->email }}</span>
-                            </div>
-                            @endif
-                        </div>
+                        @endif
                     </div>
                 </td>
                 <!-- Coluna da Direita - Informações do Relatório -->

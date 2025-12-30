@@ -61,7 +61,7 @@
                                 <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
                                     id="birth_date" name="birth_date"
                                     value="{{ old('birth_date', $customer->commonData?->birth_date ? \Carbon\Carbon::parse($customer->commonData->birth_date)->format('d/m/Y') : '') }}"
-                                    placeholder="DD/MM/AAAA">
+                                    placeholder="DD/MM/AAAA" data-mask="00/00/0000">
                                 <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
                                 @error('birth_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -82,7 +82,8 @@
                                 <label for="phone_personal" class="text-uppercase small fw-bold text-muted mb-2">Telefone Pessoal</label>
                                 <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
                                     id="phone_personal" name="phone_personal"
-                                    value="{{ old('phone_personal', $customer->contact?->phone_personal) }}" required>
+                                    value="{{ old('phone_personal', $customer->contact?->phone_personal) }}" required
+                                    data-mask="(00) 00000-0000">
                                 @error('phone_personal')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -148,7 +149,7 @@
                                     <label for="cnpj" class="text-uppercase small fw-bold text-muted mb-2">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
                                         id="cnpj" name="cnpj"
-                                        value="{{ old('cnpj', $customer->commonData?->cnpj) }}">
+                                        value="{{ old('cnpj', $customer->commonData?->cnpj) }}" data-mask="00.000.000/0000-00">
                                     @error('cnpj')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -156,36 +157,19 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="area_of_activity_id" class="text-uppercase small fw-bold text-muted mb-2">Área de Atuação</label>
-                                <select name="area_of_activity_id"
-                                    class="form-select @error('area_of_activity_id') is-invalid @enderror"
-                                    id="area_of_activity_id">
+                                <label for="area_of_activity_slug" class="text-uppercase small fw-bold text-muted mb-2">Área de Atuação</label>
+                                <select name="area_of_activity_slug"
+                                    class="form-select @error('area_of_activity_slug') is-invalid @enderror"
+                                    id="area_of_activity_slug">
                                     <option value="">Selecione uma área</option>
                                     @foreach ($areas_of_activity ?? [] as $area)
-                                        <option value="{{ $area->id }}"
-                                            {{ old('area_of_activity_id', $customer->commonData?->area_of_activity_id) == $area->id ? 'selected' : '' }}>
+                                        <option value="{{ $area->slug }}"
+                                            {{ old('area_of_activity_slug', $customer->commonData?->areaOfActivity?->slug) == $area->slug ? 'selected' : '' }}>
                                             {{ $area->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('area_of_activity_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="profession_id" class="text-uppercase small fw-bold text-muted mb-2">Profissão</label>
-                                <select name="profession_id"
-                                    class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
-                                    <option value="">Selecione uma profissão</option>
-                                    @foreach ($professions ?? [] as $prof)
-                                        <option value="{{ $prof->id }}"
-                                            {{ old('profession_id', $customer->commonData?->profession_id) == $prof->id ? 'selected' : '' }}>
-                                            {{ $prof->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('profession_id')
+                                @error('area_of_activity_slug')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -254,7 +238,7 @@
                                     <label for="cep" class="text-uppercase small fw-bold text-muted mb-2">CEP</label>
                                     <input type="text" class="form-control @error('cep') is-invalid @enderror"
                                         id="cep" name="cep" data-cep-lookup
-                                        value="{{ old('cep', $customer->address?->cep) }}" required>
+                                        value="{{ old('cep', $customer->address?->cep) }}" required data-mask="00000-000">
                                     @error('cep')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

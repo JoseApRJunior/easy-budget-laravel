@@ -240,15 +240,17 @@ class ProductService extends AbstractBaseService
     public function restoreProducts(array $ids): ServiceResult
     {
         return $this->safeExecute(function () use ($ids) {
-            $count = 0;
-            foreach ($ids as $id) {
-                $product = $this->repository->findById((int) $id, [], true);
-                if ($product && $product->trashed() && $this->restoreAction->execute($product)) {
-                    $count++;
+            return DB::transaction(function () use ($ids) {
+                $count = 0;
+                foreach ($ids as $id) {
+                    $product = $this->repository->findOneBy('id', (int) $id, [], true);
+                    if ($product && $product->trashed() && $this->restoreAction->execute($product)) {
+                        $count++;
+                    }
                 }
-            }
 
-            return $this->success(null, "{$count} produtos restaurados com sucesso");
+                return $this->success(null, "{$count} produtos restaurados com sucesso");
+            });
         }, 'Erro ao restaurar produtos.');
     }
 

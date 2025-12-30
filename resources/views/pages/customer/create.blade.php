@@ -51,17 +51,6 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="birth_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Nascimento</label>
-                                <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
-                                    id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
-                                    placeholder="DD/MM/AAAA">
-                                <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
-                                @error('birth_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="mb-3">
                                 <label for="email_personal" class="text-uppercase small fw-bold text-muted mb-2">Email Pessoal</label>
                                 <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
                                     id="email_personal" name="email_personal" value="{{ old('email_personal') }}" required>
@@ -73,7 +62,8 @@
                             <div class="mb-3">
                                 <label for="phone_personal" class="text-uppercase small fw-bold text-muted mb-2">Telefone Pessoal</label>
                                 <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
-                                    id="phone_personal" name="phone_personal" value="{{ old('phone_personal') }}" required>
+                                    id="phone_personal" name="phone_personal" value="{{ old('phone_personal') }}" required
+                                    data-mask="(00) 00000-0000">
                                 @error('phone_personal')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -109,8 +99,36 @@
                                 <div class="mb-3">
                                     <label for="cpf" class="text-uppercase small fw-bold text-muted mb-2">CPF</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
-                                        id="cpf" name="cpf" value="{{ old('cpf') }}">
+                                        id="cpf" name="cpf" value="{{ old('cpf') }}" data-mask="000.000.000-00">
                                     @error('cpf')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="birth_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Nascimento</label>
+                                    <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
+                                        id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
+                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
+                                    <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
+                                    @error('birth_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="profession_id" class="text-uppercase small fw-bold text-muted mb-2">Profissão</label>
+                                    <select name="profession_id"
+                                        class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
+                                        <option value="">Selecione uma profissão</option>
+                                        @foreach ($professions ?? [] as $prof)
+                                            <option value="{{ $prof->id }}"
+                                                {{ old('profession_id') == $prof->id ? 'selected' : '' }}>
+                                                {{ $prof->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('profession_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -130,7 +148,7 @@
                                 <div class="mb-3">
                                     <label for="cnpj" class="text-uppercase small fw-bold text-muted mb-2">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
-                                        id="cnpj" name="cnpj" value="{{ old('cnpj') }}">
+                                        id="cnpj" name="cnpj" value="{{ old('cnpj') }}" data-mask="00.000.000/0000-00">
                                     @error('cnpj')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -138,19 +156,19 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="area_of_activity_id" class="text-uppercase small fw-bold text-muted mb-2">Área de Atuação</label>
-                                <select name="area_of_activity_id"
-                                    class="form-select @error('area_of_activity_id') is-invalid @enderror"
-                                    id="area_of_activity_id">
+                                <label for="area_of_activity_slug" class="text-uppercase small fw-bold text-muted mb-2">Área de Atuação</label>
+                                <select name="area_of_activity_slug"
+                                    class="form-select @error('area_of_activity_slug') is-invalid @enderror"
+                                    id="area_of_activity_slug">
                                     <option value="">Selecione uma área</option>
                                     @foreach ($areas_of_activity ?? [] as $area)
-                                        <option value="{{ $area->id }}"
-                                            {{ old('area_of_activity_id') == $area->id ? 'selected' : '' }}>
+                                        <option value="{{ $area->slug }}"
+                                            {{ old('area_of_activity_slug') == $area->slug ? 'selected' : '' }}>
                                             {{ $area->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('area_of_activity_id')
+                                @error('area_of_activity_slug')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -203,7 +221,8 @@
                             <div class="mb-3">
                                 <label for="phone_business" class="text-uppercase small fw-bold text-muted mb-2">Telefone Empresarial</label>
                                 <input type="tel" class="form-control @error('phone_business') is-invalid @enderror"
-                                    id="phone_business" name="phone_business" value="{{ old('phone_business') }}">
+                                    id="phone_business" name="phone_business" value="{{ old('phone_business') }}"
+                                    data-mask="(00) 00000-0000">
                                 @error('phone_business')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

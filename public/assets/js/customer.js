@@ -1,128 +1,156 @@
-document.addEventListener("DOMContentLoaded", function () {
-   // Elementos do DOM
-   const searchInput = document.getElementById("search");
-   const initialMessage = document.getElementById("initial-message");
-   const loadingSpinner = document.getElementById("loading-spinner");
-   const resultsContainer = document.getElementById("results-container");
-   const statusSelect = document.getElementById("status");
-   const typeSelect = document.getElementById("type");
-   const areaSelect = document.getElementById("area_of_activity_id");
-   const deletedSelect = document.getElementById("deleted");
+/**
+ * Customer Index JavaScript - Optimized Version
+ * - Sem auto-submit (melhor performance, igual ao Product Index)
+ * - Tratamento de modais de exclusão e restauração
+ * - Validação de filtros
+ */
 
-   // Verificação de elementos essenciais
-   if (!searchInput) {
-      console.error("Elemento #search não encontrado!");
-      return;
-   }
+(function () {
+    "use strict";
 
-   // Função para limpar campos e resetar estado
-   function clearFields() {
-      if (searchInput) {
-         searchInput.value = "";
-         searchInput.focus();
-      }
+    // Gerenciamento de estado interno
+    let customerState = {
+        modalInstance: null,
+    };
 
-      if (initialMessage) initialMessage.classList.remove("d-none");
-      if (resultsContainer) resultsContainer.classList.add("d-none");
-      if (loadingSpinner) loadingSpinner.classList.add("d-none");
-   }
+    /**
+     * Inicialização principal
+     */
+    function initializeCustomerIndex() {
+        // 1. Modais de Ação
+        initializeDeleteModal();
+        initializeRestoreModal();
 
-   // Função para mostrar mensagens de erro
-   function showError(message) {
-      const existingAlerts = document.querySelectorAll(".alert");
-      existingAlerts.forEach((alert) => alert.remove());
+        // 2. Filtros e Formulário
+        initializeFilterConfirmation();
+        
+        // 3. UI e Máscaras (CEP)
+        initializeFormatting();
+    }
 
-      const alertContainer = document.createElement("div");
-      alertContainer.innerHTML = `
-         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-         </div>
-      `;
+    /**
+     * Inicializa as máscaras de CEP e data usando VanillaMask
+     */
+    function initializeFormatting() {
+        const applyMask = () => {
+            if (typeof window.VanillaMask !== "undefined") {
+                const cepInput = document.getElementById("cep");
+                const startDate = document.getElementById("start_date");
+                const endDate = document.getElementById("end_date");
 
-      const container = document.querySelector(".container-fluid");
-      if (container) {
-         container.insertBefore(
-            alertContainer.firstElementChild,
-            container.firstElementChild
-         );
-      }
+                if (cepInput && !cepInput.dataset.maskApplied) {
+                    new window.VanillaMask(cepInput, "cep");
+                    cepInput.dataset.maskApplied = "true";
+                }
+                if (startDate && !startDate.dataset.maskApplied) {
+                    new window.VanillaMask(startDate, "date");
+                    startDate.dataset.maskApplied = "true";
+                }
+                if (endDate && !endDate.dataset.maskApplied) {
+                    new window.VanillaMask(endDate, "date");
+                    endDate.dataset.maskApplied = "true";
+                }
+            } else {
+                setTimeout(applyMask, 100);
+            }
+        };
 
-      setTimeout(() => {
-         const alert = document.querySelector(".alert-danger");
-         if (alert) {
-            alert.classList.remove("show");
-            setTimeout(() => alert.remove(), 150);
-         }
-      }, 5000);
-   }
+        applyMask();
+    }
 
-   // Event Listeners
-   if (searchInput) {
-      searchInput.addEventListener("keypress", (e) => {
-         if (e.key === "Enter") {
-            e.preventDefault();
-            handleFilterSubmit();
-         }
-      });
-   }
+    /**
+     * Intercepta o envio para validar se há filtros aplicados
+     */
+    function initializeFilterConfirmation() {
+        const form = document.getElementById("filtersFormCustomers");
+        if (!form) return;
 
-   // Auto-submeter ao alterar filtros
-   [statusSelect, typeSelect, areaSelect, deletedSelect].forEach((el) => {
-      if (!el) return;
-      el.addEventListener("change", () => {
-         clearTimeout(window.filterTimeout);
-         window.filterTimeout = setTimeout(() => handleFilterSubmit(), 400);
-      });
-   });
+        form.addEventListener("submit", function (e) {
+            // Se o campo oculto 'all' existir (vindo do modal), ignora a validação
+            if (form.querySelector('input[name="all"]')) return;
 
-   function handleFilterSubmit() {
-      document.getElementById("filtersFormCustomers").submit();
-   }
-});
+            const search = (form.querySelector("#search")?.value || "").trim();
+            const status = (form.querySelector("#status")?.value || "").trim();
+            const type = (form.querySelector("#type")?.value || "").trim();
+            const area = (form.querySelector("#area_of_activity_id")?.value || "").trim();
 
-// Função para lidar com clique no botão de exclusão
-function handleDelete(button) {
-   const customerId = button.getAttribute('data-id');
-   const customerName = button.getAttribute('data-name');
-   confirmDelete(customerId, customerName);
-}
+            const hasFilters = !!(search || status || type || area);
 
-// Função para confirmar exclusão
-function confirmDelete(customerId, customerName) {
-   const modalElement = document.getElementById("deleteModal");
-   const modal = new bootstrap.Modal(modalElement);
-   const confirmBtn = modalElement.querySelector('button[type="submit"]');
-   const namePlaceholder = document.getElementById("deleteCustomerName");
-   const form = document.getElementById("deleteForm");
+            if (!hasFilters) {
+                e.preventDefault();
+                showFilterConfirmationModal(form);
+            }
+        });
+    }
 
-   if (namePlaceholder) {
-      namePlaceholder.textContent = customerName;
-   }
+    /**
+     * Exibe o modal avisando que carregar tudo pode ser lento
+     */
+    function showFilterConfirmationModal(form) {
+        const modalEl = document.getElementById("confirmAllCustomersModal");
+        if (!modalEl) return;
 
-   if (form) {
-      form.action = `/provider/customers/${customerId}`;
-   }
+        const confirmBtn = modalEl.querySelector(".btn-confirm-all-customers");
 
-   modal.show();
-}
+        // Limpa listeners antigos para evitar múltiplas submissões
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
 
-// Restaurar cliente via POST com CSRF
-function restoreCustomer(customerId) {
-   const csrfToken = document
-      .querySelector('meta[name="csrf-token"]')
-      ?.getAttribute("content");
-   if (!csrfToken) return;
+        newConfirmBtn.addEventListener("click", function () {
+            const hiddenInput = document.createElement("input");
+            hiddenInput.type = "hidden";
+            hiddenInput.name = "all";
+            hiddenInput.value = "1";
+            form.appendChild(hiddenInput);
 
-   const form = document.createElement("form");
-   form.method = "POST";
-   form.action = `/provider/customers/${customerId}/restore`;
-   const csrfInput = document.createElement("input");
-   csrfInput.type = "hidden";
-   csrfInput.name = "_token";
-   csrfInput.value = csrfToken;
-   form.appendChild(csrfInput);
-   document.body.appendChild(form);
-   form.submit();
-}
+            if (customerState.modalInstance) customerState.modalInstance.hide();
+            form.submit();
+        });
+
+        if (typeof window.bootstrap !== "undefined") {
+            customerState.modalInstance = new window.bootstrap.Modal(modalEl);
+            customerState.modalInstance.show();
+        }
+    }
+
+    /**
+     * Modais de Deleção e Restauração
+     */
+    function initializeDeleteModal() {
+        const modal = document.getElementById("deleteModal");
+        if (!modal) return;
+        
+        modal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            const url = button.getAttribute("data-delete-url") || button.getAttribute("href");
+            const name = button.getAttribute("data-name");
+
+            document.getElementById("deleteForm")?.setAttribute("action", url);
+            const nameEl = document.getElementById("deleteCustomerName");
+            if (nameEl) nameEl.textContent = `"${name}"`;
+        });
+    }
+
+    function initializeRestoreModal() {
+        const modal = document.getElementById("restoreModal");
+        if (!modal) return;
+
+        modal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            const url = button.getAttribute("data-restore-url");
+            const name = button.getAttribute("data-name");
+
+            document.getElementById("restoreForm")?.setAttribute("action", url);
+            const nameEl = document.getElementById("restoreCustomerName");
+            if (nameEl) nameEl.textContent = `"${name}"`;
+        });
+    }
+
+    // Inicializa ao carregar o DOM
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeCustomerIndex);
+    } else {
+        initializeCustomerIndex();
+    }
+
+})();

@@ -23,4 +23,12 @@ class AreaOfActivityRepository extends AbstractGlobalRepository
     {
         return $this->model->newQuery()->where('is_active', true)->orderBy('name')->get();
     }
+
+    /**
+     * Busca uma área de atuação pelo slug.
+     */
+    public function findBySlug(string $slug): ?AreaOfActivity
+    {
+        return $this->model->newQuery()->where('slug', $slug)->first();
+    }
 }

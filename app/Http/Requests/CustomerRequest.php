@@ -85,14 +85,8 @@ class CustomerRequest extends FormRequest
                 'company_size',
             ]);
         }
-        // Se for pessoa jurídica (pj), remover campos de pessoa física
-        elseif ($personType === 'pj') {
-            $this->removeInput([
-                'cpf',
-                'birth_date',
-                'profession_id',
-            ]);
-        }
+        // Se for pessoa jurídica (pj), não removemos mais os campos de PF
+        // para permitir salvar birth_date e outros campos mesmo para CNPJ (MEI, etc)
     }
 
     /**
@@ -127,13 +121,27 @@ class CustomerRequest extends FormRequest
 
             // Dados específicos por tipo de pessoa
             // Pessoa Física
-            'cpf' => 'sometimes|required_if:person_type,pf|string|max:14',
-            'birth_date' => 'sometimes|required_if:person_type,pf|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
-            'profession_id' => 'sometimes|required_if:person_type,pf|exists:professions,id',
+            'cpf' => [
+                'nullable',
+                'required_if:person_type,pf',
+                'string',
+                'max:14',
+                'cpf',
+                \Illuminate\Validation\Rule::unique('common_datas', 'cpf')->where('tenant_id', $tenantId),
+            ],
+            'birth_date' => 'nullable|required_if:person_type,pf|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
+            'profession_id' => 'nullable|required_if:person_type,pf|exists:professions,id',
 
             // Pessoa Jurídica
-            'company_name' => 'sometimes|required_if:person_type,pj|string|max:255',
-            'cnpj' => 'sometimes|required_if:person_type,pj|string|max:18',
+            'company_name' => 'nullable|required_if:person_type,pj|string|max:255',
+            'cnpj' => [
+                'nullable',
+                'required_if:person_type,pj',
+                'string',
+                'max:18',
+                'cnpj',
+                \Illuminate\Validation\Rule::unique('common_datas', 'cnpj')->where('tenant_id', $tenantId),
+            ],
             'fantasy_name' => 'nullable|string|max:255',
             'founding_date' => 'nullable|date_format:d/m/Y|before_or_equal:today',
             'state_registration' => 'nullable|string|max:50',
@@ -142,7 +150,7 @@ class CustomerRequest extends FormRequest
             'company_size' => 'nullable|in:micro,pequena,media,grande',
 
             // Dados comuns
-            'area_of_activity_id' => 'sometimes|exists:areas_of_activity,id',
+            'area_of_activity_slug' => 'sometimes|exists:areas_of_activity,slug',
             'description' => 'nullable|string|max:500',
 
             // Contatos - pessoais obrigatórios, empresariais opcionais
@@ -205,7 +213,7 @@ class CustomerRequest extends FormRequest
             'company_size.in' => 'Tamanho da empresa deve ser: micro, pequena, media ou grande.',
 
             // Mensagens para dados comuns
-            'area_of_activity_id.exists' => 'Área de atividade inválida.',
+            'area_of_activity_slug.exists' => 'Área de atividade inválida.',
             'profession_id.required_if' => 'A profissão é obrigatória para pessoa física.',
             'profession_id.exists' => 'Profissão inválida.',
 
@@ -243,7 +251,7 @@ class CustomerRequest extends FormRequest
             'cpf' => 'CPF',
             'birth_date' => 'data de nascimento',
             'founding_date' => 'data de fundação',
-            'area_of_activity_id' => 'área de atividade',
+            'area_of_activity_slug' => 'área de atividade',
             'profession_id' => 'profissão',
             'company_size' => 'tamanho da empresa',
             'state_registration' => 'inscrição estadual',

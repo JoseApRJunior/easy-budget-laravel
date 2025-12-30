@@ -69,7 +69,7 @@ class BudgetController extends Controller
 
         $selectedCustomer = null;
         if ($customerId = $request->query('customer_id')) {
-            $customerResult = $this->customerService->findById((int)$customerId);
+            $customerResult = $this->customerService->findCustomer((int)$customerId);
             if ($customerResult->isSuccess()) {
                 $selectedCustomer = $customerResult->getData();
             }

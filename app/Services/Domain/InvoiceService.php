@@ -73,7 +73,7 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             return DB::transaction(function () use ($dto) {
-                $service = $this->serviceRepository->findById($dto->service_id);
+                $service = $this->serviceRepository->find($dto->service_id);
                 if (! $service) {
                     return ServiceResult::error('Serviço não encontrado');
                 }
@@ -164,7 +164,7 @@ class InvoiceService extends AbstractBaseService
                     return ServiceResult::error('Orçamento não encontrado');
                 }
 
-                $service = $this->serviceRepository->findById($dto->service_id);
+                $service = $this->serviceRepository->find($dto->service_id);
 
                 if (! $service || $service->budget_id !== $budget->id) {
                     return ServiceResult::error('Serviço inválido para o orçamento');
@@ -382,7 +382,7 @@ class InvoiceService extends AbstractBaseService
         foreach ($items as $item) {
             $itemDTO = $item instanceof InvoiceItemDTO ? $item : InvoiceItemDTO::fromRequest($item);
 
-            $product = $this->productRepository->findById($itemDTO->product_id);
+            $product = $this->productRepository->find($itemDTO->product_id);
 
             if (! $product || ! $product->active) {
                 throw new Exception("Produto ID {$itemDTO->product_id} não encontrado ou inativo");
