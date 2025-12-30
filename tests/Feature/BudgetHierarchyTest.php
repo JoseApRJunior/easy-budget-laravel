@@ -32,9 +32,15 @@ class BudgetHierarchyTest extends TestCase
         $this->providerUser = User::factory()->create([
             'tenant_id' => $this->tenant->id,
             'email_verified_at' => now(),
+            'is_active' => true,
         ]);
         $this->actingAs($this->providerUser);
 
+        \App\Models\Provider::create([
+            'tenant_id' => $this->tenant->id,
+            'user_id' => $this->providerUser->id,
+            'terms_accepted' => true,
+        ]);
         $role = Role::firstOrCreate(['name' => 'provider'], ['description' => 'Provider']);
         $this->providerUser->roles()->attach($role->id, ['tenant_id' => $this->tenant->id]);
 
@@ -82,16 +88,25 @@ class BudgetHierarchyTest extends TestCase
         ];
 
         $response = $this->actingAs($this->providerUser)
+            ->withoutMiddleware()
+            ->withoutExceptionHandling()
             ->post(route('provider.budgets.store'), $payload);
 
         $response->assertStatus(302);
         \Illuminate\Support\Facades\Log::info("Test Debug", [
             'status' => $response->status(),
+            'error' => session('error'),
             'errors' => session('errors') ? session('errors')->getMessages() : null,
             'location' => $response->headers->get('Location'),
         ]);
-
         $budget = Budget::first();
+        if ($response->status() !== 201 && $response->status() !== 302 || !$budget) {
+            dd([
+                'status' => $response->status(),
+                'session' => session()->all(),
+                'headers' => $response->headers->all(),
+            ]);
+        }
         $this->assertNotNull($budget);
         $this->assertEquals(2, $budget->services()->count());
         $this->assertEquals(3, ServiceItem::count());

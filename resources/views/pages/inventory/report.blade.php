@@ -3,6 +3,11 @@
 @section('title', 'Relatório de Inventário')
 
 @section('content')
+    @php
+        // Variável para controlar se há filtros aplicados (excluindo paginação)
+        $hasResults = !empty($filters) && collect($filters)->except(['per_page', 'page', 'type'])->filter()->isNotEmpty();
+    @endphp
+
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
         <x-page-header
@@ -18,48 +23,55 @@
         <!-- Card de Filtros -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
+                <h5 class="mb-0"><i class="bi bi-filter me-2"></i>Filtros de Busca</h5>
             </div>
             <div class="card-body">
                 <form method="GET" action="{{ route('provider.inventory.report') }}">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
-                                <label for="type">Tipo de Relatório</label>
-                                <select class="form-control" id="type" name="type">
+                                <label for="type" class="form-label small fw-bold text-muted text-uppercase">Tipo de Relatório</label>
+                                <select class="form-select tom-select" id="type" name="type">
                                     <option value="summary" {{ ($type ?? 'summary') === 'summary' ? 'selected' : '' }}>
                                         Resumo Geral</option>
                                     <option value="movements" {{ ($type ?? '') === 'movements' ? 'selected' : '' }}>
                                         Movimentos</option>
                                     <option value="valuation" {{ ($type ?? '') === 'valuation' ? 'selected' : '' }}>
                                         Valoração</option>
-                                    <option value="low-stock" {{ ($type ?? '') === 'low-stock' ? 'selected' : '' }}>Baixo
-                                        Estoque</option>
+                                    <option value="low-stock" {{ ($type ?? '') === 'low-stock' ? 'selected' : '' }}>
+                                        Baixo Estoque</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
-                                <label for="start_date">Data Inicial</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date"
-                                    value="{{ $startDate ?? '' }}">
+                                <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Data Inicial <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="start_date" name="start_date"
+                                    value="{{ $startDate ?? '' }}" placeholder="DD/MM/AAAA" required>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
-                                <label for="end_date">Data Final</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date"
-                                    value="{{ $endDate ?? '' }}">
+                                <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Data Final <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="end_date" name="end_date"
+                                    value="{{ $endDate ?? '' }}" placeholder="DD/MM/AAAA" required>
                             </div>
                         </div>
-                        <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search me-1"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.inventory.report') }}" class="btn btn-secondary">
-                                    <i class="bi bi-x me-1"></i>Limpar
-                                </a>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por Página</label>
+                                <select name="per_page" id="per_page" class="form-select tom-select">
+                                    <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                                    <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
+                                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <div class="d-flex gap-2 flex-nowrap w-100 mb-1">
+                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
+                                <x-button type="link" :href="route('provider.inventory.report')" variant="outline-secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -68,84 +80,145 @@
         </div>
 
         <!-- Card de Resultados -->
-        <div class="card">
-            <div class="card-header">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header py-3">
                 <div class="row align-items-center">
                     <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                         <h5 class="mb-0 d-flex align-items-center flex-wrap">
                             <span class="me-2">
-                                <i class="bi bi-list-ul me-1"></i>
+                                <i class="bi bi-list-ul me-2"></i>
                                 <span class="d-none d-sm-inline">Resultados do Relatório</span>
                                 <span class="d-sm-none">Resultados</span>
                             </span>
-                            <span class="text-muted" style="font-size: 0.875rem;">
-                                @if (is_iterable($reportData) && count($reportData) > 0)
-                                    ({{ count($reportData) }})
+                            <span class="text-muted small fw-normal">
+                                @if ($reportData && $reportData->total() > 0)
+                                    ({{ $reportData->total() }} itens encontrados)
                                 @else
-                                    (0)
+                                    (0 itens)
                                 @endif
                             </span>
                         </h5>
                     </div>
-                    <div class="col-12 col-lg-4 mt-2 mt-lg-0">
+                    <div class="col-12 col-lg-4 text-start text-lg-end">
                         <div class="d-flex justify-content-start justify-content-lg-end">
-                            <div class="btn-group" role="group">
-                                <a href="{{ route('provider.inventory.export', ['type' => 'pdf', 'report_type' => $type ?? 'summary']) }}"
-                                    class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                                </a>
-                                <a href="{{ route('provider.inventory.export', ['type' => 'xlsx', 'report_type' => $type ?? 'summary']) }}"
-                                    class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                                </a>
-                                <a href="{{ route('provider.inventory.export', ['type' => 'csv', 'report_type' => $type ?? 'summary']) }}"
-                                    class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-filetype-csv me-1"></i>CSV
-                                </a>
+                            <div class="dropdown">
+                                <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary'])) }}">
+                                            <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary'])) }}">
+                                            <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="card-body p-0">
-                @if (is_iterable($reportData) && count($reportData) > 0)
-                    <div class="table-responsive">
-                        <table class="modern-table table mb-0">
-                            <thead>
-                                <tr>
-                                    @php $first = $reportData[0] ?? (is_array($reportData) ? reset($reportData) : null); @endphp
-                                    @if (is_array($first))
-                                        @foreach (array_keys($first) as $col)
-                                            <th>{{ ucfirst(str_replace('_', ' ', $col)) }}</th>
-                                        @endforeach
-                                    @else
-                                        <th>Item</th>
-                                    @endif
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($reportData as $row)
+                @if ($reportData && $reportData->total() > 0)
+                    <!-- Desktop View -->
+                    <div class="desktop-view">
+                        <div class="table-responsive">
+                            <table class="modern-table table mb-0">
+                                <thead>
                                     <tr>
-                                        @if (is_array($row))
-                                            @foreach ($row as $val)
-                                                <td>{{ is_numeric($val) ? number_format($val, 2, ',', '.') : $val }}</td>
+                                        @php
+                                            $first = $reportData->first();
+                                        @endphp
+                                        @if (is_array($first))
+                                            @foreach (array_keys($first) as $col)
+                                                <th>{{ ucfirst(str_replace('_', ' ', $col)) }}</th>
                                             @endforeach
-                                        @else
-                                            <td>{{ $row }}</td>
                                         @endif
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($reportData as $row)
+                                        <tr>
+                                            @foreach ($row as $val)
+                                                <td>{{ is_numeric($val) && !str_contains($val, 'R$') ? number_format((float)$val, 0, ',', '.') : $val }}</td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
+                    <!-- Mobile View -->
+                    <div class="mobile-view">
+                        <div class="list-group list-group-flush">
+                            @foreach ($reportData as $row)
+                                <div class="list-group-item py-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3 mt-1">
+                                            <div class="avatar-circle bg-light text-muted" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                <i class="bi bi-file-text"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="bg-body-secondary rounded p-3">
+                                                @foreach ($row as $key => $val)
+                                                    <div class="d-flex justify-content-between align-items-center mb-2 last-child-mb-0">
+                                                        <span class="small fw-bold text-muted text-uppercase me-2" style="font-size: 0.7rem;">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
+                                                        <span class="small text-body text-end">{{ is_numeric($val) && !str_contains($val, 'R$') ? number_format((float)$val, 0, ',', '.') : $val }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    @if ($reportData->hasPages())
+                        @include('partials.components.paginator', [
+                            'p' => $reportData->appends(request()->query()),
+                            'show_info' => true
+                        ])
+                    @endif
                 @else
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox display-4 text-muted mb-3"></i>
-                        <h6 class="text-muted mb-2">Nenhum dado encontrado</h6>
-                        <p class="text-muted small mb-0">Ajuste os filtros ou <a
-                                href="{{ route('provider.inventory.index') }}">acesse o inventário</a></p>
+                    <div class="p-5 text-center">
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-{{ $hasResults ? 'search' : 'filter' }} text-muted opacity-50 fs-1"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">
+                            {{ $hasResults ? 'Nenhum dado encontrado' : 'Aguardando Filtros' }}
+                        </h5>
+                        <p class="text-muted mx-auto mb-0" style="max-width: 400px;">
+                            @if($hasResults)
+                                Não encontramos dados para o período selecionado ou com os filtros aplicados.
+                                <br>
+                                <a href="{{ route('provider.inventory.report') }}" class="text-primary text-decoration-none small mt-2 d-inline-block">
+                                    <i class="bi bi-x-circle me-1"></i>Limpar filtros
+                                </a>
+                            @else
+                                Selecione os parâmetros acima e clique em <strong>Filtrar</strong> para gerar o relatório.
+                            @endif
+                        </p>
                     </div>
                 @endif
+            </div>
+        </div>
+
+        <!-- Ações do Footer -->
+        <div class="mt-4 pb-2">
+            <div class="row align-items-center g-3">
+                <div class="col-12 col-md-auto">
+                    <x-back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
+                </div>
+                <div class="col-12 col-md text-center d-none d-md-block">
+                    <small class="text-muted">
+                        Relatório gerado em: {{ now()->format('d/m/Y H:i') }}
+                    </small>
+                </div>
             </div>
         </div>
     </div>
@@ -159,6 +232,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = startDate ? startDate.closest('form') : null;
 
     if (form) {
+        if (typeof VanillaMask !== 'undefined') {
+            new VanillaMask('start_date', 'date');
+            new VanillaMask('end_date', 'date');
+        }
+
         form.addEventListener('submit', function(e) {
             if (startDate.value && endDate.value && startDate.value > endDate.value) {
                 e.preventDefault();
@@ -168,6 +246,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('A data inicial não pode ser maior que a data final.');
                 }
                 startDate.focus();
+                return;
+            }
+
+            if ((startDate.value && !endDate.value) || (!startDate.value && endDate.value)) {
+                e.preventDefault();
+                const message = 'Para filtrar por período, informe as datas inicial e final.';
+                if (window.easyAlert) {
+                    window.easyAlert.error(message);
+                } else {
+                    alert(message);
+                }
+                if (!startDate.value) startDate.focus();
+                else endDate.focus();
             }
         });
 

@@ -309,7 +309,7 @@ class BudgetVersion extends Model
             'version' => $this->version_number,
             'date' => $this->version_date->format('d/m/Y H:i'),
             'user' => $this->user->name ?? 'Sistema',
-            'total' => number_format($this->version_total, 2, ',', '.'),
+            'total' => number_format((float) $this->version_total, 2, ',', '.'),
             'is_current' => $this->is_current,
             'changes' => $this->changes_description,
         ];

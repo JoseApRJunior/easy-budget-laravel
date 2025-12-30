@@ -126,6 +126,18 @@ class InventoryRepository extends AbstractTenantRepository
             });
         }
 
+        // Filtro por período (via movimentos de inventário)
+        if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
+            $query->whereHas('product.inventoryMovements', function ($q) use ($filters) {
+                if (! empty($filters['start_date'])) {
+                    $q->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
+                }
+                if (! empty($filters['end_date'])) {
+                    $q->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
+                }
+            });
+        }
+
         return $query->count();
     }
 
@@ -196,6 +208,18 @@ class InventoryRepository extends AbstractTenantRepository
         if (! empty($filters['category'])) {
             $query->whereHas('product', function ($q) use ($filters) {
                 $q->where('category_id', $filters['category']);
+            });
+        }
+
+        // Filtro por período (via movimentos de inventário)
+        if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
+            $query->whereHas('product.inventoryMovements', function ($q) use ($filters) {
+                if (! empty($filters['start_date'])) {
+                    $q->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
+                }
+                if (! empty($filters['end_date'])) {
+                    $q->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
+                }
             });
         }
 
@@ -320,6 +344,18 @@ class InventoryRepository extends AbstractTenantRepository
         if (! empty($filters['category'])) {
             $query->whereHas('product', function ($q) use ($filters) {
                 $q->where('category_id', $filters['category']);
+            });
+        }
+
+        // Filtro por período (via movimentos de inventário)
+        if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
+            $query->whereHas('product.inventoryMovements', function ($q) use ($filters) {
+                if (! empty($filters['start_date'])) {
+                    $q->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
+                }
+                if (! empty($filters['end_date'])) {
+                    $q->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
+                }
             });
         }
 

@@ -11,7 +11,7 @@ use Carbon\Carbon;
 readonly class ServiceDTO extends AbstractDTO
 {
     public function __construct(
-        public int $budget_id,
+        public ?int $budget_id,
         public int $category_id,
         public ServiceStatus $status,
         public ?string $code = null,
@@ -27,7 +27,7 @@ readonly class ServiceDTO extends AbstractDTO
     public static function fromRequest(array $data): self
     {
         return new self(
-            budget_id: (int) $data['budget_id'],
+            budget_id: isset($data['budget_id']) ? (int) $data['budget_id'] : null,
             category_id: (int) $data['category_id'],
             status: isset($data['status']) ? ServiceStatus::from($data['status']) : ServiceStatus::PENDING,
             code: $data['code'] ?? null,

@@ -24,6 +24,61 @@
 10.   [Referência Rápida](#-referência-rápida---copy--paste) - Templates prontos
 11.   [Integração com Backend](#-integração-com-backend) - Controllers, Services e Repositories
 
+### 📄 11. REPORT Pattern
+
+O padrão de relatórios deve seguir a estrutura de filtros com estado inicial vazio, onde os dados só são carregados após a aplicação de filtros.
+
+#### Cabeçalho do Relatório
+```blade
+<x-page-header
+    title="Relatório de [Módulo]"
+    icon="clipboard-data"
+    :breadcrumb-items="[
+        '[Módulo]' => route('provider.[modulo].index'),
+        'Relatório' => '#'
+    ]">
+    <p class="text-muted mb-0">Resumo e detalhes conforme filtros aplicados</p>
+</x-page-header>
+```
+
+#### Card de Filtros (Estado Inicial)
+- O relatório deve iniciar **vazio** (`isInitial`).
+- Exibir mensagem amigável: "Aguardando Filtros - Selecione os parâmetros acima e clique em Filtrar para gerar o relatório."
+- Filtros comuns: Tipo de Relatório, Data Inicial, Data Final, Busca.
+
+#### Card de Resultados
+- Utilizar `modern-table` para desktop.
+- Implementar `mobile-view` com `list-group`.
+- Exportação: Disponibilizar apenas **PDF** e **Excel** (Remover CSV).
+
+#### Integração com Backend (Service)
+```php
+public function getReportData(array $filters = []): ServiceResult
+{
+    return $this->safeExecute(function () use ($filters) {
+        // 1. Definir parâmetros
+        $startDate = $filters['start_date'] ?? null;
+        $endDate = $filters['end_date'] ?? null;
+
+        // 2. Verificar Estado Inicial
+        $isInitial = empty($startDate) && empty($endDate) && ...;
+
+        if ($isInitial) {
+            return [
+                'reportData' => new LengthAwarePaginator([], 0, 10),
+                'isInitial' => true,
+                // ... outros dados iniciais
+            ];
+        }
+
+        // 3. Validação e Processamento
+        // ...
+    });
+}
+```
+
+---
+
 ### 🎨 Padrão de Ícones
 
 #### Ícones de Ação "Novo/Criar"
@@ -514,6 +569,61 @@
     </div>
 </div>
 ```
+
+---
+
+## 📦 12. INVENTORY Pattern (Listagem Avançada)
+
+Este padrão é a evolução do `INDEX Pattern`, incorporando métricas em tempo real e filtros densos.
+
+### 📝 Padrões de Texto (Copywriting)
+
+| Contexto | Padrão | Exemplo |
+| :--- | :--- | :--- |
+| **Título da Página** | `[Módulo] de [Objeto]` | Inventário de Produtos |
+| **Subtítulo** | `Gerencie o [ação] de seus [objetos]` | Gerencie o estoque e movimentações de seus produtos |
+| **Filtros (Label)** | `Buscar [Objeto]`, `Data Inicial` | Buscar Produto, Categoria, Status |
+| **Placeholders** | `Nome ou [Identificador]`, `DD/MM/AAAA` | Nome ou SKU, DD/MM/AAAA |
+| **Métricas** | `[Status]`, `Valor Total` | Estoque OK, Baixo, Sem Estoque |
+| **Ações** | `Filtrar`, `Limpar`, `Exportar` | Histórico, Exportar, Ver, Movimentar |
+
+### 📊 Cards de Estatísticas (Metrics)
+
+Utilizar `row g-3 mb-4` para garantir espaçamento consistente.
+
+```blade
+<div class="card h-100 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <div class="d-flex align-items-center mb-2">
+            <div class="avatar-circle bg-[cor]-subtle text-[cor] me-3">
+                <i class="bi bi-[icone]"></i>
+            </div>
+            <h6 class="text-muted mb-0 small fw-bold text-uppercase">[TÍTULO]</h6>
+        </div>
+        <h5 class="mb-0 fw-bold">[VALOR]</h5>
+    </div>
+</div>
+```
+
+### 🔍 Filtros Densos (Dense Filters)
+
+Para módulos com muitos filtros, utilizar a grade `col-md-X` de forma a manter os botões de ação na mesma linha ou em bloco destacado:
+
+- **Busca Textual**: `col-md-3` ou `col-md-4`
+- **Selects/Datas**: `col-md-2`
+- **Botões**: `d-flex gap-2 flex-nowrap`
+
+### 📱 Visualização Híbrida (Desktop vs Mobile)
+
+**Desktop (`.desktop-view`):**
+- Tabela com classe `.modern-table`.
+- Células de nome com `.item-name-cell` (Nome em negrito + Detalhes em small).
+- Badges de status com `.modern-badge`.
+
+**Mobile (`.mobile-view`):**
+- Lista com `.list-group-flush`.
+- Itens com `.item-avatar` (ícone ou imagem do produto).
+- Ações rápidas no rodapé de cada item da lista.
 
 ---
 

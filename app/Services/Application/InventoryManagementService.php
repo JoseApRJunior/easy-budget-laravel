@@ -94,11 +94,21 @@ class InventoryManagementService extends AbstractBaseService
                 };
             }
 
+            $displayFilters = $filterDto->toDisplayArray();
+
+            // Formatar datas para exibição no padrão brasileiro (d/m/Y)
+            if (! empty($displayFilters['start_date'])) {
+                $displayFilters['start_date'] = \Carbon\Carbon::parse($displayFilters['start_date'])->format('d/m/Y');
+            }
+            if (! empty($displayFilters['end_date'])) {
+                $displayFilters['end_date'] = \Carbon\Carbon::parse($displayFilters['end_date'])->format('d/m/Y');
+            }
+
             return [
                 'inventories' => $this->inventoryRepository->getPaginated($filters, $perPage),
                 'stats' => $this->inventoryRepository->getStatistics($filters),
                 'categories' => Category::whereNull('parent_id')->with('children')->get(),
-                'filters' => $filterDto->toDisplayArray(),
+                'filters' => $displayFilters,
             ];
         });
     }
@@ -135,6 +145,10 @@ class InventoryManagementService extends AbstractBaseService
     public function getMovementsData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
+            // Normalizar datas
+            $filters['start_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null) ?? ($filters['start_date'] ?? null);
+            $filters['end_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null) ?? ($filters['end_date'] ?? null);
+
             $query = \App\Models\InventoryMovement::with(['product', 'user']);
 
             // Validação de datas
@@ -164,19 +178,29 @@ class InventoryManagementService extends AbstractBaseService
             }
 
             if (! empty($filters['start_date'])) {
-                $query->whereDate('created_at', '>=', $filters['start_date']);
+                $query->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
             }
 
             if (! empty($filters['end_date'])) {
-                $query->whereDate('created_at', '<=', $filters['end_date']);
+                $query->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
             }
 
             $movements = $query->latest()->paginate($filters['per_page'] ?? 10);
+
+            $displayFilters = $filters;
+            // Formatar datas para exibição no padrão brasileiro (d/m/Y)
+            if (! empty($displayFilters['start_date'])) {
+                $displayFilters['start_date'] = \Carbon\Carbon::parse($displayFilters['start_date'])->format('d/m/Y');
+            }
+            if (! empty($displayFilters['end_date'])) {
+                $displayFilters['end_date'] = \Carbon\Carbon::parse($displayFilters['end_date'])->format('d/m/Y');
+            }
 
             return [
                 'movements' => $movements,
                 'products' => \App\Models\Product::all(),
                 'summary' => $this->calculateMovementSummary($query),
+                'filters' => $displayFilters,
             ];
         });
     }
@@ -212,7 +236,7 @@ class InventoryManagementService extends AbstractBaseService
         return $this->safeExecute(function () use ($id) {
             $movement = \App\Models\InventoryMovement::with(['product.inventory', 'user'])->find($id);
 
-            if (!$movement) {
+            if (! $movement) {
                 throw new Exception("Movimentação #{$id} não encontrada.");
             }
 
@@ -230,6 +254,10 @@ class InventoryManagementService extends AbstractBaseService
     public function getStockTurnoverData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
+            // Normalizar datas
+            $filters['start_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null) ?? ($filters['start_date'] ?? null);
+            $filters['end_date'] = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null) ?? ($filters['end_date'] ?? null);
+
             // Validação de datas
             if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
                 if ($filters['start_date'] > $filters['end_date']) {
@@ -310,8 +338,8 @@ class InventoryManagementService extends AbstractBaseService
                 'stockTurnover' => $paginatedProducts,
                 'categories' => \App\Models\Category::all(),
                 'filters' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
+                    'start_date' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
+                    'end_date' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
                     'category_id' => $categoryId,
                     'search' => $search,
                 ],
@@ -331,6 +359,13 @@ class InventoryManagementService extends AbstractBaseService
     public function getMostUsedProductsData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
+            // Normalizar datas
+            $startDate = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null) ?? ($filters['start_date'] ?? null);
+            $endDate = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null) ?? ($filters['end_date'] ?? null);
+
+            $filters['start_date'] = $startDate;
+            $filters['end_date'] = $endDate;
+
             // Validação de datas
             if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
                 if ($filters['start_date'] > $filters['end_date']) {
@@ -365,9 +400,9 @@ class InventoryManagementService extends AbstractBaseService
                 ->sum(\DB::raw('inventory_movements.quantity * products.price'));
 
             $allMovements = $movementsQuery->get();
-            $classA = $allMovements->filter(fn($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 5);
-            $classB = $allMovements->filter(fn($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 1 && ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) < 5);
-            $classC = $allMovements->filter(fn($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) < 1);
+            $classA = $allMovements->filter(fn ($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 5);
+            $classB = $allMovements->filter(fn ($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 1 && ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) < 5);
+            $classC = $allMovements->filter(fn ($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) < 1);
 
             $paginatedMovements = $movementsQuery->paginate($filters['per_page'] ?? 10);
 
@@ -414,8 +449,11 @@ class InventoryManagementService extends AbstractBaseService
                     ],
                 ],
                 'filters' => [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
+                    'start_date' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
+                    'end_date' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
+                    'category_id' => $filters['category_id'] ?? null,
+                    'limit' => $filters['limit'] ?? 10,
+                    'min_quantity' => $filters['min_quantity'] ?? 0,
                 ],
             ];
         });
@@ -455,22 +493,48 @@ class InventoryManagementService extends AbstractBaseService
     public function getReportData(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {
-            // Validação de datas
-            if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
-                if ($filters['start_date'] > $filters['end_date']) {
-                    throw new Exception('A data inicial não pode ser maior que a data final.');
-                }
+            $reportType = $filters['report_type'] ?? $filters['type'] ?? 'summary';
+
+            // Normalizar datas do formato brasileiro para o formato do banco
+            $startDate = \App\Helpers\DateHelper::parseBirthDate($filters['start_date'] ?? null) ?? ($filters['start_date'] ?? null);
+            $endDate = \App\Helpers\DateHelper::parseBirthDate($filters['end_date'] ?? null) ?? ($filters['end_date'] ?? null);
+
+            // Atualizar filtros com as datas normalizadas
+            $filters['start_date'] = $startDate;
+            $filters['end_date'] = $endDate;
+
+            $perPage = (int) ($filters['per_page'] ?? 10);
+
+            // Verifica se é o estado inicial (sem filtros reais aplicados)
+            $isInitial = empty($filters['start_date']) &&
+                        empty($filters['end_date']) &&
+                        empty($filters['search']) &&
+                        empty($filters['category']) &&
+                        empty($filters['status']);
+
+            if ($isInitial) {
+                return [
+                    'reportData' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage),
+                    'filters' => $filters,
+                    'type' => $reportType,
+                    'startDate' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
+                    'endDate' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
+                    'isInitial' => true,
+                ];
             }
 
-            $reportType = $filters['report_type'] ?? $filters['type'] ?? 'summary';
-            $startDate = $filters['start_date'] ?? null;
-            $endDate = $filters['end_date'] ?? null;
+            // Validação de datas
+            if (empty($startDate) || empty($endDate)) {
+                throw new \Exception('As datas inicial e final são obrigatórias para gerar o relatório.');
+            }
 
-            $reportData = [];
+            if ($startDate > $endDate) {
+                throw new \Exception('A data inicial não pode ser maior que a data final.');
+            }
 
             switch ($reportType) {
                 case 'summary':
-                    $reportData = $this->inventoryRepository->getPaginated($filters, 1000)->map(function ($inventory) {
+                    $reportData = $this->inventoryRepository->getPaginated($filters, $perPage)->through(function ($inventory) {
                         return [
                             'sku' => $inventory->product->sku,
                             'produto' => $inventory->product->name,
@@ -480,19 +544,36 @@ class InventoryManagementService extends AbstractBaseService
                             'estoque_max' => $inventory->max_quantity ?? '-',
                             'status' => ($inventory->quantity - $inventory->reserved_quantity) <= $inventory->min_quantity ? 'Baixo' : ($inventory->quantity >= $inventory->max_quantity && $inventory->max_quantity > 0 ? 'Alto' : 'Normal'),
                         ];
-                    })->toArray();
+                    });
                     break;
 
                 case 'movements':
                     $query = \App\Models\InventoryMovement::with(['product', 'user']);
                     if ($startDate) {
-                        $query->whereDate('created_at', '>=', $startDate);
+                        $query->where('created_at', '>=', $startDate . ' 00:00:00');
                     }
                     if ($endDate) {
-                        $query->whereDate('created_at', '<=', $endDate);
+                        $query->where('created_at', '<=', $endDate . ' 23:59:59');
                     }
 
-                    $reportData = $query->latest()->get()->map(function ($m) {
+                    // Aplicar filtros de busca e categoria
+                    $search = $filters['search'] ?? null;
+                    $category = $filters['category'] ?? null;
+
+                    if (! empty($search)) {
+                        $query->whereHas('product', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                                ->orWhere('sku', 'like', "%{$search}%");
+                        });
+                    }
+
+                    if (! empty($category)) {
+                        $query->whereHas('product', function ($q) use ($category) {
+                            $q->where('category_id', $category);
+                        });
+                    }
+
+                    $reportData = $query->latest()->paginate($perPage)->through(function ($m) {
                         return [
                             'data' => $m->created_at->format('d/m/Y H:i'),
                             'sku' => $m->product->sku,
@@ -509,12 +590,12 @@ class InventoryManagementService extends AbstractBaseService
                             'usuario' => $m->user->name ?? 'N/A',
                             'motivo' => $m->reason ?? '-',
                         ];
-                    })->toArray();
+                    });
                     break;
 
                 case 'valuation':
-                    $reportData = $this->inventoryRepository->getPaginated($filters, 1000)->map(function ($inventory) {
-                        $price = $inventory->product->price ?? 0;
+                    $reportData = $this->inventoryRepository->getPaginated($filters, $perPage)->through(function ($inventory) {
+                        $price = (float) ($inventory->product->price ?? 0);
 
                         return [
                             'sku' => $inventory->product->sku,
@@ -523,13 +604,13 @@ class InventoryManagementService extends AbstractBaseService
                             'preço_unitário' => 'R$ '.number_format($price, 2, ',', '.'),
                             'valor_total' => 'R$ '.number_format($inventory->quantity * $price, 2, ',', '.'),
                         ];
-                    })->toArray();
+                    });
                     break;
 
                 case 'low_stock':
                 case 'low-stock':
                     $filters['low_stock'] = true;
-                    $reportData = $this->inventoryRepository->getPaginated($filters, 1000)->map(function ($inventory) {
+                    $reportData = $this->inventoryRepository->getPaginated($filters, $perPage)->through(function ($inventory) {
                         $diff = $inventory->min_quantity - ($inventory->quantity - $inventory->reserved_quantity);
 
                         return [
@@ -539,13 +620,16 @@ class InventoryManagementService extends AbstractBaseService
                             'estoque_mínimo' => $inventory->min_quantity,
                             'necessidade' => max(0, $diff),
                         ];
-                    })->toArray();
+                    });
                     break;
             }
 
             return [
                 'reportData' => $reportData,
                 'filters' => $filters,
+                'type' => $reportType,
+                'startDate' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
+                'endDate' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
             ];
         });
     }

@@ -3,6 +3,10 @@
 @section('title', 'Produtos Mais Utilizados')
 
 @section('content')
+@php
+    // Variável para controlar se há filtros aplicados (excluindo paginação)
+    $hasResults = !empty($filters) && collect($filters)->except(['per_page', 'page'])->filter()->isNotEmpty();
+@endphp
 <div class="container-fluid py-1">
     <x-page-header
         title="Produtos Mais Utilizados"
@@ -24,22 +28,24 @@
                 <div class="card-body">
                     <form method="GET" action="{{ route('provider.inventory.most-used') }}">
                         <div class="row g-3">
-                            <div class="col-md-5">
+                            <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="start_date">Data Inicial</label>
-                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $filters['start_date'] ?? '' }}">
+                                    <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Data Inicial <span class="text-danger">*</span></label>
+                                    <input type="text" name="start_date" id="start_date" class="form-control"
+                                        placeholder="DD/MM/AAAA" value="{{ $filters['start_date'] ?? '' }}">
                                 </div>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-3">
                                 <div class="form-group">
-                                    <label for="end_date">Data Final</label>
-                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $filters['end_date'] ?? '' }}">
+                                    <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Data Final <span class="text-danger">*</span></label>
+                                    <input type="text" name="end_date" id="end_date" class="form-control"
+                                        placeholder="DD/MM/AAAA" value="{{ $filters['end_date'] ?? '' }}">
                                 </div>
                             </div>
-                            <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
-                                    <x-button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x-circle" label="Limpar" />
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="d-flex gap-2 flex-nowrap w-100 mb-1">
+                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
+                                    <x-button type="link" :href="route('provider.inventory.most-used')" variant="outline-secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -157,75 +163,79 @@
                 <div class="card-body p-0">
                     @if(isset($products) && $products->count() > 0)
                         <!-- Desktop View -->
-                        <div class="table-responsive d-none d-lg-block">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class=" text-muted small text-uppercase">
-                                    <tr>
-                                        <th class="ps-4">Pos.</th>
-                                        <th>Produto</th>
-                                        <th class="text-center">Quantidade</th>
-                                        <th class="text-end">Valor Total</th>
-                                        <th class="text-center">% do Total</th>
-                                        <th class="text-center">Status</th>
-                                        <th class="text-center pe-4">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($products as $index => $product)
-                                        @php
-                                            $statusClass = $product['current_stock'] <= 0 ? 'badge-inactive' : ($product['current_stock'] <= $product['min_quantity'] ? 'badge-deleted' : 'badge-active');
-                                            $statusLabel = $product['current_stock'] <= 0 ? 'Sem Estoque' : ($product['current_stock'] <= $product['min_quantity'] ? 'Estoque Baixo' : 'Estoque OK');
-                                        @endphp
+                        <div class="desktop-view">
+                            <div class="table-responsive">
+                                <table class="modern-table table mb-0">
+                                    <thead>
                                         <tr>
-                                            <td class="ps-4">
-                                                <span class="badge bg-light text-primary border shadow-sm">#{{ $index + 1 }}</span>
-                                            </td>
-                                            <td>
-                                                <div class="fw-bold text-dark">{{ $product['name'] }}</div>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <small class="text-muted text-code" style="font-size: 0.7rem;">{{ $product['sku'] }}</small>
-                                                    <span class="badge bg-light text-muted border-0 p-0" style="font-size: 0.7rem;">• {{ $product['category'] ?? 'Geral' }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="fw-bold text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</div>
-                                                <div class="small text-muted" style="font-size: 0.7rem;">{{ number_format($product['average_usage'], 2, ',', '.') }}/dia</div>
-                                            </td>
-                                            <td class="text-end">
-                                                <div class="fw-bold text-dark">R$ {{ number_format($product['total_value'], 2, ',', '.') }}</div>
-                                                <div class="small text-muted" style="font-size: 0.7rem;">R$ {{ number_format($product['unit_price'], 2, ',', '.') }} un.</div>
-                                            </td>
-                                            <td class="text-center" style="min-width: 120px;">
-                                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                                    <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
-                                                        <div class="progress-bar" role="progressbar"
-                                                             style="width: {{ $product['percentage_of_total'] }}%"
-                                                             aria-valuenow="{{ $product['percentage_of_total'] }}"
-                                                             aria-valuemin="0" aria-valuemax="100">
+                                            <th width="80" class="ps-4">Pos.</th>
+                                            <th>Produto</th>
+                                            <th class="text-center">Quantidade</th>
+                                            <th class="text-end">Valor Total</th>
+                                            <th class="text-center" width="150">% do Total</th>
+                                            <th class="text-center" width="120">Status</th>
+                                            <th class="text-center pe-4" width="150">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($products as $index => $product)
+                                            @php
+                                                $statusClass = $product['current_stock'] <= 0 ? 'badge-inactive' : ($product['current_stock'] <= $product['min_quantity'] ? 'badge-deleted' : 'badge-active');
+                                                $statusLabel = $product['current_stock'] <= 0 ? 'Sem Estoque' : ($product['current_stock'] <= $product['min_quantity'] ? 'Estoque Baixo' : 'Estoque OK');
+                                            @endphp
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <span class="badge bg-light text-primary border shadow-sm">#{{ $index + 1 }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="item-name-cell">
+                                                        <div class="fw-bold text-body">{{ $product['name'] }}</div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <small class="text-muted text-code" style="font-size: 0.7rem;">{{ $product['sku'] }}</small>
+                                                            <span class="text-muted small" style="font-size: 0.7rem;">• {{ $product['category'] ?? 'Geral' }}</span>
                                                         </div>
                                                     </div>
-                                                    <small class="fw-bold text-muted">{{ number_format($product['percentage_of_total'], 1, ',', '.') }}%</small>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="modern-badge {{ $statusClass }}">
-                                                    {{ $statusLabel }}
-                                                </span>
-                                            </td>
-                                            <td class="text-center pe-4">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" size="sm" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="fw-bold text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</div>
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ number_format($product['average_usage'], 2, ',', '.') }}/dia</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="fw-bold text-dark">R$ {{ number_format($product['total_value'], 2, ',', '.') }}</div>
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">R$ {{ number_format($product['unit_price'], 2, ',', '.') }} un.</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="d-flex align-items-center justify-content-center gap-2 px-2">
+                                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                                            <div class="progress-bar" role="progressbar"
+                                                                 style="width: {{ $product['percentage_of_total'] }}%"
+                                                                 aria-valuenow="{{ $product['percentage_of_total'] }}"
+                                                                 aria-valuemin="0" aria-valuemax="100">
+                                                            </div>
+                                                        </div>
+                                                        <small class="fw-bold text-muted">{{ number_format($product['percentage_of_total'], 1, ',', '.') }}%</small>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="modern-badge {{ $statusClass }}">
+                                                        {{ $statusLabel }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center pe-4">
+                                                    <div class="action-btn-group justify-content-center">
+                                                        <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" />
+                                                        <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <!-- Mobile View -->
-                        <div class="mobile-view d-lg-none">
+                        <div class="mobile-view">
                             <div class="list-group list-group-flush">
                                 @foreach($products as $index => $product)
                                     @php
@@ -248,7 +258,7 @@
 
                                         <div class="row g-2 mb-3 bg-light rounded p-2 mx-0">
                                             <div class="col-4 text-center">
-                                                <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Qtd Saídas</small>
+                                                <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Saídas</small>
                                                 <span class="fw-bold small text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</span>
                                             </div>
                                             <div class="col-4 text-center border-start border-end">
@@ -276,9 +286,24 @@
                             </div>
                         </div>
                     @else
-                        <div class="p-5 text-center text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
-                            Nenhum produto encontrado com os filtros aplicados para este período.
+                        <div class="p-5 text-center">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="bi bi-{{ $hasResults ? 'search' : 'filter' }} text-muted opacity-50 fs-1"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark">
+                                {{ $hasResults ? 'Nenhum dado encontrado' : 'Aguardando Filtros' }}
+                            </h5>
+                            <p class="text-muted mx-auto mb-0" style="max-width: 400px;">
+                                @if($hasResults)
+                                    Nenhum produto encontrado com os filtros aplicados para este período.
+                                    <br>
+                                    <a href="{{ route('provider.inventory.most-used') }}" class="text-primary text-decoration-none small mt-2 d-inline-block">
+                                        <i class="bi bi-x-circle me-1"></i>Limpar filtros
+                                    </a>
+                                @else
+                                    Selecione o período acima e clique em <strong>Filtrar</strong> para analisar os produtos mais utilizados.
+                                @endif
+                            </p>
                         </div>
                     @endif
                 </div>
@@ -364,7 +389,7 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const startDate = document.getElementById('start_date');
@@ -372,6 +397,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = startDate ? startDate.closest('form') : null;
 
     if (form) {
+        if (typeof VanillaMask !== 'undefined') {
+            new VanillaMask('start_date', 'date');
+            new VanillaMask('end_date', 'date');
+        }
+
         form.addEventListener('submit', function(e) {
             if (startDate.value && endDate.value && startDate.value > endDate.value) {
                 e.preventDefault();
@@ -381,6 +411,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('A data inicial não pode ser maior que a data final.');
                 }
                 startDate.focus();
+                return;
+            }
+
+            if ((startDate.value && !endDate.value) || (!startDate.value && endDate.value)) {
+                e.preventDefault();
+                const message = 'Para filtrar por período, informe as datas inicial e final.';
+                if (window.easyAlert) {
+                    window.easyAlert.error(message);
+                } else {
+                    alert(message);
+                }
+                if (!startDate.value) startDate.focus();
+                else endDate.focus();
             }
         });
 
@@ -408,4 +451,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+@endpush

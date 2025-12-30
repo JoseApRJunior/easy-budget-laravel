@@ -117,12 +117,12 @@ class NotificationService
                         ],
                         [
                             'title' => 'Valor Atual',
-                            'value' => number_format($alert->metric_value, 2),
+                            'value' => number_format((float) $alert->metric_value, 2),
                             'short' => true,
                         ],
                         [
                             'title' => 'Limiar',
-                            'value' => number_format($alert->threshold_value, 2),
+                            'value' => number_format((float) $alert->threshold_value, 2),
                             'short' => true,
                         ],
                         [
