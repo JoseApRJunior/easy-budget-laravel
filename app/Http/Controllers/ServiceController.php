@@ -9,6 +9,7 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceStoreRequest;
 use App\Http\Requests\ServiceUpdateRequest;
 use App\Models\Service;
+use App\Enums\ServiceStatus;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductService;
@@ -17,6 +18,7 @@ use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -42,6 +44,32 @@ class ServiceController extends Controller
         $this->categoryService = $categoryService;
         $this->budgetService = $budgetService;
         $this->productService = $productService;
+    }
+
+    /**
+     * List all services for the current tenant.
+     */
+    public function index(Request $request): View
+    {
+        $this->authorize('viewAny', Service::class);
+
+        $filters = $request->validate([
+            'status' => ['nullable', 'string', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
+            'category_id' => ['nullable', 'integer'],
+            'search' => ['nullable', 'string'],
+        ]);
+
+        $result = $this->serviceService->list($filters);
+
+        if ($result->isError()) {
+            abort(500, 'Erro ao carregar lista de serviços.');
+        }
+
+        return view('pages.service.index', [
+            'services' => $result->getData(),
+            'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
+            'statuses' => ServiceStatus::getOptions(),
+        ]);
     }
 
     /**
@@ -166,7 +194,7 @@ class ServiceController extends Controller
     /**
      * Change service status.
      */
-    public function toggleStatus(Request $request, string $code): RedirectResponse
+    public function change_status(Request $request, string $code): RedirectResponse
     {
         $result = $this->serviceService->findByCode($code);
         if ($result->isError()) {
@@ -183,6 +211,52 @@ class ServiceController extends Controller
         }
 
         return redirect()->back()->with('success', 'Status do serviço atualizado com sucesso');
+    }
+
+    /**
+     * Cancel service.
+     */
+    public function cancel(string $code): RedirectResponse
+    {
+        $result = $this->serviceService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $service = $result->getData();
+        $this->authorize('update', $service);
+
+        $cancelResult = $this->serviceService->changeStatusByCode($code, ServiceStatus::CANCELLED->value);
+
+        if ($cancelResult->isError()) {
+            return redirect()->back()->with('error', $cancelResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Serviço cancelado com sucesso');
+    }
+
+    /**
+     * Search services via AJAX.
+     */
+    public function search(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('viewAny', Service::class);
+        $search = $request->input('q');
+        $result = $this->serviceService->list(['search' => $search, 'limit' => 10]);
+
+        return response()->json($result->getData());
+    }
+
+    /**
+     * AJAX filter for services.
+     */
+    public function ajaxFilter(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('viewAny', Service::class);
+        $filters = $request->all();
+        $result = $this->serviceService->list($filters);
+
+        return response()->json($result->getData());
     }
 
     /**

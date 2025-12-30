@@ -27,9 +27,17 @@ abstract readonly class AbstractDTO
 
             if ($value instanceof AbstractDTO) {
                 $array[$property->getName()] = $value->toArray();
+            } elseif ($value instanceof \BackedEnum) {
+                $array[$property->getName()] = $value->value;
             } elseif (is_array($value)) {
                 $array[$property->getName()] = array_map(function ($item) {
-                    return $item instanceof AbstractDTO ? $item->toArray() : $item;
+                    if ($item instanceof AbstractDTO) {
+                        return $item->toArray();
+                    }
+                    if ($item instanceof \BackedEnum) {
+                        return $item->value;
+                    }
+                    return $item;
                 }, $value);
             } else {
                 $array[$property->getName()] = $value;

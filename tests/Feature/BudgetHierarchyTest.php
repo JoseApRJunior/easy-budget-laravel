@@ -47,6 +47,7 @@ class BudgetHierarchyTest extends TestCase
         $this->customer = Customer::factory()->create(['tenant_id' => $this->tenant->id]);
         $this->category = Category::factory()->create(['tenant_id' => $this->tenant->id]);
         $this->products = Product::factory()->count(3)->create(['tenant_id' => $this->tenant->id]);
+        // dump(['category_id' => $this->category->id]);
     }
 
     public function test_can_create_budget_with_nested_services_and_items()
