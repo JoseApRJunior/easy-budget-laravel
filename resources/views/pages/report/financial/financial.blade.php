@@ -54,16 +54,16 @@
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="start_date">Data Inicial</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}">
+                                <input type="text" class="form-control" id="start_date" name="start_date"
+                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA">
                             </div>
                         </div>
 
                         <div class="col-md-3">
                             <div class="form-group">
                                 <label for="end_date">Data Final</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}">
+                                <input type="text" class="form-control" id="end_date" name="end_date"
+                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA">
                             </div>
                         </div>
 
@@ -86,14 +86,9 @@
                         </div>
 
                         <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" id="btnFilterFinancial" class="btn btn-primary" aria-label="Filtrar">
-                                    <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.reports.financial') }}" class="btn btn-secondary"
-                                    aria-label="Limpar filtros">
-                                    <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                </a>
+                            <div class="d-flex gap-2">
+                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterFinancial" />
+                                <x-button type="link" :href="route('provider.reports.financial')" variant="outline-secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -307,20 +302,58 @@
 
 @push('scripts')
     <script>
+        const parseDate = (str) => {
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(str);
+        };
+
         // Mostrar/ocultar campos de data baseado no período selecionado
         document.addEventListener('DOMContentLoaded', function() {
             const periodSelect = document.getElementById('period');
-            const startDateInput = document.getElementById('start_date');
-            const endDateInput = document.getElementById('end_date');
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = startDate ? startDate.closest('form') : null;
 
             function toggleDateInputs() {
                 const isCustom = periodSelect.value === 'custom';
-                startDateInput.parentElement.style.display = isCustom ? 'block' : 'none';
-                endDateInput.parentElement.style.display = isCustom ? 'block' : 'none';
+                startDate.parentElement.parentElement.style.display = isCustom ? 'block' : 'none';
+                endDate.parentElement.parentElement.style.display = isCustom ? 'block' : 'none';
             }
 
-            periodSelect.addEventListener('change', toggleDateInputs);
-            toggleDateInputs(); // Chamar na inicialização
+            if (periodSelect) {
+                periodSelect.addEventListener('change', toggleDateInputs);
+                toggleDateInputs(); // Chamar na inicialização
+            }
+
+            if (form) {
+                if (typeof VanillaMask !== 'undefined') {
+                    new VanillaMask('start_date', 'date');
+                    new VanillaMask('end_date', 'date');
+                }
+
+                form.addEventListener('submit', function(e) {
+                    if (periodSelect.value === 'custom') {
+                        if (startDate.value && endDate.value) {
+                            const start = parseDate(startDate.value);
+                            const end = parseDate(endDate.value);
+
+                            if (start > end) {
+                                e.preventDefault();
+                                if (window.easyAlert) {
+                                    window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                                } else {
+                                    alert('A data inicial não pode ser maior que a data final.');
+                                }
+                                startDate.focus();
+                                return;
+                            }
+                        }
+                    }
+                });
+            }
         });
     </script>
 @endpush

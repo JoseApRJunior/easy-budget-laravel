@@ -57,14 +57,9 @@
                         </div>
 
                         <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" id="btnFilterServices" class="btn btn-primary" aria-label="Filtrar">
-                                    <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.reports.services') }}" class="btn btn-secondary"
-                                    aria-label="Limpar filtros">
-                                    <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                </a>
+                            <div class="d-flex gap-2">
+                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterServices" />
+                                <x-button type="link" :href="route('provider.reports.services')" variant="outline-secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>

@@ -78,9 +78,9 @@
                                 </div>
                             </div>
                             <div class="col-12">
-                                <div class="d-flex gap-2 flex-nowrap">
-                                    <x-button type="submit" icon="search" label="Filtrar" id="btnFilterCategories" />
-                                    <x-button type="link" :href="route('provider.categories.index')" variant="secondary" icon="x" label="Limpar" />
+                                <div class="d-flex gap-2">
+                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterCategories" />
+                                    <x-button type="link" :href="route('provider.categories.index')" variant="outline-secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>

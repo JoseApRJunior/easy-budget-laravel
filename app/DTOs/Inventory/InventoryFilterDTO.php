@@ -27,29 +27,8 @@ readonly class InventoryFilterDTO extends AbstractDTO
      */
     public static function fromRequest(array $data): self
     {
-        $startDate = null;
-        if (!empty($data['start_date'])) {
-            $startDate = DateHelper::parseBirthDate($data['start_date']) ?? $data['start_date'];
-            // Garantir formato Y-m-d se vier com /
-            if (str_contains($startDate, '/')) {
-                $parts = explode('/', $startDate);
-                if (count($parts) === 3) {
-                    $startDate = "{$parts[2]}-{$parts[1]}-{$parts[0]}";
-                }
-            }
-        }
-
-        $endDate = null;
-        if (!empty($data['end_date'])) {
-            $endDate = DateHelper::parseBirthDate($data['end_date']) ?? $data['end_date'];
-            // Garantir formato Y-m-d se vier com /
-            if (str_contains($endDate, '/')) {
-                $parts = explode('/', $endDate);
-                if (count($parts) === 3) {
-                    $endDate = "{$parts[2]}-{$parts[1]}-{$parts[0]}";
-                }
-            }
-        }
+        $startDate = DateHelper::parseBirthDate($data['start_date'] ?? null);
+        $endDate = DateHelper::parseBirthDate($data['end_date'] ?? null);
 
         return new self(
             search: $data['search'] ?? null,

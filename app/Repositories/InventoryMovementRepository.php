@@ -58,11 +58,11 @@ class InventoryMovementRepository extends AbstractTenantRepository
         $query = $this->model->newQuery();
 
         if ($startDate) {
-            $query->whereDate('created_at', '>=', $startDate);
+            $query->where('created_at', '>=', $startDate . ' 00:00:00');
         }
 
         if ($endDate) {
-            $query->whereDate('created_at', '<=', $endDate);
+            $query->where('created_at', '<=', $endDate . ' 23:59:59');
         }
 
         $movementsIn = $query->clone()->where('type', 'in');
@@ -98,10 +98,10 @@ class InventoryMovementRepository extends AbstractTenantRepository
         return $this->model->newQuery()
             ->selectRaw('product_id, SUM(quantity) as total_quantity, COUNT(*) as movement_count')
             ->when($startDate, function ($query) use ($startDate) {
-                $query->whereDate('created_at', '>=', $startDate);
+                $query->where('created_at', '>=', $startDate . ' 00:00:00');
             })
             ->when($endDate, function ($query) use ($endDate) {
-                $query->whereDate('created_at', '<=', $endDate);
+                $query->where('created_at', '<=', $endDate . ' 23:59:59');
             })
             ->groupBy('product_id')
             ->orderByDesc('total_quantity')
@@ -118,11 +118,11 @@ class InventoryMovementRepository extends AbstractTenantRepository
         $query = $this->model->newQuery();
 
         if ($startDate) {
-            $query->whereDate('created_at', '>=', $startDate);
+            $query->where('created_at', '>=', $startDate . ' 00:00:00');
         }
 
         if ($endDate) {
-            $query->whereDate('created_at', '<=', $endDate);
+            $query->where('created_at', '<=', $endDate . ' 23:59:59');
         }
 
         $summary = $query->selectRaw('type, COUNT(*) as count, SUM(quantity) as total_quantity')

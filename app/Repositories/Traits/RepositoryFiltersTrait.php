@@ -222,7 +222,7 @@ trait RepositoryFiltersTrait
         $startDate = $filters[$startKey] ?? null;
         $endDate = $filters[$endKey] ?? null;
 
-        return $query->when($startDate, fn ($q) => $q->whereDate($fieldName, '>=', $startDate))
-            ->when($endDate, fn ($q) => $q->whereDate($fieldName, '<=', $endDate));
+        return $query->when($startDate, fn ($q) => $q->where($fieldName, '>=', $startDate . ' 00:00:00'))
+            ->when($endDate, fn ($q) => $q->where($fieldName, '<=', $endDate . ' 23:59:59'));
     }
 }

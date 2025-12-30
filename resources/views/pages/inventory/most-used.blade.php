@@ -42,8 +42,19 @@
                                         placeholder="DD/MM/AAAA" value="{{ $filters['end_date'] ?? '' }}">
                                 </div>
                             </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <div class="d-flex gap-2 flex-nowrap w-100 mb-1">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por Página</label>
+                                    <select name="per_page" id="per_page" class="form-select tom-select">
+                                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="20" {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
+                                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
                                     <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
                                     <x-button type="link" :href="route('provider.inventory.most-used')" variant="outline-secondary" icon="x" label="Limpar" />
                                 </div>
@@ -403,15 +414,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         form.addEventListener('submit', function(e) {
-            if (startDate.value && endDate.value && startDate.value > endDate.value) {
-                e.preventDefault();
-                if (window.easyAlert) {
-                    window.easyAlert.error('A data inicial não pode ser maior que a data final.');
-                } else {
-                    alert('A data inicial não pode ser maior que a data final.');
+            if (startDate.value && endDate.value) {
+                const parseDate = (str) => {
+                    const parts = str.split('/');
+                    if (parts.length === 3) {
+                        return new Date(parts[2], parts[1] - 1, parts[0]);
+                    }
+                    return new Date(str);
+                };
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start > end) {
+                    e.preventDefault();
+                    if (window.easyAlert) {
+                        window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    startDate.focus();
+                    return;
                 }
-                startDate.focus();
-                return;
             }
 
             if ((startDate.value && !endDate.value) || (!startDate.value && endDate.value)) {
@@ -428,24 +452,48 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         startDate.addEventListener('change', function() {
-            if (this.value && endDate.value && this.value > endDate.value) {
-                if (window.easyAlert) {
-                    window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
-                } else {
-                    alert('A data inicial não pode ser maior que a data final.');
+            if (this.value && endDate.value) {
+                const parseDate = (str) => {
+                    const parts = str.split('/');
+                    if (parts.length === 3) {
+                        return new Date(parts[2], parts[1] - 1, parts[0]);
+                    }
+                    return new Date(str);
+                };
+                const start = parseDate(this.value);
+                const end = parseDate(endDate.value);
+
+                if (start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    this.value = '';
                 }
-                this.value = '';
             }
         });
 
         endDate.addEventListener('change', function() {
-            if (this.value && startDate.value && this.value < startDate.value) {
-                if (window.easyAlert) {
-                    window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
-                } else {
-                    alert('A data final não pode ser menor que a data inicial.');
+            if (this.value && startDate.value) {
+                const parseDate = (str) => {
+                    const parts = str.split('/');
+                    if (parts.length === 3) {
+                        return new Date(parts[2], parts[1] - 1, parts[0]);
+                    }
+                    return new Date(str);
+                };
+                const end = parseDate(this.value);
+                const start = parseDate(startDate.value);
+
+                if (end < start) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
+                    } else {
+                        alert('A data final não pode ser menor que a data inicial.');
+                    }
+                    this.value = '';
                 }
-                this.value = '';
             }
         });
     }

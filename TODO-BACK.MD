@@ -1,6 +1,6 @@
 # TODO - Backend
 
-## 🔧 10. ENUM PATTERNS - Padrões para Uso de Enums
+### 🔧 10. ENUM PATTERNS - Padrões para Uso de Enums
 
 > **📚 Documentação Completa de Padrões para Enums**
 >
@@ -19,6 +19,7 @@
 5. [Validação com Enums](#-validação-com-enums)
 6. [Case Sensitivity](#-case-sensitivity)
 7. [Exemplos Práticos](#-exemplos-práticos)
+8. [Padrão de Filtragem de Data](#-11-date-filtering-patterns---padrão-de-filtragem-de-data)
 
 ---
 
@@ -277,6 +278,37 @@ public function isPaid(Invoice $invoice): bool
 
 ---
 
+### 📅 11. DATE FILTERING PATTERNS - Padrão de Filtragem de Data
+
+#### Repositórios e Traits
+- **Precisão:** Sempre utilizar intervalos de tempo (datetime) em vez de `whereDate` para garantir consistência entre diferentes bancos de dados e precisão de segundos.
+- **Intervalo:**
+  - Data Inicial: `00:00:00`
+  - Data Final: `23:59:59`
+- **Trait:** Utilizar a `RepositoryFiltersTrait` com o método `applyDateRangeFilter`.
+
+Exemplo na `RepositoryFiltersTrait`:
+```php
+protected function applyDateRangeFilter($query, $startDate, $endDate, $column = 'created_at')
+{
+    if ($startDate) {
+        $query->where($column, '>=', Carbon::parse($startDate)->startOfDay());
+    }
+    if ($endDate) {
+        $query->where($column, '<=', Carbon::parse($endDate)->endOfDay());
+    }
+}
+```
+
+#### Services e DTOs
+- **Parsing:** Utilizar `DateHelper::parseBirthDate()` (ou similar) para converter strings vindas do frontend (`DD/MM/AAAA`) para o formato do banco (`Y-m-d`).
+- **Validação:** Garantir que datas inválidas não quebrem a aplicação, tratando exceções de parsing no DTO ou Service.
+
+#### Multi-tenancy
+- **Isolamento:** Sempre garantir que filtros de data sejam aplicados *após* ou *junto* com o isolamento de tenant (`tenant_id`), preferencialmente usando o trait `TenantScoped` no Model.
+
+---
+
 ### ⚠️ Erros Comuns e Soluções
 
 #### Erro 1: Valor vazio para Enum
@@ -358,6 +390,40 @@ InvoiceStatus::icon('pending'); // "bi-hourglass-split"
 $status = InvoiceStatus::PENDING;
 $value = $status->value; // "pending"
 ```
+
+### 📅 11. DATE FILTERING PATTERN - Padrão de Filtro de Datas
+
+Para garantir precisão em consultas de datas, especialmente em colunas `datetime` e `timestamp`, utilize sempre o intervalo completo do dia.
+
+**No Service/Repository:**
+```php
+// ✅ CORRETO: Utilizar intervalo completo (00:00:00 até 23:59:59)
+if ($startDate) {
+    $query->where('created_at', '>=', $startDate . ' 00:00:00');
+}
+if ($endDate) {
+    $query->where('created_at', '<=', $endDate . ' 23:59:59');
+}
+
+// ❌ EVITAR: whereDate pode ser impreciso em alguns bancos ou ignorar componentes de tempo
+$query->whereDate('created_at', '>=', $startDate);
+```
+
+**Normalização de Datas (DateHelper):**
+Sempre utilize o `DateHelper` para normalizar datas vindas do frontend (DD/MM/YYYY) para o formato do banco (YYYY-MM-DD).
+
+```php
+$startDate = DateHelper::parseBirthDate($filters['start_date'] ?? null);
+```
+
+---
+
+### 📋 Checklist de Implementação (Backend)
+- [ ] Usar Service Layer e Actions.
+- [ ] Tipagem estrita (`declare(strict_types=1)`).
+- [ ] Tratamento de erros com `ServiceResult`.
+- [ ] Filtros de data usando intervalo completo (00:00:00 - 23:59:59).
+- [ ] Uso de DTOs para transferência de dados complexos.
 
 ---
 

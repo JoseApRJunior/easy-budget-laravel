@@ -28,6 +28,44 @@
 
 O padrão de relatórios deve seguir a estrutura de filtros com estado inicial vazio, onde os dados só são carregados após a aplicação de filtros.
 
+#### Padrão de Filtros de Data
+- **Input:** Utilizar `type="text"` com máscara `DD/MM/AAAA`.
+- **Placeholder:** Sempre usar `placeholder="DD/MM/AAAA"`.
+- **Validação:** Implementar validação via JavaScript para garantir que a Data Inicial não seja maior que a Data Final.
+- **Máscara:** Utilizar a biblioteca `VanillaMask` para formatação automática.
+- **Utilitário:** Utilizar a função `parseDate` para converter strings `DD/MM/AAAA` em objetos `Date` válidos.
+
+Exemplo de implementação JavaScript:
+```javascript
+const parseDate = (str) => {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(str);
+};
+
+// No submit do formulário
+const start = parseDate(startDate.value);
+const end = parseDate(endDate.value);
+if (start > end) {
+    // Exibir erro e cancelar submit
+}
+```
+
+#### Botões de Filtro
+- Utilizar o componente `<x-button>`.
+- **Botão Filtrar:** `variant="primary"`, `icon="search"`, classe `flex-grow-1`.
+- **Botão Limpar:** `variant="outline-secondary"`, `icon="x"`, tipo `link`.
+
+Exemplo:
+```blade
+<div class="d-flex gap-2">
+    <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilter" />
+    <x-button type="link" :href="route('...')" variant="outline-secondary" icon="x" label="Limpar" />
+</div>
+```
+
 #### Cabeçalho do Relatório
 ```blade
 <x-page-header
@@ -788,6 +826,30 @@ Para módulos com muitos filtros, utilizar a grade `col-md-X` de forma a manter 
 
 ## ✅ Checklist de Implementação
 
+#### Validação de Datas (JavaScript)
+Sempre compare datas convertendo as strings (DD/MM/YYYY) para objetos `Date` do JavaScript.
+
+```javascript
+const parseDate = (str) => {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(str);
+};
+
+const start = parseDate(startDate.value);
+const end = parseDate(endDate.value);
+
+if (start > end) {
+    // Erro: Data inicial maior que a final
+}
+```
+
+---
+
+### ✅ Checklist de Implementação
+
 ### Antes de Criar uma Nova View
 
 -  [ ] Verificar se existe pattern correspondente neste documento
@@ -795,6 +857,7 @@ Para módulos com muitos filtros, utilizar a grade `col-md-X` de forma a manter 
 -  [ ] Implementar breadcrumbs quando necessário
 -  [ ] Usar ícones apropriados do Bootstrap Icons
 -  [ ] Garantir responsividade (desktop + mobile)
+-  [ ] Validação de datas em JS usando objetos Date
 -  [ ] Implementar empty states com CTAs
 -  [ ] Usar sistema de paginação quando aplicável
 

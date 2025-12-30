@@ -41,16 +41,16 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label for="start_date">Data Inicial</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}">
+                                <input type="text" class="form-control" id="start_date" name="start_date"
+                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA">
                             </div>
                         </div>
 
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label for="end_date">Data Final</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}">
+                                <input type="text" class="form-control" id="end_date" name="end_date"
+                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA">
                             </div>
                         </div>
 
@@ -89,14 +89,9 @@
                         </div>
 
                         <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" id="btnFilterBudgets" class="btn btn-primary" aria-label="Filtrar">
-                                    <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.reports.budgets') }}" class="btn btn-secondary"
-                                    aria-label="Limpar filtros">
-                                    <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                </a>
+                            <div class="d-flex gap-2">
+                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterBudgets" />
+                                <x-button type="link" :href="route('provider.reports.budgets')" variant="outline-secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -300,6 +295,14 @@
     <script src="{{ asset('assets/js/budget_report.js') }}"></script>
 
     <script>
+        const parseDate = (str) => {
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(str);
+        };
+
         function updatePerPage(value) {
             const url = new URL(window.location);
             url.searchParams.set('per_page', value);
@@ -308,6 +311,65 @@
 
         // Máscara para valores monetários
         document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = startDate ? startDate.closest('form') : null;
+
+            if (form) {
+                if (typeof VanillaMask !== 'undefined') {
+                    new VanillaMask('start_date', 'date');
+                    new VanillaMask('end_date', 'date');
+                }
+
+                form.addEventListener('submit', function(e) {
+                    if (startDate.value && endDate.value) {
+                        const start = parseDate(startDate.value);
+                        const end = parseDate(endDate.value);
+
+                        if (start > end) {
+                            e.preventDefault();
+                            if (window.easyAlert) {
+                                window.easyAlert.error('A data inicial não pode ser maior que a data final.');
+                            } else {
+                                alert('A data inicial não pode ser maior que a data final.');
+                            }
+                            startDate.focus();
+                            return;
+                        }
+                    }
+                });
+
+                startDate.addEventListener('change', function() {
+                    if (this.value && endDate.value) {
+                        const start = parseDate(this.value);
+                        const end = parseDate(endDate.value);
+                        if (start > end) {
+                            if (window.easyAlert) {
+                                window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                            } else {
+                                alert('A data inicial não pode ser maior que a data final.');
+                            }
+                            this.value = '';
+                        }
+                    }
+                });
+
+                endDate.addEventListener('change', function() {
+                    if (this.value && startDate.value) {
+                        const end = parseDate(this.value);
+                        const start = parseDate(startDate.value);
+                        if (end < start) {
+                            if (window.easyAlert) {
+                                window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
+                            } else {
+                                alert('A data final não pode ser menor que a data inicial.');
+                            }
+                            this.value = '';
+                        }
+                    }
+                });
+            }
+
             const moneyInputs = document.querySelectorAll('.money-input');
             moneyInputs.forEach(function(input) {
                 input.addEventListener('input', function(e) {
