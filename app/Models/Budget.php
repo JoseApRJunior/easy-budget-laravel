@@ -440,7 +440,13 @@ class Budget extends Model
             'version_number' => $this->getNextVersionNumber(),
             'changes_description' => $changeDescription,
             'budget_data' => $this->toArray(),
-            'items_data' => $this->items->toArray(),
+            'services_data' => $this->services->map(fn($s) => [
+                'id' => $s->id,
+                'category_id' => $s->category_id,
+                'description' => $s->description,
+                'total' => $s->total,
+                'items' => $s->serviceItems->toArray(),
+            ])->toArray(),
             'version_total' => $totals['grand_total'],
             'is_current' => true,
             'version_date' => Carbon::now(),
@@ -501,36 +507,30 @@ class Budget extends Model
             'pdf_verification_hash' => $budgetData['pdf_verification_hash'],
         ]);
 
-        // Recriar itens se necessário
-        if (isset($version->items_data) && is_array($version->items_data)) {
-            $this->items()->delete();
-            foreach ($version->items_data as $itemData) {
-                $this->items()->create($itemData);
+        // Recriar serviços e itens se necessário
+        if (isset($version->services_data) && is_array($version->services_data)) {
+            $this->services()->delete();
+            foreach ($version->services_data as $serviceData) {
+                $service = $this->services()->create([
+                    'tenant_id' => $this->tenant_id,
+                    'category_id' => $serviceData['category_id'],
+                    'description' => $serviceData['description'],
+                    'status' => $this->status,
+                    'code' => $serviceData['code'] ?? 'SRV-'.uniqid(),
+                    'total' => $serviceData['total'],
+                ]);
+
+                if (isset($serviceData['items']) && is_array($serviceData['items'])) {
+                    foreach ($serviceData['items'] as $itemData) {
+                        $service->serviceItems()->create($itemData);
+                    }
+                }
             }
         }
 
         return true;
     }
 
-    /**
-     * Adiciona um item ao orçamento.
-     */
-    public function addItem(array $itemData): BudgetItem
-    {
-        $itemData['tenant_id'] = $this->tenant_id;
-        $itemData['budget_id'] = $this->id;
-        $itemData['order_index'] = $this->items()->max('order_index') + 1;
-
-        return $this->items()->create($itemData);
-    }
-
-    /**
-     * Remove um item do orçamento.
-     */
-    public function removeItem(BudgetItem $item): bool
-    {
-        return $item->delete();
-    }
 
     /**
      * Duplica o orçamento.

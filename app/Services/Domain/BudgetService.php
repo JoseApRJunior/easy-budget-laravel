@@ -97,7 +97,7 @@ class BudgetService extends AbstractBaseService
                     total: $dto->total,
                     description: $dto->description,
                     payment_terms: $dto->payment_terms,
-                    items: $dto->items,
+                    services: $dto->services,
                 );
 
                 // Cria o orçamento usando o repositório

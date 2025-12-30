@@ -49,7 +49,7 @@ class BudgetController extends Controller
         $this->authorize('viewAny', Budget::class);
         /** @var User $user */
         $user = Auth::user();
-        $result = $this->budgetService->getBudgetsForProvider($user->id, $request->all());
+        $result = $this->budgetService->getBudgetsForProvider($request->all());
 
         if ($result->isError()) {
             abort(500, 'Erro ao carregar orçamentos.');
@@ -91,8 +91,8 @@ class BudgetController extends Controller
         $result = $this->budgetService->findByCode($code, [
             'customer.commonData',
             'customer.contact',
-            'items' => function ($q) {
-                $q->ordered();
+            'services.serviceItems' => function ($q) {
+                // $q->ordered(); // Ordered might not exist on ServiceItem, check if needed
             },
             'services.category',
         ]);

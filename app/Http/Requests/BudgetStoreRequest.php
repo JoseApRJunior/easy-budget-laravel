@@ -42,7 +42,7 @@ class BudgetStoreRequest extends FormRequest
             'description' => 'nullable|string|max:1000',
             'due_date' => 'nullable|date|after:today',
             'payment_terms' => 'nullable|string|max:2000',
-            'items' => 'nullable|array|min:1',
+            'items' => 'nullable|array',
             'items.*.product_id' => [
                 'required_with:items',
                 'integer',
@@ -50,6 +50,22 @@ class BudgetStoreRequest extends FormRequest
             ],
             'items.*.unit_value' => 'required_with:items|numeric|min:0|max:999999.99',
             'items.*.quantity' => 'required_with:items|integer|min:1|max:9999',
+
+            'services' => 'nullable|array',
+            'services.*.category_id' => [
+                'required_with:services',
+                'integer',
+                Rule::exists('categories', 'id')->where('tenant_id', $tenantId),
+            ],
+            'services.*.description' => 'nullable|string|max:1000',
+            'services.*.items' => 'required_with:services|array|min:1',
+            'services.*.items.*.product_id' => [
+                'required_with:services.*.items',
+                'integer',
+                Rule::exists('products', 'id')->where('tenant_id', $tenantId),
+            ],
+            'services.*.items.*.unit_value' => 'required_with:services.*.items|numeric|min:0|max:999999.99',
+            'services.*.items.*.quantity' => 'required_with:services.*.items|integer|min:1|max:9999',
         ];
     }
 
