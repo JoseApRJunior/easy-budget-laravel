@@ -354,6 +354,34 @@ class InventoryManagementService extends AbstractBaseService
     }
 
     /**
+     * Obtém dados de produtos mais utilizados com estado inicial vazio.
+     */
+    public function getEmptyMostUsedProductsData(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            return [
+                'products' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
+                'summary' => [
+                    'total_usage' => 0,
+                    'total_value' => 0,
+                    'total_products' => 0,
+                    'average_usage' => 0,
+                    'abc_analysis' => [
+                        'class_a' => ['count' => 0, 'percentage' => 0],
+                        'class_b' => ['count' => 0, 'percentage' => 0],
+                        'class_c' => ['count' => 0, 'percentage' => 0],
+                    ],
+                ],
+                'filters' => [
+                    'start_date' => '',
+                    'end_date' => '',
+                    'per_page' => 10,
+                ],
+            ];
+        });
+    }
+
+    /**
      * Obtém dados de produtos mais utilizados.
      */
     public function getMostUsedProductsData(array $filters = []): ServiceResult
@@ -369,35 +397,55 @@ class InventoryManagementService extends AbstractBaseService
             // Validação de datas
             if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
                 if ($filters['start_date'] > $filters['end_date']) {
-                    throw new Exception('A data inicial não pode ser maior que a data final.');
+                    throw new \Exception('A data inicial não pode ser maior que a data final.');
                 }
             }
 
-            $startDate = $filters['start_date'] ?? now()->subMonths(1)->format('Y-m-d');
-            $endDate = $filters['end_date'] ?? now()->format('Y-m-d');
-
             $movementsQuery = \App\Models\InventoryMovement::selectRaw('product_id, SUM(quantity) as total_usage')
-                ->where('type', 'exit')
-                ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-                ->groupBy('product_id')
+                ->where('type', 'exit');
+
+            if (! empty($startDate)) {
+                $movementsQuery->where('created_at', '>=', $startDate.' 00:00:00');
+            }
+
+            if (! empty($endDate)) {
+                $movementsQuery->where('created_at', '<=', $endDate.' 23:59:59');
+            }
+
+            $movementsQuery->groupBy('product_id')
                 ->orderByDesc('total_usage')
                 ->with(['product.category', 'product.inventory']);
 
             // Pegamos o total geral para cálculo de porcentagem e resumo
-            $summaryData = \App\Models\InventoryMovement::selectRaw('SUM(quantity) as total_usage, COUNT(DISTINCT product_id) as total_products')
-                ->where('type', 'exit')
-                ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-                ->first();
+            $summaryQuery = \App\Models\InventoryMovement::selectRaw('SUM(quantity) as total_usage, COUNT(DISTINCT product_id) as total_products')
+                ->where('type', 'exit');
+
+            if (! empty($startDate)) {
+                $summaryQuery->where('created_at', '>=', $startDate.' 00:00:00');
+            }
+
+            if (! empty($endDate)) {
+                $summaryQuery->where('created_at', '<=', $endDate.' 23:59:59');
+            }
+
+            $summaryData = $summaryQuery->first();
 
             $totalUsageAll = $summaryData->total_usage ?? 0;
             $totalProductsAll = $summaryData->total_products ?? 0;
 
-            // Para o valor total, precisamos de uma query um pouco mais complexa ou somar depois
-            // Como os produtos podem ter preços diferentes, vamos somar o valor total de uso
-            $totalValueAll = \App\Models\InventoryMovement::join('products', 'inventory_movements.product_id', '=', 'products.id')
-                ->where('inventory_movements.type', 'exit')
-                ->whereBetween('inventory_movements.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
-                ->sum(\DB::raw('inventory_movements.quantity * products.price'));
+            // Para o valor total
+            $totalValueQuery = \App\Models\InventoryMovement::join('products', 'inventory_movements.product_id', '=', 'products.id')
+                ->where('inventory_movements.type', 'exit');
+
+            if (! empty($startDate)) {
+                $totalValueQuery->where('inventory_movements.created_at', '>=', $startDate.' 00:00:00');
+            }
+
+            if (! empty($endDate)) {
+                $totalValueQuery->where('inventory_movements.created_at', '<=', $endDate.' 23:59:59');
+            }
+
+            $totalValueAll = $totalValueQuery->sum(\DB::raw('inventory_movements.quantity * products.price'));
 
             $allMovements = $movementsQuery->get();
             $classA = $allMovements->filter(fn ($m) => ($totalUsageAll > 0 ? ($m->total_usage / $totalUsageAll) * 100 : 0) >= 5);
@@ -406,7 +454,14 @@ class InventoryManagementService extends AbstractBaseService
 
             $paginatedMovements = $movementsQuery->paginate($filters['per_page'] ?? 10);
 
-            $days = max(1, now()->parse($startDate)->diffInDays(now()->parse($endDate)));
+            // Calcular dias para média - se não houver datas, pegamos desde a primeira movimentação ou padrão de 30 dias
+            if (! empty($startDate) && ! empty($endDate)) {
+                $days = max(1, now()->parse($startDate)->diffInDays(now()->parse($endDate)));
+            } else {
+                $firstMovement = \App\Models\InventoryMovement::where('type', 'exit')->orderBy('created_at', 'asc')->first();
+                $start = $firstMovement ? $firstMovement->created_at : now()->subMonths(1);
+                $days = max(1, $start->diffInDays(now()));
+            }
 
             $paginatedMovements->getCollection()->transform(function ($m) use ($totalUsageAll, $days) {
                 $p = $m->product;

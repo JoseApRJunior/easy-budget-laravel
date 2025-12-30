@@ -119,7 +119,13 @@ class InventoryController extends Controller
     public function mostUsedProducts(Request $request): View|RedirectResponse
     {
         $this->authorize('viewReports', \App\Models\Product::class);
-        $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
+
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyMostUsedProductsData();
+        } else {
+            $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
+        }
 
         if ($result->isError()) {
             return back()->with('error', $result->getMessage())->withInput();

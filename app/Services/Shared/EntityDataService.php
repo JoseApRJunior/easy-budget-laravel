@@ -40,7 +40,7 @@ class EntityDataService
             'first_name' => $data['first_name'] ?? null,
             'last_name' => $data['last_name'] ?? null,
             'birth_date' => isset($data['birth_date'])
-                ? DateHelper::parseBirthDate($data['birth_date'])
+                ? DateHelper::parseDate($data['birth_date'])
                 : null,
             'cpf' => $cpf,
             'cnpj' => $cnpj,
@@ -65,7 +65,7 @@ class EntityDataService
             $updateData['last_name'] = $data['last_name'];
         }
         if (isset($data['birth_date'])) {
-            $updateData['birth_date'] = DateHelper::parseBirthDate($data['birth_date']);
+            $updateData['birth_date'] = DateHelper::parseDate($data['birth_date']);
         }
         if (isset($data['cpf'])) {
             $updateData['cpf'] = preg_replace('/\D/', '', $data['cpf']);

@@ -5,7 +5,9 @@
 @section('content')
 @php
     // Variável para controlar se há filtros aplicados (excluindo paginação)
-    $hasResults = !empty($filters) && collect($filters)->except(['per_page', 'page'])->filter()->isNotEmpty();
+    // Se o request vier do form, ele terá pelo menos o botão de filtrar ou per_page
+    $hasResults = isset($products) && $products->total() > 0;
+    $isFirstAccess = empty(request()->query());
 @endphp
 <div class="container-fluid py-1">
     <x-page-header
@@ -75,6 +77,7 @@
         $analyzedCount = $summary['total_products'] ?? 0;
     @endphp
 
+    @if($hasResults)
     <!-- Resumo do Período -->
     <div class="row mb-4">
         <div class="col-12 col-sm-6 col-md-3">
@@ -133,6 +136,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Tabela de Produtos Mais Utilizados -->
     <div class="row">
@@ -198,7 +202,7 @@
                                             @endphp
                                             <tr>
                                                 <td class="ps-4">
-                                                    <span class="badge bg-light text-primary border shadow-sm">#{{ $index + 1 }}</span>
+                                                    <span class="badge bg-light text-primary border shadow-sm">#{{ ($products->currentPage() - 1) * $products->perPage() + $index + 1 }}</span>
                                                 </td>
                                                 <td>
                                                     <div class="item-name-cell">
@@ -258,7 +262,7 @@
                                     <div class="list-group-item py-3">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                             <div class="d-flex align-items-center">
-                                                <span class="badge bg-light text-primary border shadow-sm me-2">#{{ $index + 1 }}</span>
+                                                <span class="badge bg-light text-primary border shadow-sm me-2">#{{ ($products->currentPage() - 1) * $products->perPage() + $index + 1 }}</span>
                                                 <div>
                                                     <div class="fw-bold text-dark small">{{ $product['name'] }}</div>
                                                     <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $product['sku'] }}</small>
@@ -304,17 +308,17 @@
                                 <i class="bi bi-{{ $hasResults ? 'search' : 'filter' }} text-muted opacity-50 fs-1"></i>
                             </div>
                             <h5 class="fw-bold text-dark">
-                                {{ $hasResults ? 'Nenhum dado encontrado' : 'Aguardando Filtros' }}
+                                {{ $isFirstAccess ? 'Aguardando Filtros' : 'Nenhum dado encontrado' }}
                             </h5>
                             <p class="text-muted mx-auto mb-0" style="max-width: 400px;">
-                                @if($hasResults)
+                                @if($isFirstAccess)
+                                    Selecione o período acima e clique em <strong>Filtrar</strong> para analisar os produtos mais utilizados.
+                                @else
                                     Nenhum produto encontrado com os filtros aplicados para este período.
                                     <br>
                                     <a href="{{ route('provider.inventory.most-used') }}" class="text-primary text-decoration-none small mt-2 d-inline-block">
                                         <i class="bi bi-x-circle me-1"></i>Limpar filtros
                                     </a>
-                                @else
-                                    Selecione o período acima e clique em <strong>Filtrar</strong> para analisar os produtos mais utilizados.
                                 @endif
                             </p>
                         </div>
@@ -328,6 +332,7 @@
                         ])
                 @endif
 
+                @if($hasResults)
                 <!-- Análise de Curva ABC -->
                 <div class="p-5 border-top">
                             <h6 class="fw-bold mb-3 d-flex align-items-center">
@@ -376,12 +381,17 @@
                                 <i class="bi bi-info-circle fs-5 me-3"></i>
                                 <div>
                                     <strong>Período analisado:</strong>
-                                    {{ \App\Helpers\DateHelper::toCarbon($filters['start_date'])->format('d/m/Y') }}
-                                    até {{ \App\Helpers\DateHelper::toCarbon($filters['end_date'])->format('d/m/Y') }}
-                                    <span class="text-muted ms-1">({{ \App\Helpers\DateHelper::toCarbon($filters['start_date'])->diffInDays(\App\Helpers\DateHelper::toCarbon($filters['end_date'])) + 1 }} dias)</span>
+                                    @if(!empty($filters['start_date']) && !empty($filters['end_date']))
+                                        {{ \App\Helpers\DateHelper::toCarbon($filters['start_date'])->format('d/m/Y') }}
+                                        até {{ \App\Helpers\DateHelper::toCarbon($filters['end_date'])->format('d/m/Y') }}
+                                        <span class="text-muted ms-1">({{ \App\Helpers\DateHelper::toCarbon($filters['start_date'])->diffInDays(\App\Helpers\DateHelper::toCarbon($filters['end_date'])) + 1 }} dias)</span>
+                                    @else
+                                        Todo o período histórico
+                                    @endif
                                 </div>
                             </div>
                         </div>
+                @endif
             </div>
         </div>
     </div>

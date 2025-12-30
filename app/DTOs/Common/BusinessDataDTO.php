@@ -34,7 +34,7 @@ readonly class BusinessDataDTO extends AbstractDTO
             fantasy_name: $data['fantasy_name'] ?? null,
             state_registration: $data['state_registration'] ?? null,
             municipal_registration: $data['municipal_registration'] ?? null,
-            founding_date: DateHelper::parseBirthDate($data['founding_date'] ?? null),
+            founding_date: DateHelper::parseDate($data['founding_date'] ?? null),
             industry: $data['industry'] ?? null,
             company_size: $data['company_size'] ?? null,
             notes: $data['notes'] ?? null,
