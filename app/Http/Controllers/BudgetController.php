@@ -16,6 +16,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Mpdf\Mpdf;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * Controller para Budgets
@@ -200,5 +202,62 @@ class BudgetController extends Controller
 
         return redirect()->route('provider.budgets.index')
             ->with('success', 'Orçamento excluído com sucesso!');
+    }
+
+    /**
+     * Imprimir ou gerar PDF do orçamento.
+     */
+    public function print(Request $request, string $code)
+    {
+        $result = $this->budgetService->findByCode($code, [
+            'customer.commonData',
+            'customer.contact',
+            'services.serviceItems',
+            'services.category',
+        ]);
+
+        if ($result->isError()) {
+            abort(404, 'Orçamento não encontrado.');
+        }
+
+        $budget = $result->getData();
+        $this->authorize('view', $budget);
+
+        /** @var User $user */
+        $user = Auth::user();
+        $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+
+        $isPdf = $request->has('pdf');
+        $download = $request->has('download');
+
+        if ($isPdf) {
+            $html = view('pages.budget.pdf_budget', compact('budget', 'provider'))->render();
+
+            $mpdf = new Mpdf([
+                'mode' => 'utf-8',
+                'format' => 'A4',
+                'margin_left' => 12,
+                'margin_right' => 12,
+                'margin_top' => 14,
+                'margin_bottom' => 14,
+                'margin_header' => 8,
+                'margin_footer' => 8,
+            ]);
+
+            $mpdf->SetHeader('Orçamento #' . $budget->code . '||Gerado em: ' . now()->format('d/m/Y'));
+            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: ' . Auth::user()->name . '|' . config('app.url'));
+
+            $mpdf->WriteHTML($html);
+
+            $filename = "orcamento_{$budget->code}.pdf";
+            $content = $mpdf->Output('', 'S');
+
+            return response($content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"',
+            ]);
+        }
+
+        return view('pages.budget.pdf_budget', compact('budget', 'provider'));
     }
 }

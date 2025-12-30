@@ -247,6 +247,11 @@ class ReportController extends Controller
             return response()->json(['error' => 'Nenhum orçamento encontrado'], 404);
         }
 
+        // Get provider data for header
+        /** @var User $user */
+        $user = auth()->user();
+        $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+
         // Calculate totals
         $totals = $this->calculateTotals($budgets);
 
@@ -255,6 +260,7 @@ class ReportController extends Controller
             'budgets' => $budgets,
             'totals' => $totals,
             'filters' => $filters,
+            'provider' => $provider,
             'generated_at' => now()->format('d/m/Y H:i:s'),
             'generated_by' => auth()->user()->name,
         ])->render();
@@ -314,8 +320,24 @@ class ReportController extends Controller
             return response()->json(['error' => 'Nenhum orçamento encontrado'], 404);
         }
 
+        // Get provider data for header
+        /** @var User $user */
+        $user = auth()->user();
+        $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+        $companyName = $provider && $provider->commonData ? ($provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name)) : $user->name;
+
         // Prepare data for Excel
         $excelData = [];
+        
+        // Header Info
+        $excelData[] = ['RELATÓRIO DE ORÇAMENTOS'];
+        $excelData[] = ['Empresa:', $companyName];
+        $excelData[] = ['Gerado em:', now()->format('d/m/Y H:i:s')];
+        $excelData[] = ['Gerado por:', $user->name];
+        $excelData[] = ['Total de Registros:', $budgets->count()];
+        $excelData[] = []; // Empty row
+        
+        // Table Header
         $excelData[] = ['Nº Orçamento', 'Cliente', 'Descrição', 'Data Criação', 'Data Vencimento', 'Valor Total', 'Status'];
 
         foreach ($budgets as $budget) {
@@ -343,7 +365,15 @@ class ReportController extends Controller
         // Set data
         $sheet->fromArray($excelData, null, 'A1');
 
-        // Format header row
+        // Style Main Title
+        $sheet->mergeCells('A1:G1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Style labels
+        $sheet->getStyle('A2:A5')->getFont()->setBold(true);
+
+        // Format table header row (now at row 7)
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -359,14 +389,14 @@ class ReportController extends Controller
             ],
         ];
 
-        $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A7:G7')->applyFromArray($headerStyle);
 
         // Auto-size columns
         foreach (range('A', 'G') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
-        // Format currency column
+        // Format currency column (starts at row 8)
         $currencyStyle = [
             'numberFormat' => [
                 'formatCode' => '#,##0.00',
@@ -377,7 +407,7 @@ class ReportController extends Controller
         ];
 
         $lastRow = count($excelData);
-        $sheet->getStyle("F2:F{$lastRow}")->applyFromArray($currencyStyle);
+        $sheet->getStyle("F8:F{$lastRow}")->applyFromArray($currencyStyle);
 
         // Set title and metadata
         $sheet->setTitle('Orçamentos');
@@ -569,6 +599,11 @@ class ReportController extends Controller
 
         $customers = $query->get();
 
+        // Get provider data for header
+        /** @var User $user */
+        $user = auth()->user();
+        $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+
         $filters = [
             'name' => $name,
             'document' => $document,
@@ -579,6 +614,7 @@ class ReportController extends Controller
         return view('pages.report.customer.pdf_customer', [
             'customers' => $customers,
             'filters' => $filters,
+            'provider' => $provider,
         ]);
     }
 

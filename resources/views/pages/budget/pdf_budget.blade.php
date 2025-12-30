@@ -7,19 +7,37 @@
         <div class="row">
             <!-- Company Data -->
             <div class="col-6">
-                <h5 class="fw-bold mb-2">{{ auth()->user()->company_name }}</h5>
-                <div class="text-secondary small">
-                    <p class="mb-1">{{ auth()->user()->address }}</p>
-                    <p class="mb-1">
-                        @if( auth()->user()->cnpj )
-                        CNPJ: {{ auth()->user()->cnpj }}
-                        @else
-                        CPF: {{ auth()->user()->cpf }}
+                @if($provider && $provider->commonData)
+                    <h5 class="fw-bold mb-2">
+                        {{ $provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name) }}
+                    </h5>
+                    <div class="text-secondary small">
+                        @if($provider->address)
+                            <p class="mb-1">
+                                {{ $provider->address->street }}, {{ $provider->address->number }}
+                                @if($provider->address->complement) - {{ $provider->address->complement }} @endif
+                                <br>
+                                {{ $provider->address->neighborhood }} - {{ $provider->address->city }}/{{ $provider->address->state }}
+                            </p>
                         @endif
-                    </p>
-                    <p class="mb-1">Tel: {{ auth()->user()->phone }}</p>
-                    <p class="mb-0">Email: {{ auth()->user()->email_business }}</p>
-                </div>
+                        <p class="mb-1">
+                            @if($provider->commonData->cnpj)
+                                CNPJ: {{ \App\Helpers\DocumentHelper::formatCnpj($provider->commonData->cnpj) }}
+                            @elseif($provider->commonData->cpf)
+                                CPF: {{ \App\Helpers\DocumentHelper::formatCpf($provider->commonData->cpf) }}
+                            @endif
+                        </p>
+                        @if($provider->contact)
+                            <p class="mb-1">Tel: {{ $provider->contact->phone_personal ?: $provider->contact->phone_business }}</p>
+                            <p class="mb-0">Email: {{ $provider->contact->email_personal ?: $provider->contact->email_business }}</p>
+                        @endif
+                    </div>
+                @else
+                    <h5 class="fw-bold mb-2">{{ auth()->user()->name }}</h5>
+                    <div class="text-secondary small">
+                        <p class="mb-0">Email: {{ auth()->user()->email }}</p>
+                    </div>
+                @endif
             </div>
 
             <!-- Budget Number and Info -->
@@ -169,7 +187,11 @@
             <div class="text-center">
                 <div class="border-top pt-2" style="display: inline-block; min-width: 200px;">
                     <p class="mb-0">
-                        {{ auth()->user()->cnpj ? auth()->user()->company_name : auth()->user()->first_name . ' ' . auth()->user()->last_name }}
+                        @if($provider && $provider->commonData)
+                            {{ $provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name) }}
+                        @else
+                            {{ auth()->user()->name }}
+                        @endif
                     </p>
                 </div>
             </div>

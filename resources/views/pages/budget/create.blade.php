@@ -32,7 +32,7 @@
                 <div class="row g-4">
                     <!-- Cliente -->
                     <div class="col-md-6">
-                        <label for="customer_id" class="form-label">Cliente *</label>
+                        <label for="customer_id" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Cliente *</label>
                         <select class="form-select tom-select @error('customer_id') is-invalid @enderror"
                             id="customer_id" name="customer_id" required>
                             <option value="">Selecione um cliente...</option>
@@ -53,7 +53,7 @@
 
                     <!-- Data de Vencimento -->
                     <div class="col-md-6">
-                        <label for="due_date" class="form-label">Data de Vencimento *</label>
+                        <label for="due_date" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Data de Vencimento *</label>
                         <input type="date" id="due_date" name="due_date"
                             class="form-control @error('due_date') is-invalid @enderror"
                             value="{{ old('due_date') }}" required>
@@ -64,7 +64,7 @@
 
                     <!-- Descrição -->
                     <div class="col-12">
-                        <label for="description" class="form-label">Descrição</label>
+                        <label for="description" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Descrição</label>
                         <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
                             rows="4" maxlength="255" placeholder="Ex: Projeto de reforma da cozinha...">{{ old('description') }}</textarea>
                         <div class="d-flex justify-content-end">
@@ -77,7 +77,7 @@
 
                     <!-- Condições de Pagamento -->
                     <div class="col-12">
-                        <label for="payment_terms" class="form-label">Condições de Pagamento (Opcional)</label>
+                        <label for="payment_terms" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Condições de Pagamento (Opcional)</label>
                         <textarea id="payment_terms" name="payment_terms"
                             class="form-control @error('payment_terms') is-invalid @enderror" rows="2" maxlength="255"
                             placeholder="Ex: 50% de entrada e 50% na conclusão.">{{ old('payment_terms') }}</textarea>

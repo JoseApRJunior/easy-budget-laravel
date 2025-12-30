@@ -23,16 +23,19 @@
             <!-- Informações Básicas -->
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">
-                            <i class="bi bi-info-circle me-2"></i>Informações Básicas
+                    <div class="card-header bg-transparent py-3">
+                        <h5 class="mb-0 d-flex align-items-center text-dark fw-bold">
+                            <div class="avatar avatar-xs bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                <i class="bi bi-info-circle text-primary" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <span>Informações Básicas</span>
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <!-- Cliente (readonly) -->
                             <div class="col-md-6">
-                                <label for="customer_display" class="form-label">Cliente</label>
+                                <label for="customer_display" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Cliente</label>
                                 <input type="text" id="customer_display" class="form-control"
                                     value="{{ $budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' }} ({{ $budget->customer->commonData ? ($budget->customer->commonData->cnpj ?: $budget->customer->commonData->cpf) : 'Sem documento' }})"
                                     disabled readonly>
@@ -41,7 +44,7 @@
 
                             <!-- Data de Vencimento -->
                             <div class="col-md-3">
-                                <label for="due_date" class="form-label">Data de Vencimento</label>
+                                <label for="due_date" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Data de Vencimento</label>
                                 <input type="date" id="due_date" name="due_date"
                                     class="form-control @error('due_date') is-invalid @enderror"
                                     value="{{ old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : '') }}"
@@ -53,7 +56,7 @@
 
                             <!-- Status Atual (readonly) -->
                             <div class="col-md-3">
-                                <label class="form-label">Status Atual</label>
+                                <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Status Atual</label>
                                 <input type="text" class="form-control" value="{{ $budget->status->label() }}"
                                     readonly disabled>
                                 <input type="hidden" name="status" value="{{ $budget->status->value }}">
@@ -62,7 +65,7 @@
 
                             <!-- Descrição -->
                             <div class="col-12">
-                                <label for="description" class="form-label">Descrição</label>
+                                <label for="description" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Descrição</label>
                                 <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
                                     rows="4" maxlength="255"
                                     placeholder="Ex: Projeto de reforma da cozinha, incluindo instalação de armários e pintura.">{{ old('description', $budget->description) }}</textarea>
@@ -77,7 +80,7 @@
 
                             <!-- Condições de Pagamento -->
                             <div class="col-12">
-                                <label for="payment_terms" class="form-label">Condições de Pagamento (Opcional)</label>
+                                <label for="payment_terms" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Condições de Pagamento (Opcional)</label>
                                 <textarea id="payment_terms" name="payment_terms"
                                     class="form-control @error('payment_terms') is-invalid @enderror" rows="2" maxlength="255"
                                     placeholder="Ex: 50% de entrada e 50% na conclusão.">{{ old('payment_terms', $budget->payment_terms) }}</textarea>
@@ -93,16 +96,19 @@
             <!-- Valores -->
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">
-                            <i class="bi bi-cash-stack me-2"></i>Valores
+                    <div class="card-header bg-transparent py-3">
+                        <h5 class="mb-0 d-flex align-items-center text-dark fw-bold">
+                            <div class="avatar avatar-xs bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                <i class="bi bi-cash-stack text-success" style="font-size: 0.8rem;"></i>
+                            </div>
+                            <span>Valores</span>
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <!-- Valor Total -->
                             <div class="col-md-6">
-                                <label for="total" class="form-label">Valor Total</label>
+                                <label for="total" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Valor Total</label>
                                 <input type="text" id="total" name="total"
                                     class="form-control @error('total') is-invalid @enderror"
                                     value="{{ old('total', number_format($budget->total, 2, ',', '.')) }}"
@@ -114,7 +120,7 @@
 
                             <!-- Desconto -->
                             <div class="col-md-6">
-                                <label for="discount" class="form-label">Desconto</label>
+                                <label for="discount" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Desconto</label>
                                 <input type="text" id="discount" name="discount"
                                     class="form-control @error('discount') is-invalid @enderror"
                                     inputmode="numeric"

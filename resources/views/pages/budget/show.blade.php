@@ -16,47 +16,43 @@
         <!-- Informações Básicas -->
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 py-1">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-info-circle me-2"></i>
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center text-dark fw-bold">
+                        <div class="avatar avatar-xs bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                            <i class="bi bi-info-circle text-primary" style="font-size: 0.8rem;"></i>
+                        </div>
                         <span>Informações Básicas</span>
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Código</label>
-                        <p class="mb-0 fw-bold">{{ $budget->code }}</p>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Código</small>
+                        <span class="text-dark fw-bold">{{ $budget->code }}</span>
                     </div>
 
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Status</label>
-                        <p class="mb-0">
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</small>
+                        <div>
                             @php
                             $statusColor = $budget->status->getColor();
                             $statusIcon = $budget->status->getIcon();
                             $statusLabel = $budget->status->label();
                             @endphp
-                            <span class="badge" style="background-color: {{ $statusColor }}">
+                            <span class="badge rounded-pill" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
                                 <i class="bi {{ $statusIcon }} me-1"></i>{{ $statusLabel }}
                             </span>
-                        </p>
+                        </div>
                     </div>
 
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Data de Criação</label>
-                        <p class="mb-0 d-flex align-items-center">
-                            <i class="bi bi-calendar-plus me-2"></i>
-                            <span>{{ $budget->created_at->format('d/m/Y H:i') }}</span>
-                        </p>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Data de Criação</small>
+                        <span class="text-dark fw-bold">{{ $budget->created_at->format('d/m/Y H:i') }}</span>
                     </div>
 
                     @if ($budget->due_date)
-                    <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Data de Vencimento</label>
-                        <p class="mb-0 d-flex align-items-center">
-                            <i class="bi bi-calendar-event me-2"></i>
-                            <span>{{ $budget->due_date->format('d/m/Y') }}</span>
-                        </p>
+                    <div class="info-item">
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Data de Vencimento</small>
+                        <span class="text-dark fw-bold">{{ $budget->due_date->format('d/m/Y') }}</span>
                     </div>
                     @endif
                 </div>
@@ -66,71 +62,60 @@
         <!-- Informações do Cliente -->
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 py-1">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-person me-2"></i>
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center text-dark fw-bold">
+                        <div class="avatar avatar-xs bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                            <i class="bi bi-person text-info" style="font-size: 0.8rem;"></i>
+                        </div>
                         <span>Cliente</span>
                     </h5>
                 </div>
                 <div class="card-body">
                     @if ($budget->customer && $budget->customer->commonData)
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Nome</label>
-                        <p class="mb-0 fw-bold">
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Nome/Razão Social</small>
+                        <span class="text-dark fw-bold">
                             @if ($budget->customer->commonData->company_name)
                             {{ $budget->customer->commonData->company_name }}
                             @else
                             {{ $budget->customer->commonData->first_name }}
                             {{ $budget->customer->commonData->last_name }}
                             @endif
-                        </p>
+                        </span>
                     </div>
 
                     @if ($budget->customer->commonData->cnpj)
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">CNPJ</label>
-                        <p class="mb-0">
-                            {{ \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) }}
-                        </p>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">CNPJ</small>
+                        <span class="text-dark fw-bold">{{ \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) }}</span>
                     </div>
                     @elseif($budget->customer->commonData->cpf)
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">CPF</label>
-                        <p class="mb-0">
-                            {{ \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) }}
-                        </p>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">CPF</small>
+                        <span class="text-dark fw-bold">{{ \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) }}</span>
                     </div>
                     @endif
 
                     @if ($budget->customer->contact)
                     @if ($budget->customer->contact->email_personal)
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Email</label>
-                        <p class="mb-0 d-flex align-items-center">
-                            <i class="bi bi-envelope me-2"></i>
-                            <a href="mailto:{{ $budget->customer->contact->email_personal }}"
-                                class="text-decoration-none">
-                                {{ $budget->customer->contact->email_personal }}
-                            </a>
-                        </p>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">E-mail</small>
+                        <span class="text-dark fw-bold">{{ $budget->customer->contact->email_personal }}</span>
                     </div>
                     @endif
 
                     @if ($budget->customer->contact->phone_personal)
-                    <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Telefone</label>
-                        <p class="mb-0 d-flex align-items-center">
-                            <i class="bi bi-phone me-2"></i>
-                            <a href="tel:{{ preg_replace('/\D/', '', $budget->customer->contact->phone_personal) }}"
-                                class="text-decoration-none">
-                                {{ $budget->customer->contact->phone_personal }}
-                            </a>
-                        </p>
+                    <div class="info-item">
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Telefone</small>
+                        <span class="text-dark fw-bold">{{ $budget->customer->contact->phone_personal }}</span>
                     </div>
                     @endif
                     @endif
                     @else
-                    <p class="text-muted">Cliente não informado</p>
+                    <div class="text-center py-4">
+                        <i class="bi bi-person-exclamation text-muted fs-2"></i>
+                        <p class="text-muted mb-0 mt-2">Dados do cliente não encontrados.</p>
+                    </div>
                     @endif
                 </div>
             </div>
@@ -139,9 +124,11 @@
         <!-- Resumo Financeiro -->
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 py-1">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-cash-stack me-2"></i>
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center text-dark fw-bold">
+                        <div class="avatar avatar-xs bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                            <i class="bi bi-cash-stack text-success" style="font-size: 0.8rem;"></i>
+                        </div>
                         <span>Resumo Financeiro</span>
                     </h5>
                 </div>
@@ -151,18 +138,18 @@
                     @endphp
 
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Subtotal (Serviços)</label>
-                        <h5 class="mb-0 text-primary">R$ {{ number_format($servicesSubtotal, 2, ',', '.') }}</h5>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Subtotal (Serviços)</small>
+                        <h5 class="mb-0 text-dark fw-bold">R$ {{ number_format($servicesSubtotal, 2, ',', '.') }}</h5>
                     </div>
 
                     <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Desconto</label>
-                        <h5 class="mb-0 text-warning">R$ {{ number_format($budget->discount, 2, ',', '.') }}</h5>
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Desconto</small>
+                        <h5 class="mb-0 text-warning fw-bold">R$ {{ number_format($budget->discount, 2, ',', '.') }}</h5>
                     </div>
 
-                    <div class="info-item mb-3">
-                        <label class="text-muted small d-block mb-1">Total</label>
-                        <h4 class="mb-0 text-success">R$ {{ number_format($budget->total, 2, ',', '.') }}</h4>
+                    <div class="info-item">
+                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Total Geral</small>
+                        <h4 class="mb-0 text-success fw-bold">R$ {{ number_format($budget->total, 2, ',', '.') }}</h4>
                     </div>
                 </div>
             </div>
@@ -172,14 +159,16 @@
         @if ($budget->description)
         <div class="col-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 py-1">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-file-text me-2"></i>
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center text-dark fw-bold">
+                        <div class="avatar avatar-xs bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                            <i class="bi bi-file-text text-secondary" style="font-size: 0.8rem;"></i>
+                        </div>
                         <span>Descrição</span>
                     </h5>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0">{{ $budget->description }}</p>
+                    <p class="mb-0 text-dark">{{ $budget->description }}</p>
                 </div>
             </div>
         </div>
@@ -189,14 +178,16 @@
         @if ($budget->payment_terms)
         <div class="col-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 py-1">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <i class="bi bi-credit-card me-2"></i>
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center text-dark fw-bold">
+                        <div class="avatar avatar-xs bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                            <i class="bi bi-credit-card text-warning" style="font-size: 0.8rem;"></i>
+                        </div>
                         <span>Condições de Pagamento</span>
                     </h5>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0">{{ $budget->payment_terms }}</p>
+                    <p class="mb-0 text-dark">{{ $budget->payment_terms }}</p>
                 </div>
             </div>
         </div>
@@ -205,12 +196,14 @@
         <!-- Serviços Vinculados -->
         <div class="col-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0">
+                <div class="card-header bg-transparent border-0 py-3">
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                            <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                            <h5 class="mb-0 d-flex align-items-center flex-wrap text-dark fw-bold">
+                                <div class="avatar avatar-xs bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                    <i class="bi bi-tools text-primary" style="font-size: 0.8rem;"></i>
+                                </div>
                                 <span class="me-2">
-                                    <i class="bi bi-tools me-1"></i>
                                     <span class="d-none d-sm-inline">Serviços Vinculados</span>
                                     <span class="d-sm-none">Serviços</span>
                                 </span>
@@ -235,34 +228,34 @@
                             <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Código</th>
-                                        <th>Descrição</th>
-                                        <th>Categoria</th>
-                                        <th>Status</th>
-                                        <th>Vencimento</th>
-                                        <th class="text-end">Desconto</th>
-                                        <th class="text-end">Total</th>
-                                        <th class="text-center">Ações</th>
+                                        <th class="text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Código</th>
+                                        <th class="text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Descrição</th>
+                                        <th class="text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Categoria</th>
+                                        <th class="text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</th>
+                                        <th class="text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Vencimento</th>
+                                        <th class="text-end text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Desconto</th>
+                                        <th class="text-end text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Total</th>
+                                        <th class="text-center text-uppercase text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($budget->services as $service)
                                     <tr>
-                                        <td>{{ $service->code }}</td>
+                                        <td class="fw-bold text-dark">{{ $service->code }}</td>
                                         <td>{{ $service->description }}</td>
                                         <td>{{ $service->category?->name ?? '-' }}</td>
                                         <td>
-                                            <span class="badge"
-                                                style="background-color: {{ $service->color }}">
+                                            <span class="badge rounded-pill"
+                                                style="background-color: {{ $service->color }}20; color: {{ $service->color }}; border: 1px solid {{ $service->color }}40; font-size: 0.7rem;">
                                                 {{ $service->name }}
                                             </span>
                                         </td>
                                         <td>{{ $service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') : '-' }}
                                         </td>
-                                        <td class="text-end">R$
+                                        <td class="text-end text-warning fw-semibold">R$
                                             {{ number_format($service->discount, 2, ',', '.') }}
                                         </td>
-                                        <td class="text-end">R$
+                                        <td class="text-end text-primary fw-bold">R$
                                             {{ number_format($service->total, 2, ',', '.') }}
                                         </td>
                                         <td class="text-center">
@@ -282,25 +275,38 @@
 
                     <!-- Mobile View -->
                     <div class="mobile-view">
-                        <div class="list-group">
+                        <div class="list-group list-group-flush">
                             @foreach ($budget->services as $service)
                             <a href="{{ route('provider.services.show', $service->code) }}"
-                                class="list-group-item list-group-item-action py-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-tools text-muted me-2 mt-1"></i>
+                                class="list-group-item list-group-item-action py-3 border-bottom">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="avatar avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-tools text-primary"></i>
+                                    </div>
                                     <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-2">{{ $service->code }}</div>
-                                        <div class="small text-muted mb-2">{{ $service->description }}</div>
-                                        <div class="d-flex gap-2 flex-wrap">
-                                            <span class="badge"
-                                                style="background-color: {{ $service->color }}">
-                                                {{ $service->name }}
-                                            </span>
-                                            <span class="badge bg-success">R$
-                                                {{ number_format($service->total, 2, ',', '.') }}</span>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-dark">{{ $service->code }}</span>
+                                            <span class="text-muted small">{{ $service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') : '-' }}</span>
                                         </div>
                                     </div>
-                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                </div>
+
+                                <div class="mb-2">
+                                    <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Descrição</small>
+                                    <div class="text-dark fw-semibold">{{ $service->description }}</div>
+                                </div>
+
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Valor Total</small>
+                                        <span class="fw-bold text-primary">R$ {{ number_format($service->total, 2, ',', '.') }}</span>
+                                    </div>
+                                    <div class="col-6 text-end">
+                                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</small>
+                                        <span class="badge rounded-pill" style="background-color: {{ $service->color }}20; color: {{ $service->color }}; border: 1px solid {{ $service->color }}40; font-size: 0.7rem;">
+                                            {{ $service->name }}
+                                        </span>
+                                    </div>
                                 </div>
                             </a>
                             @endforeach

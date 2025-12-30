@@ -48,17 +48,17 @@
         <div class="row g-4 mb-4">
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-file-earmark-text text-white"></i>
+                            <div class="avatar avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-file-earmark-text text-primary fs-5"></i>
                             </div>
                             <div>
-                                <h6 class="text-muted mb-1">Total de Orçamentos</h6>
-                                <h3 class="mb-0">{{ $total }}</h3>
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Total de Orçamentos</small>
+                                <h3 class="fw-bold mb-0 text-dark">{{ $total }}</h3>
                             </div>
                         </div>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0 lh-sm">
                             Quantidade total de orçamentos cadastrados para este tenant.
                         </p>
                     </div>
@@ -67,17 +67,17 @@
 
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-check-circle-fill text-white"></i>
+                            <div class="avatar avatar-sm bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
                             </div>
                             <div>
-                                <h6 class="text-muted mb-1">Orçamentos Aprovados</h6>
-                                <h3 class="mb-0">{{ $approved }}</h3>
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Orçamentos Aprovados</small>
+                                <h3 class="fw-bold mb-0 text-dark">{{ $approved }}</h3>
                             </div>
                         </div>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0 lh-sm">
                             Propostas aprovadas pelos clientes e prontas para execução.
                         </p>
                     </div>
@@ -86,17 +86,17 @@
 
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-warning bg-gradient me-3">
-                                <i class="bi bi-clock-fill text-white"></i>
+                            <div class="avatar avatar-sm bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-clock-fill text-warning fs-5"></i>
                             </div>
                             <div>
-                                <h6 class="text-muted mb-1">Orçamentos Pendentes</h6>
-                                <h3 class="mb-0">{{ $pending }}</h3>
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Orçamentos Pendentes</small>
+                                <h3 class="fw-bold mb-0 text-dark">{{ $pending }}</h3>
                             </div>
                         </div>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0 lh-sm">
                             Propostas aguardando aprovação ou resposta do cliente.
                         </p>
                     </div>
@@ -105,17 +105,17 @@
 
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-info bg-gradient me-3">
-                                <i class="bi bi-graph-up-arrow text-white"></i>
+                            <div class="avatar avatar-sm bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-graph-up-arrow text-info fs-5"></i>
                             </div>
                             <div>
-                                <h6 class="text-muted mb-1">Taxa de Aprovação</h6>
-                                <h3 class="mb-0">{{ $approvedRate }}%</h3>
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Taxa de Aprovação</small>
+                                <h3 class="fw-bold mb-0 text-dark">{{ $approvedRate }}%</h3>
                             </div>
                         </div>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0 lh-sm">
                             Percentual de orçamentos aprovados em relação ao total.
                         </p>
                     </div>
@@ -127,17 +127,17 @@
         <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-currency-dollar text-white"></i>
+                            <div class="avatar avatar-sm bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-cash-stack text-success fs-5"></i>
                             </div>
                             <div>
-                                <h6 class="text-muted mb-1">Valor Total em Orçamentos</h6>
-                                <h3 class="mb-0">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Valor Total em Orçamentos</small>
+                                <h3 class="fw-bold mb-0 text-dark">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
                             </div>
                         </div>
-                        <p class="text-muted small mb-0">
+                        <p class="text-muted small mb-0 lh-sm">
                             Soma do valor de todos os orçamentos cadastrados.
                         </p>
                     </div>
@@ -146,18 +146,18 @@
 
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-secondary bg-gradient me-3">
-                                <i class="bi bi-x-circle-fill text-white"></i>
+                            <div class="avatar avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-calculator text-primary fs-5"></i>
                             </div>
                             <div>
-                                <h6 class="text-muted mb-1">Orçamentos Rejeitados</h6>
-                                <h3 class="mb-0">{{ $rejected }}</h3>
+                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Ticket Médio</small>
+                                <h3 class="fw-bold mb-0 text-dark">R$ {{ $total > 0 ? number_format($totalValue / $total, 2, ',', '.') : '0,00' }}</h3>
                             </div>
                         </div>
-                        <p class="text-muted small mb-0">
-                            Propostas recusadas ou rejeitadas pelos clientes.
+                        <p class="text-muted small mb-0 lh-sm">
+                            Valor médio por orçamento gerado no sistema.
                         </p>
                     </div>
                 </div>
@@ -185,9 +185,9 @@
             <!-- Orçamentos Recentes -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="bi bi-clock-history me-2 text-primary"></i>
                             <span class="d-none d-sm-inline">Orçamentos Recentes</span>
                             <span class="d-sm-none">Recentes</span>
                         </h5>
@@ -198,14 +198,14 @@
                             <div class="desktop-view">
                                 <div class="table-responsive">
                                     <table class="modern-table table mb-0">
-                                    <thead class="table-light">
+                                    <thead>
                                         <tr>
-                                            <th>Código</th>
-                                            <th>Cliente</th>
-                                            <th>Valor Total</th>
-                                            <th>Status</th>
-                                            <th>Data de Criação</th>
-                                            <th class="text-end">Ações</th>
+                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Código</th>
+                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Cliente</th>
+                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Valor Total</th>
+                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Status</th>
+                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Data</th>
+                                            <th class="text-end text-muted small text-uppercase" style="font-size: 0.7rem;">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -214,39 +214,36 @@
                                                 $customer = $budget->customer ?? null;
                                                 $commonData = $customer?->commonData ?? null;
 
-                                                $customerName =
-                                                    $commonData?->company_name ??
-                                                    trim(
-                                                        ($commonData->first_name ?? '') .
-                                                            ' ' .
-                                                            ($commonData->last_name ?? ''),
-                                                    ) ?:
+                                                $customerName = $commonData?->company_name ??
+                                                    trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?:
                                                     'Cliente não informado';
 
                                                 $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
                                                 $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
-                                                $statusLabel = $statusEnum?->label() ?? 'Rascunho';
-                                                
-                                                $statusClass = match ($budget->status) {
-                                                    'draft', 'cancelled' => 'bg-secondary-subtle text-secondary',
-                                                    'pending' => 'bg-warning-subtle text-warning',
-                                                    'approved' => 'bg-success-subtle text-success',
-                                                    'rejected' => 'bg-danger-subtle text-danger',
-                                                    'completed' => 'bg-info-subtle text-info',
-                                                    default => 'bg-secondary-subtle text-secondary',
-                                                };
-                                                
-                                                $statusBadge = '<span class="badge ' . $statusClass . '">' . $statusLabel . '</span>';
                                             @endphp
                                             <tr>
-                                                <td>{{ $budget->code }}</td>
-                                                <td>{{ Str::limit($customerName, 30) }}</td>
-                                                <td>R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
-                                                <td>{!! $statusBadge !!}</td>
-                                                <td>{{ optional($budget->created_at)->format('d/m/Y') }}</td>
+                                                <td class="fw-bold text-dark">{{ $budget->code }}</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="avatar avatar-xs me-2 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                            <i class="bi bi-person text-primary small"></i>
+                                                        </div>
+                                                        <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
+                                                            {{ $customerName }}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="fw-bold text-dark">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
+                                                <td>
+                                                    <span class="badge rounded-pill" style="background-color: {{ $statusEnum->getColor() }}20; color: {{ $statusEnum->getColor() }}; border: 1px solid {{ $statusEnum->getColor() }}40;">
+                                                        <i class="bi {{ $statusEnum->getIcon() }} me-1"></i>
+                                                        {{ $statusEnum->getDescription() }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
                                                 <td class="text-end">
                                                     <a href="{{ route('provider.budgets.show', $budget->code) }}"
-                                                        class="btn btn-sm btn-outline-secondary">
+                                                        class="btn btn-sm btn-outline-info" title="Visualizar">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                 </td>
@@ -268,44 +265,44 @@
                                         
                                         $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
                                         $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
-                                        $statusLabel = $statusEnum?->label() ?? 'Rascunho';
-                                        
-                                        $statusClass = match ($budget->status) {
-                                            'draft', 'cancelled' => 'bg-secondary-subtle text-secondary',
-                                            'pending' => 'bg-warning-subtle text-warning',
-                                            'approved' => 'bg-success-subtle text-success',
-                                            'rejected' => 'bg-danger-subtle text-danger',
-                                            'completed' => 'bg-info-subtle text-info',
-                                            default => 'bg-secondary-subtle text-secondary',
-                                        };
-                                        
-                                        $statusConfig = ['class' => $statusClass, 'text' => $statusLabel];
                                     @endphp
                                     <a href="{{ route('provider.budgets.show', $budget->code) }}" class="list-group-item list-group-item-action py-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-file-earmark-text text-muted me-2 mt-1"></i>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="avatar avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                <i class="bi bi-file-earmark-text text-primary"></i>
+                                            </div>
                                             <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-1">{{ $budget->code }}</div>
-                                                <div class="small text-muted mb-2">{{ Str::limit($customerName, 30) }}</div>
-                                                <div class="d-flex gap-2 flex-wrap align-items-center">
-                                                    <span class="badge {{ $statusConfig['class'] }}">{{ $statusConfig['text'] }}</span>
-                                                    <span class="small text-muted">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
-                                                    <span class="small text-muted">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="fw-bold text-dark">{{ $budget->code }}</span>
+                                                    <span class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
                                                 </div>
                                             </div>
-                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Cliente</small>
+                                            <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Valor Total</small>
+                                                <span class="fw-bold text-primary">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</small>
+                                                <span class="badge rounded-pill" style="background-color: {{ $statusEnum->getColor() }}20; color: {{ $statusEnum->getColor() }}; border: 1px solid {{ $statusEnum->getColor() }}40; font-size: 0.7rem;">
+                                                    {{ $statusEnum->getDescription() }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </a>
                                 @endforeach
                             </div>
                         </div>
                     @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                            <br>
-                            Nenhum orçamento recente encontrado.
-                            <br>
-                            <small>Crie novos orçamentos para visualizar aqui.</small>
+                        <div class="p-5 text-center text-muted">
+                            <i class="bi bi-inbox mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mb-1 fw-bold">Nenhum orçamento recente</p>
+                            <p class="small mb-0">Crie novos orçamentos para visualizar aqui.</p>
                         </div>
                     @endif
                     </div>
@@ -314,46 +311,52 @@
 
             <!-- Insights e Atalhos -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h6 class="mb-0 fw-bold d-flex align-items-center">
+                            <i class="bi bi-lightbulb me-2 text-warning"></i>Insights Rápidos
                         </h6>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0 small text-muted">
-                            <li class="mb-2">
-                                <i class="bi bi-clock-fill text-warning me-2"></i>
-                                Acompanhe orçamentos pendentes para aumentar sua taxa de conversão.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-graph-up-arrow text-success me-2"></i>
-                                Orçamentos aprovados geram receita garantida para seu negócio.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-envelope-fill text-primary me-2"></i>
-                                Envie lembretes para clientes com orçamentos pendentes.
-                            </li>
-                        </ul>
+                    <div class="card-body pt-0">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
+                                    <i class="bi bi-clock-fill text-warning"></i>
+                                </div>
+                                <div>
+                                    <p class="small mb-0 text-muted">Acompanhe orçamentos pendentes para aumentar sua taxa de conversão.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start">
+                                <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                                    <i class="bi bi-graph-up-arrow text-success"></i>
+                                </div>
+                                <div>
+                                    <p class="small mb-0 text-muted">Orçamentos aprovados geram receita garantida para seu negócio.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                    <i class="bi bi-envelope-check text-primary"></i>
+                                </div>
+                                <div>
+                                    <p class="small mb-0 text-muted">Envie lembretes para clientes com orçamentos pendentes.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-link-45deg me-2"></i>Atalhos
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h6 class="mb-0 fw-bold d-flex align-items-center">
+                            <i class="bi bi-link-45deg me-2 text-primary"></i>Atalhos Rápidos
                         </h6>
                     </div>
-                    <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.budgets.create') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-plus-circle me-2"></i>Novo Orçamento
-                        </a>
-                        <a href="{{ route('provider.budgets.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Listar Orçamentos
-                        </a>
-                        <a href="{{ route('provider.reports.budgets') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Orçamentos
-                        </a>
+                    <div class="card-body pt-0 d-grid gap-2">
+                        <x-button type="link" :href="route('provider.budgets.create')" variant="primary" size="sm" icon="plus-circle" label="Novo Orçamento" class="w-100 justify-content-start" />
+                        <x-button type="link" :href="route('provider.budgets.index')" variant="outline-primary" size="sm" icon="list-ul" label="Listar Todos" class="w-100 justify-content-start" />
+                        <x-button type="link" :href="route('provider.reports.budgets')" variant="outline-secondary" size="sm" icon="file-earmark-bar-graph" label="Relatórios" class="w-100 justify-content-start" />
                     </div>
                 </div>
             </div>
