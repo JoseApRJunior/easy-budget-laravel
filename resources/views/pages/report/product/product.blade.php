@@ -32,13 +32,31 @@
                     <div class="row g-3">
                         <div class="col-md-3">
                             <div class="form-group">
+                                <label for="start_date">Data Inicial</label>
+                                <input type="text" class="form-control" id="start_date" name="start_date"
+                                    value="{{ request('start_date') }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="end_date">Data Final</label>
+                                <input type="text" class="form-control" id="end_date" name="end_date"
+                                    value="{{ request('end_date') }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
                                 <label for="name">Nome do Produto</label>
                                 <input type="text" class="form-control" id="name" name="name"
                                     value="{{ request('name') ?? '' }}" placeholder="Digite o nome">
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="code">Código do Produto</label>
                                 <input type="text" class="form-control" id="code" name="code"
@@ -46,7 +64,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="price_min">Preço Mínimo</label>
                                 <input type="text" class="form-control money-input" id="price_min" name="price_min"
@@ -55,7 +73,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="price_max">Preço Máximo</label>
                                 <input type="text" class="form-control money-input" id="price_max" name="price_max"
@@ -64,7 +82,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="status">Status</label>
                                 <select class="form-control" id="status" name="status">
@@ -260,6 +278,70 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = document.getElementById('filtersFormProducts');
+
+            if (!form || !startDate || !endDate) return;
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = (input) => {
+                if (!startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
+
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                }
+            });
+
+            // Máscara para valores monetários
+            const moneyInputs = document.querySelectorAll('.money-input');
+            moneyInputs.forEach(function(input) {
+                input.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    value = (value / 100).toFixed(2);
+                    value = value.replace('.', ',');
+                    e.target.value = value;
+                });
+            });
+        });
+    </script>
+@endpush
 
 @push('scripts')
     <!-- Adicione a biblioteca SheetJS -->

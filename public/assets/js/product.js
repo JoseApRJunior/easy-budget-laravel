@@ -26,18 +26,20 @@
       initializeFormSubmission();
 
       // 3. UI e Máscaras
-      initializeCurrencyFormatting();
+      initializeFormatting();
       initializeStatusToggle();
    }
 
    /**
-    * Inicializa as máscaras de moeda usando VanillaMask
+    * Inicializa as máscaras de moeda e data usando VanillaMask
     */
-   function initializeCurrencyFormatting() {
+   function initializeFormatting() {
       const applyMask = () => {
          if (typeof window.VanillaMask !== "undefined") {
             const minPrice = document.getElementById("min_price");
             const maxPrice = document.getElementById("max_price");
+            const startDate = document.getElementById("start_date");
+            const endDate = document.getElementById("end_date");
 
             if (minPrice && !minPrice.dataset.maskApplied) {
                new window.VanillaMask(minPrice, "currency");
@@ -46,6 +48,14 @@
             if (maxPrice && !maxPrice.dataset.maskApplied) {
                new window.VanillaMask(maxPrice, "currency");
                maxPrice.dataset.maskApplied = "true";
+            }
+            if (startDate && !startDate.dataset.maskApplied) {
+               new window.VanillaMask(startDate, "date");
+               startDate.dataset.maskApplied = "true";
+            }
+            if (endDate && !endDate.dataset.maskApplied) {
+               new window.VanillaMask(endDate, "date");
+               endDate.dataset.maskApplied = "true";
             }
          } else {
             console.warn(

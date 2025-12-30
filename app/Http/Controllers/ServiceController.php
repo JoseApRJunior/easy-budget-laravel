@@ -57,6 +57,8 @@ class ServiceController extends Controller
             'status' => ['nullable', 'string', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
             'category_id' => ['nullable', 'integer'],
             'search' => ['nullable', 'string'],
+            'start_date' => ['nullable', 'string'],
+            'end_date' => ['nullable', 'string'],
         ]);
 
         $result = $this->serviceService->list($filters);

@@ -336,6 +336,9 @@ class CustomerRepository extends AbstractTenantRepository
             });
         }
 
+        // Filtro de Data
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
+
         $this->applyOrderBy($query, $orderBy ?: ['created_at' => 'desc']);
 
         return $query->paginate($this->getEffectivePerPage($filters, $perPage));

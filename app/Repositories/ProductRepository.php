@@ -241,5 +241,8 @@ class ProductRepository extends AbstractTenantRepository
         $query->when(isset($filters['max_price']) && $filters['max_price'] !== '', function ($q) use ($filters) {
             $q->where('price', '<=', $filters['max_price']);
         });
+
+        // Filtro de Data
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
     }
 }

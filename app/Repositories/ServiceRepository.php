@@ -135,7 +135,7 @@ class ServiceRepository extends AbstractTenantRepository
     {
         $this->applyBooleanFilter($query, $filters, 'status', 'status');
         $this->applyBooleanFilter($query, $filters, 'category_id', 'category_id');
-        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
         $this->applySearchFilter($query, $filters, ['code', 'description']);
     }
 

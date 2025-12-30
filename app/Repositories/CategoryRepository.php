@@ -204,5 +204,8 @@ class CategoryRepository extends AbstractTenantRepository
         $this->applyOperatorFilter($query, $filters, 'name', 'name');
         $this->applyBooleanFilter($query, $filters, 'is_active', 'is_active');
         $this->applySoftDeleteFilter($query, $filters);
+
+        // Filtro de Data
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
     }
 }

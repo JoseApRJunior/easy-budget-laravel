@@ -117,9 +117,6 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
             $data['tenant_id'] = $this->getTenantId();
         }
 
-        if (app()->environment('testing')) {
-            \Illuminate\Support\Facades\Log::info('Repo Create: ' . get_class($this->model), $data);
-        }
         return $this->model->create($data);
     }
 

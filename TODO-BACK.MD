@@ -309,6 +309,59 @@ protected function applyDateRangeFilter($query, $startDate, $endDate, $column = 
 
 ---
 
+### 🚀 12. CRUD PATTERNS - Padrões de CRUD (Ex: ServiceController)
+
+#### Controllers
+- **ServiceResult:** Sempre utilizar o padrão `ServiceResult` para retorno dos services.
+- **Autorização:** Utilizar `$this->authorize()` para validar permissões via Policies.
+- **Redirects:** Tratar sucessos e erros com mensagens de feedback amigáveis (`with('success', ...)` ou `with('error', ...)`).
+- **Index/Filtros:** Seguir o padrão de passagem de filtros para o Service/Repository.
+
+Exemplo de Index:
+```php
+public function index(Request $request): View
+{
+    $this->authorize('viewAny', Service::class);
+    
+    $filters = $request->only(['search', 'category', 'active', 'start_date', 'end_date', 'deleted', 'per_page']);
+    $result = $this->serviceService->getPaginated($filters);
+    
+    return view('pages.service.index', [
+        'services' => $result->getData(),
+        'filters' => $filters,
+        'categories' => $this->categoryService->listParents()->getData(),
+    ]);
+}
+```
+
+Exemplo de Store:
+```php
+public function store(ServiceStoreRequest $request): RedirectResponse
+{
+    $this->authorize('create', Service::class);
+    $dto = ServiceDTO::fromRequest($request->validated());
+    $result = $this->serviceService->create($dto);
+
+    if ($result->isError()) {
+        return redirect()->back()->withInput()->with('error', $result->getMessage());
+    }
+
+    return redirect()->route('provider.services.show', $result->getData()->code)
+        ->with('success', 'Criado com sucesso!');
+}
+```
+
+#### Services
+- **DTOs:** Utilizar DTOs para transferência de dados entre Controller e Service.
+- **Transações:** Utilizar `DB::transaction()` para garantir integridade em operações complexas.
+- **Execução Segura:** Utilizar o método `safeExecute` (da `AbstractBaseService`) para capturar exceções e retornar `ServiceResult`.
+
+#### Repositories
+- **Filtros de Data:** Utilizar `applyDateRangeFilter` da `RepositoryFiltersTrait`.
+- **Tenant:** Garantir que todas as consultas respeitem o `tenant_id` (via `AbstractTenantRepository` ou Trait `TenantScoped`).
+
+---
+
 ### ⚠️ Erros Comuns e Soluções
 
 #### Erro 1: Valor vazio para Enum

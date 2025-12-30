@@ -30,7 +30,25 @@
             <div class="card-body">
                 <form id="filtersFormServices" method="GET" action="{{ route('provider.reports.services') }}">
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="start_date">Data Inicial</label>
+                                <input type="text" class="form-control" id="start_date" name="start_date"
+                                    value="{{ request('start_date') }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="end_date">Data Final</label>
+                                <input type="text" class="form-control" id="end_date" name="end_date"
+                                    value="{{ request('end_date') }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="name">Nome do Serviço</label>
                                 <input type="text" class="form-control" id="name" name="name"
@@ -38,7 +56,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="price_min">Preço Mínimo</label>
                                 <input type="text" class="form-control money-input" id="price_min" name="price_min"
@@ -47,7 +65,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="price_max">Preço Máximo</label>
                                 <input type="text" class="form-control money-input" id="price_max" name="price_max"
@@ -243,8 +261,8 @@
             window.location.href = url.toString();
         }
 
-        // Máscara para valores monetários
         document.addEventListener('DOMContentLoaded', function() {
+            // Máscara para valores monetários
             const moneyInputs = document.querySelectorAll('.money-input');
             moneyInputs.forEach(function(input) {
                 input.addEventListener('input', function(e) {
@@ -253,6 +271,57 @@
                     value = value.replace('.', ',');
                     e.target.value = value;
                 });
+            });
+
+            // Validação de Datas
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = document.getElementById('filtersFormServices');
+
+            if (!startDate || !endDate || !form) return;
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = (input) => {
+                const startVal = startDate.value;
+                const endVal = endDate.value;
+
+                if (!startVal || !endVal) return true;
+
+                const start = parseDate(startVal);
+                const end = parseDate(endVal);
+
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
+
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                }
             });
         });
     </script>

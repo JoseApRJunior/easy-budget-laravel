@@ -132,6 +132,22 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="start_date">Data Inicial</label>
+                                    <input type="text" class="form-control" id="start_date" name="start_date"
+                                        value="{{ old('start_date', $filters['start_date'] ?? '') }}"
+                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="end_date">Data Final</label>
+                                    <input type="text" class="form-control" id="end_date" name="end_date"
+                                        value="{{ old('end_date', $filters['end_date'] ?? '') }}"
+                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2">
                                     <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterProducts" />
@@ -409,4 +425,68 @@
 
 @push('scripts')
 <script type="module" src="{{ asset('assets/js/product.js') }}?v={{ time() }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDate = document.getElementById('start_date');
+        const endDate = document.getElementById('end_date');
+        const form = document.getElementById('filtersFormProducts');
+
+        if (!form || !startDate || !endDate) return;
+
+        const parseDate = (str) => {
+            if (!str) return null;
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                return isNaN(d.getTime()) ? null : d;
+            }
+            return null;
+        };
+
+        const validateDates = () => {
+            if (!startDate.value || !endDate.value) return true;
+
+            const start = parseDate(startDate.value);
+            const end = parseDate(endDate.value);
+
+            if (start && end && start > end) {
+                const message = 'A data inicial não pode ser maior que a data final.';
+                if (window.easyAlert) {
+                    window.easyAlert.warning(message);
+                } else {
+                    alert(message);
+                }
+                return false;
+            }
+            return true;
+        };
+
+        form.addEventListener('submit', function(e) {
+            if (!validateDates()) {
+                e.preventDefault();
+                return;
+            }
+
+            if (startDate.value && !endDate.value) {
+                e.preventDefault();
+                const message = 'Para filtrar por período, informe as datas inicial e final.';
+                if (window.easyAlert) {
+                    window.easyAlert.error(message);
+                } else {
+                    alert(message);
+                }
+                endDate.focus();
+            } else if (!startDate.value && endDate.value) {
+                e.preventDefault();
+                const message = 'Para filtrar por período, informe as datas inicial e final.';
+                if (window.easyAlert) {
+                    window.easyAlert.error(message);
+                } else {
+                    alert(message);
+                }
+                startDate.focus();
+            }
+        });
+    });
+</script>
 @endpush

@@ -43,6 +43,18 @@ class BudgetService extends AbstractBaseService
     }
 
     /**
+     * Retorna lista de orçamentos filtrados (usado em relatórios).
+     */
+    public function getFilteredBudgets(array $filters = []): ServiceResult
+    {
+        return $this->safeExecute(function () use ($filters) {
+            $budgets = $this->repository->getFilteredBudgets($filters);
+
+            return ServiceResult::success($budgets);
+        }, 'Erro ao obter orçamentos filtrados.');
+    }
+
+    /**
      * Busca um orçamento por código com relações opcionais.
      */
     public function findByCode(string $code, array $with = []): ServiceResult

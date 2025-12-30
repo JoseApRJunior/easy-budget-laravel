@@ -42,7 +42,8 @@
                             <div class="form-group">
                                 <label for="start_date">Data Inicial</label>
                                 <input type="text" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA">
+                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
                             </div>
                         </div>
 
@@ -50,7 +51,8 @@
                             <div class="form-group">
                                 <label for="end_date">Data Final</label>
                                 <input type="text" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA">
+                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
                             </div>
                         </div>
 
@@ -283,11 +285,12 @@
                         ])
                     @endif
                 </div>
+            </div>
         @endif
     </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
     <!-- Adicione a biblioteca SheetJS -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script src="{{ asset('assets/js/modules/table-paginator.js') }}"></script>
@@ -295,80 +298,79 @@
     <script src="{{ asset('assets/js/budget_report.js') }}"></script>
 
     <script>
-        const parseDate = (str) => {
-            const parts = str.split('/');
-            if (parts.length === 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            return new Date(str);
-        };
-
-        function updatePerPage(value) {
-            const url = new URL(window.location);
-            url.searchParams.set('per_page', value);
-            window.location.href = url.toString();
-        }
-
-        // Máscara para valores monetários
         document.addEventListener('DOMContentLoaded', function() {
             const startDate = document.getElementById('start_date');
             const endDate = document.getElementById('end_date');
-            const form = startDate ? startDate.closest('form') : null;
+            const form = document.getElementById('filtersFormBudgets');
 
-            if (form) {
-                if (typeof VanillaMask !== 'undefined') {
-                    new VanillaMask('start_date', 'date');
-                    new VanillaMask('end_date', 'date');
+            if (!form || !startDate || !endDate) return;
+
+            if (typeof VanillaMask !== 'undefined') {
+                new VanillaMask('start_date', 'date');
+                new VanillaMask('end_date', 'date');
+            }
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = (input) => {
+                if (!startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
+
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                    return;
                 }
 
-                form.addEventListener('submit', function(e) {
-                    if (startDate.value && endDate.value) {
-                        const start = parseDate(startDate.value);
-                        const end = parseDate(endDate.value);
-
-                        if (start > end) {
-                            e.preventDefault();
-                            if (window.easyAlert) {
-                                window.easyAlert.error('A data inicial não pode ser maior que a data final.');
-                            } else {
-                                alert('A data inicial não pode ser maior que a data final.');
-                            }
-                            startDate.focus();
-                            return;
-                        }
+                if (startDate.value && !endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
                     }
-                });
-
-                startDate.addEventListener('change', function() {
-                    if (this.value && endDate.value) {
-                        const start = parseDate(this.value);
-                        const end = parseDate(endDate.value);
-                        if (start > end) {
-                            if (window.easyAlert) {
-                                window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
-                            } else {
-                                alert('A data inicial não pode ser maior que a data final.');
-                            }
-                            this.value = '';
-                        }
+                    endDate.focus();
+                } else if (!startDate.value && endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
                     }
-                });
-
-                endDate.addEventListener('change', function() {
-                    if (this.value && startDate.value) {
-                        const end = parseDate(this.value);
-                        const start = parseDate(startDate.value);
-                        if (end < start) {
-                            if (window.easyAlert) {
-                                window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
-                            } else {
-                                alert('A data final não pode ser menor que a data inicial.');
-                            }
-                            this.value = '';
-                        }
-                    }
-                });
-            }
+                    startDate.focus();
+                }
+            });
 
             const moneyInputs = document.querySelectorAll('.money-input');
             moneyInputs.forEach(function(input) {
@@ -380,5 +382,11 @@
                 });
             });
         });
+
+        function updatePerPage(value) {
+            const url = new URL(window.location);
+            url.searchParams.set('per_page', value);
+            window.location.href = url.toString();
+        }
     </script>
-@endsection
+@endpush

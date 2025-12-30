@@ -50,7 +50,8 @@
                             <div class="form-group">
                                 <label for="start_date">Data de Cadastro Inicial</label>
                                 <input type="text" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA">
+                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
                             </div>
                         </div>
 
@@ -58,7 +59,8 @@
                             <div class="form-group">
                                 <label for="end_date">Data de Cadastro Final</label>
                                 <input type="text" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA">
+                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
                             </div>
                         </div>
 
@@ -264,89 +266,92 @@
             window.location.href = url.toString();
         }
 
-        // Máscara para CPF/CNPJ e Datas
         document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = document.getElementById('filtersFormCustomers');
+            const documentInput = document.getElementById('document');
+
+            if (!form || !startDate || !endDate) return;
+
             if (typeof VanillaMask !== 'undefined') {
                 new VanillaMask('start_date', 'date');
                 new VanillaMask('end_date', 'date');
             }
 
-            const documentInput = document.getElementById('document');
             if (documentInput) {
                 documentInput.addEventListener('input', function(e) {
                     let value = e.target.value.replace(/\D/g, '');
                     if (value.length <= 11) {
-                        // CPF
                         value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
                     } else {
-                        // CNPJ
                         value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
                     }
                     e.target.value = value;
                 });
             }
 
-            // Validação de Data
-            const form = document.getElementById('filtersFormCustomers');
-            const startDate = document.getElementById('start_date');
-            const endDate = document.getElementById('end_date');
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
 
-            if (form && startDate && endDate) {
-                const parseDate = (str) => {
-                    const parts = str.split('/');
-                    if (parts.length === 3) {
-                        return new Date(parts[2], parts[1] - 1, parts[0]);
+            const validateDates = (input) => {
+                if (!startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
                     }
-                    return new Date(str);
-                };
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
 
-                form.addEventListener('submit', function(e) {
-                    if (startDate.value && endDate.value) {
-                        const start = parseDate(startDate.value);
-                        const end = parseDate(endDate.value);
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
 
-                        if (start > end) {
-                            e.preventDefault();
-                            if (window.easyAlert) {
-                                window.easyAlert.error('A data inicial não pode ser maior que a data final.');
-                            } else {
-                                alert('A data inicial não pode ser maior que a data final.');
-                            }
-                            startDate.focus();
-                        }
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                    return;
+                }
+
+                if (startDate.value && !endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
                     }
-                });
-
-                startDate.addEventListener('change', function() {
-                    if (this.value && endDate.value) {
-                        const start = parseDate(this.value);
-                        const end = parseDate(endDate.value);
-                        if (start > end) {
-                            if (window.easyAlert) {
-                                window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
-                            } else {
-                                alert('A data inicial não pode ser maior que a data final.');
-                            }
-                            this.value = '';
-                        }
+                    endDate.focus();
+                } else if (!startDate.value && endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
                     }
-                });
-
-                endDate.addEventListener('change', function() {
-                    if (this.value && startDate.value) {
-                        const end = parseDate(this.value);
-                        const start = parseDate(startDate.value);
-                        if (end < start) {
-                            if (window.easyAlert) {
-                                window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
-                            } else {
-                                alert('A data final não pode ser menor que a data inicial.');
-                            }
-                            this.value = '';
-                        }
-                    }
-                });
-            }
+                    startDate.focus();
+                }
+            });
         });
     </script>
 @endpush

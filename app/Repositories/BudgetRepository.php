@@ -200,12 +200,35 @@ class BudgetRepository extends AbstractTenantRepository
             });
         }
 
+        // Filtro por nome do cliente específico (usado em relatórios)
+        if (! empty($filters['customer_name'])) {
+            $customerName = $filters['customer_name'];
+            $query->whereHas('customer.commonData', function ($q) use ($customerName) {
+                $q->where('first_name', 'like', "%{$customerName}%")
+                    ->orWhere('last_name', 'like', "%{$customerName}%")
+                    ->orWhere('company_name', 'like', "%{$customerName}%");
+            });
+        }
+
         $query->when(! empty($filters['status']), fn ($q) => $q->where('status', $filters['status']));
         $query->when(! empty($filters['customer_id']), fn ($q) => $q->where('customer_id', $filters['customer_id']));
+        $query->when(! empty($filters['total_min']), fn ($q) => $q->where('total', '>=', $filters['total_min']));
 
-        // Filtros de data
-        $query->when(! empty($filters['date_from']), fn ($q) => $q->where('created_at', '>=', $filters['date_from']));
-        $query->when(! empty($filters['date_to']), fn ($q) => $q->where('created_at', '<=', $filters['date_to']));
+        // Filtros de data (compatibilidade com múltiplos formatos de chave)
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
+    }
+
+    /**
+     * Retorna orçamentos filtrados sem paginação (usado em relatórios).
+     */
+    public function getFilteredBudgets(array $filters = []): Collection
+    {
+        return $this->model->newQuery()
+            ->with(['customer.commonData'])
+            ->tap(fn ($q) => $this->applyAllBudgetFilters($q, $filters))
+            ->latest()
+            ->get();
     }
 
     /**

@@ -162,16 +162,16 @@
                                 <div class="form-group">
                                     <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Data Inicial <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="start_date" name="start_date"
-                                        value="{{ $filters['start_date'] ?? request('start_date') }}" placeholder="DD/MM/AAAA" 
-                                        data-mask="00/00/0000" required>
+                                        value="{{ $filters['start_date'] ?? request('start_date') }}" placeholder="DD/MM/AAAA"
+                                        data-mask="00/00/0000" >
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <div class="form-group">
                                     <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Data Final <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="end_date" name="end_date"
-                                        value="{{ $filters['end_date'] ?? request('end_date') }}" placeholder="DD/MM/AAAA" 
-                                        data-mask="00/00/0000" required>
+                                        value="{{ $filters['end_date'] ?? request('end_date') }}" placeholder="DD/MM/AAAA"
+                                        data-mask="00/00/0000" >
                                 </div>
                             </div>
                             <div class="col-md-1">
@@ -434,98 +434,64 @@
         document.addEventListener('DOMContentLoaded', function() {
             const startDate = document.getElementById('start_date');
             const endDate = document.getElementById('end_date');
-            const form = startDate ? startDate.closest('form') : null;
+            const form = document.getElementById('filtersFormInventory');
 
-            if (form) {
-                if (typeof VanillaMask !== 'undefined') {
-                    new VanillaMask('start_date', 'date');
-                    new VanillaMask('end_date', 'date');
+            if (!form || !startDate || !endDate) return;
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = () => {
+                if (!startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    const message = 'A data inicial não pode ser maior que a data final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.warning(message);
+                    } else {
+                        alert(message);
+                    }
+                    return false;
+                }
+                return true;
+            };
+
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                    return;
                 }
 
-                form.addEventListener('submit', function(e) {
-                    if (startDate.value && endDate.value) {
-                        const parseDate = (str) => {
-                            const parts = str.split('/');
-                            if (parts.length === 3) {
-                                return new Date(parts[2], parts[1] - 1, parts[0]);
-                            }
-                            return new Date(str);
-                        };
-
-                        const start = parseDate(startDate.value);
-                        const end = parseDate(endDate.value);
-
-                        if (start > end) {
-                            e.preventDefault();
-                            if (window.easyAlert) {
-                                window.easyAlert.error('A data inicial não pode ser maior que a data final.');
-                            } else {
-                                alert('A data inicial não pode ser maior que a data final.');
-                            }
-                            startDate.focus();
-                            return;
-                        }
+                if (startDate.value && !endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
                     }
-
-                    if ((startDate.value && !endDate.value) || (!startDate.value && endDate.value)) {
-                        e.preventDefault();
-                        const message = 'Para filtrar por período, informe as datas inicial e final.';
-                        if (window.easyAlert) {
-                            window.easyAlert.error(message);
-                        } else {
-                            alert(message);
-                        }
-                        if (!startDate.value) startDate.focus();
-                        else endDate.focus();
+                    endDate.focus();
+                } else if (!startDate.value && endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
                     }
-                });
-
-                startDate.addEventListener('change', function() {
-                    if (this.value && endDate.value) {
-                        const parseDate = (str) => {
-                            const parts = str.split('/');
-                            if (parts.length === 3) {
-                                return new Date(parts[2], parts[1] - 1, parts[0]);
-                            }
-                            return new Date(str);
-                        };
-                        const start = parseDate(this.value);
-                        const end = parseDate(endDate.value);
-
-                        if (start > end) {
-                            if (window.easyAlert) {
-                                window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
-                            } else {
-                                alert('A data inicial não pode ser maior que a data final.');
-                            }
-                            this.value = '';
-                        }
-                    }
-                });
-
-                endDate.addEventListener('change', function() {
-                    if (this.value && startDate.value) {
-                        const parseDate = (str) => {
-                            const parts = str.split('/');
-                            if (parts.length === 3) {
-                                return new Date(parts[2], parts[1] - 1, parts[0]);
-                            }
-                            return new Date(str);
-                        };
-                        const start = parseDate(startDate.value);
-                        const end = parseDate(this.value);
-
-                        if (end < start) {
-                            if (window.easyAlert) {
-                                window.easyAlert.warning('A data final não pode ser menor que a data inicial.');
-                            } else {
-                                alert('A data final não pode ser menor que a data inicial.');
-                            }
-                            this.value = '';
-                        }
-                    }
-                });
-            }
+                    startDate.focus();
+                }
+            });
         });
     </script>
 @endpush

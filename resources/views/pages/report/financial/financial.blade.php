@@ -55,7 +55,8 @@
                             <div class="form-group">
                                 <label for="start_date">Data Inicial</label>
                                 <input type="text" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA">
+                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
                             </div>
                         </div>
 
@@ -63,7 +64,8 @@
                             <div class="form-group">
                                 <label for="end_date">Data Final</label>
                                 <input type="text" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA">
+                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA"
+                                    data-mask="00/00/0000">
                             </div>
                         </div>
 
@@ -302,58 +304,97 @@
 
 @push('scripts')
     <script>
-        const parseDate = (str) => {
-            const parts = str.split('/');
-            if (parts.length === 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            return new Date(str);
-        };
-
-        // Mostrar/ocultar campos de data baseado no período selecionado
         document.addEventListener('DOMContentLoaded', function() {
             const periodSelect = document.getElementById('period');
             const startDate = document.getElementById('start_date');
             const endDate = document.getElementById('end_date');
-            const form = startDate ? startDate.closest('form') : null;
+            const form = document.getElementById('filtersFormFinancial');
+
+            if (!form || !startDate || !endDate) return;
+
+            if (typeof VanillaMask !== 'undefined') {
+                new VanillaMask('start_date', 'date');
+                new VanillaMask('end_date', 'date');
+            }
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
 
             function toggleDateInputs() {
+                if (!periodSelect || !startDate || !endDate) return;
                 const isCustom = periodSelect.value === 'custom';
-                startDate.parentElement.parentElement.style.display = isCustom ? 'block' : 'none';
-                endDate.parentElement.parentElement.style.display = isCustom ? 'block' : 'none';
+                const startContainer = startDate.closest('.col-md-3');
+                const endContainer = endDate.closest('.col-md-3');
+                if (startContainer) startContainer.style.display = isCustom ? 'block' : 'none';
+                if (endContainer) endContainer.style.display = isCustom ? 'block' : 'none';
             }
 
             if (periodSelect) {
                 periodSelect.addEventListener('change', toggleDateInputs);
-                toggleDateInputs(); // Chamar na inicialização
+                toggleDateInputs();
             }
 
-            if (form) {
-                if (typeof VanillaMask !== 'undefined') {
-                    new VanillaMask('start_date', 'date');
-                    new VanillaMask('end_date', 'date');
-                }
+            const validateDates = (input) => {
+                if (periodSelect && periodSelect.value !== 'custom') return true;
+                if (!startDate.value || !endDate.value) return true;
 
-                form.addEventListener('submit', function(e) {
-                    if (periodSelect.value === 'custom') {
-                        if (startDate.value && endDate.value) {
-                            const start = parseDate(startDate.value);
-                            const end = parseDate(endDate.value);
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
 
-                            if (start > end) {
-                                e.preventDefault();
-                                if (window.easyAlert) {
-                                    window.easyAlert.error('A data inicial não pode ser maior que a data final.');
-                                } else {
-                                    alert('A data inicial não pode ser maior que a data final.');
-                                }
-                                startDate.focus();
-                                return;
-                            }
-                        }
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
                     }
-                });
-            }
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
+
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+
+            form.addEventListener('submit', function(e) {
+                if (periodSelect && periodSelect.value === 'custom') {
+                    if (!validateDates()) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (startDate.value && !endDate.value) {
+                        e.preventDefault();
+                        const message = 'Para filtrar por período, informe as datas inicial e final.';
+                        if (window.easyAlert) {
+                            window.easyAlert.error(message);
+                        } else {
+                            alert(message);
+                        }
+                        endDate.focus();
+                    } else if (!startDate.value && endDate.value) {
+                        e.preventDefault();
+                        const message = 'Para filtrar por período, informe as datas inicial e final.';
+                        if (window.easyAlert) {
+                            window.easyAlert.error(message);
+                        } else {
+                            alert(message);
+                        }
+                        startDate.focus();
+                    }
+                }
+            });
         });
     </script>
 @endpush

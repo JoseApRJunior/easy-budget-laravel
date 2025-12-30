@@ -408,7 +408,7 @@ class ReportController extends Controller
      */
     public function services(Request $request): View
     {
-        $filters = $request->only(['name', 'price_min', 'price_max']);
+        $filters = $request->only(['name', 'price_min', 'price_max', 'start_date', 'end_date']);
 
         $serviceService = app(\App\Services\Domain\ServiceService::class);
         $result = $serviceService->getFilteredServices($filters);
