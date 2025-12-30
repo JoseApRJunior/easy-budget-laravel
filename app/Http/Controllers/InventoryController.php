@@ -104,7 +104,13 @@ class InventoryController extends Controller
     public function stockTurnover(Request $request): View|RedirectResponse
     {
         $this->authorize('viewReports', \App\Models\Product::class);
-        $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
+
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyStockTurnoverData();
+        } else {
+            $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
+        }
 
         if ($result->isError()) {
             return back()->with('error', $result->getMessage())->withInput();
@@ -170,7 +176,13 @@ class InventoryController extends Controller
     public function report(Request $request): View|RedirectResponse
     {
         $this->authorize('viewReports', \App\Models\Product::class);
-        $result = $this->inventoryManagementService->getReportData($request->all());
+
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyReportData();
+        } else {
+            $result = $this->inventoryManagementService->getReportData($request->all());
+        }
 
         if ($result->isError()) {
             return back()->with('error', $result->getMessage())->withInput();

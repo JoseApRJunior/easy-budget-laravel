@@ -107,10 +107,16 @@ class ServiceController extends Controller
             }
         }
 
+        // Create requires selecting a budget, so we list them
+        $budgetsResult = $this->budgetService->getBudgetsForProvider(['per_page' => 100]);
+        $budgets = $budgetsResult->isSuccess() ? $budgetsResult->getData() : [];
+
         return view('pages.service.create', [
             'budget' => $budget,
+            'budgets' => $budgets,
             'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
             'products' => $this->productService->list()->getData(),
+            'statusOptions' => ServiceStatus::cases(),
         ]);
     }
 

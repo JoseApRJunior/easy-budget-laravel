@@ -54,7 +54,7 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning-subtle text-warning me-3" style="width: 35px; height: 35px;">
+                        <div class="avatar-circle bg-warning-subtle me-3" style="width: 35px; height: 35px;">
                             <i class="bi bi-exclamation-triangle" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
@@ -123,7 +123,7 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header pt-3 bg-transparent border-0">
-                    <h6 class="mb-0 fw-bold text-body"><i class="bi bi-lightning-charge me-2 text-warning"></i>Ações Rápidas</h6>
+                    <h6 class="mb-0 fw-bold text-body"><i class="bi bi-lightning-charge me-2 t"></i>Ações Rápidas</h6>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
@@ -146,7 +146,7 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Estoque Baixo
+                        <i class="bi bi-exclamation-triangle me-2 "></i>Estoque Baixo
                     </h5>
                     <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="btn btn-sm btn-link text-primary p-0 text-decoration-none">Ver todos</a>
                 </div>

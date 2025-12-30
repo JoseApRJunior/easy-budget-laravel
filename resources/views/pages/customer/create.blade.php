@@ -7,16 +7,16 @@
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-person-plus me-2"></i>Novo Cliente
+                <h1 class="h3 mb-0 fw-bold text-dark">
+                    <i class="bi bi-person-plus me-2 text-primary"></i>Novo Cliente
                 </h1>
-                <p class="text-muted mb-0 small">Preencha os dados para criar um novo cliente</p>
+                <p class="text-muted mb-0 small">Cadastre um novo cliente no sistema</p>
             </div>
             <nav aria-label="breadcrumb" class="d-none d-md-block">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}">Clientes</a></li>
-                    <li class="breadcrumb-item active">Novo Cliente</li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}" class="text-decoration-none">Clientes</a></li>
+                    <li class="breadcrumb-item active">Novo</li>
                 </ol>
             </nav>
         </div>
@@ -27,13 +27,13 @@
             <div class="row g-4">
                 <!-- Dados Pessoais -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-person me-2"></i>Dados Pessoais</h5>
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person me-2 text-primary"></i>Dados Pessoais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="first_name" class="form-label">Nome</label>
+                                <label for="first_name" class="text-uppercase small fw-bold text-muted mb-2">Nome</label>
                                 <input type="text" class="form-control @error('first_name') is-invalid @enderror"
                                     id="first_name" name="first_name" value="{{ old('first_name') }}" required>
                                 @error('first_name')
@@ -42,7 +42,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="last_name" class="form-label">Sobrenome</label>
+                                <label for="last_name" class="text-uppercase small fw-bold text-muted mb-2">Sobrenome</label>
                                 <input type="text" class="form-control @error('last_name') is-invalid @enderror"
                                     id="last_name" name="last_name" value="{{ old('last_name') }}" required>
                                 @error('last_name')
@@ -51,7 +51,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="birth_date" class="form-label">Data de Nascimento</label>
+                                <label for="birth_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Nascimento</label>
                                 <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
                                     id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
                                     placeholder="DD/MM/AAAA">
@@ -62,7 +62,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="email_personal" class="form-label">Email Pessoal</label>
+                                <label for="email_personal" class="text-uppercase small fw-bold text-muted mb-2">Email Pessoal</label>
                                 <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
                                     id="email_personal" name="email_personal" value="{{ old('email_personal') }}" required>
                                 @error('email_personal')
@@ -71,7 +71,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="phone_personal" class="form-label">Telefone Pessoal</label>
+                                <label for="phone_personal" class="text-uppercase small fw-bold text-muted mb-2">Telefone Pessoal</label>
                                 <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
                                     id="phone_personal" name="phone_personal" value="{{ old('phone_personal') }}" required>
                                 @error('phone_personal')
@@ -84,13 +84,13 @@
 
                 <!-- Dados Profissionais -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Dados Profissionais</h5>
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-briefcase me-2 text-primary"></i>Dados Profissionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="person_type" class="form-label">Tipo de Pessoa</label>
+                                <label for="person_type" class="text-uppercase small fw-bold text-muted mb-2">Tipo de Pessoa</label>
                                 <select name="person_type" id="person_type"
                                     class="form-select @error('person_type') is-invalid @enderror" required>
                                     <option value="">Selecione o tipo</option>
@@ -107,7 +107,7 @@
                             <!-- Campos PF -->
                             <div id="pf_fields">
                                 <div class="mb-3">
-                                    <label for="cpf" class="form-label">CPF</label>
+                                    <label for="cpf" class="text-uppercase small fw-bold text-muted mb-2">CPF</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
                                         id="cpf" name="cpf" value="{{ old('cpf') }}">
                                     @error('cpf')
@@ -119,7 +119,7 @@
                             <!-- Campos PJ -->
                             <div id="pj_fields">
                                 <div class="mb-3">
-                                    <label for="company_name" class="form-label">Razão Social</label>
+                                    <label for="company_name" class="text-uppercase small fw-bold text-muted mb-2">Razão Social</label>
                                     <input type="text" class="form-control @error('company_name') is-invalid @enderror"
                                         id="company_name" name="company_name" value="{{ old('company_name') }}">
                                     @error('company_name')
@@ -128,7 +128,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="cnpj" class="form-label">CNPJ</label>
+                                    <label for="cnpj" class="text-uppercase small fw-bold text-muted mb-2">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
                                         id="cnpj" name="cnpj" value="{{ old('cnpj') }}">
                                     @error('cnpj')
@@ -138,7 +138,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="area_of_activity_id" class="form-label">Área de Atuação</label>
+                                <label for="area_of_activity_id" class="text-uppercase small fw-bold text-muted mb-2">Área de Atuação</label>
                                 <select name="area_of_activity_id"
                                     class="form-select @error('area_of_activity_id') is-invalid @enderror"
                                     id="area_of_activity_id">
@@ -156,7 +156,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="profession_id" class="form-label">Profissão</label>
+                                <label for="profession_id" class="text-uppercase small fw-bold text-muted mb-2">Profissão</label>
                                 <select name="profession_id"
                                     class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
                                     <option value="">Selecione uma profissão</option>
@@ -173,7 +173,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="description" class="form-label">Descrição</label>
+                                <label for="description" class="text-uppercase small fw-bold text-muted mb-2">Descrição</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
                                     rows="3" maxlength="250" placeholder="Descrição do cliente...">{{ old('description') }}</textarea>
                                 @error('description')
@@ -186,13 +186,13 @@
 
                 <!-- Contato -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Contato</h5>
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-envelope me-2 text-primary"></i>Contato</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="email_business" class="form-label">Email Empresarial</label>
+                                <label for="email_business" class="text-uppercase small fw-bold text-muted mb-2">Email Empresarial</label>
                                 <input type="email" class="form-control @error('email_business') is-invalid @enderror"
                                     id="email_business" name="email_business" value="{{ old('email_business') }}">
                                 @error('email_business')
@@ -201,7 +201,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="phone_business" class="form-label">Telefone Empresarial</label>
+                                <label for="phone_business" class="text-uppercase small fw-bold text-muted mb-2">Telefone Empresarial</label>
                                 <input type="tel" class="form-control @error('phone_business') is-invalid @enderror"
                                     id="phone_business" name="phone_business" value="{{ old('phone_business') }}">
                                 @error('phone_business')
@@ -210,7 +210,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="website" class="form-label">Website</label>
+                                <label for="website" class="text-uppercase small fw-bold text-muted mb-2">Website</label>
                                 <input type="url" class="form-control @error('website') is-invalid @enderror"
                                     id="website" name="website" value="{{ old('website') }}">
                                 @error('website')
@@ -223,14 +223,14 @@
 
                 <!-- Endereço -->
                 <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Endereço</h5>
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-geo-alt me-2 text-primary"></i>Endereço</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="cep" class="form-label">CEP</label>
+                                    <label for="cep" class="text-uppercase small fw-bold text-muted mb-2">CEP</label>
                                     <input type="text" class="form-control @error('cep') is-invalid @enderror"
                                         id="cep" name="cep" data-cep-lookup value="{{ old('cep') }}"
                                         required>
@@ -240,7 +240,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="address_number" class="form-label">Número</label>
+                                    <label for="address_number" class="text-uppercase small fw-bold text-muted mb-2">Número</label>
                                     <input type="text"
                                         class="form-control @error('address_number') is-invalid @enderror"
                                         id="address_number" name="address_number" value="{{ old('address_number') }}">
@@ -251,7 +251,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="address" class="form-label">Endereço</label>
+                                <label for="address" class="text-uppercase small fw-bold text-muted mb-2">Endereço</label>
                                 <input type="text" class="form-control @error('address') is-invalid @enderror"
                                     id="address" name="address" value="{{ old('address') }}" required>
                                 @error('address')
@@ -260,7 +260,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="neighborhood" class="form-label">Bairro</label>
+                                <label for="neighborhood" class="text-uppercase small fw-bold text-muted mb-2">Bairro</label>
                                 <input type="text" class="form-control @error('neighborhood') is-invalid @enderror"
                                     id="neighborhood" name="neighborhood" value="{{ old('neighborhood') }}" required>
                                 @error('neighborhood')
@@ -270,7 +270,7 @@
 
                             <div class="row">
                                 <div class="col-md-8 mb-3">
-                                    <label for="city" class="form-label">Cidade</label>
+                                    <label for="city" class="text-uppercase small fw-bold text-muted mb-2">Cidade</label>
                                     <input type="text" class="form-control @error('city') is-invalid @enderror"
                                         id="city" name="city" value="{{ old('city') }}" required>
                                     @error('city')
@@ -279,7 +279,7 @@
                                 </div>
 
                                 <div class="col-md-4 mb-3">
-                                    <label for="state" class="form-label">Estado</label>
+                                    <label for="state" class="text-uppercase small fw-bold text-muted mb-2">Estado</label>
                                     <input type="text" class="form-control @error('state') is-invalid @enderror"
                                         id="state" name="state" value="{{ old('state') }}" required>
                                     @error('state')
@@ -293,14 +293,14 @@
 
                 <!-- Dados Empresariais Adicionais (PJ) -->
                 <div class="col-12" id="business-data-section" style="display: none;">
-                    <div class="card">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-building-gear me-2"></i>Dados Empresariais Adicionais</h5>
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-building-gear me-2 text-primary"></i>Dados Empresariais Adicionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="fantasy_name" class="form-label">Nome Fantasia</label>
+                                    <label for="fantasy_name" class="text-uppercase small fw-bold text-muted mb-2">Nome Fantasia</label>
                                     <input type="text"
                                         class="form-control @error('fantasy_name') is-invalid @enderror"
                                         id="fantasy_name" name="fantasy_name" value="{{ old('fantasy_name') }}">
@@ -310,7 +310,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="founding_date" class="form-label">Data de Fundação</label>
+                                    <label for="founding_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Fundação</label>
                                     <input type="text"
                                         class="form-control @error('founding_date') is-invalid @enderror"
                                         id="founding_date" name="founding_date" value="{{ old('founding_date') }}"
@@ -321,7 +321,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="state_registration" class="form-label">Inscrição Estadual</label>
+                                    <label for="state_registration" class="text-uppercase small fw-bold text-muted mb-2">Inscrição Estadual</label>
                                     <input type="text"
                                         class="form-control @error('state_registration') is-invalid @enderror"
                                         id="state_registration" name="state_registration"
@@ -332,7 +332,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="municipal_registration" class="form-label">Inscrição Municipal</label>
+                                    <label for="municipal_registration" class="text-uppercase small fw-bold text-muted mb-2">Inscrição Municipal</label>
                                     <input type="text"
                                         class="form-control @error('municipal_registration') is-invalid @enderror"
                                         id="municipal_registration" name="municipal_registration"
@@ -343,7 +343,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="industry" class="form-label">Setor de Atuação</label>
+                                    <label for="industry" class="text-uppercase small fw-bold text-muted mb-2">Setor de Atuação</label>
                                     <input type="text" class="form-control @error('industry') is-invalid @enderror"
                                         id="industry" name="industry" value="{{ old('industry') }}">
                                     @error('industry')
@@ -352,7 +352,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="company_size" class="form-label">Porte da Empresa</label>
+                                    <label for="company_size" class="text-uppercase small fw-bold text-muted mb-2">Porte da Empresa</label>
                                     <select name="company_size"
                                         class="form-select @error('company_size') is-invalid @enderror"
                                         id="company_size">
@@ -373,7 +373,7 @@
                                 </div>
 
                                 <div class="col-12 mb-3">
-                                    <label for="notes" class="form-label">Observações</label>
+                                    <label for="notes" class="text-uppercase small fw-bold text-muted mb-2">Observações</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3"
                                         placeholder="Informações adicionais sobre o cliente...">{{ old('notes') }}</textarea>
                                     @error('notes')

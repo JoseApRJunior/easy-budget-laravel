@@ -33,14 +33,14 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="search">Buscar</label>
+                                        <label for="search" class="text-uppercase small fw-bold text-muted">Buscar</label>
                                         <input type="text" class="form-control" id="search" name="search"
                                             value="{{ $filters['search'] ?? '' }}" placeholder="Nome, e-mail ou documento">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="status">Status</label>
+                                        <label for="status" class="text-uppercase small fw-bold text-muted">Status</label>
                                         <select class="form-control" id="status" name="status">
                                             <option value="">Todos</option>
                                             <option value="active"
@@ -54,7 +54,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="type">Tipo</label>
+                                        <label for="type" class="text-uppercase small fw-bold text-muted">Tipo</label>
                                         <select class="form-control" id="type" name="type">
                                             <option value="">Todos</option>
                                             <option value="pf"
@@ -70,7 +70,7 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label for="area_of_activity_id">Área de Atuação</label>
+                                        <label for="area_of_activity_id" class="text-uppercase small fw-bold text-muted">Área de Atuação</label>
                                         <select class="form-control" id="area_of_activity_id" name="area_of_activity_id">
                                             <option value="">Todas</option>
                                             @isset($areas_of_activity)
@@ -85,7 +85,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="deleted">Registros</label>
+                                        <label for="deleted" class="text-uppercase small fw-bold text-muted">Registros</label>
                                         <select class="form-control" id="deleted" name="deleted">
                                             <option value="">Atuais</option>
                                             <option value="only"
@@ -96,14 +96,14 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="cep">CEP (Proximidade)</label>
+                                        <label for="cep" class="text-uppercase small fw-bold text-muted">CEP (Proximidade)</label>
                                         <input type="text" class="form-control" id="cep" name="cep"
                                             value="{{ $filters['cep'] ?? '' }}" placeholder="00000-000">
                                     </div>
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="start_date">Data Inicial</label>
+                                        <label for="start_date" class="text-uppercase small fw-bold text-muted">Data Inicial</label>
                                         <input type="text" class="form-control" id="start_date" name="start_date"
                                             value="{{ old('start_date', $filters['start_date'] ?? '') }}"
                                             placeholder="DD/MM/AAAA" data-mask="00/00/0000">
@@ -111,7 +111,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-group">
-                                        <label for="end_date">Data Final</label>
+                                        <label for="end_date" class="text-uppercase small fw-bold text-muted">Data Final</label>
                                         <input type="text" class="form-control" id="end_date" name="end_date"
                                             value="{{ old('end_date', $filters['end_date'] ?? '') }}"
                                             placeholder="DD/MM/AAAA" data-mask="00/00/0000">
@@ -199,14 +199,20 @@
                                             </div>
                                         </a>
                                     @empty
-                                        <div class="p-4 text-center text-muted">
-                                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                            <br>
-                                            @if (($filters['deleted'] ?? '') === 'only')
-                                                Nenhum cliente deletado encontrado.
-                                            @else
-                                                Nenhum cliente encontrado.
-                                            @endif
+                                        <div class="text-center py-5">
+                                            <div class="mb-3">
+                                                <div class="avatar-circle bg-secondary shadow-sm text-white mx-auto" style="width: 60px; height: 60px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="bi bi-people"></i>
+                                                </div>
+                                            </div>
+                                            <h5 class="fw-bold text-body">Nenhum cliente encontrado</h5>
+                                            <p class="text-muted mx-auto px-3" style="max-width: 400px;">
+                                                @if (($filters['deleted'] ?? '') === 'only')
+                                                    Não foram encontrados clientes deletados com os filtros aplicados.
+                                                @else
+                                                    Não encontramos clientes registrados que correspondam aos filtros utilizados.
+                                                @endif
+                                            </p>
                                         </div>
                                     @endforelse
                                 </div>
@@ -219,13 +225,13 @@
                                     <thead>
                                         <tr>
                                             <th width="60"><i class="bi bi-person" aria-hidden="true"></i></th>
-                                            <th>Cliente</th>
-                                            <th>Documento</th>
-                                            <th>E-mail</th>
-                                            <th>Telefone</th>
-                                            <th>Cadastro</th>
-                                            <th>Status</th>
-                                            <th class="text-center text-nowrap">Ações</th>
+                                            <th class="small text-uppercase text-muted">Cliente</th>
+                                            <th class="small text-uppercase text-muted">Documento</th>
+                                            <th class="small text-uppercase text-muted">E-mail</th>
+                                            <th class="small text-uppercase text-muted">Telefone</th>
+                                            <th class="small text-uppercase text-muted">Cadastro</th>
+                                            <th class="small text-uppercase text-muted">Status</th>
+                                            <th class="small text-uppercase text-muted text-center text-nowrap">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -321,17 +327,22 @@
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8" class="text-center text-muted">
-                                                    <i class="bi bi-inbox mb-2" aria-hidden="true"
-                                                        style="font-size: 2rem;"></i>
-                                                    <br>
-                                                    @if (($filters['deleted'] ?? '') === 'only')
-                                                        Nenhum cliente deletado encontrado.
-                                                        <br>
-                                                        <small>Você ainda não deletou nenhum cliente.</small>
-                                                    @else
-                                                        Nenhum cliente encontrado.
-                                                    @endif
+                                                <td colspan="8">
+                                                    <div class="text-center py-5">
+                                                        <div class="mb-3">
+                                                            <div class="avatar-circle bg-secondary shadow-sm text-white mx-auto" style="width: 80px; height: 80px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
+                                                                <i class="bi bi-people"></i>
+                                                            </div>
+                                                        </div>
+                                                        <h5 class="fw-bold text-body">Nenhum cliente encontrado</h5>
+                                                        <p class="text-muted mx-auto" style="max-width: 400px;">
+                                                            @if (($filters['deleted'] ?? '') === 'only')
+                                                                Não foram encontrados clientes deletados com os filtros aplicados.
+                                                            @else
+                                                                Não encontramos clientes registrados que correspondam aos filtros utilizados.
+                                                            @endif
+                                                        </p>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforelse

@@ -5,20 +5,42 @@
 @section('content')
     <div class="container-fluid py-1">
         <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-person-badge me-2"></i>Detalhes do Cliente
-                </h1>
-                <p class="text-muted mb-0">Visualize as informações completas do cliente</p>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+            <div class="d-flex align-items-center">
+                <div class="avatar-circle bg-primary shadow-sm text-white me-3 d-flex align-items-center justify-content-center fw-bold" style="width: 50px; height: 50px; font-size: 1.25rem;">
+                    @if ($customer->commonData)
+                        @if ($customer->commonData->isCompany())
+                            {{ substr($customer->commonData->company_name, 0, 1) }}
+                        @else
+                            {{ substr($customer->commonData->first_name, 0, 1) }}{{ substr($customer->commonData->last_name, 0, 1) }}
+                        @endif
+                    @else
+                        C
+                    @endif
+                </div>
+                <div>
+                    <h1 class="h3 mb-0 fw-bold text-dark">
+                        @if ($customer->commonData)
+                            @if ($customer->commonData->isCompany())
+                                {{ $customer->commonData->company_name }}
+                            @else
+                                {{ $customer->commonData->first_name }} {{ $customer->commonData->last_name }}
+                            @endif
+                        @else
+                            Cliente #{{ $customer->id }}
+                        @endif
+                    </h1>
+                    <p class="text-muted mb-0 small">
+                        <i class="bi bi-person-badge me-1"></i>
+                        Visualizando informações detalhadas do cliente
+                    </p>
+                </div>
             </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
+            <nav aria-label="breadcrumb" class="d-none d-lg-block">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}">Clientes</a></li>
-                    <li class="breadcrumb-item active">{{ $customer->commonData?->first_name }}
-                        {{ $customer->commonData?->last_name }}
-                    </li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}" class="text-decoration-none">Clientes</a></li>
+                    <li class="breadcrumb-item active">Detalhes</li>
                 </ol>
             </nav>
         </div>
@@ -28,14 +50,14 @@
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 card-hover">
                     <div class="card-header bg-transparent border-0 py-1">
-                        <h5 class="card-title mb-0 d-flex align-items-center">
-                            <i class="bi bi-person me-2"></i>
+                        <h5 class="card-title mb-0 d-flex align-items-center fw-bold text-dark">
+                            <i class="bi bi-person me-2 text-primary"></i>
                             <span>Informações Pessoais</span>
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="info-item mb-3 ">
-                            <label class="text-muted small d-block mb-1">Nome Completo</label>
+                            <label class="text-uppercase small fw-bold text-muted d-block mb-1">Nome Completo</label>
                             <p class="mb-0 d-flex align-items-center fw-bold">{{ $customer->commonData?->first_name }}
                                 {{ $customer->commonData?->last_name }}
                             </p>
@@ -65,7 +87,7 @@
                         @foreach ($personal_info as $key => $info)
                             @if ($info['value'])
                                 <div class="info-item mb-3">
-                                    <label class="text-muted small d-block mb-1">{{ str_replace('_', ' ', $key) }}</label>
+                                    <label class="text-uppercase small fw-bold text-muted d-block mb-1">{{ str_replace('_', ' ', $key) }}</label>
                                     <p class="mb-0 d-flex align-items-center">
                                         <i class="bi bi-{{ $info['icon'] }} me-2 "></i>
                                         @if ($key === 'Email' || $key === 'Email Comercial')
@@ -84,9 +106,9 @@
 
                         <!-- Data de cadastro -->
                         <div class="info-item mb-3">
-                            <label class="text-muted small d-block mb-1">Cadastrado em</label>
+                            <label class="text-uppercase small fw-bold text-muted d-block mb-1">Cadastrado em</label>
                             <p class="mb-0 d-flex align-items-center">
-                                <i class="bi bi-calendar-plus me-2"></i>
+                                <i class="bi bi-calendar-plus me-2 text-primary"></i>
                                 <span>{{ \Carbon\Carbon::parse($customer->created_at)->format('d/m/Y H:i') }}</span>
                             </p>
                         </div>
@@ -98,8 +120,8 @@
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 card-hover">
                     <div class="card-header bg-transparent border-0 py-1">
-                        <h5 class="card-title mb-0 d-flex align-items-center">
-                            <i class="bi bi-briefcase me-2"></i>
+                        <h5 class="card-title mb-0 d-flex align-items-center fw-bold text-dark">
+                            <i class="bi bi-briefcase me-2 text-primary"></i>
                             <span>Informações Específicas</span>
                         </h5>
                     </div>
@@ -188,7 +210,7 @@
                             @if ($info['value'])
                                 <div class="info-item mb-3">
                                     <label
-                                        class="text-muted small d-block mb-1">{{ str_replace('_', ' ', $key) }}</label>
+                                        class="text-uppercase small fw-bold text-muted d-block mb-1">{{ str_replace('_', ' ', $key) }}</label>
                                     <p class="mb-0 d-flex align-items-center">
                                         <i class="bi bi-{{ $info['icon'] }} me-2 "></i>
                                         @if ($key == 'Website' && $info['value'])
@@ -219,24 +241,24 @@
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100 card-hover">
                     <div class="card-header bg-transparent border-0 py-1">
-                        <h5 class="card-title mb-0 d-flex align-items-center">
-                            <i class="bi bi-geo-alt me-2"></i>
+                        <h5 class="card-title mb-0 d-flex align-items-center fw-bold text-dark">
+                            <i class="bi bi-geo-alt me-2 text-primary"></i>
                             <span>Endereço</span>
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="info-item mb-3">
-                            <label class="text-muted small d-block mb-1">CEP</label>
+                            <label class="text-uppercase small fw-bold text-muted d-block mb-1">CEP</label>
                             <p class="mb-0 d-flex align-items-center">
-                                <i class="bi bi-mailbox me-2"></i>
+                                <i class="bi bi-mailbox me-2 text-primary"></i>
                                 <span>{{ $customer->address?->cep }}</span>
                             </p>
                         </div>
 
                         <div class="info-item">
-                            <label class="text-muted small d-block mb-1">Endereço Completo</label>
+                            <label class="text-uppercase small fw-bold text-muted d-block mb-1">Endereço Completo</label>
                             <p class="mb-0 d-flex align-items-start">
-                                <i class="bi bi-pin-map me-2"></i>
+                                <i class="bi bi-pin-map me-2 text-primary"></i>
                                 <span>
                                     {{ $customer->address?->address }}, {{ $customer->address?->address_number }}<br>
                                     {{ $customer->address?->neighborhood }}<br>
@@ -253,8 +275,8 @@
                 <div class="col-12">
                     <div class="card border-0 shadow-sm card-hover">
                         <div class="card-header bg-transparent border-0 py-1">
-                            <h5 class="card-title mb-0 d-flex align-items-center">
-                                <i class="bi bi-info-circle me-2"></i>
+                            <h5 class="card-title mb-0 d-flex align-items-center fw-bold text-dark">
+                                <i class="bi bi-info-circle me-2 text-primary"></i>
                                 <span>Observações</span>
                             </h5>
                         </div>
@@ -267,8 +289,8 @@
                 <div class="col-12">
                     <div class="card border-0 shadow-sm card-hover">
                         <div class="card-header bg-transparent border-0 py-1">
-                            <h5 class="card-title mb-0 d-flex align-items-center">
-                                <i class="bi bi-info-circle me-2"></i>
+                            <h5 class="card-title mb-0 d-flex align-items-center fw-bold text-dark">
+                                <i class="bi bi-info-circle me-2 text-primary"></i>
                                 <span>Descrição Profissional</span>
                             </h5>
                         </div>

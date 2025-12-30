@@ -60,13 +60,22 @@ class BudgetController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('create', Budget::class);
         $customersResult = $this->customerService->getFilteredCustomers(['per_page' => 200]);
 
+        $selectedCustomer = null;
+        if ($customerId = $request->query('customer_id')) {
+            $customerResult = $this->customerService->findById((int)$customerId);
+            if ($customerResult->isSuccess()) {
+                $selectedCustomer = $customerResult->getData();
+            }
+        }
+
         return view('pages.budget.create', [
             'customers' => $customersResult->isSuccess() ? $customersResult->getData() : [],
+            'selectedCustomer' => $selectedCustomer,
         ]);
     }
 

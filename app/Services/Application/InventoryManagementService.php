@@ -261,12 +261,12 @@ class InventoryManagementService extends AbstractBaseService
             // Validação de datas
             if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
                 if ($filters['start_date'] > $filters['end_date']) {
-                    throw new Exception('A data inicial não pode ser maior que a data final.');
+                    throw new \Exception('A data inicial não pode ser maior que a data final.');
                 }
             }
 
-            $startDate = $filters['start_date'] ?? now()->startOfMonth()->format('Y-m-d');
-            $endDate = $filters['end_date'] ?? now()->format('Y-m-d');
+            $startDate = $filters['start_date'] ?? null;
+            $endDate = $filters['end_date'] ?? null;
             $categoryId = $filters['category_id'] ?? null;
             $search = $filters['search'] ?? null;
 
@@ -286,15 +286,22 @@ class InventoryManagementService extends AbstractBaseService
                 });
             }
 
-            $products = $query->get()->map(function ($product) use ($startDate, $endDate) {
-                $movements = \App\Models\InventoryMovement::where('product_id', $product->id)
-                    ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+            // Aplicamos os mesmos filtros para o cálculo do resumo e para a paginação
+            $products = (clone $query)->get()->map(function ($product) use ($startDate, $endDate) {
+                $movementsQuery = \App\Models\InventoryMovement::where('product_id', $product->id);
 
-                $totalEntries = (clone $movements)->where('type', 'entry')->sum('quantity');
-                $totalExits = (clone $movements)->where('type', 'exit')->sum('quantity');
+                if (! empty($startDate)) {
+                    $movementsQuery->where('created_at', '>=', $startDate.' 00:00:00');
+                }
+
+                if (! empty($endDate)) {
+                    $movementsQuery->where('created_at', '<=', $endDate.' 23:59:59');
+                }
+
+                $totalEntries = (clone $movementsQuery)->where('type', 'entry')->sum('quantity');
+                $totalExits = (clone $movementsQuery)->where('type', 'exit')->sum('quantity');
 
                 // Cálculo simplificado de estoque médio: (estoque inicial + estoque final) / 2
-                // Para simplificar ainda mais, vamos usar o estoque atual como aproximação se não tivermos dados históricos precisos
                 $currentStock = $product->inventory->quantity ?? 0;
                 $initialStock = $currentStock - $totalEntries + $totalExits;
                 $averageStock = ($initialStock + $currentStock) / 2;
@@ -317,11 +324,18 @@ class InventoryManagementService extends AbstractBaseService
 
             $paginatedProducts = $query->paginate($filters['per_page'] ?? 10);
             $paginatedProducts->getCollection()->transform(function ($product) use ($startDate, $endDate) {
-                $movements = \App\Models\InventoryMovement::where('product_id', $product->id)
-                    ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+                $movementsQuery = \App\Models\InventoryMovement::where('product_id', $product->id);
 
-                $totalEntries = (clone $movements)->where('type', 'entry')->sum('quantity');
-                $totalExits = (clone $movements)->where('type', 'exit')->sum('quantity');
+                if (! empty($startDate)) {
+                    $movementsQuery->where('created_at', '>=', $startDate.' 00:00:00');
+                }
+
+                if (! empty($endDate)) {
+                    $movementsQuery->where('created_at', '<=', $endDate.' 23:59:59');
+                }
+
+                $totalEntries = (clone $movementsQuery)->where('type', 'entry')->sum('quantity');
+                $totalExits = (clone $movementsQuery)->where('type', 'exit')->sum('quantity');
 
                 $currentStock = $product->inventory->quantity ?? 0;
                 $initialStock = $currentStock - $totalEntries + $totalExits;
@@ -352,6 +366,32 @@ class InventoryManagementService extends AbstractBaseService
             ];
         });
     }
+
+    /**
+     * Retorna dados vazios para giro de estoque.
+     */
+    public function getEmptyStockTurnoverData(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            return [
+                'stockTurnover' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
+                'categories' => \App\Models\Category::all(),
+                'filters' => [
+                    'start_date' => null,
+                    'end_date' => null,
+                    'category_id' => null,
+                    'search' => null,
+                ],
+                'reportData' => [
+                    'total_products' => 0,
+                    'total_entries' => 0,
+                    'total_exits' => 0,
+                    'average_turnover' => 0,
+                ],
+            ];
+        });
+    }
+
 
     /**
      * Obtém dados de produtos mais utilizados com estado inicial vazio.

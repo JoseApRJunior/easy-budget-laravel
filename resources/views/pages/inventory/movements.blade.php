@@ -16,7 +16,7 @@
 
     <!-- Filtros de Busca -->
     <div class="card mb-4">
-        <div class="card-header bg-white py-3">
+        <div class="card-header  py-3">
             <h5 class="mb-0 fw-bold text-muted small text-uppercase">
                 <i class="bi bi-filter me-2"></i>Filtros
             </h5>
@@ -79,7 +79,7 @@
 
     <!-- Tabela de Movimentações -->
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
+        <div class="card-header  py-3">
             <div class="row align-items-center">
                 <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                     <h5 class="mb-0 fw-bold text-muted small text-uppercase">
@@ -113,7 +113,7 @@
             <!-- Desktop View -->
             <div class="table-responsive d-none d-md-block">
                 <table class="table table-hover align-middle mb-0 modern-table">
-                    <thead class="bg-light">
+                    <thead class="">
                         <tr>
                             <th class="px-3">Data/Hora</th>
                             <th class="px-3">Produto / SKU</th>
@@ -245,13 +245,13 @@
                                 {{ $typeLabel }}
                             </span>
                         </div>
-                        
+
                         @if($movement->reason)
                             <div class="small text-muted mb-2">
                                 <i class="bi bi-chat-left-text me-1"></i> {{ Str::limit($movement->reason, 50) }}
                             </div>
                         @endif
-                        
+
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="d-flex gap-3">
                                 <div>
@@ -282,7 +282,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex gap-2">
                             <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="outline-primary" size="sm" icon="chevron-right" label="Detalhes" class="flex-grow-1" />
                             <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="outline-info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
@@ -294,7 +294,7 @@
 
             @else
             <div class="text-center py-5">
-                <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                <div class="rounded-circle  d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
                     <i class="bi bi-search text-muted fs-1"></i>
                 </div>
                 @if(empty(request()->query()))
