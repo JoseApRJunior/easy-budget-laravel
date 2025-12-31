@@ -193,9 +193,9 @@
                             </td>
                             <td class="px-3 text-center">
                                 <div class="btn-group">
-                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="outline-primary" size="sm" icon="chevron-right" title="Ver Detalhes" />
-                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="outline-info" size="sm" icon="eye" title="Ver Inventário" />
-                                    <x-button type="link" :href="route('provider.inventory.adjust', $movement->product->sku)" variant="outline-success" size="sm" icon="sliders" title="Ajustar" />
+                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="primary" size="sm" icon="chevron-right" title="Ver Detalhes" />
+                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="info" size="sm" icon="eye" title="Ver Inventário" />
+                                    <x-button type="link" :href="route('provider.inventory.adjust', $movement->product->sku)" variant="success" size="sm" icon="sliders" title="Ajustar" />
                                 </div>
                             </td>
                         </tr>

@@ -9,12 +9,13 @@
                     <i class="bi bi-pencil me-2"></i>Editar Alerta
                 </h1>
                 <div class="btn-group" role="group">
-                    <a href="{{ route('admin.alerts.show', $alert['id']) }}" class="btn btn-outline-primary">
-                        <i class="bi bi-eye me-2"></i>Ver
-                    </a>
-                    <a href="{{ route('admin.alerts.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Voltar
-                    </a>
+                    <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" text="Ver" />
+                    <x-button 
+                         href="{{ route('admin.alerts.index') }}" 
+                         variant="secondary"
+                         icon="bi bi-arrow-left">
+                         Voltar
+                     </x-button>
                 </div>
             </div>
         </div>

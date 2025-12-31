@@ -241,8 +241,7 @@
                     <div class="mobile-view">
                         <div class="list-group ">
                             @foreach ($recent as $product)
-                            <a href="{{ route('provider.products.show', $product->sku) }}"
-                                class="list-group-item list-group-item-action py-3">
+                            <div class="list-group-item py-3">
                                 <div class="d-flex align-items-start">
                                     <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
                                     <div class="flex-grow-1">
@@ -263,9 +262,12 @@
                                             Venda: {{ $product->formatted_price }}
                                         </div>
                                     </div>
-                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                    <div class="ms-2">
+                                        <x-button type="link" :href="route('provider.products.show', $product->sku)"
+                                            variant="info" size="sm" icon="eye" />
+                                    </div>
                                 </div>
-                            </a>
+                            </div>
                             @endforeach
                         </div>
                     </div>

@@ -129,10 +129,9 @@
                             </div>
                             <p class="mt-2">Carregando predições...</p>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/admin/ai/reports?type=churn" class="btn btn-primary btn-sm">
-                                Ver Relatório Completo
-                            </a>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <x-button type="link" href="/admin/ai/reports?type=churn" variant="primary" size="sm" label="Ver Relatório Completo" />
+                            <small class="text-muted">Atualizado há 2 horas</small>
                         </div>
                     </div>
                 </div>

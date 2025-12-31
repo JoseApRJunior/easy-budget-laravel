@@ -10,12 +10,8 @@
                 <i class="bi bi-graph-up me-2"></i>Dashboard de Monitoramento
             </h1>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary btn-sm" onclick="refreshMetrics()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                </button>
-                <a href="{{ url('/admin/monitoring/metrics') }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-graph-up me-1"></i>Métricas Detalhadas
-                </a>
+                <x-button variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
+                <x-button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" size="sm" icon="graph-up" label="Métricas Detalhadas" />
             </div>
         </div>
 

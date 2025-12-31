@@ -111,10 +111,14 @@
                                         <tr>
                                             <th>Link Público:</th>
                                             <td>
-                                                <a href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}"
-                                                    target="_blank" class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-external-link-alt"></i> Ver Status
-                                                </a>
+                                                <x-button 
+                                                    href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}" 
+                                                    target="_blank" 
+                                                    variant="outline-info" 
+                                                    size="sm"
+                                                    icon="fas fa-external-link-alt">
+                                                    Ver Status
+                                                </x-button>
                                             </td>
                                         </tr>
                                     </table>
@@ -124,27 +128,36 @@
 
                         <!-- Footer -->
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="{{ url()->previous() }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Voltar
-                            </a>
+                            <x-button 
+                                href="{{ url()->previous() }}" 
+                                variant="secondary"
+                                icon="bi bi-arrow-left">
+                                Voltar
+                            </x-button>
                             <small class="text-muted d-none d-md-block">
                                 Criado em: {{ $schedule->created_at->format('d/m/Y H:i') }}
                             </small>
                             <div class="d-flex gap-2">
                                 @can('update', $schedule)
-                                    <a href="{{ route('schedules.edit', $schedule) }}" class="btn btn-warning">
-                                        <i class="bi bi-pencil me-2"></i>Editar
-                                    </a>
+                                    <x-button 
+                                        href="{{ route('schedules.edit', $schedule) }}" 
+                                        variant="warning"
+                                        icon="bi bi-pencil">
+                                        Editar
+                                    </x-button>
                                 @endcan
                                 @can('delete', $schedule)
                                     <form action="{{ route('schedules.destroy', $schedule) }}" method="POST"
                                         class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger"
+                                        <x-button 
+                                            type="submit"
+                                            variant="danger"
+                                            icon="bi bi-trash"
                                             onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
-                                            <i class="bi bi-trash me-2"></i>Excluir
-                                        </button>
+                                            Excluir
+                                        </x-button>
                                     </form>
                                 @endcan
                             </div>

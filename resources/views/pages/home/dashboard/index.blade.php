@@ -86,15 +86,9 @@
               </div>
               <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
-                  <a href="{{ route( 'admin.users.index' ) }}" class="btn btn-primary">
-                    <i class="bi bi-people me-1"></i> Gerenciar Usuários
-                  </a>
-                  <a href="{{ route( 'admin.settings' ) }}" class="btn btn-info text-white">
-                    <i class="bi bi-gear me-1"></i> Configurações do Sistema
-                  </a>
-                  <a href="{{ route( 'admin.index' ) }}" class="btn btn-outline-success">
-                    <i class="bi bi-speedometer me-1"></i> Painel Principal
-                  </a>
+                  <x-button type="link" :href="route( 'admin.users.index' )" variant="primary" icon="people" label="Gerenciar Usuários" />
+                  <x-button type="link" :href="route( 'admin.settings' )" variant="info" icon="gear" label="Configurações do Sistema" />
+                  <x-button type="link" :href="route( 'admin.index' )" variant="success" outline icon="speedometer" label="Painel Principal" />
                 </div>
               </div>
             </div>

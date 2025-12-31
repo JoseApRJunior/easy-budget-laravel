@@ -198,8 +198,8 @@
                 <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Histórico de Movimentações</h6>
                 <div class="d-flex gap-2">
                     <div class="dropdown">
-                        <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                        <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHistoryDropdown" />
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportHistoryDropdown">
                             <li>
                                 <a class="dropdown-item"
                                     href="{{ route('provider.inventory.export-movements', ['sku' => $product->sku, 'format' => 'xlsx']) }}">
@@ -214,9 +214,13 @@
                             </li>
                         </ul>
                     </div>
-                    <a href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-list-ul me-1"></i>Ver Tudo
-                    </a>
+                    <x-button 
+                href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}" 
+                variant="primary" 
+                size="sm"
+                icon="bi bi-list-ul">
+                Ver Tudo
+            </x-button>
                 </div>
             </div>
             <div class="card-body">

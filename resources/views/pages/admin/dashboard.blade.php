@@ -148,15 +148,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <a href="/admin/monitoring" class="btn btn-outline-secondary">
-                                        <i class="bi bi-graph-up me-2 text-primary"></i>Ver Métricas Técnicas
-                                    </a>
-                                    <a href="/admin/alerts" class="btn btn-outline-secondary">
-                                        <i class="bi bi-bell me-2 text-warning"></i>Gerenciar Alertas
-                                    </a>
-                                    <button class="btn btn-outline-secondary" onclick="refreshData()">
-                                        <i class="bi bi-arrow-clockwise me-2 text-success"></i>Atualizar Dados
-                                    </button>
+                                    <x-button type="link" href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" />
+                                    <x-button type="link" href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" />
+                                    <x-button variant="secondary" outline icon="arrow-clockwise" label="Atualizar Dados" onclick="refreshData()" />
                                 </div>
                             </div>
                         </div>

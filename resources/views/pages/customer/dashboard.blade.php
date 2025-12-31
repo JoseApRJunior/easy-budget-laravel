@@ -183,29 +183,31 @@
 
                     <!-- Mobile View -->
                     <div class="mobile-view">
-                        <div class="list-group">
-                            @foreach ($recent as $customer)
-                            @php
-                            $common = $customer->commonData ?? ($customer->common_data ?? null);
-                            $name =
-                            $common?->company_name ??
-                            trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?:
-                            'Cliente';
-                            @endphp
-                            <a href="{{ route('provider.customers.show', $customer) }}"
-                                class="list-group-item list-group-item-action py-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-person text-muted me-2 mt-1"></i>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-1">{{ $name }}</div>
-                                        <small
-                                            class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</small>
+                            <div class="list-group">
+                                @foreach ($recent as $customer)
+                                @php
+                                $common = $customer->commonData ?? ($customer->common_data ?? null);
+                                $name =
+                                $common?->company_name ??
+                                trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?:
+                                'Cliente';
+                                @endphp
+                                <div class="list-group-item py-3">
+                                    <div class="d-flex align-items-start">
+                                        <i class="bi bi-person text-muted me-2 mt-1"></i>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold mb-1">{{ $name }}</div>
+                                            <small
+                                                class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</small>
+                                        </div>
+                                        <div class="ms-2">
+                                            <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                                variant="info" size="sm" icon="eye" />
+                                        </div>
                                     </div>
-                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
                                 </div>
-                            </a>
-                            @endforeach
-                        </div>
+                                @endforeach
+                            </div>
                     </div>
                     @else
                     <div class="p-4">

@@ -55,10 +55,11 @@
                             <div class="avatar-circle bg-primary bg-gradient me-3">
                                 <i class="bi bi-calendar text-white"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <h6 class="text-muted mb-1">Total</h6>
                                 <h3 class="mb-0">{{ $total }}</h3>
                             </div>
+                            <x-button type="link" :href="route('provider.schedules.index')" variant="link" size="sm" icon="chevron-right" class="p-0" />
                         </div>
                         <p class="text-muted small mb-0">Agendamentos registrados.</p>
                     </div>
@@ -326,10 +327,7 @@
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <a href="{{ route('provider.schedules.show', $sc->id) }}"
-                                                            class="btn btn-sm btn-info text-white" title="Visualizar">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
+                                                        <x-button type="link" :href="route('provider.schedules.show', $sc->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -368,29 +366,30 @@
                                                 default => 'bi-question-circle',
                                             };
                                         @endphp
-                                        <a href="{{ route('provider.schedules.show', $sc->id) }}"
-                                            class="list-group-item list-group-item-action py-3">
-                                            <div class="d-flex align-items-start">
-                                                <i class="bi bi-calendar-event text-muted me-2 mt-1"></i>
-                                                <div class="flex-grow-1">
-                                                    <div class="fw-semibold mb-2">
-                                                        {{ \Carbon\Carbon::parse($sc->start_date_time)->format('d/m/Y H:i') }}
-                                                    </div>
-                                                    <div class="d-flex gap-2 flex-wrap mb-2">
-                                                        <span class="badge {{ $statusClass }}">
-                                                            <i class="{{ $statusIcon }}"></i>
-                                                        </span>
-                                                        <small class="text-muted">
-                                                            {{ $sc->service?->customer?->commonData?->first_name ?? 'N/A' }}
-                                                        </small>
-                                                    </div>
-                                                    <div class="small text-muted">
-                                                        {{ Str::limit($sc->service?->description ?? $sc->service?->code, 50) }}
-                                                    </div>
+                                        <div class="list-group-item py-3">
+                                        <div class="d-flex align-items-start">
+                                            <i class="bi bi-calendar-event text-muted me-2 mt-1"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-2">
+                                                    {{ \Carbon\Carbon::parse($sc->start_date_time)->format('d/m/Y H:i') }}
                                                 </div>
-                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                                <div class="d-flex gap-2 flex-wrap mb-2">
+                                                    <span class="badge {{ $statusClass }}">
+                                                        <i class="{{ $statusIcon }}"></i>
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        {{ $sc->service?->customer?->commonData?->first_name ?? 'N/A' }}
+                                                    </small>
+                                                </div>
+                                                <div class="small text-muted">
+                                                    {{ Str::limit($sc->service?->description ?? $sc->service?->code, 50) }}
+                                                </div>
                                             </div>
-                                        </a>
+                                            <div class="ms-2">
+                                                <x-button type="link" :href="route('provider.schedules.show', $sc->id)" variant="info" size="sm" icon="eye" />
+                                            </div>
+                                        </div>
+                                    </div>
                                     @endforeach
                                 </div>
                             @else
@@ -459,20 +458,10 @@
                         <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Atalhos</h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-plus-circle me-2"></i>Ver Serviços
-                        </a>
-                        <a href="{{ route('provider.schedules.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-calendar3 me-2"></i>Listar Todos
-                        </a>
-                        <a href="{{ route('provider.schedules.index', ['status' => 'pending']) }}"
-                            class="btn btn-sm btn-outline-warning">
-                            <i class="bi bi-hourglass-split me-2"></i>Pendentes
-                        </a>
-                        <a href="{{ route('provider.schedules.index', ['status' => 'confirmed']) }}"
-                            class="btn btn-sm btn-outline-info">
-                            <i class="bi bi-check-circle me-2"></i>Confirmados
-                        </a>
+                        <x-button type="link" :href="route('provider.services.index')" variant="success" size="sm" icon="plus-circle" label="Ver Serviços" />
+                        <x-button type="link" :href="route('provider.schedules.index')" variant="primary" outline size="sm" icon="calendar3" label="Listar Todos" />
+                        <x-button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="warning" outline size="sm" icon="hourglass-split" label="Pendentes" />
+                        <x-button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="info" outline size="sm" icon="check-circle" label="Confirmados" />
                     </div>
                 </div>
 
@@ -483,16 +472,10 @@
                     </div>
                     <div class="card-body d-grid gap-2">
                         @if ($pending > 0)
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="confirmAllPending()">
-                                <i class="bi bi-check-all me-2"></i>Confirmar Todos Pendentes
-                            </button>
+                            <x-button variant="primary" outline size="sm" icon="check-all" label="Confirmar Todos Pendentes" onclick="confirmAllPending()" />
                         @endif
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportSchedules()">
-                            <i class="bi bi-download me-2"></i>Exportar Agendamentos
-                        </button>
-                        <a href="{{ route('provider.schedules.calendar') }}" class="btn btn-sm btn-outline-info">
-                            <i class="bi bi-calendar-week me-2"></i>Ver Calendário
-                        </a>
+                        <x-button variant="secondary" outline size="sm" icon="download" label="Exportar Agendamentos" onclick="exportSchedules()" />
+                        <x-button type="link" :href="route('provider.schedules.calendar')" variant="info" outline size="sm" icon="calendar-week" label="Ver Calendário" />
                     </div>
                 </div>
             </div>

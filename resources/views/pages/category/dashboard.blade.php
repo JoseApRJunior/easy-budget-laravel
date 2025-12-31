@@ -189,8 +189,7 @@
                     <div class="mobile-view">
                         <div class="list-group">
                             @foreach ($recent as $category)
-                            <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                class="list-group-item list-group-item-action py-3">
+                            <div class="list-group-item py-3">
                                 <div class="d-flex align-items-start">
                                     @if ($category->parent)
                                     <i
@@ -207,9 +206,12 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                    <div class="ms-2">
+                                        <x-button type="link" :href="route('provider.categories.show', $category->slug)"
+                                            variant="info" size="sm" icon="eye" />
+                                    </div>
                                 </div>
-                            </a>
+                            </div>
                             @endforeach
                         </div>
                     </div>

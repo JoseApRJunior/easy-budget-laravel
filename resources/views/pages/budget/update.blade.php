@@ -101,9 +101,9 @@
 
                 <!-- Form Actions -->
                 <div class="d-flex justify-content-between mt-4 pt-4 border-top">
-                    <a href="{{ route( 'budget.show', $budget->code ) }}" class="btn btn-outline-secondary px-4">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </a>
+                    <x-button type="link" :href="route('budget.show', $budget->code)" variant="outline-secondary" icon="x-circle">
+                        Cancelar
+                    </x-button>
                     <div>
                         @if ( StatusHelper::status_allows_edit( $budget->status->value ) )
                             <button type="submit" form="update-budget-form" class="btn btn-primary px-4">
@@ -147,10 +147,8 @@
                                         </td>
                                         <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
                                         <td class="text-end">
-                                            <a href="{{ route( 'provider.services.show', $service->code ) }}"
-                                                class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                            <x-button type="link" :href="route('provider.services.show', $service->code)"
+                                                    variant="info" size="sm" icon="eye" title="Visualizar" />
                                         </td>
                                     </tr>
                                 @endforeach

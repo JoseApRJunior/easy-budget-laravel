@@ -249,10 +249,8 @@
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-end">
-                                                                        <a href="{{ route('provider.budgets.show', $budget->id) }}" class="btn btn-sm btn-info text-white">
-                                                                            <i class="bi bi-eye"></i>
-                                                                        </a>
-                                                                    </td>
+                                                                <x-button type="link" :href="route('provider.budgets.show', $budget->id)" variant="info" size="sm" icon="eye" />
+                                                            </td>
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>

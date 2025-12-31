@@ -76,7 +76,7 @@
                 <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                     <div class="d-flex justify-content-start justify-content-lg-end gap-2">
                         <div class="dropdown">
-                            <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportLowStock" />
+                            <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportLowStock" />
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportLowStock">
                                 <li>
                                     <a class="dropdown-item" href="{{ route('provider.inventory.export', ['type' => 'xlsx', 'status' => 'low']) }}">

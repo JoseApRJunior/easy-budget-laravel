@@ -213,10 +213,7 @@
                                                 <td>R$ {{ number_format($service->total, 2, ',', '.') }}</td>
                                                 <td>{{ $service->created_at->format('d/m/Y') }}</td>
                                                 <td>
-                                                    <a href="{{ route('provider.services.show', $service->code) }}"
-                                                            class="btn btn-sm btn-info text-white" title="Visualizar">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
+                                                    <x-button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -293,15 +290,9 @@
                         </h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.services.create') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-plus-circle me-2"></i>Novo Serviço
-                        </a>
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-tools me-2"></i>Listar Serviços
-                        </a>
-                        <a href="{{ route('provider.reports.services') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Serviços
-                        </a>
+                        <x-button type="link" :href="route('provider.services.create')" variant="success" size="sm" icon="plus-circle" label="Novo Serviço" />
+                        <x-button type="link" :href="route('provider.services.index')" variant="primary" outline size="sm" icon="tools" label="Listar Serviços" />
+                        <x-button type="link" :href="route('provider.reports.services')" variant="secondary" outline size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
                     </div>
                 </div>
             </div>

@@ -146,16 +146,10 @@
                                             {!! formatInvoiceStatus($invoice->status) !!}
                                         </td>
                                         <td class="text-center">
-                                            <div class="action-btn-group">
-                                                <a href="{{ route('provider.invoices.show', $invoice->code) }}"
-                                                    class="action-btn action-btn-view" title="Visualizar">
-                                                    <i class="bi bi-eye-fill"></i>
-                                                </a>
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <x-button type="link" :href="route('provider.invoices.show', $invoice->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 @if ($invoice->status === 'pending')
-                                                    <a href="{{ route('provider.invoices.edit', $invoice->code) }}"
-                                                        class="action-btn action-btn-edit" title="Editar">
-                                                        <i class="bi bi-pencil-fill"></i>
-                                                    </a>
+                                                    <x-button type="link" :href="route('provider.invoices.edit', $invoice->code)" variant="primary" size="sm" icon="pencil" title="Editar" />
                                                 @endif
                                             </div>
                                         </td>

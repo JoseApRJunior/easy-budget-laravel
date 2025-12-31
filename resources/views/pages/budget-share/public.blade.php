@@ -113,10 +113,12 @@
                                             <td class="text-end">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
                                             <td class="text-end">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                        onclick="showItemDetails({{ json_encode($item) }})">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
+                                                <x-button 
+                                                    type="button" 
+                                                    variant="info" 
+                                                    size="sm" 
+                                                    icon="bi bi-eye"
+                                                    onclick="showItemDetails({{ json_encode($item) }})" />
                                             </td>
                                         </tr>
                                         @empty
@@ -194,9 +196,13 @@
                                     @endif
                                     
                                     @if($permissions['can_comment'] ?? false)
-                                    <button type="button" class="btn btn-outline-info" onclick="showCommentModal()">
-                                        <i class="bi bi-chat-dots me-2"></i>Adicionar Comentário
-                                    </button>
+                                    <x-button 
+                                        type="button" 
+                                        variant="outline-info" 
+                                        onclick="showCommentModal()"
+                                        icon="bi bi-chat-left-text">
+                                        Adicionar Comentário
+                                    </x-button>
                                     @endif
                                 </div>
                             </div>

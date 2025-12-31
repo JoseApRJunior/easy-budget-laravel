@@ -17,15 +17,22 @@
                 </p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('provider.budgets.print', $budget->code) }}" class="btn btn-outline-primary"
-                    target="_blank" title="Download PDF">
-                    <i class="bi bi-file-pdf me-2"></i>PDF
-                </a>
+                <x-button 
+                    href="{{ route('provider.budgets.print', $budget->code) }}" 
+                    variant="outline-primary"
+                    target="_blank" 
+                    title="Download PDF"
+                    icon="bi bi-file-pdf">
+                    PDF
+                </x-button>
                 @if ($budget->status->canEdit())
-                    <a href="{{ route('provider.budgets.edit', $budget->code) }}" class="btn btn-primary"
-                        title="Editar orçamento">
-                        <i class="bi bi-pencil me-2"></i>Editar
-                    </a>
+                    <x-button 
+                        href="{{ route('provider.budgets.edit', $budget->code) }}" 
+                        variant="primary"
+                        title="Editar orçamento"
+                        icon="bi bi-pencil">
+                        Editar
+                    </x-button>
                 @endif
             </div>
         </div>

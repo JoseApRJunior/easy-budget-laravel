@@ -184,10 +184,9 @@
                                                 </td>
                                                 <td>R$ {{ number_format($inv->total, 2, ',', '.') }}</td>
                                                 <td>{{ optional($inv->due_date)->format('d/m/Y') }}</td>
-                                                <td class="text-end"><a
-                                                        href="{{ route('provider.invoices.show', $inv->code) }}"
-                                                        class="btn btn-sm btn-info text-white"><i
-                                                            class="bi bi-eye"></i></a></td>
+                                                <td class="text-end">
+                                                    <x-button type="link" :href="route('provider.invoices.show', $inv->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -254,10 +253,10 @@
                     <div class="card-header bg-transparent border-0">
                         <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Atalhos</h6>
                     </div>
-                    <div class="card-body d-grid gap-2"><a href="{{ route('provider.invoices.create') }}"
-                            class="btn btn-sm btn-success"><i class="bi bi-plus-circle me-2"></i>Nova Fatura</a><a
-                            href="{{ route('provider.invoices.index') }}" class="btn btn-sm btn-outline-primary"><i
-                                class="bi bi-receipt me-2"></i>Listar Faturas</a></div>
+                    <div class="card-body d-grid gap-2">
+                        <x-button type="link" :href="route('provider.invoices.create')" variant="success" size="sm" icon="plus-circle" label="Nova Fatura" />
+                        <x-button type="link" :href="route('provider.invoices.index')" variant="primary" outline size="sm" icon="receipt" label="Listar Faturas" />
+                    </div>
                 </div>
             </div>
         </div>

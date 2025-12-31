@@ -5,12 +5,18 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="bi bi-graph-up-arrow me-2"></i>Dashboard Executivo</h2>
             <div>
-                <button class="btn btn-outline-primary" onclick="refreshCharts()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                </button>
-                <a href="/admin/executive-dashboard/export-pdf" class="btn btn-success">
-                    <i class="bi bi-file-earmark-pdf me-1"></i>Exportar PDF
-                </a>
+                <x-button 
+                    variant="outline-primary" 
+                    onclick="refreshCharts()"
+                    icon="bi bi-arrow-clockwise">
+                    Atualizar
+                </x-button>
+                <x-button 
+                    href="/admin/executive-dashboard/export-pdf" 
+                    variant="success"
+                    icon="bi bi-file-earmark-pdf">
+                    Exportar PDF
+                </x-button>
             </div>
         </div>
 

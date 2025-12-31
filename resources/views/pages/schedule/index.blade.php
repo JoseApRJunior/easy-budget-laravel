@@ -207,27 +207,19 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <div class="action-btn-group">
-                                                        <a href="{{ route('provider.schedules.show', $schedule->id) }}"
-                                                            class="action-btn action-btn-view" title="Visualizar">
-                                                            <i class="bi bi-eye-fill"></i>
-                                                        </a>
+                                                    <div class="d-flex justify-content-center gap-1">
+                                                        <x-button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                         @php($canEdit = true)
                                                         @php($canDelete = true)
                                                         @if ($canEdit)
-                                                            <a href="{{ route('provider.schedules.edit', $schedule->id) }}"
-                                                                class="action-btn action-btn-edit" title="Editar">
-                                                                <i class="bi bi-pencil-fill"></i>
-                                                            </a>
+                                                            <x-button type="link" :href="route('provider.schedules.edit', $schedule->id)" variant="primary" size="sm" icon="pencil" title="Editar" />
                                                         @endif
                                                         @if ($canDelete)
-                                                            <button type="button" class="action-btn action-btn-delete"
+                                                            <x-button type="button" variant="danger" size="sm" icon="trash"
                                                                 data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                                 data-delete-url="{{ route('provider.schedules.destroy', $schedule->id) }}"
                                                                 data-schedule-name="{{ $schedule->service->description ?? $schedule->service->code }}"
-                                                                title="Excluir">
-                                                                <i class="bi bi-trash-fill"></i>
-                                                            </button>
+                                                                title="Excluir" />
                                                         @endif
                                                     </div>
                                                 </td>

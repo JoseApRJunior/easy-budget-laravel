@@ -307,40 +307,47 @@
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             @if ($service->canBeEdited())
-                                <a href="{{ route('provider.services.edit', $service->code) }}"
-                                    class="btn btn-outline-primary">
-                                    <i class="bi bi-pencil me-2"></i>
+                                <x-button 
+                                    href="{{ route('provider.services.edit', $service->code) }}"
+                                    variant="outline-primary"
+                                    icon="bi bi-pencil">
                                     Editar Serviço
-                                </a>
+                                </x-button>
                             @endif
                             @if ($service->budget)
-                                <a href="{{ route('provider.budgets.show', $service->budget->code) }}"
-                                    class="btn btn-outline-info">
-                                    <i class="bi bi-receipt me-2"></i>
+                                <x-button 
+                                    href="{{ route('provider.budgets.show', $service->budget->code) }}"
+                                    variant="outline-info"
+                                    icon="bi bi-receipt">
                                     Ver Orçamento
-                                </a>
+                                </x-button>
                             @endif
 
                             {{-- Botões de Fatura --}}
                             @if ($service->status->isFinished() || $service->status->value === 'COMPLETED')
                                 {{-- Serviço finalizado - pode criar fatura completa --}}
-                                <a href="{{ route('provider.invoices.create.from-service', $service->code) }}"
-                                    class="btn btn-outline-success">
-                                    <i class="bi bi-receipt me-2"></i>
+                                <x-button 
+                                    href="{{ route('provider.invoices.create.from-service', $service->code) }}"
+                                    variant="outline-success"
+                                    icon="bi bi-receipt">
                                     Criar Fatura
-                                </a>
+                                </x-button>
                             @elseif($service->status->isActive() && $service->serviceItems && $service->serviceItems->count() > 0)
                                 {{-- Serviço ativo com itens - pode criar fatura parcial --}}
-                                <a href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
-                                    class="btn btn-outline-warning">
-                                    <i class="bi bi-receipt me-2"></i>
+                                <x-button 
+                                    href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
+                                    variant="outline-warning"
+                                    icon="bi bi-receipt">
                                     Criar Fatura Parcial
-                                </a>
+                                </x-button>
                             @endif
-                            <button type="button" class="btn btn-outline-success" onclick="window.print()">
-                                <i class="bi bi-printer me-2"></i>
+                            <x-button 
+                                type="button" 
+                                variant="outline-success" 
+                                onclick="window.print()"
+                                icon="bi bi-printer">
                                 Imprimir
-                            </button>
+                            </x-button>
                         </div>
                     </div>
                 </div>
@@ -350,22 +357,33 @@
         {{-- Botões de Ação (Footer) --}}
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex gap-2">
-                <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                </a>
+                <x-button 
+                    href="{{ url()->previous(route('provider.services.index')) }}" 
+                    variant="outline-secondary"
+                    icon="bi bi-arrow-left">
+                    Voltar
+                </x-button>
             </div>
             <small class="text-muted d-none d-md-block">
                 Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
             </small>
             <div class="d-flex gap-2">
                 @if ($service->canBeEdited())
-                    <a href="{{ route('provider.services.edit', $service->code) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil-fill me-2"></i>Editar
-                    </a>
+                    <x-button 
+                        href="{{ route('provider.services.edit', $service->code) }}" 
+                        variant="primary"
+                        icon="bi bi-pencil-fill">
+                        Editar
+                    </x-button>
                 @endif
-                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                    <i class="bi bi-trash-fill me-2"></i>Excluir
-                </button>
+                <x-button 
+                    type="button" 
+                    variant="outline-danger" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#deleteModal"
+                    icon="bi bi-trash-fill">
+                    Excluir
+                </x-button>
             </div>
         </div>
 

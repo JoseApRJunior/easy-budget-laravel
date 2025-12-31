@@ -144,10 +144,7 @@
                                     </td>
                                     <td>{{ $child->created_at?->format('d/m/Y H:i') }}</td>
                                     <td class="text-center">
-                                        <a href="{{ route('provider.categories.show', $child->slug) }}"
-                                            class="btn btn-sm btn-outline-secondary" title="Visualizar">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
+                                        <x-button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                     </td>
                                 </tr>
                                 @endforeach

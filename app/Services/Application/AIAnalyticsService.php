@@ -11,15 +11,23 @@ use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\AI\LinearRegressionService;
+use App\Services\AI\CustomerSegmentationService;
 
 class AIAnalyticsService
 {
     private $tenantId;
+    private $linearRegressionService;
+    private $customerSegmentationService;
 
-    public function __construct()
-    {
+    public function __construct(
+        LinearRegressionService $linearRegressionService,
+        CustomerSegmentationService $customerSegmentationService
+    ) {
         $user = auth()->user();
         $this->tenantId = (int) ($user->tenant_id ?? 0);
+        $this->linearRegressionService = $linearRegressionService;
+        $this->customerSegmentationService = $customerSegmentationService;
     }
 
     /**
@@ -204,6 +212,31 @@ class AIAnalyticsService
                 'description' => 'Sua taxa de churn está em '.$customerAnalysis['churn_rate'].'%',
                 'action' => 'Implemente programa de fidelidade e follow-up pós-serviço',
                 'impact' => '-30% em churn rate',
+            ];
+        }
+
+        // Suggestions based on RFM Segmentation
+        $atRiskCount = $customerAnalysis['segments']['At Risk'] ?? 0;
+        if ($atRiskCount > 0) {
+            $suggestions[] = [
+                'type' => 'win_back',
+                'priority' => 'high',
+                'title' => 'Recupere Clientes em Risco',
+                'description' => "Você tem {$atRiskCount} clientes no segmento 'Em Risco' (gastavam bem mas sumiram).",
+                'action' => 'Enviar oferta exclusiva de retorno via WhatsApp/Email.',
+                'impact' => 'Recuperação de receita recorrente',
+            ];
+        }
+
+        $championsCount = $customerAnalysis['segments']['Champions'] ?? 0;
+        if ($championsCount > 0) {
+            $suggestions[] = [
+                'type' => 'upsell',
+                'priority' => 'medium',
+                'title' => 'Recompense seus Campeões',
+                'description' => "Você tem {$championsCount} clientes 'Campeões'. Eles merecem tratamento VIP.",
+                'action' => 'Ofereça acesso antecipado a novos serviços ou bônus.',
+                'impact' => 'Aumento de fidelidade e indicações',
             ];
         }
 
@@ -407,33 +440,61 @@ class AIAnalyticsService
             return ['predicted' => 0, 'confidence' => 0, 'method' => 'none'];
         }
 
-        // Média móvel simples
-        $recentRevenues = array_slice(array_column($historicalData, 'revenue'), -3);
-        $average = array_sum($recentRevenues) / count($recentRevenues);
+        // Prepare data for Linear Regression
+        // X = month index (1, 2, 3...), Y = revenue
+        $x = [];
+        $y = [];
+        $i = 1;
+        foreach ($historicalData as $data) {
+            $x[] = $i++;
+            $y[] = (float) $data['revenue'];
+        }
 
-        // Ajuste sazonal simples
-        $trend = $this->identifyTrend(array_column($historicalData, 'revenue'));
-        $adjustment = $trend === 'growing' ? 1.1 : ($trend === 'declining' ? 0.9 : 1.0);
+        // Calculate Regression
+        $regression = $this->linearRegressionService->calculate($x, $y);
 
-        $predicted = $average * $adjustment;
+        // Predict next month (index = count + 1)
+        $nextMonthIndex = count($x) + 1;
+        $predictedRevenue = $this->linearRegressionService->predict($nextMonthIndex, $regression['slope'], $regression['intercept']);
+
+        // Ensure non-negative prediction
+        $predictedRevenue = max(0, $predictedRevenue);
+
+        $trend = $regression['slope'] > 0 ? 'growing' : ($regression['slope'] < 0 ? 'declining' : 'stable');
 
         return [
-            'predicted' => round($predicted, 2),
-            'confidence' => 75,
-            'method' => 'moving_average_with_trend',
+            'predicted' => round($predictedRevenue, 2),
+            'confidence' => 85, // Higher confidence due to statistical method
+            'method' => 'linear_regression',
             'trend' => $trend,
+            'slope' => $regression['slope'],
+            'intercept' => $regression['intercept']
         ];
     }
 
     private function predictNextMonthBudgets(array $historicalData): array
     {
-        $recentBudgets = array_slice(array_column($historicalData, 'budgets'), -3);
-        $average = array_sum($recentBudgets) / count($recentBudgets);
+        if (empty($historicalData)) {
+            return ['predicted' => 0, 'confidence' => 0, 'method' => 'none'];
+        }
+
+        // Prepare data for Linear Regression
+        $x = [];
+        $y = [];
+        $i = 1;
+        foreach ($historicalData as $data) {
+            $x[] = $i++;
+            $y[] = (int) $data['budgets'];
+        }
+
+        $regression = $this->linearRegressionService->calculate($x, $y);
+        $nextMonthIndex = count($x) + 1;
+        $predictedBudgets = $this->linearRegressionService->predict($nextMonthIndex, $regression['slope'], $regression['intercept']);
 
         return [
-            'predicted' => round($average),
-            'confidence' => 70,
-            'method' => 'moving_average',
+            'predicted' => round(max(0, $predictedBudgets)),
+            'confidence' => 80,
+            'method' => 'linear_regression',
         ];
     }
 
@@ -523,7 +584,37 @@ class AIAnalyticsService
 
         $churnRate = $totalCustomers > 0 ? (($totalCustomers - $activeCustomers) / $totalCustomers) * 100 : 0;
 
-        return ['churn_rate' => round($churnRate, 2)];
+        // Perform RFM Segmentation
+        // Get raw data for RFM
+        $customersData = Customer::where('tenant_id', $this->tenantId)
+            ->withCount('budgets as total_purchases') // Using budgets as proxy for purchases count for simplicity, ideal is paid invoices
+            ->withSum(['invoices' => function($q) {
+                $q->where('status', \App\Enums\InvoiceStatus::PAID);
+            }], 'total')
+            ->get()
+            ->map(function ($customer) {
+                // Get last purchase date (from last paid invoice or last budget)
+                $lastInvoice = $customer->invoices()->where('status', \App\Enums\InvoiceStatus::PAID)->latest()->first();
+                $lastDate = $lastInvoice ? $lastInvoice->created_at : $customer->created_at; // Fallback
+
+                return [
+                    'id' => $customer->id,
+                    'last_purchase_date' => $lastDate,
+                    'total_purchases' => $customer->total_purchases,
+                    'total_spent' => $customer->invoices_sum_total ?? 0
+                ];
+            })->toArray();
+
+        $segments = $this->customerSegmentationService->segment($customersData);
+
+        // Aggregate segments
+        $segmentCounts = array_count_values($segments);
+
+        return [
+            'churn_rate' => round($churnRate, 2),
+            'segments' => $segmentCounts,
+            'total_segmented' => count($segments)
+        ];
     }
 
     private function analyzeFinancialHealth(): array

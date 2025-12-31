@@ -54,12 +54,8 @@
                             </select>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-qr-code me-2"></i>Gerar QR Code
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="clearBtn">
-                                <i class="bi bi-eraser me-2"></i>Limpar
-                            </button>
+                            <x-button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" />
+                            <x-button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" />
                         </div>
                     </form>
                 </div>
@@ -97,10 +93,7 @@
                                     <h5 class="card-title mb-2">Orçamentos</h5>
                                     <p class="card-text text-muted small mb-3">Gerar QR Code para verificação de orçamento
                                     </p>
-                                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#budgetModal">
-                                        <i class="bi bi-qr-code me-2"></i>Gerar QR Orçamento
-                                    </button>
+                                    <x-button variant="primary" size="sm" icon="qr-code" label="Gerar QR Orçamento" data-bs-toggle="modal" data-bs-target="#budgetModal" />
                                 </div>
                             </div>
                         </div>
@@ -112,10 +105,7 @@
                                     </div>
                                     <h5 class="card-title mb-2">Faturas</h5>
                                     <p class="card-text text-muted small mb-3">Gerar QR Code para verificação de fatura</p>
-                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#invoiceModal">
-                                        <i class="bi bi-qr-code me-2"></i>Gerar QR Fatura
-                                    </button>
+                                    <x-button variant="success" size="sm" icon="qr-code" label="Gerar QR Fatura" data-bs-toggle="modal" data-bs-target="#invoiceModal" />
                                 </div>
                             </div>
                         </div>
@@ -127,10 +117,7 @@
                                     </div>
                                     <h5 class="card-title mb-2">Serviços</h5>
                                     <p class="card-text text-muted small mb-3">Gerar QR Code para verificação de serviço</p>
-                                    <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
-                                        data-bs-target="#serviceModal">
-                                        <i class="bi bi-qr-code me-2"></i>Gerar QR Serviço
-                                    </button>
+                                    <x-button variant="info" size="sm" icon="qr-code" label="Gerar QR Serviço" data-bs-toggle="modal" data-bs-target="#serviceModal" />
                                 </div>
                             </div>
                         </div>
@@ -171,12 +158,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-2"></i>Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-qr-code me-2"></i>Gerar QR Code
-                        </button>
+                        <x-button variant="secondary" outline label="Cancelar" icon="x-circle" data-bs-dismiss="modal" />
+                        <x-button type="submit" variant="primary" label="Gerar QR Code" icon="qr-code" />
                     </div>
                 </form>
             </div>
@@ -214,12 +197,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-2"></i>Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-qr-code me-2"></i>Gerar QR Code
-                        </button>
+                        <x-button variant="secondary" outline label="Cancelar" icon="x-circle" data-bs-dismiss="modal" />
+                        <x-button type="submit" variant="success" label="Gerar QR Code" icon="qr-code" />
                     </div>
                 </form>
             </div>
@@ -257,12 +236,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-2"></i>Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-info text-white">
-                            <i class="bi bi-qr-code me-2"></i>Gerar QR Code
-                        </button>
+                        <x-button variant="secondary" outline label="Cancelar" icon="x-circle" data-bs-dismiss="modal" />
+                        <x-button type="submit" variant="info" label="Gerar QR Code" icon="qr-code" />
                     </div>
                 </form>
             </div>

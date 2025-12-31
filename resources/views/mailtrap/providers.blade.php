@@ -149,23 +149,15 @@
 
                                                 <!-- Ações do Provedor -->
                                                 <div class="provider-actions d-flex gap-2">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill"
-                                                        onclick="testProvider('{{ $providerKey }}')">
-                                                        <i class="bi bi-lightning me-1"></i>
-                                                        Testar
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-info flex-fill"
-                                                        onclick="viewProviderConfig('{{ $providerKey }}')">
-                                                        <i class="bi bi-eye me-1"></i>
-                                                        Detalhes
-                                                    </button>
+                                                    <x-button type="button" variant="outline-primary" size="sm" icon="lightning" 
+                                                        text="Testar" class="flex-fill" 
+                                                        onclick="testProvider('{{ $providerKey }}')" />
+                                                    <x-button type="button" variant="info" size="sm" icon="eye" text="Detalhes"
+                                                        class="flex-fill" onclick="viewProviderConfig('{{ $providerKey }}')" />
                                                     @if ($providerKey !== 'log')
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-outline-secondary flex-fill"
-                                                            onclick="configureProvider('{{ $providerKey }}')">
-                                                            <i class="bi bi-pencil me-1"></i>
-                                                            Configurar
-                                                        </button>
+                                                        <x-button type="button" variant="outline-secondary" size="sm" icon="pencil" 
+                                                            text="Configurar" class="flex-fill" 
+                                                            onclick="configureProvider('{{ $providerKey }}')" />
                                                     @endif
                                                 </div>
                                             </div>

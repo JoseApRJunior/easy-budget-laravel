@@ -242,10 +242,7 @@
                                                 </td>
                                                 <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('provider.budgets.show', $budget->code) }}"
-                                                        class="btn btn-sm btn-info text-white" title="Visualizar">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
+                                                    <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -355,8 +352,8 @@
                     </div>
                     <div class="card-body pt-0 d-grid gap-2">
                         <x-button type="link" :href="route('provider.budgets.create')" variant="primary" size="sm" icon="plus-circle" label="Novo Orçamento" class="w-100 justify-content-start" />
-                        <x-button type="link" :href="route('provider.budgets.index')" variant="outline-primary" size="sm" icon="list-ul" label="Listar Todos" class="w-100 justify-content-start" />
-                        <x-button type="link" :href="route('provider.reports.budgets')" variant="outline-secondary" size="sm" icon="file-earmark-bar-graph" label="Relatórios" class="w-100 justify-content-start" />
+                        <x-button type="link" :href="route('provider.budgets.index')" variant="primary" outline size="sm" icon="list-ul" label="Listar Todos" class="w-100 justify-content-start" />
+                        <x-button type="link" :href="route('provider.reports.budgets')" variant="secondary" outline size="sm" icon="file-earmark-bar-graph" label="Relatórios" class="w-100 justify-content-start" />
                     </div>
                 </div>
             </div>

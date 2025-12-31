@@ -163,14 +163,16 @@
 
                         <!-- Footer com botões -->
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <a href="{{ route('plans.show', $plan->slug) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-eye me-2"></i>Visualizar
-                            </a>
+                            <x-button type="link" :href="route('plans.show', $plan->slug)" variant="info" icon="eye" text="Visualizar" />
 
                             <div>
-                                <a href="{{ route('plans.index') }}" class="btn btn-outline-secondary me-2">
-                                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                                </a>
+                                <x-button 
+                                    href="{{ route('plans.index') }}" 
+                                    variant="outline-secondary"
+                                    icon="bi bi-arrow-left"
+                                    class="me-2">
+                                    Voltar
+                                </x-button>
                                 <button type="submit" class="btn btn-warning btn-lg">
                                     <i class="bi bi-check-lg me-2"></i>Salvar Alterações
                                 </button>

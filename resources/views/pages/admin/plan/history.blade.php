@@ -111,10 +111,8 @@
                                     </td>
                                     <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                        <div class="d-flex gap-1">
+                                            <x-button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                         </div>
                                     </td>
                                 </tr>

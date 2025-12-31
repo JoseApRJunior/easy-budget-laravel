@@ -7,21 +7,10 @@
 
     <div class="card-body">
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route( 'provider.budgets.create' ) }}" class="btn btn-primary">
-                <i class="bi bi-file-earmark-plus me-1"></i> Criar Novo Orçamento
-            </a>
-
-            <a href="{{ route( 'provider.reports.index' ) }}" class="btn btn-info text-white">
-                <i class="bi bi-graph-up me-1"></i> Ver Relatórios
-            </a>
-
-            <a href="{{ route( 'provider.services.index' ) }}" class="btn btn-outline-success">
-                <i class="bi bi-tools me-1"></i> Gerenciar Serviços
-            </a>
-
-            <a href="{{ route( 'provider.customers.index' ) }}" class="btn btn-outline-dark">
-                <i class="bi bi-people me-1"></i> Clientes
-            </a>
+            <x-button type="link" :href="route( 'provider.budgets.create' )" variant="primary" icon="file-earmark-plus" label="Criar Novo Orçamento" />
+            <x-button type="link" :href="route( 'provider.reports.index' )" variant="info" icon="graph-up" label="Ver Relatórios" />
+            <x-button type="link" :href="route( 'provider.services.index' )" variant="success" outline icon="tools" label="Gerenciar Serviços" />
+            <x-button type="link" :href="route( 'provider.customers.index' )" variant="dark" outline icon="people" label="Clientes" />
         </div>
     </div>
 </div>

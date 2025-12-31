@@ -141,11 +141,16 @@
                                     <span class="small fw-bold">Novo Cliente</span>
                                 </a>
                             </div>
-                            <div class="col-md-2">
-                                <a href="{{ route('provider.services.index') }}" class="btn btn-outline-info w-100 py-3 hover-card">
-                                    <i class="bi bi-tools fs-4 d-block mb-1"></i>
-                                    <span class="small fw-bold">Serviços</span>
-                                </a>
+                            <div class="col-md-3">
+                                <x-button 
+                                    href="{{ route('provider.services.index') }}" 
+                                    variant="outline-info" 
+                                    class="w-100 py-3 hover-card">
+                                    <div class="text-center">
+                                        <i class="bi bi-tools fs-1 mb-2 d-block"></i>
+                                        <span class="fw-bold">Serviços</span>
+                                    </div>
+                                </x-button>
                             </div>
                             <div class="col-md-2">
                                 <a href="{{ route('provider.invoices.create') }}" class="btn btn-outline-warning w-100 py-3 hover-card">

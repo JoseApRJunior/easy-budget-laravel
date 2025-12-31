@@ -131,9 +131,13 @@
                         <h5 class="mb-0">
                             <i class="bi bi-clock-history me-2"></i>Compartilhamentos Recentes
                         </h5>
-                        <a href="{{ route('provider.budgets.shares.index') }}" class="btn btn-sm btn-outline-primary">
+                        <x-button 
+                            href="{{ route('provider.budgets.shares.index') }}" 
+                            variant="primary" 
+                            size="sm"
+                            outline>
                             Ver todos
-                        </a>
+                        </x-button>
                     </div>
                     <div class="card-body">
                         @if ($recentShares instanceof \Illuminate\Support\Collection && $recentShares->isNotEmpty())
@@ -206,10 +210,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('provider.budgets.show', $share->budget->code) }}"
-                                                        class="btn btn-sm btn-info text-white" title="Visualizar Orçamento">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
+                                                    <x-button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="info" size="sm" icon="eye" title="Visualizar Orçamento" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -307,25 +308,16 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.shares.create') }}" class="btn btn-success w-100">
-                                    <i class="bi bi-plus-circle me-2"></i>Novo Compartilhamento
-                                </a>
+                                <x-button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Compartilhamento" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.shares.index') }}"
-                                    class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-list me-2"></i>Gerenciar Compartilhamentos
-                                </a>
+                                <x-button type="link" :href="route('provider.budgets.shares.index')" variant="primary" outline icon="list" label="Gerenciar Compartilhamentos" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.index') }}" class="btn btn-outline-secondary w-100">
-                                    <i class="bi bi-file-earmark-text me-2"></i>Ver Orçamentos
-                                </a>
+                                <x-button type="link" :href="route('provider.budgets.index')" variant="secondary" outline icon="file-earmark-text" label="Ver Orçamentos" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.reports.budgets') }}" class="btn btn-outline-info w-100">
-                                    <i class="bi bi-graph-up me-2"></i>Relatórios
-                                </a>
+                                <x-button type="link" :href="route('provider.reports.budgets')" variant="info" outline icon="graph-up" label="Relatórios" class="w-100" />
                             </div>
                         </div>
                     </div>

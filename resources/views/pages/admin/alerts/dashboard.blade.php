@@ -141,10 +141,8 @@
                                                 <td>{{ \Carbon\Carbon::parse($alert['created_at'])->format('d/m/Y H:i') }}
                                                 </td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-success"
-                                                        onclick="resolveAlert({{ $alert['id'] }})">
-                                                        <i class="fas fa-check"></i> Resolver
-                                                    </button>
+                                                    <x-button variant="success" size="sm" icon="check" label="Resolver"
+                                                        onclick="resolveAlert({{ $alert['id'] }})" />
                                                 </td>
                                             </tr>
                                         @endforeach

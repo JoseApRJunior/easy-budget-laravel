@@ -162,18 +162,12 @@
                                                         <span class="badge bg-success">Concluído</span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <div class="btn-group" role="group">
+                                                        <div class="d-flex justify-content-center gap-1">
                                                             @if (isset($report->download_url))
-                                                                <a href="{{ $report->download_url }}"
-                                                                    class="btn btn-sm btn-outline-primary">
-                                                                    <i class="bi bi-download"></i>
-                                                                </a>
+                                                                <x-button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                             @endif
                                                             @if (isset($report->view_url))
-                                                                <a href="{{ $report->view_url }}"
-                                                                    class="btn btn-sm btn-info text-white">
-                                                                    <i class="bi bi-eye"></i>
-                                                                </a>
+                                                                <x-button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                             @endif
                                                         </div>
                                                     </td>
@@ -207,18 +201,12 @@
                                                         <span class="badge bg-success">Concluído</span>
                                                     </div>
                                                 </div>
-                                                <div class="btn-group" role="group">
+                                                <div class="d-flex gap-1">
                                                     @if (isset($report->download_url))
-                                                        <a href="{{ $report->download_url }}"
-                                                            class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-download"></i>
-                                                        </a>
+                                                        <x-button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                     @endif
                                                     @if (isset($report->view_url))
-                                                        <a href="{{ $report->view_url }}"
-                                                            class="btn btn-sm btn-info text-white">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
+                                                        <x-button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                     @endif
                                                 </div>
                                             </div>
@@ -274,18 +262,10 @@
                         </h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.reports.financial') }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-graph-up me-2"></i>Financeiro
-                        </a>
-                        <a href="{{ route('provider.reports.customers') }}" class="btn btn-sm btn-info text-white">
-                            <i class="bi bi-people me-2"></i>Clientes
-                        </a>
-                        <a href="{{ route('provider.reports.products') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-box me-2"></i>Produtos
-                        </a>
-                        <a href="{{ route('provider.reports.index') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-list-ul me-2"></i>Ver Todos
-                        </a>
+                        <x-button type="link" :href="route('provider.reports.financial')" variant="primary" size="sm" icon="graph-up" label="Financeiro" />
+                        <x-button type="link" :href="route('provider.reports.customers')" variant="info" size="sm" icon="people" label="Clientes" />
+                        <x-button type="link" :href="route('provider.reports.products')" variant="success" size="sm" icon="box" label="Produtos" />
+                        <x-button type="link" :href="route('provider.reports.index')" variant="secondary" outline size="sm" icon="list-ul" label="Ver Todos" />
                     </div>
                 </div>
             </div>

@@ -20,9 +20,13 @@
                             </option>
                             <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
                         </select>
-                        <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
-                            <i class="bi bi-arrow-clockwise"></i> Atualizar
-                        </button>
+                        <x-button 
+                            variant="outline-primary" 
+                            size="sm" 
+                            onclick="refreshDashboard()"
+                            icon="bi bi-arrow-clockwise">
+                            Atualizar
+                        </x-button>
                     </div>
                 </div>
             </div>
@@ -283,9 +287,12 @@
                             <a href="{{ route('admin.tenants.index') }}" class="btn btn-outline-success btn-sm">
                                 <i class="bi bi-building me-1"></i> Gerenciar Tenants
                             </a>
-                            <a href="{{ route('admin.global-settings.index') }}" class="btn btn-outline-info btn-sm">
-                                <i class="bi bi-sliders me-1"></i> Configurações Globais
-                            </a>
+                            <x-button 
+                                href="{{ route('admin.global-settings.index') }}" 
+                                variant="outline-info" 
+                                size="sm">
+                                <i class="bi bi-gear me-1"></i>Configurações
+                            </x-button>
                             <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-warning btn-sm">
                                 <i class="bi bi-file-earmark-text me-1"></i> Ver Relatórios
                             </a>

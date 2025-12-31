@@ -104,7 +104,7 @@
                     <div class="col-12 col-lg-4 text-start text-lg-end">
                         <div class="d-flex justify-content-start justify-content-lg-end">
                             <div class="dropdown">
-                                <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                                <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                     <li>
                                         <a class="dropdown-item" href="{{ route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary'])) }}">

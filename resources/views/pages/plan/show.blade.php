@@ -175,9 +175,12 @@
 
                 <!-- Botão voltar -->
                 <div class="text-center mt-3">
-                    <a href="{{ route('plans.index') }}" class="btn btn-outline-primary">
-                        <i class="bi bi-arrow-left me-2"></i>Voltar para Lista
-                    </a>
+                    <x-button 
+                        href="{{ route('plans.index') }}" 
+                        variant="outline-primary"
+                        icon="bi bi-arrow-left">
+                        Voltar para Lista
+                    </x-button>
                 </div>
             </div>
         </div>

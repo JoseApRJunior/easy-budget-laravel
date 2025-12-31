@@ -448,17 +448,27 @@
 
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="bi bi-check-circle me-2"></i>Atualizar Dados
-                    </button>
-                    <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </a>
+                <div class="d-flex gap-2">
+                    <x-button 
+                        type="submit" 
+                        variant="primary"
+                        id="submitBtn"
+                        icon="bi bi-check-circle">
+                        Atualizar Dados
+                    </x-button>
+                    <x-button 
+                        href="{{ route('settings.index') }}" 
+                        variant="outline-secondary"
+                        icon="bi bi-x-circle">
+                        Cancelar
+                    </x-button>
                 </div>
-                <a href="{{ route('settings.profile.edit') }}" class="btn btn-outline-info">
-                    <i class="bi bi-person me-2"></i>Perfil Pessoal
-                </a>
+                <x-button 
+                    href="{{ route('settings.profile.edit') }}" 
+                    variant="outline-info"
+                    icon="bi bi-person">
+                    Perfil Pessoal
+                </x-button>
             </div>
         </form>
     </div>

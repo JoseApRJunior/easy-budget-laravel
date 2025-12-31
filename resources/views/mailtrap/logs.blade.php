@@ -18,18 +18,23 @@
                             <i class="bi bi-arrow-clockwise me-1"></i>
                             Atualizar
                         </button>
-                        <button type="button" class="btn btn-outline-info" onclick="exportLogs()">
-                            <i class="bi bi-download me-1"></i>
-                            Exportar
-                        </button>
+                        <x-button 
+                            type="button" 
+                            variant="outline-info" 
+                            onclick="exportLogs()"
+                            icon="bi bi-download">
+                            Exportar CSV
+                        </x-button>
                         <button type="button" class="btn btn-outline-secondary" onclick="clearLogs()">
                             <i class="bi bi-trash me-1"></i>
                             Limpar Logs
                         </button>
-                        <a href="{{ route('mailtrap.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
+                        <x-button 
+                            href="{{ route('mailtrap.index') }}" 
+                            variant="secondary"
+                            icon="bi bi-arrow-left">
                             Voltar ao Dashboard
-                        </a>
+                        </x-button>
                     </div>
                 </div>
             </div>
@@ -185,11 +190,9 @@
                                                         @endif
                                                     </div>
                                                     <div class="log-actions">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                            onclick="showLogDetails({{ json_encode($log) }})"
-                                                            title="Ver detalhes">
-                                                            <i class="bi bi-eye"></i>
-                                                        </button>
+                                                        <x-button type="button" variant="info" size="sm" icon="eye"
+                                                    onclick="showLogDetails({{ json_encode($log) }})"
+                                                    title="Ver detalhes" />
                                                     </div>
                                                 </div>
                                                 <div class="log-message">

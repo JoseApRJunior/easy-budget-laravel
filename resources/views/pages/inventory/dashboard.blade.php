@@ -27,7 +27,7 @@
                     </div>
                     <h5 class="mb-0 fw-bold text-body">{{ number_format($totalProducts, 0, ',', '.') }}</h5>
                     <div class="mt-2">
-                        <a href="{{ route('provider.inventory.index') }}" class="text-primary small text-decoration-none">Ver todos <i class="bi bi-chevron-right ms-1"></i></a>
+                        <x-button type="link" :href="route('provider.inventory.index')" variant="link" size="sm" label="Ver todos" icon="chevron-right" icon-right class="p-0 text-decoration-none" />
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
                     </div>
                     <h5 class="mb-0 fw-bold text-body">{{ number_format($sufficientStockProducts, 0, ',', '.') }}</h5>
                     <div class="mt-2">
-                        <a href="{{ route('provider.inventory.index', ['status' => 'sufficient']) }}" class="text-success small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
+                        <x-button type="link" :href="route('provider.inventory.index', ['status' => 'sufficient'])" variant="link" size="sm" label="Ver produtos" icon="chevron-right" icon-right class="text-success p-0 text-decoration-none" />
                     </div>
                 </div>
             </div>
@@ -148,7 +148,7 @@
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-exclamation-triangle me-2 "></i>Estoque Baixo
                     </h5>
-                    <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="btn btn-sm btn-link text-primary p-0 text-decoration-none">Ver todos</a>
+                    <x-button type="link" :href="route('provider.inventory.index', ['status' => 'low'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
                 <div class="card-body p-0">
                     <!-- Desktop View -->
@@ -239,7 +239,7 @@
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-arrow-up-circle me-2 "></i>Estoque Alto
                     </h5>
-                    <a href="{{ route('provider.inventory.index', ['status' => 'high']) }}" class="btn btn-sm btn-link text-primary p-0 text-decoration-none">Ver todos</a>
+                    <x-button type="link" :href="route('provider.inventory.index', ['status' => 'high'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
                 <div class="card-body p-0">
                     <!-- Desktop View -->
@@ -307,8 +307,8 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">Máx: {{ number_format($item->max_quantity, 0, ',', '.') }}</small>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="outline-warning" icon="dash" size="sm" />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
                                         </div>
                                     </div>
                                 </div>

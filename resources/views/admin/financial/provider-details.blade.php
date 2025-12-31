@@ -229,31 +229,12 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.financial.reports', ['tenant_id' => $providerFinancialDetails['tenant_id']]) }}" 
-                               class="btn btn-primary btn-block">
-                                <i class="fas fa-chart-bar"></i> Ver Relatórios
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <button class="btn btn-success btn-block" onclick="exportProviderReports()">
-                                <i class="fas fa-download"></i> Exportar Dados
-                            </button>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.enterprises.show', $providerFinancialDetails['tenant_id']) }}" 
-                               class="btn btn-info btn-block text-white">
-                                <i class="fas fa-building"></i> Ver Empresa
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.financial.index') }}" 
-                               class="btn btn-secondary btn-block">
-                                <i class="fas fa-arrow-left"></i> Voltar
-                            </a>
-                        </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex flex-wrap gap-2">
+                        <x-button type="link" :href="route('admin.financial.reports', ['tenant_id' => $providerFinancialDetails['tenant_id']])" variant="primary" label="Ver Relatórios" icon="chart-bar" class="flex-grow-1" />
+                        <x-button variant="success" label="Exportar Dados" icon="download" class="flex-grow-1" onclick="exportProviderReports()" />
+                        <x-button type="link" :href="route('admin.enterprises.show', $providerFinancialDetails['tenant_id'])" variant="info" label="Ver Empresa" icon="building" class="flex-grow-1" />
+                        <x-back-button index-route="admin.financial.index" class="flex-grow-1" label="Voltar" />
                     </div>
                 </div>
             </div>

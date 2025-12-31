@@ -23,13 +23,8 @@
                             {{-- Cabeçalho com cliente e código --}}
                             <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
                                 <div class="d-flex align-items-center flex-wrap gap-2">
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ route( 'provider.budgets.show', $budget->code ) }}"
-                                            class="btn btn-warning">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </div>
-                                    <span class="fw-bold">{{ $budget->first_name }} {{ $budget->last_name }}</span>
+                                        <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
+                                        <span class="fw-bold">{{ $budget->first_name }} {{ $budget->last_name }}</span>
                                     <span class="badge bg-secondary">{{ $budget->code }}</span>
                                     <span class="badge" style="background-color: {{ $budget->color }}">
                                         <i class="bi {{ $budget->icon }}"></i>
