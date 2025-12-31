@@ -17,7 +17,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Mpdf\Mpdf;
-use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * Controller para Budgets
@@ -49,9 +48,8 @@ class BudgetController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Budget::class);
-        /** @var User $user */
-        $user = Auth::user();
-        $result = $this->budgetService->getBudgetsForProvider($request->all());
+        $filters = $request->all();
+        $result = $this->budgetService->getBudgetsForProvider($filters);
 
         if ($result->isError()) {
             abort(500, 'Erro ao carregar orçamentos.');
@@ -59,6 +57,7 @@ class BudgetController extends Controller
 
         return view('pages.budget.index', [
             'budgets' => $result->getData(),
+            'filters' => $filters,
         ]);
     }
 
@@ -70,7 +69,7 @@ class BudgetController extends Controller
 
         $selectedCustomer = null;
         if ($customerId = $request->query('customer_id')) {
-            $customerResult = $this->customerService->findCustomer((int)$customerId);
+            $customerResult = $this->customerService->findCustomer((int) $customerId);
             if ($customerResult->isSuccess()) {
                 $selectedCustomer = $customerResult->getData();
             }
@@ -119,7 +118,7 @@ class BudgetController extends Controller
 
     public function edit(string $code): View
     {
-        $result = $this->budgetService->findByCode($code, ['customer', 'items']);
+        $result = $this->budgetService->findByCode($code, ['customer.commonData']);
 
         if ($result->isError()) {
             abort(404, 'Orçamento não encontrado.');
@@ -139,8 +138,15 @@ class BudgetController extends Controller
 
     public function update(BudgetUpdateRequest $request, string $code): RedirectResponse
     {
+        \Illuminate\Support\Facades\Log::info('[BudgetController@update] Iniciando atualização', [
+            'code' => $code,
+            'request_all' => $request->all(),
+        ]);
+
         $result = $this->budgetService->findByCode($code);
         if ($result->isError()) {
+            \Illuminate\Support\Facades\Log::error('[BudgetController@update] Orçamento não encontrado', ['code' => $code]);
+
             return redirect()->back()->with('error', $result->getMessage());
         }
 
@@ -148,7 +154,17 @@ class BudgetController extends Controller
         $this->authorize('update', $budget);
 
         $dto = BudgetDTO::fromRequest($request->validated());
+
+        \Illuminate\Support\Facades\Log::info('[BudgetController@update] DTO criado', [
+            'dto' => $dto->toArray(),
+        ]);
+
         $updateResult = $this->budgetService->update($code, $dto);
+
+        \Illuminate\Support\Facades\Log::info('[BudgetController@update] Resultado do serviço', [
+            'success' => $updateResult->isSuccess(),
+            'message' => $updateResult->getMessage(),
+        ]);
 
         return $this->redirectBackWithServiceResult(
             $updateResult,
@@ -238,8 +254,8 @@ class BudgetController extends Controller
                 'margin_footer' => 8,
             ]);
 
-            $mpdf->SetHeader('Orçamento #' . $budget->code . '||Gerado em: ' . now()->format('d/m/Y'));
-            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: ' . Auth::user()->name . '|' . config('app.url'));
+            $mpdf->SetHeader('Orçamento #'.$budget->code.'||Gerado em: '.now()->format('d/m/Y'));
+            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: '.Auth::user()->name.'|'.config('app.url'));
 
             $mpdf->WriteHTML($html);
 
@@ -248,7 +264,7 @@ class BudgetController extends Controller
 
             return response($content, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"',
+                'Content-Disposition' => ($download ? 'attachment' : 'inline').'; filename="'.$filename.'"',
             ]);
         }
 

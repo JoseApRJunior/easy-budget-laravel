@@ -32,7 +32,7 @@
                 <div class="row g-4">
                     <!-- Cliente -->
                     <div class="col-md-6">
-                        <label for="customer_id" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Cliente *</label>
+                        <label for="customer_id" class="form-label small fw-bold text-muted text-uppercase">Cliente *</label>
                         <select class="form-select tom-select @error('customer_id') is-invalid @enderror"
                             id="customer_id" name="customer_id" required>
                             <option value="">Selecione um cliente...</option>
@@ -42,7 +42,7 @@
                                 {{ $customer->commonData
                                             ? ($customer->commonData->company_name ?: ($customer->commonData->first_name . ' ' . $customer->commonData->last_name))
                                             : 'Nome não informado' }}
-                                ({{ $customer->commonData ? ($customer->commonData->cnpj ?: $customer->commonData->cpf) : 'Sem documento' }})
+                                ({{ $customer->commonData ? ($customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($customer->commonData->cpf)) : 'Sem documento' }})
                             </option>
                             @endforeach
                         </select>
@@ -53,10 +53,14 @@
 
                     <!-- Data de Vencimento -->
                     <div class="col-md-6">
-                        <label for="due_date" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Data de Vencimento *</label>
+                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
                         <input type="date" id="due_date" name="due_date"
                             class="form-control @error('due_date') is-invalid @enderror"
-                            value="{{ old('due_date') }}" required>
+                            value="{{ old('due_date') }}"
+                            min="{{ date('Y-m-d') }}" required>
+                        <div class="form-text text-muted small">
+                            <i class="bi bi-info-circle me-1"></i>A data de vencimento deve ser igual ou posterior a hoje.
+                        </div>
                         @error('due_date')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -64,7 +68,7 @@
 
                     <!-- Descrição -->
                     <div class="col-12">
-                        <label for="description" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Descrição</label>
+                        <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
                         <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
                             rows="4" maxlength="255" placeholder="Ex: Projeto de reforma da cozinha...">{{ old('description') }}</textarea>
                         <div class="d-flex justify-content-end">
@@ -77,7 +81,7 @@
 
                     <!-- Condições de Pagamento -->
                     <div class="col-12">
-                        <label for="payment_terms" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Condições de Pagamento (Opcional)</label>
+                        <label for="payment_terms" class="form-label small fw-bold text-muted text-uppercase">Condições de Pagamento (Opcional)</label>
                         <textarea id="payment_terms" name="payment_terms"
                             class="form-control @error('payment_terms') is-invalid @enderror" rows="2" maxlength="255"
                             placeholder="Ex: 50% de entrada e 50% na conclusão.">{{ old('payment_terms') }}</textarea>

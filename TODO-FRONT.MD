@@ -34,7 +34,27 @@ O padrão de relatórios deve seguir a estrutura de filtros com estado inicial v
 
 #### Padrão de Estilização (CSS)
 - **Labels de Filtro:** Sempre utilizar as classes `form-label small fw-bold text-muted text-uppercase`.
-- **Cabeçalhos de Tabela (`<th>`):** Para manter a consistência, utilizar as classes `small fw-bold text-muted text-uppercase`.
+- **Cabeçalhos de Tabela (`<th>`):** NÃO utilizar classes de estilização manual (como `small fw-bold...`). A estilização deve vir da classe `.modern-table` aplicada à tabela. Cabeçalhos de tabela devem ser limpos: `<th>Nome</th>`.
+
+#### Padrão de Campos de Formulário (Create/Edit)
+Para campos de entrada em formulários, seguir a estrutura utilizada no Budget Create:
+- **Label:** `form-label small fw-bold text-muted text-uppercase`.
+- **Input de Data:** `type="date"` (nativo do navegador para melhor UX mobile) ou `type="text"` com máscara se necessário. Sempre definir `min="{{ date('Y-m-d') }}"` para campos de vencimento/prazo.
+- **Selects:** Utilizar a classe `tom-select` para busca dinâmica.
+
+Exemplo de campo de data:
+```blade
+<div class="col-md-6">
+    <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
+    <input type="date" id="due_date" name="due_date"
+        class="form-control @error('due_date') is-invalid @enderror"
+        value="{{ old('due_date') }}"
+        min="{{ date('Y-m-d') }}" required>
+    @error('due_date')
+    <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
+```
 
 #### Padrão de Filtros de Data
 - **Labels Sugeridas:**

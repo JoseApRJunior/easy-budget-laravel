@@ -27,7 +27,6 @@ class BudgetUpdateRequest extends FormRequest
     public function rules(): array
     {
         $tenantId = auth()->user()->tenant_id ?? 0;
-        $budgetId = $this->route('budget')?->id;
 
         return [
             'customer_id' => [
@@ -36,38 +35,16 @@ class BudgetUpdateRequest extends FormRequest
                 Rule::exists('customers', 'id')->where('tenant_id', $tenantId),
             ],
             'status' => [
-                'required',
+                'nullable',
                 Rule::in(array_column(BudgetStatus::cases(), 'value')),
             ],
+            'total' => 'required|numeric|min:0|max:9999999.99',
             'discount' => 'nullable|numeric|min:0|max:999999.99',
             'description' => 'nullable|string|max:1000',
             'due_date' => 'nullable|date',
             'payment_terms' => 'nullable|string|max:2000',
             'items' => 'nullable|array',
-            'items.*.product_id' => [
-                'required_with:items',
-                'integer',
-                Rule::exists('products', 'id')->where('tenant_id', $tenantId),
-            ],
-            'items.*.unit_value' => 'required_with:items|numeric|min:0|max:999999.99',
-            'items.*.quantity' => 'required_with:items|integer|min:1|max:9999',
-            'items.*.total' => 'nullable|numeric|min:0|max:999999.99',
-
             'services' => 'nullable|array',
-            'services.*.category_id' => [
-                'required_with:services',
-                'integer',
-                Rule::exists('categories', 'id')->where('tenant_id', $tenantId),
-            ],
-            'services.*.description' => 'nullable|string|max:1000',
-            'services.*.items' => 'required_with:services|array|min:1',
-            'services.*.items.*.product_id' => [
-                'required_with:services.*.items',
-                'integer',
-                Rule::exists('products', 'id')->where('tenant_id', $tenantId),
-            ],
-            'services.*.items.*.unit_value' => 'required_with:services.*.items|numeric|min:0|max:999999.99',
-            'services.*.items.*.quantity' => 'required_with:services.*.items|integer|min:1|max:9999',
         ];
     }
 
@@ -79,26 +56,12 @@ class BudgetUpdateRequest extends FormRequest
         return [
             'customer_id.required' => 'O cliente é obrigatório.',
             'customer_id.exists' => 'Cliente não encontrado.',
-            'status.required' => 'O status é obrigatório.',
-            'status.in' => 'Status inválido.',
+            'total.required' => 'O valor total é obrigatório.',
+            'total.numeric' => 'O valor total deve ser um número.',
             'discount.numeric' => 'O desconto deve ser um valor numérico.',
             'discount.min' => 'O desconto não pode ser negativo.',
-            'discount.max' => 'O desconto não pode ser maior que R$ 999.999,99.',
             'description.max' => 'A descrição não pode ter mais de 1000 caracteres.',
             'payment_terms.max' => 'Os termos de pagamento não podem ter mais de 2000 caracteres.',
-            'items.required' => 'Pelo menos um item deve ser adicionado.',
-            'items.*.product_id.required_with' => 'O produto é obrigatório para cada item.',
-            'items.*.product_id.exists' => 'Produto não encontrado.',
-            'items.*.unit_value.required_with' => 'O valor unitário é obrigatório para cada item.',
-            'items.*.unit_value.numeric' => 'O valor unitário deve ser numérico.',
-            'items.*.unit_value.min' => 'O valor unitário não pode ser negativo.',
-            'items.*.unit_value.max' => 'O valor unitário não pode ser maior que R$ 999.999,99.',
-            'items.*.quantity.required_with' => 'A quantidade é obrigatória para cada item.',
-            'items.*.quantity.integer' => 'A quantidade deve ser um número inteiro.',
-            'items.*.quantity.min' => 'A quantidade deve ser pelo menos 1.',
-            'items.*.quantity.max' => 'A quantidade não pode ser maior que 9999.',
-            'items.*.total.min' => 'O total do item não pode ser negativo.',
-            'items.*.total.max' => 'O total do item não pode ser maior que R$ 999.999,99.',
         ];
     }
 

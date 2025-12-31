@@ -624,13 +624,7 @@ class InventoryManagementService extends AbstractBaseService
 
             $perPage = (int) ($filters['per_page'] ?? 10);
 
-            // Validação de datas (apenas se o tipo for movements)
-            if ($reportType === 'movements') {
-                if (empty($startDate) || empty($endDate)) {
-                    throw new \Exception('As datas inicial e final são obrigatórias para o relatório de movimentações.');
-                }
-            }
-
+            // Validação de datas
             if (! empty($startDate) && ! empty($endDate) && $startDate > $endDate) {
                 throw new \Exception('A data inicial não pode ser maior que a data final.');
             }
@@ -733,6 +727,8 @@ class InventoryManagementService extends AbstractBaseService
                 'type' => $reportType,
                 'startDate' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
                 'endDate' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
+                'isInitial' => false,
+                'categories' => \App\Models\Category::whereNull('parent_id')->with('children')->get(),
             ];
         });
     }
@@ -896,4 +892,3 @@ class InventoryManagementService extends AbstractBaseService
         });
     }
 }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

@@ -28,32 +28,25 @@
                 </div>
                 <div class="card-body">
                     <div class="info-item mb-3">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Código</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Código</small>
                         <span class="text-dark fw-bold">{{ $budget->code }}</span>
                     </div>
 
                     <div class="info-item mb-3">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
                         <div>
-                            @php
-                            $statusColor = $budget->status->getColor();
-                            $statusIcon = $budget->status->getIcon();
-                            $statusLabel = $budget->status->label();
-                            @endphp
-                            <span class="badge rounded-pill" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
-                                <i class="bi {{ $statusIcon }} me-1"></i>{{ $statusLabel }}
-                            </span>
+                            <x-status-badge :item="$budget" />
                         </div>
                     </div>
 
                     <div class="info-item mb-3">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Data de Criação</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Data de Criação</small>
                         <span class="text-dark fw-bold">{{ $budget->created_at->format('d/m/Y H:i') }}</span>
                     </div>
 
                     @if ($budget->due_date)
                     <div class="info-item">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Data de Vencimento</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Data de Vencimento</small>
                         <span class="text-dark fw-bold">{{ $budget->due_date->format('d/m/Y') }}</span>
                     </div>
                     @endif
@@ -75,7 +68,7 @@
                 <div class="card-body">
                     @if ($budget->customer && $budget->customer->commonData)
                     <div class="info-item mb-3">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Nome/Razão Social</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Nome/Razão Social</small>
                         <span class="text-dark fw-bold">
                             @if ($budget->customer->commonData->company_name)
                             {{ $budget->customer->commonData->company_name }}
@@ -88,12 +81,12 @@
 
                     @if ($budget->customer->commonData->cnpj)
                     <div class="info-item mb-3">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">CNPJ</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">CNPJ</small>
                         <span class="text-dark fw-bold">{{ \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) }}</span>
                     </div>
                     @elseif($budget->customer->commonData->cpf)
                     <div class="info-item mb-3">
-                        <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">CPF</small>
+                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">CPF</small>
                         <span class="text-dark fw-bold">{{ \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) }}</span>
                     </div>
                     @endif
@@ -342,7 +335,7 @@
             <x-button type="link" :href="route('provider.budgets.print', $budget->code)"
                 variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" class="d-none d-md-inline-flex" />
 
-            <x-button type="link" :href="route('provider.budgets.print', ['budget' => $budget->code, 'pdf' => true, 'download' => true])"
+            <x-button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true, 'download' => true])"
                 variant="outline-secondary" icon="download" label="PDF" class="d-none d-md-inline-flex" />
 
             <!-- Mobile: Dropdown -->
@@ -359,7 +352,7 @@
                     </li>
                     <li>
                         <a class="dropdown-item"
-                            href="{{ route('provider.budgets.print', ['budget' => $budget->code, 'pdf' => true, 'download' => true]) }}">
+                            href="{{ route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true, 'download' => true]) }}">
                             <i class="bi bi-download me-2"></i>Baixar PDF
                         </a>
                     </li>

@@ -312,11 +312,11 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         // Rotas com parâmetros devem vir DEPOIS das rotas específicas
         Route::get('/{code}', [BudgetController::class, 'show'])->name('show');
         Route::get('/{code}/edit', [BudgetController::class, 'edit'])->name('edit');
-        Route::post('/{budget}', [BudgetController::class, 'update'])->name('update');
-        Route::post('/{budget}/change-status', [BudgetController::class, 'changeStatus'])->name('change-status');
-        Route::delete('/{budget}', [BudgetController::class, 'destroy'])->name('destroy');
-        Route::get('/{budget}/print', [BudgetController::class, 'print'])->name('print');
-        Route::get('/{budget}/services/create', [ServiceController::class, 'create'])->name('services.create');
+        Route::put('/{code}', [BudgetController::class, 'update'])->name('update');
+        Route::post('/{code}/change-status', [BudgetController::class, 'changeStatus'])->name('change-status');
+        Route::delete('/{code}', [BudgetController::class, 'destroy'])->name('destroy');
+        Route::get('/{code}/print', [BudgetController::class, 'print'])->name('print');
+        Route::get('/{code}/services/create', [ServiceController::class, 'create'])->name('services.create');
     });
 
     // Invoices

@@ -152,7 +152,7 @@
                     <div class="mobile-view">
                         <div class="list-group list-group-flush">
                             @forelse($budgets ?? [] as $budget)
-                                <a href="{{ route('provider.budgets.show', $budget) }}"
+                                <a href="{{ route('provider.budgets.show', $budget->code) }}"
                                     class="list-group-item list-group-item-action py-3">
                                     <div class="d-flex align-items-start">
                                         <i class="bi bi-file-earmark-bar-graph text-muted me-3 mt-1"

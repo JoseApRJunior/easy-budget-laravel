@@ -4,34 +4,15 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-file-earmark-text me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Orçamentos</span>
-                        <span class="d-sm-none">Orçamentos</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.budgets.index') }}">Orçamentos</a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Dashboard
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-            <p class="text-muted mb-0 small">
-                Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.
-            </p>
-        </div>
+        <x-page-header
+            title="Dashboard de Orçamentos"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Orçamentos' => route('provider.budgets.index'),
+                'Dashboard' => '#'
+            ]">
+            <p class="text-muted mb-0">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
+        </x-page-header>
 
         @php
             $total = $stats['total_budgets'] ?? 0;

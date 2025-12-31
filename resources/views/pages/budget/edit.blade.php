@@ -35,20 +35,24 @@
                         <div class="row g-3">
                             <!-- Cliente (readonly) -->
                             <div class="col-md-6">
-                                <label for="customer_display" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Cliente</label>
+                                <label for="customer_display" class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
                                 <input type="text" id="customer_display" class="form-control"
-                                    value="{{ $budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' }} ({{ $budget->customer->commonData ? ($budget->customer->commonData->cnpj ?: $budget->customer->commonData->cpf) : 'Sem documento' }})"
+                                    value="{{ $budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' }} ({{ $budget->customer->commonData ? ($budget->customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf)) : 'Sem documento' }})"
                                     disabled readonly>
                                 <input type="hidden" name="customer_id" value="{{ $budget->customer_id }}">
                             </div>
 
                             <!-- Data de Vencimento -->
                             <div class="col-md-3">
-                                <label for="due_date" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Data de Vencimento</label>
+                                <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
                                 <input type="date" id="due_date" name="due_date"
                                     class="form-control @error('due_date') is-invalid @enderror"
                                     value="{{ old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : '') }}"
+                                    min="{{ date('Y-m-d') }}"
                                     required>
+                                <div class="form-text text-muted small">
+                                    <i class="bi bi-info-circle me-1"></i>A data de vencimento deve ser igual ou posterior a hoje.
+                                </div>
                                 @error('due_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -56,7 +60,7 @@
 
                             <!-- Status Atual (readonly) -->
                             <div class="col-md-3">
-                                <label class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Status Atual</label>
+                                <label class="form-label small fw-bold text-muted text-uppercase">Status Atual</label>
                                 <input type="text" class="form-control" value="{{ $budget->status->label() }}"
                                     readonly disabled>
                                 <input type="hidden" name="status" value="{{ $budget->status->value }}">
@@ -65,7 +69,7 @@
 
                             <!-- Descrição -->
                             <div class="col-12">
-                                <label for="description" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Descrição</label>
+                                <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
                                 <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
                                     rows="4" maxlength="255"
                                     placeholder="Ex: Projeto de reforma da cozinha, incluindo instalação de armários e pintura.">{{ old('description', $budget->description) }}</textarea>
@@ -80,7 +84,7 @@
 
                             <!-- Condições de Pagamento -->
                             <div class="col-12">
-                                <label for="payment_terms" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Condições de Pagamento (Opcional)</label>
+                                <label for="payment_terms" class="form-label small fw-bold text-muted text-uppercase">Condições de Pagamento (Opcional)</label>
                                 <textarea id="payment_terms" name="payment_terms"
                                     class="form-control @error('payment_terms') is-invalid @enderror" rows="2" maxlength="255"
                                     placeholder="Ex: 50% de entrada e 50% na conclusão.">{{ old('payment_terms', $budget->payment_terms) }}</textarea>
@@ -108,25 +112,33 @@
                         <div class="row g-3">
                             <!-- Valor Total -->
                             <div class="col-md-6">
-                                <label for="total" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Valor Total</label>
-                                <input type="text" id="total" name="total"
-                                    class="form-control @error('total') is-invalid @enderror"
-                                    value="{{ old('total', number_format($budget->total, 2, ',', '.')) }}"
-                                    inputmode="numeric">
+                                <label for="total" class="form-label small fw-bold text-muted text-uppercase">Valor Total</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">R$</span>
+                                    <input type="text" id="total_display"
+                                        class="form-control bg-light @error('total') is-invalid @enderror"
+                                        value="{{ old('total', number_format($budget->total, 2, ',', '.')) }}"
+                                        readonly tabindex="-1">
+                                    <input type="hidden" id="total" name="total" value="{{ old('total', $budget->total) }}">
+                                </div>
                                 @error('total')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <!-- Desconto -->
                             <div class="col-md-6">
-                                <label for="discount" class="form-label text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Desconto</label>
-                                <input type="text" id="discount" name="discount"
-                                    class="form-control @error('discount') is-invalid @enderror"
-                                    inputmode="numeric"
-                                    value="{{ old('discount', number_format($budget->discount, 2, ',', '.')) }}">
+                                <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">R$</span>
+                                    <input type="text" id="discount_display"
+                                        class="form-control bg-light @error('discount') is-invalid @enderror"
+                                        value="{{ old('discount', number_format($budget->discount, 2, ',', '.')) }}"
+                                        readonly tabindex="-1">
+                                    <input type="hidden" id="discount" name="discount" value="{{ old('discount', $budget->discount) }}">
+                                </div>
                                 @error('discount')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -161,34 +173,33 @@
             });
         }
 
-        // Currency formatting
+        // Currency formatting (only for form submission)
         try {
-            if (window.VanillaMask) {
-                new VanillaMask('total', 'currency');
-                new VanillaMask('discount', 'currency');
-            }
-
             var form = document.getElementById('edit-budget-form');
             if (form) {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(event) {
+                    console.log('[budget:edit] Form submitted, processing fields...');
                     const fields = ['total', 'discount'];
                     fields.forEach(function(id) {
                         const input = document.getElementById(id);
-                        if (input) {
+                        const displayInput = document.getElementById(id + '_display');
+                        if (input && displayInput) {
+                            let val = displayInput.value;
                             let num = 0;
                             if (window.parseCurrencyBRLToNumber) {
-                                num = window.parseCurrencyBRLToNumber(input.value);
+                                num = window.parseCurrencyBRLToNumber(val);
                             } else {
-                                var digits = input.value.replace(/\D/g, '');
+                                var digits = val.replace(/\D/g, '');
                                 num = parseInt(digits || '0', 10) / 100;
                             }
                             input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
+                            console.log(`[budget:edit] Processed ${id}: ${input.value}`);
                         }
                     });
                 });
             }
         } catch (e) {
-            console.error('[budget:edit] Error initializing masks:', e);
+            console.error('[budget:edit] Error in submit handler:', e);
         }
     });
 </script>

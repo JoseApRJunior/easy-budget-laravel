@@ -13,6 +13,24 @@
 @endphp
 
 <div class="container my-4">
+    {{-- Exibição de Erros de Validação do Laravel --}}
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-4 shadow-sm border-start border-danger border-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-octagon-fill me-2 fs-5"></i>
+                <div>
+                    <strong class="d-block mb-1">Ops! Verifique os campos abaixo:</strong>
+                    <ul class="mb-0 ps-3 small">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                <button type="button" class="btn-close small" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    @endif
+
     @php
         $flashTypes = [
             'error'   => 'danger',

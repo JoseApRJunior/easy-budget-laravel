@@ -245,11 +245,11 @@
                                                                     <td>R$ {{ number_format($budget->total, 2, ',', '.') }}</td>
                                                                     <td>
                                                                         <span class="badge rounded-pill bg-light text-dark border">
-                                                                            {{ ucfirst($budget->status) }}
+                                                                            {{ is_string($budget->status) ? ucfirst($budget->status) : $budget->status->label() }}
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-end">
-                                                                <x-button type="link" :href="route('provider.budgets.show', $budget->id)" variant="info" size="sm" icon="eye" />
+                                                                <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
                                                             </td>
                                                                 </tr>
                                                             @endforeach

@@ -19,12 +19,17 @@ readonly class BudgetDTO extends AbstractDTO
         public float $total = 0.0,
         public ?string $description = null,
         public ?string $payment_terms = null,
-        public array $services = [],
+        public ?array $services = null,
         public ?int $tenant_id = null
     ) {}
 
     public static function fromRequest(array $data): self
     {
+        $servicesData = $data['services'] ?? $data['items'] ?? null;
+        $services = is_array($servicesData) 
+            ? array_map(fn ($service) => \App\DTOs\Service\ServiceDTO::fromRequest($service), $servicesData)
+            : null;
+
         return new self(
             customer_id: (int) $data['customer_id'],
             status: isset($data['status']) ? BudgetStatus::from($data['status']) : BudgetStatus::DRAFT,
@@ -34,7 +39,7 @@ readonly class BudgetDTO extends AbstractDTO
             total: (float) ($data['total'] ?? 0.0),
             description: $data['description'] ?? null,
             payment_terms: $data['payment_terms'] ?? null,
-            services: array_map(fn ($service) => \App\DTOs\Service\ServiceDTO::fromRequest($service), $data['services'] ?? $data['items'] ?? []),
+            services: $services,
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
