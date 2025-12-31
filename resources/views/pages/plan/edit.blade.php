@@ -163,19 +163,11 @@
 
                         <!-- Footer com botões -->
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <x-button type="link" :href="route('plans.show', $plan->slug)" variant="info" icon="eye" text="Visualizar" />
+                            <x-button type="link" :href="route('plans.show', $plan->slug)" variant="info" icon="eye" label="Visualizar" />
 
-                            <div>
-                                <x-button 
-                                    href="{{ route('plans.index') }}" 
-                                    variant="outline-secondary"
-                                    icon="bi bi-arrow-left"
-                                    class="me-2">
-                                    Voltar
-                                </x-button>
-                                <button type="submit" class="btn btn-warning btn-lg">
-                                    <i class="bi bi-check-lg me-2"></i>Salvar Alterações
-                                </button>
+                            <div class="d-flex gap-2">
+                                <x-button type="link" :href="route('plans.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                                <x-button type="submit" variant="warning" size="lg" icon="check-lg" label="Salvar Alterações" />
                             </div>
                         </div>
                     </form>

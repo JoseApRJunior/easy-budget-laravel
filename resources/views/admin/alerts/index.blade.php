@@ -18,21 +18,19 @@
             </div>
             <div class="btn-group" role="group">
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-download"></i> Exportar
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Exportar
                     </button>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                         <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'excel') }}">
-                                <i class="bi bi-file-earmark-excel me-2"></i>Excel
+                                <i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel
                             </a></li>
                         <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'csv') }}">
-                                <i class="bi bi-file-earmark-text me-2"></i>CSV
+                                <i class="bi bi-file-earmark-text me-2 text-primary"></i>CSV
                             </a></li>
                     </ul>
                 </div>
-                <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Novo Alerta
-                </a>
+                <x-button type="link" :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
             </div>
         </div>
 
@@ -157,12 +155,8 @@
                             <div class="form-group">
                                 <label>&nbsp;</label>
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-search"></i> Filtrar
-                                    </button>
-                                    <a href="{{ route('admin.alerts.index') }}" class="btn btn-secondary">
-                                        <i class="bi bi-x-circle"></i> Limpar
-                                    </a>
+                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
+                                    <x-button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -329,12 +323,10 @@
                 @else
                     <!-- Empty State -->
                     <div class="text-center py-5">
-                        <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                        <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                         <h5 class="text-muted">Nenhum alerta encontrado</h5>
-                        <p class="text-muted">Não há alertas para exibir com os filtros aplicados.</p>
-                        <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Criar Primeiro Alerta
-                        </a>
+                        <p class="text-muted mb-4">Não há alertas para exibir com os filtros aplicados.</p>
+                        <x-button type="link" :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Criar Primeiro Alerta" />
                     </div>
                 @endif
             </div>
@@ -353,11 +345,11 @@
                     Tem certeza que deseja excluir este alerta? Esta ação não pode ser desfeita.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <x-button variant="secondary" label="Cancelar" data-bs-dismiss="modal" />
                     <form id="deleteForm" method="POST" style="display: inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Excluir</button>
+                        <x-button type="submit" variant="danger" label="Excluir" />
                     </form>
                 </div>
             </div>

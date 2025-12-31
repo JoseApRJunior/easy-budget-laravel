@@ -73,7 +73,7 @@
                         <div class="col-12">
                             <div class="d-flex gap-2">
                                 <x-button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
-                                <x-button type="link" :href="route('provider.inventory.report')" variant="outline-secondary" icon="x" label="Limpar" />
+                                <x-button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -103,20 +103,9 @@
                     </div>
                     <div class="col-12 col-lg-4 text-start text-lg-end">
                         <div class="d-flex justify-content-start justify-content-lg-end">
-                            <div class="dropdown">
-                                <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary'])) }}">
-                                            <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary'])) }}">
-                                            <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                        </a>
-                                    </li>
-                                </ul>
+                            <div class="d-flex gap-1" role="group">
+                                <x-button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                <x-button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                             </div>
                         </div>
                     </div>
@@ -160,8 +149,8 @@
                                 <div class="list-group-item py-3">
                                     <div class="d-flex align-items-start">
                                         <div class="me-3 mt-1">
-                                            <div class="avatar-circle bg-light text-muted" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                                <i class="bi bi-file-text"></i>
+                                            <div class="avatar-circle bg-secondary bg-gradient me-3" style="width: 35px; height: 35px;">
+                                                <i class="bi bi-file-text text-white" style="font-size: 0.9rem;"></i>
                                             </div>
                                         </div>
                                         <div class="flex-grow-1">

@@ -587,7 +587,9 @@ class AIAnalyticsService
         // Perform RFM Segmentation
         // Get raw data for RFM
         $customersData = Customer::where('tenant_id', $this->tenantId)
-            ->withCount('budgets as total_purchases') // Using budgets as proxy for purchases count for simplicity, ideal is paid invoices
+            ->withCount(['invoices as total_purchases' => function($q) {
+                $q->where('status', \App\Enums\InvoiceStatus::PAID);
+            }])
             ->withSum(['invoices' => function($q) {
                 $q->where('status', \App\Enums\InvoiceStatus::PAID);
             }], 'total')

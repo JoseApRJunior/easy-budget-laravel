@@ -13,8 +13,8 @@
                         <p class="text-muted mb-0">Gerencie as configurações do sistema EasyBudget</p>
                     </div>
                     <div>
-                        <x-button variant="secondary" outline size="sm" icon="download" label="Exportar" onclick="exportSettings()" />
-                        <x-button variant="danger" outline size="sm" icon="trash" label="Limpar Cache" onclick="clearCache()" class="ms-2" />
+                        <x-button variant="info" size="sm" icon="download" label="Exportar" onclick="exportSettings()" />
+                        <x-button variant="danger" size="sm" icon="trash" label="Limpar Cache" onclick="clearCache()" class="ms-2" />
                     </div>
                 </div>
             </div>
@@ -247,7 +247,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Configurações de Email</h6>
-                        <x-button type="button" variant="info" outline size="sm" icon="envelope-check" label="Testar Email" onclick="testEmail()" />
+                        <x-button type="button" variant="info" size="sm" icon="envelope-check" label="Testar Email" onclick="testEmail()" />
                     </div>
                     <div class="card-body">
                         <form action="{{ route('admin.settings.email.update') }}" method="POST">
@@ -335,7 +335,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Configurações de Pagamento</h6>
-                        <x-button type="button" variant="info" outline size="sm" icon="credit-card" label="Testar Pagamento" onclick="testPayment()" />
+                        <x-button type="button" variant="info" size="sm" icon="credit-card" label="Testar Pagamento" onclick="testPayment()" />
                     </div>
                     <div class="card-body">
                         <form action="{{ route('admin.settings.payment.update') }}" method="POST">

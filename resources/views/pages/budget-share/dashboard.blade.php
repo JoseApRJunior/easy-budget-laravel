@@ -134,8 +134,7 @@
                         <x-button 
                             href="{{ route('provider.budgets.shares.index') }}" 
                             variant="primary" 
-                            size="sm"
-                            outline>
+                            size="sm">
                             Ver todos
                         </x-button>
                     </div>

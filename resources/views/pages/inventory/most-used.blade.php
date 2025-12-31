@@ -60,7 +60,7 @@
                             <div class="col-12">
                                 <div class="d-flex gap-2">
                                     <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                                    <x-button type="link" :href="route('provider.inventory.most-used')" variant="outline-secondary" icon="x" label="Limpar" />
+                                    <x-button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -84,8 +84,8 @@
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info text-white me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-box" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-info bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Analisados</h6>
                     </div>
@@ -98,8 +98,8 @@
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success text-white me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-arrow-up-circle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-arrow-up-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Saídas</h6>
                     </div>
@@ -112,8 +112,8 @@
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning text-white me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-currency-dollar" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-warning bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total</h6>
                     </div>
@@ -126,8 +126,8 @@
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary text-white me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-graph-up" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-primary bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-graph-up text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Média Uso</h6>
                     </div>
@@ -157,22 +157,9 @@
                             </h5>
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0 text-lg-end">
-                            <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                                <div class="dropdown">
-                                    <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
-                                                <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf'])) }}">
-                                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+                            <div class="d-flex justify-content-start justify-content-lg-end gap-1">
+                                <x-button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                <x-button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                             </div>
                         </div>
                     </div>

@@ -26,8 +26,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary-subtle text-primary me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-box" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-primary bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total</h6>
                     </div>
@@ -39,8 +39,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success-subtle text-success me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-currency-dollar" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total</h6>
                     </div>
@@ -52,8 +52,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success-subtle text-success me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-check-circle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-check-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
                     </div>
@@ -65,8 +65,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning-subtle text-warning me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-exclamation-triangle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-warning bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Baixo</h6>
                     </div>
@@ -78,8 +78,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger-subtle text-danger me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-x-circle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-danger bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-x-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
                     </div>
@@ -91,8 +91,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info-subtle text-info me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-percent" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-info bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Taxa Uso</h6>
                     </div>
@@ -275,7 +275,9 @@
                                                     @if($product->image_url)
                                                         <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="rounded shadow-sm" style="width: 32px; height: 32px; object-fit: cover;">
                                                     @else
-                                                        <i class="bi bi-box-fill"></i>
+                                                        <div class="avatar-circle bg-primary bg-gradient" style="width: 32px; height: 32px;">
+                                                            <i class="bi bi-box-fill text-white" style="font-size: 0.8rem;"></i>
+                                                        </div>
                                                     @endif
                                                 </div>
                                             </td>
@@ -323,11 +325,13 @@
                                     @empty
                                         <tr>
                                             <td colspan="7" class="text-center py-5 text-muted">
-                                                <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                                                <div class="avatar-circle bg-secondary bg-gradient mx-auto mb-3" style="width: 50px; height: 50px;">
+                                                    <i class="bi bi-inbox text-white" style="font-size: 1.5rem;"></i>
+                                                </div>
                                                 @if($hasResults)
-                                                    Nenhum item de inventário encontrado para os filtros aplicados.
+                                                    <p class="mb-0">Nenhum item de inventário encontrado para os filtros aplicados.</p>
                                                 @else
-                                                    Utilize os filtros acima para pesquisar no inventário.
+                                                    <p class="mb-0">Utilize os filtros acima para pesquisar no inventário.</p>
                                                 @endif
                                             </td>
                                         </tr>
@@ -356,8 +360,8 @@
                                             @if($product->image_url)
                                                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="rounded shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
                                             @else
-                                                <div class="avatar-circle" style="width: 40px; height: 40px; background-color: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="bi bi-box-fill"></i>
+                                                <div class="avatar-circle bg-primary bg-gradient" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-box-fill text-white" style="font-size: 1rem;"></i>
                                                 </div>
                                             @endif
                                         </div>
@@ -404,12 +408,13 @@
                                 </div>
                             @empty
                                 <div class="p-4 text-center text-muted">
-                                    <i class="bi bi-inbox mb-2 opacity-25" style="font-size: 2rem;"></i>
-                                    <br>
+                                    <div class="avatar-circle bg-secondary bg-gradient mx-auto mb-3" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-inbox text-white" style="font-size: 1.5rem;"></i>
+                                    </div>
                                     @if($hasResults)
-                                        Nenhum item encontrado para os filtros aplicados.
+                                        <p class="mb-0">Nenhum item encontrado para os filtros aplicados.</p>
                                     @else
-                                        Utilize os filtros acima para pesquisar.
+                                        <p class="mb-0">Utilize os filtros acima para pesquisar.</p>
                                     @endif
                                 </div>
                             @endforelse

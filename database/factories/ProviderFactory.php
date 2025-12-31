@@ -26,9 +26,6 @@ class ProviderFactory extends Factory
         return [
             'tenant_id' => Tenant::factory(),
             'user_id' => User::factory(),
-            'common_data_id' => CommonData::factory(),
-            'contact_id' => Contact::factory(),
-            'address_id' => Address::factory(),
             'terms_accepted' => $this->faker->boolean(90), // 90% chance de aceitar termos
         ];
     }

@@ -36,9 +36,7 @@
     @if (count($events) >= 5)
         <div class="card-footer bg-light d-flex justify-content-between align-items-center">
             <small class="small-text">Mostrando {{ count($events) }} de {{ $total ?? count($events) }}</small>
-            <a href="{{ route('provider.schedules.index') }}" class="btn btn-sm btn-outline-warning">
-                <i class="bi bi-calendar-week me-1"></i>Ver Todos
-            </a>
+            <x-button type="link" :href="route('provider.schedules.index')" variant="warning" size="sm" icon="calendar-week" label="Ver Todos" />
         </div>
     @endif
 </div>

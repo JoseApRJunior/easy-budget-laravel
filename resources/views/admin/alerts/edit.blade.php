@@ -9,13 +9,8 @@
                     <i class="bi bi-pencil me-2"></i>Editar Alerta
                 </h1>
                 <div class="btn-group" role="group">
-                    <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" text="Ver" />
-                    <x-button 
-                         href="{{ route('admin.alerts.index') }}" 
-                         variant="secondary"
-                         icon="bi bi-arrow-left">
-                         Voltar
-                     </x-button>
+                    <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" label="Ver" />
+                    <x-button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="arrow-left" label="Voltar" />
                 </div>
             </div>
         </div>
@@ -130,12 +125,8 @@
                         </div>
                         
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('admin.alerts.show', $alert['id']) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle me-2"></i>Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save me-2"></i>Atualizar Alerta
-                            </button>
+                            <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="secondary" icon="x-circle" label="Cancelar" />
+                            <x-button type="submit" variant="primary" icon="save" label="Atualizar Alerta" />
                         </div>
                     </form>
                 </div>

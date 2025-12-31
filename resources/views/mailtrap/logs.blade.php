@@ -14,27 +14,19 @@
                         <p class="text-muted mt-1">Visualize e monitore os logs de atividades de e-mail</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="refreshLogs()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Atualizar
-                        </button>
+                        <x-button type="button" variant="primary" icon="arrow-clockwise" label="Atualizar" onclick="refreshLogs()" />
                         <x-button 
                             type="button" 
-                            variant="outline-info" 
+                            variant="success" 
                             onclick="exportLogs()"
-                            icon="bi bi-download">
-                            Exportar CSV
-                        </x-button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="clearLogs()">
-                            <i class="bi bi-trash me-1"></i>
-                            Limpar Logs
-                        </button>
+                            icon="download"
+                            label="Exportar CSV" />
+                        <x-button type="button" variant="danger" icon="trash" label="Limpar Logs" onclick="clearLogs()" />
                         <x-button 
                             href="{{ route('mailtrap.index') }}" 
                             variant="secondary"
-                            icon="bi bi-arrow-left">
-                            Voltar ao Dashboard
-                        </x-button>
+                            icon="arrow-left"
+                            label="Voltar ao Dashboard" />
                     </div>
                 </div>
             </div>
@@ -73,10 +65,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-grid">
-                                    <button type="button" class="btn btn-primary" onclick="applyFilters()">
-                                        <i class="bi bi-funnel me-1"></i>
-                                        Aplicar Filtros
-                                    </button>
+                                    <x-button type="button" variant="primary" icon="funnel" onclick="applyFilters()" label="Aplicar Filtros" />
                                 </div>
                             </div>
                         </div>

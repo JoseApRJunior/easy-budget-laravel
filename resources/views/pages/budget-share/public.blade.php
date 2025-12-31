@@ -117,7 +117,7 @@
                                                     type="button" 
                                                     variant="info" 
                                                     size="sm" 
-                                                    icon="bi bi-eye"
+                                                    icon="eye"
                                                     onclick="showItemDetails({{ json_encode($item) }})" />
                                             </td>
                                         </tr>
@@ -179,30 +179,23 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex gap-2">
                                     @if($permissions['can_print'] ?? true)
-                                    <button type="button" class="btn btn-outline-primary" onclick="printBudget()">
-                                        <i class="bi bi-printer me-2"></i>Imprimir
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary" onclick="downloadPDF()">
-                                        <i class="bi bi-download me-2"></i>Download PDF
-                                    </button>
+                                    <x-button type="button" variant="primary" icon="printer" label="Imprimir" onclick="printBudget()" />
+                                    <x-button type="button" variant="secondary" icon="download" label="Download PDF" onclick="downloadPDF()" />
                                     @endif
                                 </div>
                                 
                                 <div class="d-flex gap-2">
                                     @if($permissions['can_approve'] ?? false && $budget->status === 'pending')
-                                    <button type="button" class="btn btn-success" onclick="approveBudget()">
-                                        <i class="bi bi-check-circle me-2"></i>Aprovar Orçamento
-                                    </button>
+                                    <x-button type="button" variant="success" icon="check-circle" label="Aprovar Orçamento" onclick="approveBudget()" />
                                     @endif
                                     
                                     @if($permissions['can_comment'] ?? false)
                                     <x-button 
                                         type="button" 
-                                        variant="outline-info" 
+                                        variant="info" 
                                         onclick="showCommentModal()"
-                                        icon="bi bi-chat-left-text">
-                                        Adicionar Comentário
-                                    </x-button>
+                                        icon="chat-left-text"
+                                        label="Adicionar Comentário" />
                                     @endif
                                 </div>
                             </div>

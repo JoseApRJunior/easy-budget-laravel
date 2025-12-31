@@ -24,13 +24,9 @@
 
         <!-- Botões de Ação -->
         <div class="d-flex justify-content-end mb-4">
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshData()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                </button>
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="exportAnalytics()">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar
-                </button>
+            <div class="d-flex gap-1" role="group">
+                <x-button type="button" variant="primary" size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshData()" />
+                <x-button type="button" variant="success" size="sm" icon="file-earmark-spreadsheet" label="Exportar" onclick="exportAnalytics()" />
             </div>
         </div>
 

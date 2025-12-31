@@ -129,46 +129,41 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-2">
-                                <a href="{{ route('provider.budgets.create') }}" class="btn btn-outline-primary w-100 py-3 hover-card">
+                            <div class="col-6 col-md-2 mb-3">
+                                <x-button type="link" :href="route('provider.budgets.create')" variant="primary" class="w-100 py-3 hover-card">
                                     <i class="bi bi-file-earmark-plus fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Novo Orçamento</span>
-                                </a>
-                            </div>
-                            <div class="col-md-2">
-                                <a href="{{ route('provider.customers.create') }}" class="btn btn-outline-success w-100 py-3 hover-card">
-                                    <i class="bi bi-person-plus fs-4 d-block mb-1"></i>
-                                    <span class="small fw-bold">Novo Cliente</span>
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <x-button 
-                                    href="{{ route('provider.services.index') }}" 
-                                    variant="outline-info" 
-                                    class="w-100 py-3 hover-card">
-                                    <div class="text-center">
-                                        <i class="bi bi-tools fs-1 mb-2 d-block"></i>
-                                        <span class="fw-bold">Serviços</span>
-                                    </div>
                                 </x-button>
                             </div>
-                            <div class="col-md-2">
-                                <a href="{{ route('provider.invoices.create') }}" class="btn btn-outline-warning w-100 py-3 hover-card">
+                            <div class="col-6 col-md-2 mb-3">
+                                <x-button type="link" :href="route('provider.customers.create')" variant="success" class="w-100 py-3 hover-card">
+                                    <i class="bi bi-person-plus fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Novo Cliente</span>
+                                </x-button>
+                            </div>
+                            <div class="col-6 col-md-2 mb-3">
+                                <x-button type="link" :href="route('provider.services.index')" variant="info" class="w-100 py-3 hover-card">
+                                    <i class="bi bi-tools fs-4 d-block mb-1"></i>
+                                    <span class="small fw-bold">Serviços</span>
+                                </x-button>
+                            </div>
+                            <div class="col-6 col-md-2 mb-3">
+                                <x-button type="link" :href="route('provider.invoices.create')" variant="warning" class="w-100 py-3 hover-card">
                                     <i class="bi bi-receipt fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Nova Fatura</span>
-                                </a>
+                                </x-button>
                             </div>
-                            <div class="col-md-2">
-                                <a href="{{ route('provider.inventory.index') }}" class="btn btn-outline-secondary w-100 py-3 hover-card">
+                            <div class="col-6 col-md-2 mb-3">
+                                <x-button type="link" :href="route('provider.inventory.index')" variant="secondary" class="w-100 py-3 hover-card">
                                     <i class="bi bi-box-seam fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Estoque</span>
-                                </a>
+                                </x-button>
                             </div>
-                            <div class="col-md-2">
-                                <a href="{{ route('provider.qrcode.index') }}" class="btn btn-outline-dark w-100 py-3 hover-card">
+                            <div class="col-6 col-md-2 mb-3">
+                                <x-button type="link" :href="route('provider.qrcode.index')" variant="dark" class="w-100 py-3 hover-card">
                                     <i class="bi bi-qr-code-scan fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Gerar QR Code</span>
-                                </a>
+                                </x-button>
                             </div>
                         </div>
                     </div>

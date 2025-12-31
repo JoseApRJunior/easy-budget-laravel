@@ -46,7 +46,37 @@ class AIAnalyticsFeatureTest extends TestCase
         $this->user = User::factory()->create([
             'tenant_id' => $this->tenantId,
             'email_verified_at' => now(),
+            'is_active' => true,
         ]);
+
+        // Ensure provider role exists and assign it
+        if (class_exists(\App\Models\Role::class)) {
+            $role = \App\Models\Role::firstOrCreate(
+                ['name' => 'provider'],
+                ['guard_name' => 'web'] // Assuming guard_name is needed or ignored
+            );
+            // Check if attachRole expects distinct logic or if simple relation works
+            // User model has attachRole method
+            if (method_exists($this->user, 'attachRole')) {
+                 $this->user->attachRole($role);
+            }
+        }
+
+        // Create Provider record
+        if (class_exists(\Database\Factories\ProviderFactory::class)) {
+            \App\Models\Provider::factory()->create([
+                'user_id' => $this->user->id,
+                'tenant_id' => $this->tenantId,
+            ]);
+        } else {
+             // Fallback
+             \App\Models\Provider::create([
+                 'user_id' => $this->user->id,
+                 'tenant_id' => $this->tenantId,
+                 'document' => '12345678901', // Dummy
+                 'type' => 'individual',
+             ]);
+        }
 
         $this->actingAs($this->user);
     }
@@ -115,6 +145,10 @@ class AIAnalyticsFeatureTest extends TestCase
         ]);
 
         $response = $this->get(route('provider.analytics.customers'));
+
+        if ($response->status() !== 200) {
+            dump($response->json());
+        }
 
         $response->assertStatus(200)
              ->assertJsonStructure([

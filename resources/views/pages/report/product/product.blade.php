@@ -98,7 +98,7 @@
                         <div class="col-12">
                             <div class="d-flex gap-2">
                                 <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterProducts" />
-                                <x-button type="link" :href="route('provider.reports.products')" variant="outline-secondary" icon="x" label="Limpar" />
+                                <x-button type="link" :href="route('provider.reports.products')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -115,9 +115,7 @@
                     <p class="text-muted mb-3">
                         Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
                     </p>
-                    <a href="{{ route('provider.products.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Criar Primeiro Produto
-                    </a>
+                    <x-button type="link" :href="route('provider.products.create')" variant="primary" icon="plus" label="Criar Primeiro Produto" />
                 </div>
             </div>
         @else
@@ -143,15 +141,9 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" title="Exportar PDF"
-                                        id="export-pdf">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-sm" title="Exportar Excel"
-                                        id="export-excel">
-                                        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                                    </button>
+                                <div class="d-flex gap-1" role="group">
+                                    <x-button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>

@@ -152,9 +152,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Assinaturas Recentes</h5>
-                    <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-sm btn-outline-primary">
-                        Ver Todas
-                    </a>
+                    <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="primary" size="sm" label="Ver Todas" />
                 </div>
                 <div class="card-body">
                     @if($subscriptions->count() > 0)
@@ -227,8 +225,8 @@
                     @endif
                 </div>
                 <div class="d-flex gap-2">
-                    <x-button type="link" :href="route('admin.plans.duplicate', $plan)" variant="outline-secondary" icon="copy" label="Duplicar" />
-                    <x-button type="link" :href="route('admin.plans.analytics', $plan)" variant="outline-primary" icon="graph-up" label="Análises" />
+                    <x-button type="link" :href="route('admin.plans.duplicate', $plan)" variant="secondary" icon="copy" label="Duplicar" />
+                    <x-button type="link" :href="route('admin.plans.analytics', $plan)" variant="primary" icon="graph-up" label="Análises" />
                     <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
                 </div>
             </div>

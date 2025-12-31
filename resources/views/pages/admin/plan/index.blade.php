@@ -5,12 +5,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-box-seam me-2"></i>Gerenciamento de Planos</h1>
         <div>
-            <a href="{{ route('admin.plans.create') }}" class="btn btn-primary me-2">
-                <i class="bi bi-plus-circle me-1"></i>Novo Plano
-            </a>
-            <a href="{{ route('admin.plans.export', ['format' => 'csv']) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-download me-1"></i>Exportar
-            </a>
+            <x-button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" class="me-2" />
+            <x-button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
         </div>
     </div>
 
@@ -86,13 +82,9 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i>Filtrar
-                        </button>
-                        <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-1"></i>Limpar
-                        </a>
+                    <div class="col-12 d-flex gap-2">
+                        <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
+                        <x-button type="link" :href="route('admin.plans.index')" variant="secondary" icon="x-circle" label="Limpar" />
                     </div>
                 </div>
             </form>
@@ -187,11 +179,11 @@
                 <p class="text-danger"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <x-button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>

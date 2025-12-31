@@ -20,8 +20,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary-subtle text-primary me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-box" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-primary bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Produtos</h6>
                     </div>
@@ -37,8 +37,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success-subtle text-success me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-check-circle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-check-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
                     </div>
@@ -54,8 +54,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning-subtle me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-exclamation-triangle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-warning bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
                     </div>
@@ -71,8 +71,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger-subtle text-danger me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-x-circle" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-danger bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-x-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
                     </div>
@@ -88,8 +88,8 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info-subtle text-info me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-bookmark-check" style="font-size: 0.9rem;"></i>
+                        <div class="avatar-circle bg-info bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-bookmark-check text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Reservados</h6>
                     </div>
@@ -105,8 +105,8 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center">
-                        <div class="avatar-circle bg-success-subtle text-success me-4" style="width: 45px; height: 45px;">
-                            <i class="bi bi-currency-dollar" style="font-size: 1.2rem;"></i>
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <div>
                             <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total em Estoque</h6>
@@ -123,7 +123,12 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header pt-3 bg-transparent border-0">
-                    <h6 class="mb-0 fw-bold text-body"><i class="bi bi-lightning-charge me-2 t"></i>Ações Rápidas</h6>
+                    <h6 class="mb-0 fw-bold text-body d-flex align-items-center">
+                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-lightning-charge text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        Ações Rápidas
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
@@ -145,8 +150,11 @@
         <div class="col-12 col-xl-6">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-exclamation-triangle me-2 "></i>Estoque Baixo
+                    <h5 class="mb-0 fw-bold d-flex align-items-center">
+                        <div class="avatar-circle bg-warning bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        Estoque Baixo
                     </h5>
                     <x-button type="link" :href="route('provider.inventory.index', ['status' => 'low'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
@@ -183,15 +191,17 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="outline-success" icon="plus" size="sm" title="Entrada" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" title="Ajustar" />
+                                                    <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
+                                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="4" class="text-center py-4 text-muted small">
-                                                <i class="bi bi-check-circle text-success d-block mb-2 fs-4"></i>
+                                                <div class="avatar-circle bg-success bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-check-circle text-white" style="font-size: 1.1rem;"></i>
+                                                </div>
                                                 Nenhum item com estoque baixo.
                                             </td>
                                         </tr>
@@ -216,13 +226,16 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">Mín: {{ number_format($item->min_quantity, 0, ',', '.') }}</small>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="outline-success" icon="plus" size="sm" />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" />
+                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
                                         </div>
                                     </div>
                                 </div>
                             @empty
                                 <div class="p-4 text-center text-muted small">
+                                    <div class="avatar-circle bg-success bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-check-circle text-white" style="font-size: 1.1rem;"></i>
+                                    </div>
                                     Nenhum item com estoque baixo.
                                 </div>
                             @endforelse
@@ -236,8 +249,11 @@
         <div class="col-12 col-xl-6">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-arrow-up-circle me-2 "></i>Estoque Alto
+                    <h5 class="mb-0 fw-bold d-flex align-items-center">
+                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-arrow-up-circle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        Estoque Alto
                     </h5>
                     <x-button type="link" :href="route('provider.inventory.index', ['status' => 'high'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
@@ -274,15 +290,17 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="outline-warning" icon="dash" size="sm" title="Saída" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" title="Ajustar" />
+                                                    <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
+                                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="4" class="text-center py-4 text-muted small">
-                                                <i class="bi bi-info-circle text-info d-block mb-2 fs-4"></i>
+                                                <div class="avatar-circle bg-info bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-info-circle text-white" style="font-size: 1.1rem;"></i>
+                                                </div>
                                                 Nenhum item com estoque alto.
                                             </td>
                                         </tr>
@@ -314,6 +332,9 @@
                                 </div>
                             @empty
                                 <div class="p-4 text-center text-muted small">
+                                    <div class="avatar-circle bg-info bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-info-circle text-white" style="font-size: 1.1rem;"></i>
+                                    </div>
                                     Nenhum item com estoque alto.
                                 </div>
                             @endforelse

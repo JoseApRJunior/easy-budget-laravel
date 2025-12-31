@@ -154,10 +154,7 @@
                             <p class="mt-2">Carregando alertas...</p>
                         </div>
                         <div class="text-center mt-3">
-                            <button class="btn btn-primary btn-sm" onclick="loadDashboardData()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                Atualizar Dashboard
-                            </button>
+                            <x-button variant="primary" size="sm" icon="arrow-clockwise" label="Atualizar Dashboard" onclick="loadDashboardData()" />
                         </div>
                     </div>
                 </div>
@@ -238,7 +235,7 @@
                 <div class="alert alert-warning alert-item">
                     <strong>${p.customer_name}</strong> (ID: ${p.customer_id})<br>
                     Probabilidade de Churn: <strong>${p.churn_probability}%</strong><br>
-                    <a href="/admin/customer/${p.customer_id}" class="btn btn-sm btn-outline-secondary mt-2">Ver Cliente</a>
+                    <a href="/admin/customer/${p.customer_id}" class="btn btn-sm btn-secondary mt-2">Ver Cliente</a>
                 </div>`;
                 container.insertAdjacentHTML('beforeend', predictionHtml);
             });

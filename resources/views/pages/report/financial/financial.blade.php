@@ -90,7 +90,7 @@
                         <div class="col-12">
                             <div class="d-flex gap-2">
                                 <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterFinancial" />
-                                <x-button type="link" :href="route('provider.reports.financial')" variant="outline-secondary" icon="x" label="Limpar" />
+                                <x-button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -155,15 +155,9 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" title="Exportar PDF"
-                                        id="export-pdf">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-sm" title="Exportar Excel"
-                                        id="export-excel">
-                                        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                                    </button>
+                                <div class="d-flex gap-1" role="group">
+                                    <x-button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>

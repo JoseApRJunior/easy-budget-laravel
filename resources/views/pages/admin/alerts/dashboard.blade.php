@@ -10,13 +10,9 @@
                 <i class="fas fa-exclamation-triangle text-warning me-2"></i>
                 Sistema de Alertas
             </h1>
-            <div class="btn-group">
-                <button type="button" class="btn btn-primary" onclick="checkAlertsNow()">
-                    <i class="fas fa-sync-alt"></i> Verificar Agora
-                </button>
-                <a href="{{ url('/admin/alerts/settings') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-cog"></i> Configurações
-                </a>
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" />
+                <x-button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" />
             </div>
         </div>
 

@@ -359,9 +359,7 @@
                         <i class="bi bi-building fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nenhuma empresa encontrada</h5>
                         <p class="text-muted">Não há empresas para exibir com os filtros aplicados.</p>
-                        <a href="{{ route('admin.enterprises.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Criar Primeira Empresa
-                        </a>
+                        <x-button type="link" :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Criar Primeira Empresa" />
                     </div>
                 @endif
             </div>
@@ -380,8 +378,8 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="confirmModalAction">Confirmar</button>
+                    <x-button variant="secondary" data-bs-dismiss="modal">Cancelar</x-button>
+                    <x-button variant="primary" id="confirmModalAction">Confirmar</x-button>
                 </div>
             </div>
         </div>

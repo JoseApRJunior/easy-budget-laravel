@@ -14,14 +14,8 @@
                         <p class="text-muted mt-1">Gerencie os provedores de e-mail disponíveis no sistema</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="refreshProviders()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Atualizar
-                        </button>
-                        <a href="{{ route('mailtrap.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
-                            Voltar ao Dashboard
-                        </a>
+                        <x-button type="button" variant="primary" icon="arrow-clockwise" label="Atualizar" onclick="refreshProviders()" />
+                        <x-button type="link" :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar ao Dashboard" />
                     </div>
                 </div>
             </div>
@@ -54,10 +48,7 @@
                                 @endif
                             </div>
                             <div class="col-md-4 text-end">
-                                <button type="button" class="btn btn-sm btn-primary" onclick="testCurrentProvider()">
-                                    <i class="bi bi-lightning me-1"></i>
-                                    Testar Provedor
-                                </button>
+                                <x-button type="button" variant="primary" size="sm" icon="lightning" label="Testar Provedor" onclick="testCurrentProvider()" />
                             </div>
                         </div>
                     </div>
@@ -113,11 +104,8 @@
                                                                 Ativo
                                                             </span>
                                                         @else
-                                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                                onclick="activateProvider('{{ $providerKey }}')">
-                                                                <i class="bi bi-check-lg me-1"></i>
-                                                                Ativar
-                                                            </button>
+                                                            <x-button type="button" variant="primary" size="sm" icon="check-lg" label="Ativar"
+                                                                onclick="activateProvider('{{ $providerKey }}')" />
                                                         @endif
                                                     </div>
                                                 </div>
@@ -149,14 +137,14 @@
 
                                                 <!-- Ações do Provedor -->
                                                 <div class="provider-actions d-flex gap-2">
-                                                    <x-button type="button" variant="outline-primary" size="sm" icon="lightning" 
-                                                        text="Testar" class="flex-fill" 
+                                                    <x-button type="button" variant="primary" size="sm" icon="lightning" 
+                                                        label="Testar" class="flex-fill" 
                                                         onclick="testProvider('{{ $providerKey }}')" />
-                                                    <x-button type="button" variant="info" size="sm" icon="eye" text="Detalhes"
+                                                    <x-button type="button" variant="info" size="sm" icon="eye" label="Detalhes"
                                                         class="flex-fill" onclick="viewProviderConfig('{{ $providerKey }}')" />
                                                     @if ($providerKey !== 'log')
-                                                        <x-button type="button" variant="outline-secondary" size="sm" icon="pencil" 
-                                                            text="Configurar" class="flex-fill" 
+                                                        <x-button type="button" variant="secondary" size="sm" icon="pencil" 
+                                                            label="Configurar" class="flex-fill" 
                                                             onclick="configureProvider('{{ $providerKey }}')" />
                                                     @endif
                                                 </div>

@@ -21,10 +21,10 @@
                             <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
                         </select>
                         <x-button 
-                            variant="outline-primary" 
+                            variant="primary" 
                             size="sm" 
                             onclick="refreshDashboard()"
-                            icon="bi bi-arrow-clockwise">
+                            icon="arrow-clockwise">
                             Atualizar
                         </x-button>
                     </div>
@@ -281,21 +281,10 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-gear me-1"></i> Gerenciar Planos
-                            </a>
-                            <a href="{{ route('admin.tenants.index') }}" class="btn btn-outline-success btn-sm">
-                                <i class="bi bi-building me-1"></i> Gerenciar Tenants
-                            </a>
-                            <x-button 
-                                href="{{ route('admin.global-settings.index') }}" 
-                                variant="outline-info" 
-                                size="sm">
-                                <i class="bi bi-gear me-1"></i>Configurações
-                            </x-button>
-                            <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-warning btn-sm">
-                                <i class="bi bi-file-earmark-text me-1"></i> Ver Relatórios
-                            </a>
+                            <x-button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" />
+                            <x-button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" />
+                            <x-button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" />
+                            <x-button type="link" :href="route('admin.reports.index')" variant="warning" size="sm" icon="file-earmark-text" label="Ver Relatórios" />
                         </div>
                     </div>
                 </div>
@@ -308,9 +297,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Atividades Recentes do Sistema</h6>
-                        <a href="{{ route('admin.audit.logs') }}" class="btn btn-outline-primary btn-sm">
-                            Ver todas
-                        </a>
+                        <x-button type="link" :href="route('admin.audit.logs')" variant="primary" size="sm" label="Ver todas" />
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">

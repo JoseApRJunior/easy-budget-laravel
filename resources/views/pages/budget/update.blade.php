@@ -101,14 +101,14 @@
 
                 <!-- Form Actions -->
                 <div class="d-flex justify-content-between mt-4 pt-4 border-top">
-                    <x-button type="link" :href="route('budget.show', $budget->code)" variant="outline-secondary" icon="x-circle">
+                    <x-button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="x-circle">
                         Cancelar
                     </x-button>
                     <div>
                         @if ( StatusHelper::status_allows_edit( $budget->status->value ) )
-                            <button type="submit" form="update-budget-form" class="btn btn-primary px-4">
-                                <i class="bi bi-check-lg me-2"></i>Salvar Alterações
-                            </button>
+                            <x-button type="submit" form="update-budget-form" variant="primary" icon="check-lg" class="px-4">
+                                Salvar Alterações
+                            </x-button>
                         @else
                             <div class="alert alert-info mb-0 py-2 px-3">
                                 <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $budget->status->getDescription() }})

@@ -69,7 +69,7 @@
                     <div class="col-12">
                         <div class="d-flex gap-2">
                             <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                            <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="outline-secondary" icon="x" label="Limpar" />
+                            <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x" label="Limpar" />
                         </div>
                     </div>
                 </div>
@@ -84,8 +84,8 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary shadow-sm text-white me-3" style="width: 45px; height: 45px;">
-                            <i class="bi bi-box" style="font-size: 1.25rem;"></i>
+                        <div class="avatar-circle bg-primary bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Produtos</h6>
                     </div>
@@ -99,8 +99,8 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success shadow-sm text-white me-3" style="width: 45px; height: 45px;">
-                            <i class="bi bi-plus-circle" style="font-size: 1.25rem;"></i>
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-plus-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Entradas</h6>
                     </div>
@@ -114,8 +114,8 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger shadow-sm text-white me-3" style="width: 45px; height: 45px;">
-                            <i class="bi bi-dash-circle" style="font-size: 1.25rem;"></i>
+                        <div class="avatar-circle bg-danger bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-dash-circle text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Saídas</h6>
                     </div>
@@ -129,8 +129,8 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning shadow-sm text-white me-3" style="width: 45px; height: 45px;">
-                            <i class="bi bi-arrow-repeat" style="font-size: 1.25rem;"></i>
+                        <div class="avatar-circle bg-warning bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-arrow-repeat text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Giro Médio</h6>
                     </div>
@@ -160,22 +160,9 @@
                 </div>
                 <div class="col-12 col-lg-4 text-start text-lg-end">
                     @if($hasResults)
-                    <div class="dropdown d-inline-block">
-                        <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx'])) }}">
-                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf'])) }}">
-                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                </a>
-                            </li>
-                        </ul>
+                    <div class="d-flex justify-content-start justify-content-lg-end gap-1">
+                        <x-button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                        <x-button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                     </div>
                     @endif
                 </div>

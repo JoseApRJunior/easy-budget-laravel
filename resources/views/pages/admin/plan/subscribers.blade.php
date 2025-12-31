@@ -4,13 +4,9 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-people me-2"></i>Assinantes do Plano: {{ $plan->name }}</h1>
-        <div>
-            <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Voltar ao Plano
-            </a>
-            <a href="{{ route('admin.plans.export', ['format' => 'csv']) }}" class="btn btn-outline-primary">
-                <i class="bi bi-download me-1"></i>Exportar
-            </a>
+        <div class="d-flex gap-2">
+            <x-button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
+            <x-button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="primary" icon="download" label="Exportar" />
         </div>
     </div>
 
@@ -72,9 +68,7 @@
                     <div class="col-md-3">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-search me-1"></i>Filtrar
-                            </button>
+                            <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
                         </div>
                     </div>
                 </div>
