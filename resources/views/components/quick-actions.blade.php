@@ -11,7 +11,7 @@
                 <i class="bi bi-file-earmark-plus me-1"></i> Criar Novo Orçamento
             </a>
 
-            <a href="{{ route( 'provider.reports.index' ) }}" class="btn btn-info">
+            <a href="{{ route( 'provider.reports.index' ) }}" class="btn btn-info text-white">
                 <i class="bi bi-graph-up me-1"></i> Ver Relatórios
             </a>
 

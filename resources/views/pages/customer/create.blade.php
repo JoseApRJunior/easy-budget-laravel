@@ -7,7 +7,7 @@
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="h3 mb-0 fw-bold text-dark">
+                <h1 class="h3 mb-0 fw-bold ">
                     <i class="bi bi-person-plus me-2 "></i>Novo Cliente
                 </h1>
                 <p class="text-muted mb-0 small">Cadastre um novo cliente no sistema</p>
@@ -29,7 +29,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person me-2 "></i>Dados Pessoais</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-person me-2 "></i>Dados Pessoais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -46,6 +46,17 @@
                                 <input type="text" class="form-control @error('last_name') is-invalid @enderror"
                                     id="last_name" name="last_name" value="{{ old('last_name') }}" required>
                                 @error('last_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birth_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Nascimento</label>
+                                <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
+                                    id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
+                                    placeholder="DD/MM/AAAA" data-mask="00/00/0000">
+                                <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
+                                @error('birth_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -76,7 +87,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-briefcase me-2 "></i>Dados Profissionais</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-briefcase me-2 "></i>Dados Profissionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -101,34 +112,6 @@
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
                                         id="cpf" name="cpf" value="{{ old('cpf') }}" data-mask="000.000.000-00">
                                     @error('cpf')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="birth_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Nascimento</label>
-                                    <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
-                                        id="birth_date" name="birth_date" value="{{ old('birth_date') }}"
-                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                    <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
-                                    @error('birth_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="profession_id" class="text-uppercase small fw-bold text-muted mb-2">Profissão</label>
-                                    <select name="profession_id"
-                                        class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
-                                        <option value="">Selecione uma profissão</option>
-                                        @foreach ($professions ?? [] as $prof)
-                                            <option value="{{ $prof->id }}"
-                                                {{ old('profession_id') == $prof->id ? 'selected' : '' }}>
-                                                {{ $prof->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('profession_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -206,7 +189,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-envelope me-2 "></i>Contato</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-envelope me-2 "></i>Contato</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -230,8 +213,8 @@
 
                             <div class="mb-3">
                                 <label for="website" class="text-uppercase small fw-bold text-muted mb-2">Website</label>
-                                <input type="url" class="form-control @error('website') is-invalid @enderror"
-                                    id="website" name="website" value="{{ old('website') }}">
+                                <input type="text" class="form-control @error('website') is-invalid @enderror"
+                                    id="website" name="website" value="{{ old('website') }}" placeholder="ex: www.site.com.br">
                                 @error('website')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -244,7 +227,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-geo-alt me-2 "></i>Endereço</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-geo-alt me-2 "></i>Endereço</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -314,7 +297,7 @@
                 <div class="col-12" id="business-data-section" style="display: none;">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-building-gear me-2 "></i>Dados Empresariais Adicionais</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-building-gear me-2 "></i>Dados Empresariais Adicionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">

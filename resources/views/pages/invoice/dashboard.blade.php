@@ -186,7 +186,7 @@
                                                 <td>{{ optional($inv->due_date)->format('d/m/Y') }}</td>
                                                 <td class="text-end"><a
                                                         href="{{ route('provider.invoices.show', $inv->code) }}"
-                                                        class="btn btn-sm btn-outline-primary"><i
+                                                        class="btn btn-sm btn-info text-white"><i
                                                             class="bi bi-eye"></i></a></td>
                                             </tr>
                                         @endforeach

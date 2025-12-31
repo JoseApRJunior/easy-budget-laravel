@@ -139,7 +139,7 @@ class CustomerManagementController extends Controller
             'admin_id' => auth()->id(),
         ]);
 
-        return redirect()->route('admin.customers.index')
+        return redirect()->back()
             ->with('success', 'Cliente criado com sucesso!');
     }
 
@@ -221,7 +221,7 @@ class CustomerManagementController extends Controller
             'admin_id' => auth()->id(),
         ]);
 
-        return redirect()->route('admin.customers.show', $customer)
+        return redirect()->back()
             ->with('success', 'Cliente atualizado com sucesso!');
     }
 

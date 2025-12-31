@@ -285,7 +285,7 @@
 
                         <div class="d-flex gap-2">
                             <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="outline-primary" size="sm" icon="chevron-right" label="Detalhes" class="flex-grow-1" />
-                            <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="outline-info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                            <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
                         </div>
                     </div>
                     @endforeach

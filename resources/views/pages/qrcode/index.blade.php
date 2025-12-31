@@ -127,7 +127,7 @@
                                     </div>
                                     <h5 class="card-title mb-2">Serviços</h5>
                                     <p class="card-text text-muted small mb-3">Gerar QR Code para verificação de serviço</p>
-                                    <button class="btn btn-info btn-sm" data-bs-toggle="modal"
+                                    <button class="btn btn-info btn-sm text-white" data-bs-toggle="modal"
                                         data-bs-target="#serviceModal">
                                         <i class="bi bi-qr-code me-2"></i>Gerar QR Serviço
                                     </button>

@@ -42,16 +42,16 @@
     <!-- Cards de Métricas -->
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 bg-primary bg-gradient text-white">
                 <div class="card-body p-3 d-flex flex-column justify-content-between">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
                             <i class="bi bi-tags text-white" style="font-size: 0.9rem;"></i>
                         </div>
-                        <h6 class="text-muted mb-0 small fw-bold">TOTAL</h6>
+                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">TOTAL</h6>
                     </div>
                     <h3 class="mb-1 fw-bold">{{ $total }}</h3>
-                    <p class="text-muted small-text mb-0">Ativas e inativas.</p>
+                    <p class="text-white text-opacity-75 small-text mb-0">Ativas e inativas.</p>
                 </div>
             </div>
         </div>
@@ -176,7 +176,7 @@
                                         </td>
                                         <td class="text-center">
                                             <x-button type="link" :href="route('provider.categories.show', $category->slug)"
-                                                variant="secondary" outline size="sm" icon="eye" />
+                                                    variant="info" size="sm" icon="eye" />
                                         </td>
                                     </tr>
                                     @endforeach

@@ -20,7 +20,7 @@
                         <a href="{{ route('provider.dashboard') }}">Dashboard</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard de Clientes
+                        Clientes
                     </li>
                 </ol>
             </nav>
@@ -105,7 +105,7 @@
                 <div class="card-body p-3 d-flex flex-column justify-content-between">
                     <div class="d-flex align-items-center mb-2">
                         <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-graph-up-arrow text-white" style="font-size: 0.9rem;"></i>
+                            <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold">TAXA USO</h6>
                     </div>
@@ -167,12 +167,12 @@
                                                 <span>{{ $name }}</span>
                                             </div>
                                         </td>
-                                        <td class="text-muted">{{ $email ?? '—' }}</td>
-                                        <td class="text-muted">{{ $phone ?? '—' }}</td>
+                                        <td class="text-muted text-break">{{ $email ?? '—' }}</td>
+                                        <td class="text-muted">{{ $phone ? \App\Helpers\MaskHelper::formatPhone($phone) : '—' }}</td>
                                         <td class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</td>
                                         <td class="text-center">
                                             <x-button type="link" :href="route('provider.customers.show', $customer)"
-                                                variant="secondary" outline size="sm" icon="eye" />
+                                                    variant="info" size="sm" icon="eye" />
                                         </td>
                                     </tr>
                                     @endforeach
@@ -269,63 +269,101 @@
                     </div>
                     <div class="card-body p-0">
                         @if ($activeWithStats->isNotEmpty())
-                        <div class="table-responsive">
-                            <table class="modern-table table table-hover align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="ps-4">Cliente</th>
-                                        <th class="text-center">Orçamentos</th>
-                                        <th class="text-center">Faturas</th>
-                                        <th class="text-center">Engajamento</th>
-                                        <th class="text-end pe-4">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($activeWithStats as $customer)
-                                    @php
-                                    $common = $customer->commonData ?? ($customer->common_data ?? null);
-                                    $name = $common?->company_name ?? trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?: 'Cliente';
-                                    $budgetsCount = $customer->budgets_count ?? 0;
-                                    $invoicesCount = $customer->invoices_count ?? 0;
-                                    $totalActivity = $budgetsCount + $invoicesCount;
-                                    @endphp
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-person me-2 text-muted"></i>
-                                                <div>
-                                                    <div class="fw-bold">{{ $name }}</div>
-                                                    <small class="text-muted">ID: #{{ $customer->id }}</small>
+                        <!-- Desktop View -->
+                        <div class="desktop-view d-none d-md-block">
+                            <div class="table-responsive">
+                                <table class="modern-table table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4">Cliente</th>
+                                            <th class="text-center">Orçamentos</th>
+                                            <th class="text-center">Faturas</th>
+                                            <th class="text-center">Engajamento</th>
+                                            <th class="text-end pe-4">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($activeWithStats as $customer)
+                                        @php
+                                        $common = $customer->commonData ?? ($customer->common_data ?? null);
+                                        $name = $common?->company_name ?? trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?: 'Cliente';
+                                        $budgetsCount = $customer->budgets_count ?? 0;
+                                        $invoicesCount = $customer->invoices_count ?? 0;
+                                        $totalActivity = $budgetsCount + $invoicesCount;
+                                        @endphp
+                                        <tr>
+                                            <td class="ps-4">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-person me-2 text-muted"></i>
+                                                    <div>
+                                                        <div class="fw-bold">{{ $name }}</div>
+                                                        <small class="text-muted">ID: #{{ $customer->id }}</small>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-3">
-                                                {{ $budgetsCount }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill px-3">
-                                                {{ $invoicesCount }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center" style="width: 200px;">
-                                            <div class="progress bg-light" style="height: 6px;">
-                                                @php
-                                                $maxActivity = $activeWithStats->max(function($c) { return ($c->budgets_count ?? 0) + ($c->invoices_count ?? 0); }) ?: 1;
-                                                $percent = ($totalActivity / $maxActivity) * 100;
-                                                @endphp
-                                                <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: {{ $percent }}%"></div>
-                                            </div>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <x-button type="link" :href="route('provider.customers.show', $customer)"
-                                                variant="secondary" outline size="sm" icon="eye" />
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-3">
+                                                    {{ $budgetsCount }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill px-3">
+                                                    {{ $invoicesCount }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center" style="width: 200px;">
+                                                <div class="progress bg-light" style="height: 6px;">
+                                                    @php
+                                                    $maxActivity = $activeWithStats->max(function($c) { return ($c->budgets_count ?? 0) + ($c->invoices_count ?? 0); }) ?: 1;
+                                                    $percent = ($totalActivity / $maxActivity) * 100;
+                                                    @endphp
+                                                    <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: {{ $percent }}%"></div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end pe-4">
+                                                <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                                    variant="info" size="sm" icon="eye" />
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Mobile View -->
+                        <div class="mobile-view d-md-none">
+                            <div class="list-group list-group-flush">
+                                @foreach ($activeWithStats as $customer)
+                                @php
+                                $common = $customer->commonData ?? ($customer->common_data ?? null);
+                                $name = $common?->company_name ?? trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?: 'Cliente';
+                                $budgetsCount = $customer->budgets_count ?? 0;
+                                $invoicesCount = $customer->invoices_count ?? 0;
+                                $totalActivity = $budgetsCount + $invoicesCount;
+                                $maxActivity = $activeWithStats->max(function($c) { return ($c->budgets_count ?? 0) + ($c->invoices_count ?? 0); }) ?: 1;
+                                $percent = ($totalActivity / $maxActivity) * 100;
+                                @endphp
+                                <div class="list-group-item py-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="fw-bold text-dark">{{ $name }}</div>
+                                        <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                            variant="info" size="sm" icon="eye" />
+                                    </div>
+                                    <div class="d-flex gap-2 mb-2">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-2">
+                                            {{ $budgetsCount }} Orçamentos
+                                        </span>
+                                        <span class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill px-2">
+                                            {{ $invoicesCount }} Faturas
+                                        </span>
+                                    </div>
+                                    <div class="progress bg-light" style="height: 4px;">
+                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: {{ $percent }}%"></div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
                         </div>
                         @else
                         <div class="p-4 text-center">

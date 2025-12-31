@@ -7,8 +7,8 @@
         <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="h3 mb-0 fw-bold text-dark">
-                    <i class="bi bi-pencil-square me-2 text-primary"></i>Editar Cliente
+                <h1 class="h3 mb-0 fw-bold ">
+                    <i class="bi bi-pencil-square me-2 "></i>Editar Cliente
                 </h1>
                 <p class="text-muted mb-0 small">Atualize as informações do cliente</p>
             </div>
@@ -33,7 +33,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-person me-2 text-primary"></i>Dados Pessoais</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-person me-2 "></i>Dados Pessoais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -96,7 +96,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-briefcase me-2 text-primary"></i>Dados Profissionais</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-briefcase me-2 "></i>Dados Profissionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -175,6 +175,24 @@
                             </div>
 
                             <div class="mb-3">
+                                <label for="profession_id" class="text-uppercase small fw-bold text-muted mb-2">Profissão</label>
+                                <select name="profession_id"
+                                    class="form-select @error('profession_id') is-invalid @enderror"
+                                    id="profession_id">
+                                    <option value="">Selecione uma profissão</option>
+                                    @foreach ($professions ?? [] as $prof)
+                                        <option value="{{ $prof->id }}"
+                                            {{ old('profession_id', $customer->commonData?->profession_id) == $prof->id ? 'selected' : '' }}>
+                                            {{ $prof->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('profession_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="description" class="text-uppercase small fw-bold text-muted mb-2">Descrição</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
                                     rows="3" maxlength="250" placeholder="Descrição do cliente...">{{ old('description', $customer->commonData?->description) }}</textarea>
@@ -190,7 +208,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-envelope me-2 text-primary"></i>Contato</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-envelope me-2 "></i>Contato</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
@@ -215,9 +233,9 @@
 
                             <div class="mb-3">
                                 <label for="website" class="text-uppercase small fw-bold text-muted mb-2">Website</label>
-                                <input type="url" class="form-control @error('website') is-invalid @enderror"
+                                <input type="text" class="form-control @error('website') is-invalid @enderror"
                                     id="website" name="website"
-                                    value="{{ old('website', $customer->contact?->website) }}">
+                                    value="{{ old('website', $customer->contact?->website) }}" placeholder="ex: www.site.com.br">
                                 @error('website')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -230,7 +248,7 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-geo-alt me-2 text-primary"></i>Endereço</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-geo-alt me-2 "></i>Endereço</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -305,7 +323,7 @@
                 <div class="col-12" id="business-data-section" style="display: none;">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-transparent border-0 py-3">
-                            <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-building-gear me-2 text-primary"></i>Dados Empresariais Adicionais</h5>
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-building-gear me-2 "></i>Dados Empresariais Adicionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">

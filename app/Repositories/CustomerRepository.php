@@ -513,7 +513,7 @@ class CustomerRepository extends AbstractTenantRepository
      */
     public function updateFromDTO(Customer $customer, CustomerDTO $dto): ?Model
     {
-        $data = $dto->toArrayWithoutNulls();
+        $data = $dto->toArray();
 
         return $this->updateWithRelations($customer, $data);
     }
@@ -656,38 +656,38 @@ class CustomerRepository extends AbstractTenantRepository
             if ($customer->commonData) {
                 $customer->commonData->update([
                     'type' => $data['type'] ?? $customer->commonData->type,
-                    'first_name' => $data['first_name'] ?? $customer->commonData->first_name,
-                    'last_name' => $data['last_name'] ?? $customer->commonData->last_name,
-                    'birth_date' => $data['birth_date'] ?? $customer->commonData->birth_date,
-                    'cpf' => $data['cpf'] ?? $customer->commonData->cpf,
-                    'cnpj' => $data['cnpj'] ?? $customer->commonData->cnpj,
-                    'company_name' => $data['company_name'] ?? $customer->commonData->company_name,
-                    'description' => $data['description'] ?? $customer->commonData->description,
+                    'first_name' => array_key_exists('first_name', $data) ? $data['first_name'] : $customer->commonData->first_name,
+                    'last_name' => array_key_exists('last_name', $data) ? $data['last_name'] : $customer->commonData->last_name,
+                    'birth_date' => array_key_exists('birth_date', $data) ? $data['birth_date'] : $customer->commonData->birth_date,
+                    'cpf' => array_key_exists('cpf', $data) ? $data['cpf'] : $customer->commonData->cpf,
+                    'cnpj' => array_key_exists('cnpj', $data) ? $data['cnpj'] : $customer->commonData->cnpj,
+                    'company_name' => array_key_exists('company_name', $data) ? $data['company_name'] : $customer->commonData->company_name,
+                    'description' => array_key_exists('description', $data) ? $data['description'] : $customer->commonData->description,
                     'area_of_activity_id' => $areaId,
-                    'profession_id' => $data['profession_id'] ?? $customer->commonData->profession_id,
+                    'profession_id' => array_key_exists('profession_id', $data) ? $data['profession_id'] : $customer->commonData->profession_id,
                 ]);
             }
 
             // Atualizar Contact
             if ($customer->contact) {
                 $customer->contact->update([
-                    'email_personal' => $data['email_personal'] ?? ($data['email'] ?? $customer->contact->email_personal),
-                    'phone_personal' => $data['phone_personal'] ?? ($data['phone'] ?? $customer->contact->phone_personal),
-                    'email_business' => $data['email_business'] ?? $customer->contact->email_business,
-                    'phone_business' => $data['phone_business'] ?? $customer->contact->phone_business,
-                    'website' => $data['website'] ?? $customer->contact->website,
+                    'email_personal' => array_key_exists('email_personal', $data) ? $data['email_personal'] : (array_key_exists('email', $data) ? $data['email'] : $customer->contact->email_personal),
+                    'phone_personal' => array_key_exists('phone_personal', $data) ? $data['phone_personal'] : (array_key_exists('phone', $data) ? $data['phone'] : $customer->contact->phone_personal),
+                    'email_business' => array_key_exists('email_business', $data) ? $data['email_business'] : $customer->contact->email_business,
+                    'phone_business' => array_key_exists('phone_business', $data) ? $data['phone_business'] : $customer->contact->phone_business,
+                    'website' => array_key_exists('website', $data) ? $data['website'] : $customer->contact->website,
                 ]);
             }
 
             // Atualizar Address
             if ($customer->address) {
                 $customer->address->update([
-                    'address' => $data['address'] ?? $customer->address->address,
-                    'address_number' => $data['address_number'] ?? $customer->address->address_number,
-                    'neighborhood' => $data['neighborhood'] ?? $customer->address->neighborhood,
-                    'city' => $data['city'] ?? $customer->address->city,
-                    'state' => $data['state'] ?? $customer->address->state,
-                    'cep' => $data['cep'] ?? $customer->address->cep,
+                    'address' => array_key_exists('address', $data) ? $data['address'] : $customer->address->address,
+                    'address_number' => array_key_exists('address_number', $data) ? $data['address_number'] : $customer->address->address_number,
+                    'neighborhood' => array_key_exists('neighborhood', $data) ? $data['neighborhood'] : $customer->address->neighborhood,
+                    'city' => array_key_exists('city', $data) ? $data['city'] : $customer->address->city,
+                    'state' => array_key_exists('state', $data) ? $data['state'] : $customer->address->state,
+                    'cep' => array_key_exists('cep', $data) ? $data['cep'] : $customer->address->cep,
                 ]);
             }
 
@@ -695,13 +695,13 @@ class CustomerRepository extends AbstractTenantRepository
             if (($data['type'] ?? 'individual') === 'company' || ! empty($data['cnpj'])) {
                 if ($customer->businessData) {
                     $customer->businessData->update([
-                        'fantasy_name' => $data['fantasy_name'] ?? $customer->businessData->fantasy_name,
-                        'state_registration' => $data['state_registration'] ?? $customer->businessData->state_registration,
-                        'municipal_registration' => $data['municipal_registration'] ?? $customer->businessData->municipal_registration,
-                        'founding_date' => $data['founding_date'] ?? $customer->businessData->founding_date,
-                        'industry' => $data['industry'] ?? $customer->businessData->industry,
-                        'company_size' => $data['company_size'] ?? $customer->businessData->company_size,
-                        'notes' => $data['business_notes'] ?? ($data['notes'] ?? $customer->businessData->notes),
+                        'fantasy_name' => array_key_exists('fantasy_name', $data) ? $data['fantasy_name'] : $customer->businessData->fantasy_name,
+                        'state_registration' => array_key_exists('state_registration', $data) ? $data['state_registration'] : $customer->businessData->state_registration,
+                        'municipal_registration' => array_key_exists('municipal_registration', $data) ? $data['municipal_registration'] : $customer->businessData->municipal_registration,
+                        'founding_date' => array_key_exists('founding_date', $data) ? $data['founding_date'] : $customer->businessData->founding_date,
+                        'industry' => array_key_exists('industry', $data) ? $data['industry'] : $customer->businessData->industry,
+                        'company_size' => array_key_exists('company_size', $data) ? $data['company_size'] : $customer->businessData->company_size,
+                        'notes' => array_key_exists('business_notes', $data) ? $data['business_notes'] : (array_key_exists('notes', $data) ? $data['notes'] : $customer->businessData->notes),
                     ]);
                 } else {
                     BusinessData::create([
@@ -720,7 +720,7 @@ class CustomerRepository extends AbstractTenantRepository
 
             // Atualizar Customer (status)
             $customer->update([
-                'status' => $data['status'] ?? $customer->status,
+                'status' => array_key_exists('status', $data) ? $data['status'] : $customer->status,
             ]);
 
             return $customer->fresh(['commonData', 'contact', 'address', 'businessData']);

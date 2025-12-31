@@ -206,8 +206,8 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('provider.budgets.shares.show', $share->id) }}"
-                                                        class="btn btn-sm btn-outline-secondary">
+                                                    <a href="{{ route('provider.budgets.show', $share->budget->code) }}"
+                                                        class="btn btn-sm btn-info text-white" title="Visualizar Orçamento">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                 </td>

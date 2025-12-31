@@ -775,7 +775,7 @@
                                 <h5 class="card-title">Profissões</h5>
                                 <p class="card-text">Gerenciar profissões do sistema</p>
                                 <h3 class="text-info">{{ $professions }}</h3>
-                                <a href="{{ route('admin.professions.index') }}" class="btn btn-info">
+                                <a href="{{ route('admin.professions.index') }}" class="btn btn-info text-white">
                                     <i class="bi bi-gear me-1"></i> Gerenciar
                                 </a>
                             </div>

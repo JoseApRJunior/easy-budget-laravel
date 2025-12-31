@@ -327,7 +327,7 @@
                                                     </td>
                                                     <td class="text-center">
                                                         <a href="{{ route('provider.schedules.show', $sc->id) }}"
-                                                            class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                            class="btn btn-sm btn-info text-white" title="Visualizar">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
                                                     </td>

@@ -104,7 +104,7 @@ class ProviderUpdateRequest extends FormRequest
             'email_business' => 'nullable|email|max:255|unique:contacts,email_business,'.$this->getContactId(),
             'phone_personal' => 'nullable|string|max:20',
             'phone_business' => 'nullable|string|max:20',
-            'website' => 'nullable|url|max:255',
+            'website' => 'nullable|string|max:255',
 
             // Address validation rules
             'address' => 'required|string|max:255',

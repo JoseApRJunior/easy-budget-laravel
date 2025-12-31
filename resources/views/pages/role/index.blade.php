@@ -55,18 +55,10 @@
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ url('/admin/roles/' . $role->id) }}"
-                                                    class="btn btn-sm btn-outline-info" title="Visualizar">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ url('/admin/roles/' . $role->id . '/edit') }}"
-                                                    class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
-                                                    onclick="confirmDelete('{{ $role->id }}', '{{ $role->name }}')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <x-button type="link" :href="url('/admin/roles/' . $role->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-button type="link" :href="url('/admin/roles/' . $role->id . '/edit')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                    onclick="confirmDelete('{{ $role->id }}', '{{ $role->name }}')" />
                                             </div>
                                         </td>
                                     </tr>

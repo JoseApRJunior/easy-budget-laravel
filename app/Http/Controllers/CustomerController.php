@@ -85,8 +85,7 @@ class CustomerController extends Controller
         $dto = CustomerDTO::fromRequest($request->validated());
         $result = $this->customerService->createCustomer($dto);
 
-        return $this->redirectWithServiceResult(
-            'provider.customers.create',
+        return $this->redirectBackWithServiceResult(
             $result,
             'Cliente criado com sucesso! Você pode cadastrar outro cliente agora.'
         );
@@ -146,8 +145,7 @@ class CustomerController extends Controller
         $dto = CustomerDTO::fromRequest($request->validated());
         $result = $this->customerService->updateCustomer((int) $customer->id, $dto);
 
-        return $this->redirectWithServiceResult(
-            'provider.customers.index',
+        return $this->redirectBackWithServiceResult(
             $result,
             'Cliente atualizado com sucesso!'
         );

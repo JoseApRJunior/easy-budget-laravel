@@ -65,7 +65,8 @@ class BudgetController extends Controller
     public function create(Request $request): View
     {
         $this->authorize('create', Budget::class);
-        $customersResult = $this->customerService->getFilteredCustomers(['per_page' => 200]);
+        $filterDto = \App\DTOs\Customer\CustomerFilterDTO::fromRequest(['per_page' => 200]);
+        $customersResult = $this->customerService->getFilteredCustomers($filterDto);
 
         $selectedCustomer = null;
         if ($customerId = $request->query('customer_id')) {
@@ -87,14 +88,10 @@ class BudgetController extends Controller
         $dto = BudgetDTO::fromRequest($request->validated());
         $result = $this->budgetService->create($dto);
 
-        if ($result->isError()) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $result->getMessage());
-        }
-
-        return redirect()->route('provider.budgets.show', $result->getData()->code)
-            ->with('success', 'Orçamento criado com sucesso!');
+        return $this->redirectBackWithServiceResult(
+            $result,
+            'Orçamento criado com sucesso! Você pode cadastrar outro agora.'
+        );
     }
 
     public function show(string $code): View
@@ -131,7 +128,8 @@ class BudgetController extends Controller
         $budget = $result->getData();
         $this->authorize('update', $budget);
 
-        $customersResult = $this->customerService->getFilteredCustomers(['per_page' => 200]);
+        $filterDto = \App\DTOs\Customer\CustomerFilterDTO::fromRequest(['per_page' => 200]);
+        $customersResult = $this->customerService->getFilteredCustomers($filterDto);
 
         return view('pages.budget.edit', [
             'budget' => $budget,
@@ -152,14 +150,10 @@ class BudgetController extends Controller
         $dto = BudgetDTO::fromRequest($request->validated());
         $updateResult = $this->budgetService->update($code, $dto);
 
-        if ($updateResult->isError()) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $updateResult->getMessage());
-        }
-
-        return redirect()->route('provider.budgets.show', $updateResult->getData()->code)
-            ->with('success', 'Orçamento atualizado com sucesso!');
+        return $this->redirectBackWithServiceResult(
+            $updateResult,
+            'Orçamento atualizado com sucesso!'
+        );
     }
 
     public function toggleStatus(Request $request, string $code): RedirectResponse

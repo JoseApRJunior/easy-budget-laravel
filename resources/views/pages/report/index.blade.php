@@ -165,7 +165,7 @@
                                             </div>
                                             <h5 class="card-title">Clientes</h5>
                                             <p class="card-text text-muted small">Base de clientes e CRM</p>
-                                            <a href="{{ route('reports.customers') }}" class="btn btn-info btn-sm">
+                                            <a href="{{ route('reports.customers') }}" class="btn btn-info btn-sm text-white">
                                                 <i class="bi bi-people me-1"></i>Ver Relatório
                                             </a>
                                         </div>
@@ -246,7 +246,7 @@
                                             <h5 class="card-title">Estoque</h5>
                                             <p class="card-text text-muted small">Controle de inventário</p>
                                             <a href="{{ route('provider.inventory.report') }}"
-                                                class="btn btn-info btn-sm">
+                                                class="btn btn-info btn-sm text-white">
                                                 <i class="bi bi-boxes me-1"></i>Ver Relatório
                                             </a>
                                         </div>

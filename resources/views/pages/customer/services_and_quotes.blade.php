@@ -71,24 +71,13 @@
                                         </span>
                                     </td>
                                     <td class="text-end px-4">
-                                        <div class="btn-group">
-                                            <a href="{{ route( 'provider.services.show', $servico->id ) }}"
-                                                class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
-                                                title="Visualizar">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route( 'provider.services.edit', $servico->id ) }}"
-                                                class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                data-type="servico" 
-                                                data-id="{{ $servico->id }}"
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <x-button type="link" :href="route( 'provider.services.show', $servico->id )" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-button type="link" :href="route( 'provider.services.edit', $servico->id )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-button variant="danger" size="sm" icon="trash" title="Excluir"
                                                 onclick="handleGenericDelete(this)" 
-                                                data-bs-toggle="tooltip"
-                                                title="Excluir">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                                data-type="servico" 
+                                                data-id="{{ $servico->id }}" />
                                         </div>
                                     </td>
                                 </tr>
@@ -161,23 +150,13 @@
                                         </span>
                                     </td>
                                     <td class="text-end px-4">
-                                        <div class="btn-group">
-                                            <a href="{{ route( 'provider.budgets.show', $orcamento->code ) }}"
-                                                class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
-                                                title="Visualizar">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route( 'provider.budgets.edit', $orcamento->code ) }}"
-                                                class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                data-type="orcamento" 
-                                                data-id="{{ $orcamento->id }}"
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <x-button type="link" :href="route( 'provider.budgets.show', $orcamento->code )" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-button type="link" :href="route( 'provider.budgets.edit', $orcamento->code )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-button variant="danger" size="sm" icon="trash" title="Excluir"
                                                 onclick="handleGenericDelete(this)"
-                                                data-bs-toggle="tooltip" title="Excluir">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                                data-type="orcamento" 
+                                                data-id="{{ $orcamento->id }}" />
                                         </div>
                                     </td>
                                 </tr>

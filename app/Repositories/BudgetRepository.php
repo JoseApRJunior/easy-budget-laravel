@@ -144,13 +144,22 @@ class BudgetRepository extends AbstractTenantRepository
     {
         $baseQuery = $this->model->newQuery();
 
+        $statusBreakdown = $this->model->newQuery()
+            ->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
+
         return [
             'total_count' => (clone $baseQuery)->count(),
-            'pending_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::PENDING->value)->count(),
-            'approved_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->count(),
-            'rejected_count' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::REJECTED->value)->count(),
+            'total_budgets' => (clone $baseQuery)->count(),
+            'pending_budgets' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::PENDING->value)->count(),
+            'approved_budgets' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->count(),
+            'rejected_budgets' => (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::REJECTED->value)->count(),
+            'total_budget_value' => (float) (clone $baseQuery)->sum('total'),
             'total_value' => (float) (clone $baseQuery)->sum('total'),
             'approved_value' => (float) (clone $baseQuery)->where('status', \App\Enums\BudgetStatus::APPROVED->value)->sum('total'),
+            'status_breakdown' => $statusBreakdown,
             'recent_budgets' => $this->getRecentBudgets(5),
         ];
     }

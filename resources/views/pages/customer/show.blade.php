@@ -72,9 +72,9 @@
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-{{ $info['icon'] }} me-2 text-muted"></i>
                                                 @if (str_contains($key, 'Email'))
-                                                    <a href="mailto:{{ $info['value'] }}" class="text-decoration-none text-dark">{{ $info['value'] }}</a>
+                                                    <a href="mailto:{{ $info['value'] }}" class="text-decoration-none text-dark text-break">{{ $info['value'] }}</a>
                                                 @else
-                                                    <a href="tel:{{ preg_replace('/\D/', '', $info['value']) }}" class="text-decoration-none text-dark">{{ $info['value'] }}</a>
+                                                    <a href="tel:{{ preg_replace('/\D/', '', $info['value']) }}" class="text-decoration-none text-dark">{{ \App\Helpers\MaskHelper::formatPhone($info['value']) }}</a>
                                                 @endif
                                             </div>
                                         </div>
@@ -249,7 +249,7 @@
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-end">
-                                                                        <a href="{{ route('provider.budgets.show', $budget->id) }}" class="btn btn-sm btn-link text-primary p-0">
+                                                                        <a href="{{ route('provider.budgets.show', $budget->id) }}" class="btn btn-sm btn-info text-white">
                                                                             <i class="bi bi-eye"></i>
                                                                         </a>
                                                                     </td>

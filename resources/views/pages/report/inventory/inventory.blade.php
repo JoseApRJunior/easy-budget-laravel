@@ -237,15 +237,9 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.products.show', $item->product->code ?? '#') }}"
-                                                        class="action-btn action-btn-view" title="Visualizar">
-                                                        <i class="bi bi-eye-fill"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.products.edit', $item->product->code ?? '#') }}"
-                                                        class="action-btn action-btn-edit" title="Editar">
-                                                        <i class="bi bi-pencil-fill"></i>
-                                                    </a>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-button type="link" :href="route('provider.products.show', $item->product->code ?? '#')" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-button type="link" :href="route('provider.products.edit', $item->product->code ?? '#')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>

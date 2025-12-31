@@ -207,15 +207,9 @@
                                                 <strong>R$ {{ number_format($service->price, 2, ',', '.') }}</strong>
                                             </td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.services.show', $service) }}"
-                                                        class="action-btn action-btn-view" title="Visualizar">
-                                                        <i class="bi bi-eye-fill"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.services.edit', $service) }}"
-                                                        class="action-btn action-btn-edit" title="Editar">
-                                                        <i class="bi bi-pencil-fill"></i>
-                                                    </a>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-button type="link" :href="route('provider.services.edit', $service->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>

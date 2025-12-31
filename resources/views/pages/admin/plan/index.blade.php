@@ -145,22 +145,13 @@
                                     </td>
                                     <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-sm btn-warning" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-sm btn-info" title="Assinantes">
-                                                <i class="bi bi-people"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger" 
+                                        <div class="d-flex gap-1">
+                                            <x-button type="link" :href="route('admin.plans.show', $plan)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                            <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" size="sm" icon="people" title="Assinantes" />
+                                            <x-button variant="danger" size="sm" icon="trash" title="Excluir"
                                                     onclick="confirmDelete('{{ route('admin.plans.destroy', $plan) }}')" 
-                                                    title="Excluir"
-                                                    {{ $plan->planSubscriptions()->exists() ? 'disabled' : '' }}>
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                                    :disabled="$plan->planSubscriptions()->exists()" />
                                         </div>
                                     </td>
                                 </tr>

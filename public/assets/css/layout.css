@@ -2112,20 +2112,20 @@ input[type="number"] {
    }
 
    .action-btn-view {
-      background: rgba(37, 99, 235, 0.15);
-      color: var(--text-info);
+      background: #0dcaf0;
+      color: #fff;
    }
    .action-btn-edit {
-      background: rgba(217, 119, 6, 0.15);
-      color: var(--text-warning);
+      background: #0d6efd;
+      color: #fff;
    }
    .action-btn-delete {
-      background: rgba(220, 38, 38, 0.15);
-      color: var(--text-error);
+      background: #dc3545;
+      color: #fff;
    }
    .action-btn-restore {
-      background: rgba(5, 150, 105, 0.15);
-      color: var(--text-success);
+      background: #198754;
+      color: #fff;
    }
 }
 

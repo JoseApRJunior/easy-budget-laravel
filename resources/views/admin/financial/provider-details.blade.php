@@ -244,7 +244,7 @@
                         </div>
                         <div class="col-md-3 mb-2">
                             <a href="{{ route('admin.enterprises.show', $providerFinancialDetails['tenant_id']) }}" 
-                               class="btn btn-info btn-block">
+                               class="btn btn-info btn-block text-white">
                                 <i class="fas fa-building"></i> Ver Empresa
                             </a>
                         </div>

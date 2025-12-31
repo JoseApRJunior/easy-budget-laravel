@@ -114,8 +114,8 @@
 
 <div class="mb-3">
     <label for="website" class="form-label">Website</label>
-    <input type="url" class="form-control @error( 'website' ) is-invalid @enderror" id="website" name="website"
-        value="{{ old( 'website', $customer->contact->website ?? '' ) }}">
+    <input type="text" class="form-control @error( 'website' ) is-invalid @enderror" id="website" name="website"
+        value="{{ old( 'website', $customer->contact->website ?? '' ) }}" placeholder="ex: www.site.com.br">
     @error( 'website' )
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror

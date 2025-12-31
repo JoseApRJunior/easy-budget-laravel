@@ -214,9 +214,9 @@
                                                 <td>{{ $service->created_at->format('d/m/Y') }}</td>
                                                 <td>
                                                     <a href="{{ route('provider.services.show', $service->code) }}"
-                                                        class="btn btn-sm btn-outline-primary">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
+                                                            class="btn btn-sm btn-info text-white" title="Visualizar">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
                                                 </td>
                                             </tr>
                                         @endforeach

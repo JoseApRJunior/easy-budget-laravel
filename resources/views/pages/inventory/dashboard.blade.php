@@ -237,7 +237,7 @@
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-arrow-up-circle me-2 text-info"></i>Estoque Alto
+                        <i class="bi bi-arrow-up-circle me-2 "></i>Estoque Alto
                     </h5>
                     <a href="{{ route('provider.inventory.index', ['status' => 'high']) }}" class="btn btn-sm btn-link text-primary p-0 text-decoration-none">Ver todos</a>
                 </div>

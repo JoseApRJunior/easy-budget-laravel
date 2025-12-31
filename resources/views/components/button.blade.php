@@ -11,6 +11,9 @@
 @php
 $classes = 'btn ';
 $classes .= $outline ? "btn-outline-{$variant}" : "btn-{$variant}";
+if ($variant === 'info' && !$outline) {
+    $classes .= ' text-white';
+}
 if ($size) {
 $classes .= " btn-{$size}";
 }

@@ -98,6 +98,7 @@ class CommonData extends Model
         } else {
             $rules['company_name'] = 'required|string|max:255';
             $rules['cnpj'] = 'required|string|size:14|unique:common_datas,cnpj';
+            $rules['birth_date'] = 'nullable|date|before:today';
         }
 
         return $rules;

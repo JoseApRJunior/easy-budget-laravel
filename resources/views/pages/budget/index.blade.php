@@ -164,9 +164,9 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
-                                        <x-button type="link" :href="route('provider.budgets.edit', $budget->code)" variant="outline-primary" size="sm" icon="pencil-square" title="Editar" />
-                                        <x-button variant="outline-danger" size="sm" icon="trash"
+                                        <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                        <x-button type="link" :href="route('provider.budgets.edit', $budget->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                        <x-button variant="danger" size="sm" icon="trash"
                                             data-bs-toggle="modal" data-bs-target="#deleteBudgetModal"
                                             data-budget-code="{{ $budget->code }}"
                                             data-budget-id="{{ $budget->id }}" title="Excluir" />

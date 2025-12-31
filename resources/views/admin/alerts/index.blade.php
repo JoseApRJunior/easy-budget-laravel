@@ -243,19 +243,11 @@
                                         </td>
                                         <td>{{ $alert['created_at']->format('d/m/Y H:i') }}</td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('admin.alerts.show', $alert['id']) }}"
-                                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('admin.alerts.edit', $alert['id']) }}"
-                                                    class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="confirmDelete({{ $alert['id'] }})" title="Excluir">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                            <div class="d-flex gap-1">
+                                                <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" title="Ver Detalhes" />
+                                                <x-button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                    onclick="confirmDelete({{ $alert['id'] }})" />
                                             </div>
                                         </td>
                                     </tr>
@@ -299,19 +291,11 @@
                                         </span><br>
                                         <strong>Data:</strong> {{ $alert['created_at']->format('d/m/Y H:i') }}
                                     </p>
-                                    <div class="btn-group w-100" role="group">
-                                        <a href="{{ route('admin.alerts.show', $alert['id']) }}"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> Ver
-                                        </a>
-                                        <a href="{{ route('admin.alerts.edit', $alert['id']) }}"
-                                            class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-pencil"></i> Editar
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDelete({{ $alert['id'] }})">
-                                            <i class="bi bi-trash"></i> Excluir
-                                        </button>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                                        <x-button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
+                                        <x-button variant="danger" size="sm" icon="trash" label="Excluir" class="flex-grow-1"
+                                            onclick="confirmDelete({{ $alert['id'] }})" />
                                     </div>
                                 </div>
                             </div>

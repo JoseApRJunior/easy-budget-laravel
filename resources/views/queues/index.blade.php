@@ -96,7 +96,7 @@
                             </div>
                             <div class="card-body">
                                 <p class="text-muted">Tenta processar novamente jobs que falharam.</p>
-                                <button type="button" class="btn btn-info" onclick="retryFailedJobs()">
+                                <button type="button" class="btn btn-info text-white" onclick="retryFailedJobs()">
                                     Retry Jobs Falhados
                                 </button>
                             </div>

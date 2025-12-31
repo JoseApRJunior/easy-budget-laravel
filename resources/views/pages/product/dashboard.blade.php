@@ -228,7 +228,7 @@
                                         <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
                                         <td class="text-center">
                                             <x-button type="link" :href="route('provider.products.show', $product->sku)"
-                                                variant="secondary" outline size="sm" icon="eye" />
+                                                    variant="info" size="sm" icon="eye" />
                                         </td>
                                     </tr>
                                     @endforeach

@@ -127,8 +127,8 @@ class CustomerUpdateRequest extends FormRequest
                     ->where('tenant_id', $tenantId)
                     ->ignore($this->excludeCustomerId, 'customer_id')
             ],
-            'birth_date' => 'nullable|required_if:person_type,pf|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
-            'profession_id' => 'nullable|required_if:person_type,pf|exists:professions,id',
+            'birth_date' => 'nullable|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
+            'profession_id' => 'nullable|exists:professions,id',
 
             // Pessoa Jurídica
             'company_name' => 'nullable|required_if:person_type,pj|string|max:255',
@@ -158,7 +158,7 @@ class CustomerUpdateRequest extends FormRequest
             'phone_personal' => 'required|string|phone_br',
             'email_business' => 'nullable|email|max:255',
             'phone_business' => 'nullable|string|phone_br',
-            'website' => 'nullable|url|max:255',
+            'website' => 'nullable|string|max:255',
 
             // Endereço - todos obrigatórios
             'cep' => 'required|cep_br',

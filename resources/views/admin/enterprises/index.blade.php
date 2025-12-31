@@ -259,27 +259,15 @@
                                         </td>
                                         <td>{{ $enterprise->created_at->format('d/m/Y') }}</td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('admin.enterprises.show', $enterprise->id) }}"
-                                                    class="btn btn-sm btn-outline-primary" title="Ver">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('admin.enterprises.edit', $enterprise->id) }}"
-                                                    class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
+                                            <div class="d-flex gap-1">
+                                                <x-button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" title="Ver" />
+                                                <x-button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 @if ($enterprise->status === 'active')
-                                                    <button
-                                                        onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                        class="btn btn-sm btn-outline-danger" title="Suspender">
-                                                        <i class="bi bi-pause"></i>
-                                                    </button>
+                                                    <x-button variant="danger" size="sm" icon="pause" title="Suspender"
+                                                        onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                                 @else
-                                                    <button
-                                                        onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                        class="btn btn-sm btn-outline-success" title="Reativar">
-                                                        <i class="bi bi-play"></i>
-                                                    </button>
+                                                    <x-button variant="success" size="sm" icon="play" title="Reativar"
+                                                        onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                                 @endif
                                             </div>
                                         </td>
@@ -325,27 +313,15 @@
                                         <br>
                                         <strong>Criado em:</strong> {{ $enterprise->created_at->format('d/m/Y') }}
                                     </p>
-                                    <div class="btn-group w-100" role="group">
-                                        <a href="{{ route('admin.enterprises.show', $enterprise->id) }}"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> Ver
-                                        </a>
-                                        <a href="{{ route('admin.enterprises.edit', $enterprise->id) }}"
-                                            class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-pencil"></i> Editar
-                                        </a>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <x-button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                                        <x-button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
                                         @if ($enterprise->status === 'active')
-                                            <button
-                                                onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-pause"></i> Suspender
-                                            </button>
+                                            <x-button variant="danger" size="sm" icon="pause" label="Suspender" class="flex-grow-1"
+                                                onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                         @else
-                                            <button
-                                                onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-play"></i> Reativar
-                                            </button>
+                                            <x-button variant="success" size="sm" icon="play" label="Reativar" class="flex-grow-1"
+                                                onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                         @endif
                                     </div>
                                 </div>

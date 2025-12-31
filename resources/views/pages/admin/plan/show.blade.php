@@ -4,16 +4,10 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="bi bi-box-seam me-2"></i>Detalhes do Plano: {{ $plan->name }}</h1>
-        <div>
-            <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-arrow-left me-1"></i>Voltar
-            </a>
-            <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-warning me-2">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
-            <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-info">
-                <i class="bi bi-people me-1"></i>Assinantes
-            </a>
+        <div class="d-flex gap-2">
+            <x-back-button index-route="admin.plans.index" />
+            <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
+            <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
         </div>
     </div>
 
@@ -200,9 +194,7 @@
                                             <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
                                             <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
                                             <td>
-                                                <a href="{{ route('admin.plans.subscribers', [$plan, 'search' => $subscription->id]) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
+                                                <x-button type="link" :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                             </td>
                                         </tr>
                                     @endforeach
@@ -226,25 +218,18 @@
             <div class="d-flex justify-content-between">
                 <div>
                     @if(!$plan->planSubscriptions()->exists())
-                        <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" class="d-inline">
+                        <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" id="deleteForm-{{ $plan->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este plano?')">
-                                <i class="bi bi-trash me-1"></i>Excluir Plano
-                            </button>
+                            <x-button variant="danger" icon="trash" label="Excluir Plano" 
+                                onclick="if(confirm('Tem certeza que deseja excluir este plano?')) document.getElementById('deleteForm-{{ $plan->id }}').submit();" />
                         </form>
                     @endif
                 </div>
-                <div>
-                    <a href="{{ route('admin.plans.duplicate', $plan) }}" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-copy me-1"></i>Duplicar
-                    </a>
-                    <a href="{{ route('admin.plans.analytics', $plan) }}" class="btn btn-outline-primary me-2">
-                        <i class="bi bi-graph-up me-1"></i>Análises
-                    </a>
-                    <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil me-1"></i>Editar Plano
-                    </a>
+                <div class="d-flex gap-2">
+                    <x-button type="link" :href="route('admin.plans.duplicate', $plan)" variant="outline-secondary" icon="copy" label="Duplicar" />
+                    <x-button type="link" :href="route('admin.plans.analytics', $plan)" variant="outline-primary" icon="graph-up" label="Análises" />
+                    <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
                 </div>
             </div>
         </div>

@@ -89,7 +89,7 @@
                   <a href="{{ route( 'admin.users.index' ) }}" class="btn btn-primary">
                     <i class="bi bi-people me-1"></i> Gerenciar Usuários
                   </a>
-                  <a href="{{ route( 'admin.settings' ) }}" class="btn btn-info">
+                  <a href="{{ route( 'admin.settings' ) }}" class="btn btn-info text-white">
                     <i class="bi bi-gear me-1"></i> Configurações do Sistema
                   </a>
                   <a href="{{ route( 'admin.index' ) }}" class="btn btn-outline-success">

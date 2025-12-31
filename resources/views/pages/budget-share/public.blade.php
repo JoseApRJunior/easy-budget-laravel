@@ -17,7 +17,7 @@
                         </div>
                         <div class="text-end">
                             <div class="badge bg-light text-dark fs-6">
-                                #{{ str_pad($budget->id, 6, '0', STR_PAD_LEFT) }}
+                                {{ $budget->code }}
                             </div>
                         </div>
                     </div>
@@ -36,11 +36,11 @@
                                     </div>
                                     <div class="mb-2">
                                         <strong>Email:</strong>
-                                        <span class="text-muted">{{ $budget->customer->email ?? 'Não informado' }}</span>
+                                        <span class="text-muted text-break">{{ $budget->customer->email ?? 'Não informado' }}</span>
                                     </div>
                                     <div class="mb-2">
                                         <strong>Telefone:</strong>
-                                        <span class="text-muted">{{ $budget->customer->phone ?? 'Não informado' }}</span>
+                                        <span class="text-muted">{{ $budget->customer->phone ? \App\Helpers\MaskHelper::formatPhone($budget->customer->phone) : 'Não informado' }}</span>
                                     </div>
                                     @if($budget->customer->address)
                                     <div class="mb-2">
@@ -66,9 +66,12 @@
                                     </div>
                                     <div class="mb-2">
                                         <strong>Status:</strong>
-                                        <span class="badge bg-{{ $budget->status === 'approved' ? 'success' : 
-                                                               ($budget->status === 'pending' ? 'warning' : 'secondary') }}">
-                                            {{ ucfirst($budget->status) }}
+                                        @php
+                                            $statusColor = $budget->status->getColor();
+                                            $statusLabel = $budget->status->label();
+                                        @endphp
+                                        <span class="badge" style="background-color: {{ $statusColor }}20; color: {{ $statusColor }}; border: 1px solid {{ $statusColor }}40;">
+                                            {{ $statusLabel }}
                                         </span>
                                     </div>
                                     <div class="mb-2">

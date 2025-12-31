@@ -248,15 +248,9 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.budgets.show', $budget) }}"
-                                                        class="action-btn action-btn-view" title="Visualizar">
-                                                        <i class="bi bi-eye-fill"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.budgets.edit', $budget) }}"
-                                                        class="action-btn action-btn-edit" title="Editar">
-                                                        <i class="bi bi-pencil-fill"></i>
-                                                    </a>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-button type="link" :href="route('provider.budgets.edit', $budget->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>

@@ -187,7 +187,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-transparent border-0 py-3">
                         <h5 class="mb-0 d-flex align-items-center">
-                            <i class="bi bi-clock-history me-2 text-primary"></i>
+                            <i class="bi bi-clock-history me-2 "></i>
                             <span class="d-none d-sm-inline">Orçamentos Recentes</span>
                             <span class="d-sm-none">Recentes</span>
                         </h5>
@@ -243,7 +243,7 @@
                                                 <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
                                                 <td class="text-end">
                                                     <a href="{{ route('provider.budgets.show', $budget->code) }}"
-                                                        class="btn btn-sm btn-outline-info" title="Visualizar">
+                                                        class="btn btn-sm btn-info text-white" title="Visualizar">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                 </td>
@@ -262,7 +262,7 @@
                                         $customer = $budget->customer ?? null;
                                         $commonData = $customer?->commonData ?? null;
                                         $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
-                                        
+
                                         $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
                                         $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
                                     @endphp
@@ -314,7 +314,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent border-0 py-3">
                         <h6 class="mb-0 fw-bold d-flex align-items-center">
-                            <i class="bi bi-lightbulb me-2 text-warning"></i>Insights Rápidos
+                            <i class="bi bi-lightbulb me-2 "></i>Insights Rápidos
                         </h6>
                     </div>
                     <div class="card-body pt-0">

@@ -6,10 +6,12 @@
 <div class="container-fluid py-1">
     <x-page-header
         title="Detalhes do Orçamento"
-        subtitle="Visualize as informações completas do orçamento"
-        icon="file-earmark-text">
-        <li class="breadcrumb-item"><a href="{{ route('provider.budgets.index') }}">Orçamentos</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ $budget->code }}</li>
+        icon="file-earmark-text"
+        :breadcrumb-items="[
+            'Orçamentos' => route('provider.budgets.index'),
+            $budget->code => '#'
+        ]">
+        <p class="text-muted mb-0">Visualize as informações completas do orçamento</p>
     </x-page-header>
 
     <div class="row g-4">
@@ -100,14 +102,14 @@
                     @if ($budget->customer->contact->email_personal)
                     <div class="info-item mb-3">
                         <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">E-mail</small>
-                        <span class="text-dark fw-bold">{{ $budget->customer->contact->email_personal }}</span>
+                        <span class="text-dark fw-bold text-break">{{ $budget->customer->contact->email_personal }}</span>
                     </div>
                     @endif
 
                     @if ($budget->customer->contact->phone_personal)
                     <div class="info-item">
                         <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Telefone</small>
-                        <span class="text-dark fw-bold">{{ $budget->customer->contact->phone_personal }}</span>
+                        <span class="text-dark fw-bold">{{ \App\Helpers\MaskHelper::formatPhone($budget->customer->contact->phone_personal) }}</span>
                     </div>
                     @endif
                     @endif
@@ -252,18 +254,18 @@
                                         </td>
                                         <td>{{ $service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') : '-' }}
                                         </td>
-                                        <td class="text-end text-warning fw-semibold">R$
-                                            {{ number_format($service->discount, 2, ',', '.') }}
+                                        <td class="text-end text-warning fw-semibold">
+                                            R$ {{ number_format($service->discount, 2, ',', '.') }}
                                         </td>
-                                        <td class="text-end text-primary fw-bold">R$
-                                            {{ number_format($service->total, 2, ',', '.') }}
+                                        <td class="text-end text-primary fw-bold">
+                                            R$ {{ number_format($service->total, 2, ',', '.') }}
                                         </td>
                                         <td class="text-center">
                                             <div class="action-btn-group">
                                                 <x-button type="link" :href="route('provider.services.show', $service->code)"
-                                                    variant="outline-primary" size="sm" icon="eye-fill" title="Visualizar" class="action-btn action-btn-view p-0" />
+                                                    variant="info" size="sm" icon="eye" title="Visualizar" class="action-btn action-btn-view" />
                                                 <x-button type="link" :href="route('provider.services.edit', $service->code)"
-                                                    variant="outline-primary" size="sm" icon="pencil-fill" title="Editar" class="action-btn action-btn-edit p-0" />
+                                                    variant="outline-primary" size="sm" icon="pencil-fill" title="Editar" class="action-btn action-btn-edit" />
                                             </div>
                                         </td>
                                     </tr>
@@ -327,7 +329,7 @@
     <!-- Botões de Ação -->
     <div class="d-flex justify-content-between align-items-center mt-4">
         <div class="d-flex gap-2">
-            <x-back-button :fallback="route('provider.budgets.index')" />
+            <x-back-button index-route="provider.budgets.index" />
         </div>
         <small class="text-muted d-none d-md-block">
             Última atualização: {{ $budget->updated_at?->format('d/m/Y H:i') }}

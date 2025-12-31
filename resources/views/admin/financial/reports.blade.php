@@ -254,7 +254,7 @@
                             </button>
                         </div>
                         <div class="col-md-3 mb-2">
-                            <button class="btn btn-info btn-block" onclick="printReports()">
+                            <button class="btn btn-info btn-block text-white" onclick="printReports()">
                                 <i class="fas fa-print"></i> Imprimir
                             </button>
                         </div>

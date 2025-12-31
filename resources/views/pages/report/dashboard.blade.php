@@ -171,7 +171,7 @@
                                                             @endif
                                                             @if (isset($report->view_url))
                                                                 <a href="{{ $report->view_url }}"
-                                                                    class="btn btn-sm btn-outline-secondary">
+                                                                    class="btn btn-sm btn-info text-white">
                                                                     <i class="bi bi-eye"></i>
                                                                 </a>
                                                             @endif
@@ -216,7 +216,7 @@
                                                     @endif
                                                     @if (isset($report->view_url))
                                                         <a href="{{ $report->view_url }}"
-                                                            class="btn btn-sm btn-outline-secondary">
+                                                            class="btn btn-sm btn-info text-white">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
                                                     @endif
@@ -277,7 +277,7 @@
                         <a href="{{ route('provider.reports.financial') }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-graph-up me-2"></i>Financeiro
                         </a>
-                        <a href="{{ route('provider.reports.customers') }}" class="btn btn-sm btn-info">
+                        <a href="{{ route('provider.reports.customers') }}" class="btn btn-sm btn-info text-white">
                             <i class="bi bi-people me-2"></i>Clientes
                         </a>
                         <a href="{{ route('provider.reports.products') }}" class="btn btn-sm btn-success">

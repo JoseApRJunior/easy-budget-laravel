@@ -1,13 +1,13 @@
-@props(['indexRoute', 'defaultIndexRoute' => null, 'label' => 'Voltar'])
+@props(['indexRoute' => null, 'defaultIndexRoute' => null, 'label' => 'Voltar'])
 
 @php
 $previousUrl = url()->previous();
-$indexUrl = route($indexRoute);
+$indexUrl = $indexRoute ? route($indexRoute) : $previousUrl;
 $defaultUrl = $defaultIndexRoute ? route($defaultIndexRoute) : $indexUrl;
 
 // Se o URL anterior for outra página de detalhes (show), voltamos para o index para quebrar o loop
 // Verificamos se o URL anterior começa com o index e se não é exatamente o index (o que indicaria um show ou sub-página)
-$isAnotherShowPage = str_starts_with($previousUrl, $indexUrl) &&
+$isAnotherShowPage = $indexRoute && str_starts_with($previousUrl, $indexUrl) &&
 $previousUrl !== $indexUrl &&
 !str_contains($previousUrl, '?');
 
