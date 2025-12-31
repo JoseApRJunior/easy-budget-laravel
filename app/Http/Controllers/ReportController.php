@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Customer\CustomerFilterDTO;
+use App\DTOs\Product\ProductFilterDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ReportGenerateRequest;
 use App\Models\Customer;
+use App\Services\Domain\CustomerService;
+use App\Services\Domain\ProductService;
 use App\Services\Domain\ReportService;
 use Exception;
 use Illuminate\Contracts\View\View;
@@ -139,17 +143,31 @@ class ReportController extends Controller
     /**
      * Relatório de clientes
      */
-    public function customers(): View
+    public function customers(Request $request): View
     {
-        return view('pages.report.customer.customer');
+        $filters = $request->all();
+        $filterDto = CustomerFilterDTO::fromRequest($filters);
+        $result = app(CustomerService::class)->getFilteredCustomers($filterDto);
+
+        return view('pages.report.customer.customer', [
+            'customers' => $result->getData(),
+            'filters' => $filters,
+        ]);
     }
 
     /**
      * Relatório de produtos
      */
-    public function products(): View
+    public function products(Request $request): View
     {
-        return view('pages.report.product.product');
+        $filters = $request->all();
+        $filterDto = ProductFilterDTO::fromRequest($filters);
+        $result = app(ProductService::class)->getFilteredProducts($filterDto);
+
+        return view('pages.report.product.product', [
+            'products' => $result->getData(),
+            'filters' => $filters,
+        ]);
     }
 
     /**

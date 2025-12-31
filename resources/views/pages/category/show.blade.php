@@ -71,10 +71,7 @@
                     <div class="d-flex flex-column {{ !$category->parent ? 'offset-md-4' : '' }}">
                         <label class="text-muted small mb-1">Status</label>
                         <div>
-                            <span
-                                class="modern-badge {{ $category->deleted_at ? 'badge-deleted' : ($category->is_active ? 'badge-active' : 'badge-inactive') }}">
-                                {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
-                            </span>
+                            <x-status-badge :item="$category" />
                         </div>
                     </div>
                 </div>
@@ -137,10 +134,7 @@
                                         <span class="badge bg-primary">Subcategoria</span>
                                     </td>
                                     <td class="text-center">
-                                        <span
-                                            class="modern-badge {{ $child->deleted_at ? 'badge-deleted' : ($child->is_active ? 'badge-active' : 'badge-inactive') }}">
-                                            {{ $child->deleted_at ? 'Deletado' : ($child->is_active ? 'Ativo' : 'Inativo') }}
-                                        </span>
+                                        <x-status-badge :item="$child" />
                                     </td>
                                     <td>{{ $child->created_at?->format('d/m/Y H:i') }}</td>
                                     <td class="text-center">
@@ -164,10 +158,7 @@
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold mb-2">{{ $child->name }}</div>
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <span
-                                            class="modern-badge {{ $child->deleted_at ? 'badge-deleted' : ($child->is_active ? 'badge-active' : 'badge-inactive') }}">
-                                            {{ $child->deleted_at ? 'Deletado' : ($child->is_active ? 'Ativo' : 'Inativo') }}
-                                        </span>
+                                        <x-status-badge :item="$child" />
                                     </div>
                                 </div>
                                 <i class="bi bi-chevron-right text-muted ms-2"></i>

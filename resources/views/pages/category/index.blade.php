@@ -17,92 +17,74 @@
     <div class="row">
         <div class="col-12">
             <!-- Filtros de Busca -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-                </div>
-                <div class="card-body">
-                    <form id="filtersFormCategories" method="GET" action="{{ route('provider.categories.index') }}">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="search" class="form-label small fw-bold text-muted text-uppercase">Buscar</label>
-                                    <input type="text" class="form-control" id="search" name="search"
-                                        value="{{ old('search', $filters['search'] ?? '') }}"
-                                        placeholder="Categoria, Subcategoria">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="active" class="form-label small fw-bold text-muted text-uppercase">Status</label>
-                                    <select class="form-select tom-select" id="active" name="active">
-                                        @php($selectedActive = $filters['active'] ?? '1')
-                                        <option value="1" {{ $selectedActive === '1' ? 'selected' : '1' }}>
-                                            Ativo
-                                        </option>
-                                        <option value="0" {{ $selectedActive === '0' ? 'selected' : '1' }}>
-                                            Inativo
-                                        </option>
-                                        <option value="all" {{ $selectedActive === 'all' ? 'selected' : '1' }}>
-                                            Todos
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por página</label>
-                                    <select class="form-select tom-select" id="per_page" name="per_page">
-                                        @php($pp = (int) request('per_page', 10))
-                                        <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
-                                        <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
-                                        <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="deleted" class="form-label small fw-bold text-muted text-uppercase">Registros</label>
-                                    <select name="deleted" id="deleted" class="form-select tom-select">
-                                        @php($selectedDeleted = $filters['deleted'] ?? 'current')
-                                        <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : 'current' }}>
-                                            Atuais
-                                        </option>
-                                        <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : 'current' }}>
-                                            Deletados
-                                        </option>
-                                        <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : 'current' }}>
-                                            Todos
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro Inicial</label>
-                                    <input type="text" class="form-control" id="start_date" name="start_date"
-                                        value="{{ old('start_date', $filters['start_date'] ?? '') }}"
-                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro Final</label>
-                                    <input type="text" class="form-control" id="end_date" name="end_date"
-                                        value="{{ old('end_date', $filters['end_date'] ?? '') }}"
-                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterCategories" />
-                                    <x-button type="link" :href="route('provider.categories.index')" variant="outline-secondary" icon="x" label="Limpar" />
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <x-filter-form
+                id="filtersFormCategories"
+                :route="route('provider.categories.index')"
+                :filters="$filters"
+            >
+                <x-filter-field
+                    type="text"
+                    name="search"
+                    label="Buscar"
+                    placeholder="Categoria, Subcategoria"
+                    :filters="$filters"
+                />
+
+                <x-filter-field
+                    type="select"
+                    name="active"
+                    label="Status"
+                    col="col-md-2"
+                    :options="[
+                        '1' => 'Ativo',
+                        '0' => 'Inativo',
+                        'all' => 'Todos'
+                    ]"
+                    :filters="$filters"
+                />
+
+                <x-filter-field
+                    type="select"
+                    name="per_page"
+                    label="Por página"
+                    col="col-md-2"
+                    :options="[
+                        10 => '10',
+                        20 => '20',
+                        50 => '50'
+                    ]"
+                    :filters="$filters"
+                />
+
+                <x-filter-field
+                    type="select"
+                    name="deleted"
+                    label="Registros"
+                    col="col-md-2"
+                    :options="[
+                        'current' => 'Atuais',
+                        'only' => 'Deletados',
+                        'all' => 'Todos'
+                    ]"
+                    :filters="$filters"
+                />
+
+                <x-filter-field
+                    type="date"
+                    name="start_date"
+                    label="Cadastro Inicial"
+                    col="col-md-2"
+                    :filters="$filters"
+                />
+
+                <x-filter-field
+                    type="date"
+                    name="end_date"
+                    label="Cadastro Final"
+                    col="col-md-2"
+                    :filters="$filters"
+                />
+            </x-filter-form>
 
             <div class="card">
                 <div class="card-header">
@@ -123,28 +105,11 @@
                                 </span>
                             </h5>
                         </div>
-                        <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                            <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                                <div class="dropdown">
-                                    <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                                        <li>
-                                            <a class="dropdown-item"
-                                                href="{{ route('provider.categories.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
-                                                <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item"
-                                                href="{{ route('provider.categories.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
-                                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <x-button type="link" :href="route('provider.categories.create')" size="sm" icon="plus" label="Nova" />
-                            </div>
-                        </div>
+                        <x-table-header-actions
+                            resource="categories"
+                            :filters="$filters"
+                            createLabel="Nova"
+                        />
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -166,10 +131,7 @@
                                             {{ $category->parent_id && $category->parent ? $category->parent->name : $category->name }}
                                         </div>
                                         <div class="d-flex gap-2 flex-wrap mb-2">
-                                            <span
-                                                class="modern-badge {{ $category->deleted_at ? 'badge-deleted' : ($category->is_active ? 'badge-active' : 'badge-inactive') }}">
-                                                {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
-                                            </span>
+                                            <x-status-badge :item="$category" />
                                         </div>
                                         @if ($category->parent_id)
                                         <div class="mb-2">
@@ -182,41 +144,22 @@
                                             <small class="text-muted">
                                                 {{ $category->created_at?->format('d/m/Y') ?? '—' }}
                                             </small>
-                                            <div class="d-flex gap-2">
-                                                @if ($category->deleted_at)
-                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                <x-button variant="success" size="sm" icon="arrow-counterclockwise"
-                                                    data-bs-toggle="modal" data-bs-target="#restoreModal"
-                                                    data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
-                                                    data-category-name="{{ $category->name }}"
-                                                    title="Restaurar" />
-                                                @else
-                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                                                <x-button type="link" :href="route('provider.categories.edit', $category->slug)" size="sm" icon="pencil-square" title="Editar" />
-                                                @if ($canDelete)
-                                                <x-button variant="danger" size="sm" icon="trash"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                    data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
-                                                    data-category-name="{{ $category->name }}"
-                                                    title="Excluir" />
-                                                @endif
-                                                @endif
-                                            </div>
+                                            <x-action-buttons
+                                                :item="$category"
+                                                resource="categories"
+                                                identifier="slug"
+                                                :canDelete="$category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0"
+                                                size="sm"
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             @empty
-                            <div class="p-4 text-center text-muted">
-                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                <br>
-                                @if (($filters['deleted'] ?? '') === 'only')
-                                Nenhuma categoria deletada encontrada.
-                                @else
-                                Nenhuma categoria encontrada.
-                                @endif
-                            </div>
+                            <x-empty-state
+                                resource="categorias"
+                                :isTrashView="($filters['deleted'] ?? '') === 'only'"
+                            />
                             @endforelse
                         </div>
                     </div>
@@ -260,10 +203,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span
-                                                class="modern-badge {{ $category->deleted_at ? 'badge-deleted' : ($category->is_active ? 'badge-active' : 'badge-inactive') }}">
-                                                {{ $category->deleted_at ? 'Deletado' : ($category->is_active ? 'Ativo' : 'Inativo') }}
-                                            </span>
+                                            <x-status-badge :item="$category" />
                                         </td>
                                         <td>
                                             <small class="text-muted">
@@ -271,49 +211,24 @@
                                             </small>
                                         </td>
                                         <td>
-                                            <div class="action-btn-group">
-                                                @if ($category->deleted_at)
-                                                {{-- Categoria deletada: visualizar e restaurar --}}
-                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" title="Visualizar" />
-
-                                                @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
-                                                <x-button variant="success" icon="arrow-counterclockwise"
-                                                    data-bs-toggle="modal" data-bs-target="{{ $parentIsTrashed ? '' : '#restoreModal' }}"
-                                                    data-restore-url="{{ route('provider.categories.restore', $category->slug) }}"
-                                                    data-category-name="{{ $category->name }}"
-                                                    title="{{ $parentIsTrashed ? 'Restaure o pai primeiro' : 'Restaurar' }}"
-                                                    :class="$parentIsTrashed ? 'opacity-50' : ''"
-                                                    style="{{ $parentIsTrashed ? 'cursor: not-allowed;' : '' }}"
-                                                    onclick="{{ $parentIsTrashed ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.\', { duration: 8000 }); return false;' : '' }}" />
-                                                @else
-                                                {{-- Categoria ativa: show, edit, delete --}}
-                                                <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" title="Visualizar" />
-                                                <x-button type="link" :href="route('provider.categories.edit', $category->slug)" icon="pencil-square" title="Editar" />
-                                                @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                                                @if ($canDelete)
-                                                <x-button variant="danger" icon="trash"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                    data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
-                                                    data-category-name="{{ $category->name }}"
-                                                    title="Excluir" />
-                                                @endif
-                                                @endif
-                                            </div>
+                                            @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
+                                            <x-action-buttons
+                                                :item="$category"
+                                                resource="categories"
+                                                identifier="slug"
+                                                :canDelete="$category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0"
+                                                :restoreBlocked="$parentIsTrashed"
+                                                restoreBlockedMessage="<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro."
+                                            />
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted">
-                                            <i class="bi bi-inbox mb-2" aria-hidden="true"
-                                                style="font-size: 2rem;"></i>
-                                            <br>
-                                            @if (($filters['deleted'] ?? '') === 'only')
-                                            Nenhuma categoria deletada encontrada.
-                                            <br>
-                                            <small>Você ainda não deletou nenhuma categoria.</small>
-                                            @else
-                                            Nenhuma categoria encontrada.
-                                            @endif
+                                        <td colspan="6">
+                                            <x-empty-state
+                                                resource="categorias"
+                                                :isTrashView="($filters['deleted'] ?? '') === 'only'"
+                                            />
                                         </td>
                                     </tr>
                                     @endforelse
@@ -329,31 +244,20 @@
                 'show_info' => true,
                 ])
                 @endif
-                <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Fechar"></button>
-                            </div>
-                            <div class="modal-body">
-                                Tem certeza de que deseja excluir a categoria <strong
-                                    id="deleteCategoryName"></strong>?
-                                <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
-                            </div>
-                            <div class="modal-footer">
-                                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                                <form id="deleteForm" action="#" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-button type="submit" variant="danger" label="Excluir" />
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {{-- Modais de Confirmação --}}
+            <x-confirm-modal
+                id="deleteModal"
+                type="delete"
+                resource="categoria"
+                method="DELETE"
+            />
+
+            <x-confirm-modal
+                id="restoreModal"
+                type="restore"
+                resource="categoria"
+                method="POST"
+            />
             </div>
         </div>
         <div class="modal fade" id="confirmAllCategoriesModal" tabindex="-1" aria-hidden="true">
@@ -375,39 +279,13 @@
             </div>
         </div>
 
-        <!-- Modal de Confirmação de Restauração -->
-        <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                        Tem certeza de que deseja restaurar a categoria <strong id="restoreCategoryName"></strong>?
-                        <br><small class="text-muted">A categoria será restaurada e ficará disponível
-                            novamente.</small>
-                    </div>
-                    <div class="modal-footer">
-                        <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                        <form id="restoreForm" action="#" method="POST" class="d-inline">
-                            @csrf
-                            <x-button type="submit" variant="success" label="Restaurar" />
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script src="{{ asset('assets/js/category.js') }}?v={{ time() }}"></script>
-<script>
-    // Script para os modais
+    // Validação de datas no formulário de filtros
     document.addEventListener('DOMContentLoaded', function() {
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
@@ -467,38 +345,6 @@
                     }
                     startDate.focus();
                 }
-            });
-        }
-
-        // Modal de exclusão
-        const deleteModal = document.getElementById('deleteModal');
-        if (deleteModal) {
-            deleteModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const deleteUrl = button.getAttribute('data-delete-url');
-                const categoryName = button.getAttribute('data-category-name');
-
-                const deleteCategoryName = deleteModal.querySelector('#deleteCategoryName');
-                const deleteForm = deleteModal.querySelector('#deleteForm');
-
-                deleteCategoryName.textContent = categoryName;
-                deleteForm.action = deleteUrl;
-            });
-        }
-
-        // Modal de restauração
-        const restoreModal = document.getElementById('restoreModal');
-        if (restoreModal) {
-            restoreModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const restoreUrl = button.getAttribute('data-restore-url');
-                const categoryName = button.getAttribute('data-category-name');
-
-                const restoreCategoryName = restoreModal.querySelector('#restoreCategoryName');
-                const restoreForm = restoreModal.querySelector('#restoreForm');
-
-                restoreCategoryName.textContent = categoryName;
-                restoreForm.action = restoreUrl;
             });
         }
     });

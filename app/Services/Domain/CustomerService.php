@@ -51,6 +51,14 @@ class CustomerService extends AbstractBaseService
     }
 
     /**
+     * Lista clientes com filtros.
+     */
+    public function listCustomers(array $filters = []): ServiceResult
+    {
+        return $this->list($filters);
+    }
+
+    /**
      * Cria um novo cliente com suas relações.
      */
     public function createCustomer(CustomerDTO $dto): ServiceResult

@@ -425,7 +425,15 @@ class CategoryService extends AbstractBaseService
     }
 
     /**
-     * Retorna dados para o dashboard de categorias.
+     * Busca categoria por ID dentro do tenant com verificações.
+     */
+    public function getCategoryById(int $id): ServiceResult
+    {
+        return $this->findAndVerifyOwnership($id);
+    }
+
+    /**
+     * Dashboard de categorias com estatísticas.
      */
     public function getDashboardData(): ServiceResult
     {
