@@ -583,6 +583,30 @@ class InventoryManagementService extends AbstractBaseService
     }
 
     /**
+     * Obtém dados vazios para o relatório de inventário.
+     */
+    public function getEmptyReportData(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            return [
+                'reportData' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10),
+                'filters' => [
+                    'start_date' => null,
+                    'end_date' => null,
+                    'report_type' => 'summary',
+                    'category' => null,
+                    'search' => null,
+                ],
+                'type' => 'summary',
+                'startDate' => null,
+                'endDate' => null,
+                'isInitial' => true,
+                'categories' => \App\Models\Category::whereNull('parent_id')->with('children')->get(),
+            ];
+        });
+    }
+
+    /**
      * Obtém dados para relatórios customizados de inventário.
      */
     public function getReportData(array $filters = []): ServiceResult
@@ -600,30 +624,14 @@ class InventoryManagementService extends AbstractBaseService
 
             $perPage = (int) ($filters['per_page'] ?? 10);
 
-            // Verifica se é o estado inicial (sem filtros reais aplicados)
-            $isInitial = empty($filters['start_date']) &&
-                        empty($filters['end_date']) &&
-                        empty($filters['search']) &&
-                        empty($filters['category']) &&
-                        empty($filters['status']);
-
-            if ($isInitial) {
-                return [
-                    'reportData' => new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage),
-                    'filters' => $filters,
-                    'type' => $reportType,
-                    'startDate' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
-                    'endDate' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
-                    'isInitial' => true,
-                ];
+            // Validação de datas (apenas se o tipo for movements)
+            if ($reportType === 'movements') {
+                if (empty($startDate) || empty($endDate)) {
+                    throw new \Exception('As datas inicial e final são obrigatórias para o relatório de movimentações.');
+                }
             }
 
-            // Validação de datas
-            if (empty($startDate) || empty($endDate)) {
-                throw new \Exception('As datas inicial e final são obrigatórias para gerar o relatório.');
-            }
-
-            if ($startDate > $endDate) {
+            if (! empty($startDate) && ! empty($endDate) && $startDate > $endDate) {
                 throw new \Exception('A data inicial não pode ser maior que a data final.');
             }
 
@@ -888,3 +896,4 @@ class InventoryManagementService extends AbstractBaseService
         });
     }
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            

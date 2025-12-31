@@ -165,11 +165,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($category->is_active)
-                                            <span class="badge bg-success-subtle text-success">Ativa</span>
-                                            @else
-                                            <span class="badge bg-danger-subtle text-danger">Inativa</span>
-                                            @endif
+                                            <x-status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
                                         </td>
                                         <td>
                                             {{ optional($category->created_at)->format('d/m/Y') }}
@@ -199,11 +195,7 @@
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold mb-2">{{ $category->name }}</div>
                                         <div class="d-flex gap-2 flex-wrap">
-                                            @if ($category->is_active)
-                                            <span class="badge bg-success-subtle text-success">Ativa</span>
-                                            @else
-                                            <span class="badge bg-danger-subtle text-danger">Inativa</span>
-                                            @endif
+                                            <x-status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
                                         </div>
                                     </div>
                                     <div class="ms-2">

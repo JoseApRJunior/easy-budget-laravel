@@ -109,9 +109,9 @@ class CategoryController extends Controller
     /**
      * Exibe detalhes da categoria.
      */
-    public function show(int $id): View|RedirectResponse
+    public function show(string $slug): View|RedirectResponse
     {
-        $result = $this->categoryService->getCategoryById($id);
+        $result = $this->categoryService->findBySlug($slug);
 
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());
@@ -125,9 +125,9 @@ class CategoryController extends Controller
     /**
      * Form para editar categoria.
      */
-    public function edit(int $id): View|RedirectResponse
+    public function edit(string $slug): View|RedirectResponse
     {
-        $result = $this->categoryService->getCategoryById($id);
+        $result = $this->categoryService->findBySlug($slug);
 
         if ($result->isError()) {
             return $this->redirectError('provider.categories.index', $result->getMessage());
@@ -136,7 +136,7 @@ class CategoryController extends Controller
         $category = $result->getData();
         $this->authorize('update', $category);
 
-        $parentsResult = $this->categoryService->getParentCategories($id);
+        $parentsResult = $this->categoryService->getParentCategories($category->id);
 
         return $this->view('pages.category.edit', $result, 'category', [
             'parents' => $parentsResult->getData(),
@@ -146,17 +146,18 @@ class CategoryController extends Controller
     /**
      * Atualiza categoria.
      */
-    public function update(CategoryUpdateRequest $request, int $id): RedirectResponse
+    public function update(CategoryUpdateRequest $request, string $slug): RedirectResponse
     {
-        $categoryResult = $this->categoryService->getCategoryById($id);
+        $categoryResult = $this->categoryService->findBySlug($slug);
         if ($categoryResult->isError()) {
             return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        $this->authorize('update', $categoryResult->getData());
+        $category = $categoryResult->getData();
+        $this->authorize('update', $category);
 
         $dto = CategoryDTO::fromRequest($request->validated());
-        $result = $this->categoryService->updateCategory($id, $dto);
+        $result = $this->categoryService->updateCategory($category->id, $dto);
 
         return $this->redirectWithServiceResult(
             'provider.categories.index',
@@ -168,16 +169,17 @@ class CategoryController extends Controller
     /**
      * Remove categoria (Soft Delete).
      */
-    public function destroy(int $id): RedirectResponse
+    public function destroy(string $slug): RedirectResponse
     {
-        $categoryResult = $this->categoryService->getCategoryById($id);
+        $categoryResult = $this->categoryService->findBySlug($slug);
         if ($categoryResult->isError()) {
             return $this->redirectError('provider.categories.index', 'Categoria não encontrada');
         }
 
-        $this->authorize('delete', $categoryResult->getData());
+        $category = $categoryResult->getData();
+        $this->authorize('delete', $category);
 
-        $result = $this->categoryService->deleteCategory($id);
+        $result = $this->categoryService->deleteCategory($category->id);
 
         return $this->redirectWithServiceResult(
             'provider.categories.index',
