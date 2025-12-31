@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Budget;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class BudgetTemplateDTO extends AbstractDTO
@@ -43,7 +44,7 @@ readonly class BudgetTemplateDTO extends AbstractDTO
             is_public: isset($data['is_public']) ? (bool) $data['is_public'] : false,
             is_active: isset($data['is_active']) ? (bool) $data['is_active'] : true,
             usage_count: isset($data['usage_count']) ? (int) $data['usage_count'] : 0,
-            last_used_at: isset($data['last_used_at']) ? Carbon::parse($data['last_used_at']) : null,
+            last_used_at: DateHelper::toCarbon($data['last_used_at'] ?? null),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

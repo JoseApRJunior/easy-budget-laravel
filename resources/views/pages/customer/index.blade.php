@@ -131,20 +131,20 @@
                                     </div>
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro inicial</label>
-                                        <input type="text" class="form-control" id="start_date" name="start_date"
-                                            value="{{ $filters['start_date'] ?? '' }}"
-                                            placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                    </div>
+                                    <x-filter-field
+                                        type="date"
+                                        name="start_date"
+                                        label="Cadastro inicial"
+                                        :value="$filters['start_date'] ?? request('start_date')"
+                                    />
                                 </div>
                                 <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro final</label>
-                                        <input type="text" class="form-control" id="end_date" name="end_date"
-                                            value="{{ $filters['end_date'] ?? '' }}"
-                                            placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                    </div>
+                                    <x-filter-field
+                                        type="date"
+                                        name="end_date"
+                                        label="Cadastro final"
+                                        :value="$filters['end_date'] ?? request('end_date')"
+                                    />
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">

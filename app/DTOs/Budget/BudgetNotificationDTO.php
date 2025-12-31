@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Budget;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class BudgetNotificationDTO extends AbstractDTO
@@ -33,7 +34,7 @@ readonly class BudgetNotificationDTO extends AbstractDTO
             subject: $data['subject'],
             content: $data['content'],
             status: $data['status'],
-            sent_at: isset($data['sent_at']) ? Carbon::parse($data['sent_at']) : null,
+            sent_at: DateHelper::toCarbon($data['sent_at'] ?? null),
             error_message: $data['error_message'] ?? null,
             metadata: is_string($data['metadata'] ?? []) ? json_decode($data['metadata'], true) : ($data['metadata'] ?? []),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null

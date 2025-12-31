@@ -10,7 +10,6 @@ use App\Models\Customer;
 use App\Services\Domain\CustomerService;
 use App\Services\Domain\ProductService;
 use App\Services\Domain\ReportService;
-use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -32,6 +31,15 @@ class ReportController extends Controller
     public function index(Request $request): View
     {
         $filters = $request->only(['search', 'type', 'status', 'format', 'start_date', 'end_date']);
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
+
         $result = app(ReportService::class)->getFilteredReports($filters, ['user']);
         if (! $result->isSuccess()) {
             abort(500, 'Erro ao carregar relatórios');
@@ -146,6 +154,15 @@ class ReportController extends Controller
     public function customers(Request $request): View
     {
         $filters = $request->all();
+
+        // Normalizar datas para o componente de data nativo e para o DTO
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
+
         $filterDto = CustomerFilterDTO::fromRequest($filters);
         $result = app(CustomerService::class)->getFilteredCustomers($filterDto);
 
@@ -161,6 +178,15 @@ class ReportController extends Controller
     public function products(Request $request): View
     {
         $filters = $request->all();
+
+        // Normalizar datas para o componente de data nativo e para o DTO
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
+
         $filterDto = ProductFilterDTO::fromRequest($filters);
         $result = app(ProductService::class)->getFilteredProducts($filterDto);
 
@@ -176,6 +202,14 @@ class ReportController extends Controller
     public function budgets(Request $request): View
     {
         $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total_min', 'status']);
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
 
         $budgetService = app(\App\Services\Domain\BudgetService::class);
         $result = $budgetService->getFilteredBudgets($filters);
@@ -196,6 +230,14 @@ class ReportController extends Controller
     public function budgetsPdf(Request $request): Response
     {
         $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total', 'status']);
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
 
         $budgetService = app(\App\Services\Domain\BudgetService::class);
         $result = $budgetService->getFilteredBudgets($filters);
@@ -250,6 +292,14 @@ class ReportController extends Controller
     {
         // Get filters from request
         $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total', 'status']);
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
 
         // Get budget data
         $budgetService = app(\App\Services\Domain\BudgetService::class);
@@ -324,6 +374,22 @@ class ReportController extends Controller
         // Get filters from request
         $filters = $request->only(['code', 'start_date', 'end_date', 'customer_name', 'total', 'status']);
 
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
+
         // Get budget data
         $budgetService = app(\App\Services\Domain\BudgetService::class);
         $result = $budgetService->getFilteredBudgets($filters);
@@ -342,11 +408,11 @@ class ReportController extends Controller
         /** @var User $user */
         $user = auth()->user();
         $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
-        $companyName = $provider && $provider->commonData ? ($provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name)) : $user->name;
+        $companyName = $provider && $provider->commonData ? ($provider->commonData->company_name ?: ($provider->commonData->first_name.' '.$provider->commonData->last_name)) : $user->name;
 
         // Prepare data for Excel
         $excelData = [];
-        
+
         // Header Info
         $excelData[] = ['RELATÓRIO DE ORÇAMENTOS'];
         $excelData[] = ['Empresa:', $companyName];
@@ -354,7 +420,7 @@ class ReportController extends Controller
         $excelData[] = ['Gerado por:', $user->name];
         $excelData[] = ['Total de Registros:', $budgets->count()];
         $excelData[] = []; // Empty row
-        
+
         // Table Header
         $excelData[] = ['Nº Orçamento', 'Cliente', 'Descrição', 'Data Criação', 'Data Vencimento', 'Valor Total', 'Status'];
 
@@ -456,7 +522,15 @@ class ReportController extends Controller
      */
     public function services(Request $request): View
     {
-        $filters = $request->only(['name', 'price_min', 'price_max', 'start_date', 'end_date']);
+        $filters = $request->only(['name', 'price_min', 'price_max', 'start_date', 'end_date', 'status', 'category_id', 'search']);
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = \App\Helpers\DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = \App\Helpers\DateHelper::parseDate($filters['end_date']);
+        }
 
         $serviceService = app(\App\Services\Domain\ServiceService::class);
         $result = $serviceService->getFilteredServices($filters);
@@ -506,8 +580,8 @@ class ReportController extends Controller
     {
         $name = $request->input('name', '');
         $document = $request->input('document', '');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = \App\Helpers\DateHelper::parseDate($request->input('start_date'));
+        $endDate = \App\Helpers\DateHelper::parseDate($request->input('end_date'));
 
         Log::info('Filtros recebidos:', [
             'name' => $name,
@@ -582,8 +656,8 @@ class ReportController extends Controller
     {
         $name = $request->input('name', '');
         $document = $request->input('document', '');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = \App\Helpers\DateHelper::parseDate($request->input('start_date'));
+        $endDate = \App\Helpers\DateHelper::parseDate($request->input('end_date'));
 
         $query = Customer::with(['commonData', 'contact'])
             ->where('tenant_id', auth()->user()->tenant_id);
@@ -643,8 +717,8 @@ class ReportController extends Controller
     {
         $name = $request->input('name', '');
         $document = $request->input('document', '');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = \App\Helpers\DateHelper::parseDate($request->input('start_date'));
+        $endDate = \App\Helpers\DateHelper::parseDate($request->input('end_date'));
 
         $query = Customer::with(['commonData', 'contact'])
             ->where('tenant_id', auth()->user()->tenant_id);
@@ -686,11 +760,11 @@ class ReportController extends Controller
         /** @var User $user */
         $user = auth()->user();
         $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
-        $companyName = $provider && $provider->commonData ? ($provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name)) : $user->name;
+        $companyName = $provider && $provider->commonData ? ($provider->commonData->company_name ?: ($provider->commonData->first_name.' '.$provider->commonData->last_name)) : $user->name;
 
         // Prepare data for Excel
         $excelData = [];
-        
+
         // Header Info
         $excelData[] = ['RELATÓRIO DE CLIENTES'];
         $excelData[] = ['Empresa:', $companyName];
@@ -698,7 +772,7 @@ class ReportController extends Controller
         $excelData[] = ['Gerado por:', $user->name];
         $excelData[] = ['Total de Registros:', $customers->count()];
         $excelData[] = []; // Empty row
-        
+
         // Table Header
         $excelData[] = ['Nome/Razão Social', 'CPF/CNPJ', 'E-mail Pessoal', 'E-mail Comercial', 'Telefone Pessoal', 'Telefone Comercial', 'Data Cadastro'];
 

@@ -126,13 +126,25 @@ class ServiceService extends AbstractBaseService
                     $service->serviceItems()->delete();
                     foreach ($dto->items as $itemDto) {
                         /** @var ServiceItemDTO $itemDto */
-                        $service->serviceItems()->create($itemDto->toArray());
+                        $service->serviceItems()->create($itemDto->toDatabaseArray());
                     }
                 }
 
                 return ServiceResult::success($service->fresh(), 'Serviço atualizado com sucesso.');
             });
         });
+    }
+
+    /**
+     * Busca serviços com filtros avançados.
+     */
+    public function getFilteredServices(array $filters = [], ?array $orderBy = null, ?int $limit = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($filters, $orderBy, $limit) {
+            $services = $this->repository->getFiltered($filters, $orderBy, $limit);
+
+            return ServiceResult::success($services);
+        }, 'Erro ao obter serviços filtrados.');
     }
 
     /**

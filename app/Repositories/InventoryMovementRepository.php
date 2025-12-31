@@ -57,13 +57,7 @@ class InventoryMovementRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery();
 
-        if ($startDate) {
-            $query->where('created_at', '>=', $startDate . ' 00:00:00');
-        }
-
-        if ($endDate) {
-            $query->where('created_at', '<=', $endDate . ' 23:59:59');
-        }
+        $this->applyDateRangeFilter($query, ['start_date' => $startDate, 'end_date' => $endDate], 'created_at', 'start_date', 'end_date');
 
         $movementsIn = $query->clone()->where('type', 'in');
         $movementsOut = $query->clone()->where('type', 'out');
@@ -95,15 +89,12 @@ class InventoryMovementRepository extends AbstractTenantRepository
      */
     public function getMostMovedProducts(int $limit = 10, ?string $startDate = null, ?string $endDate = null): Collection
     {
-        return $this->model->newQuery()
-            ->selectRaw('product_id, SUM(quantity) as total_quantity, COUNT(*) as movement_count')
-            ->when($startDate, function ($query) use ($startDate) {
-                $query->where('created_at', '>=', $startDate . ' 00:00:00');
-            })
-            ->when($endDate, function ($query) use ($endDate) {
-                $query->where('created_at', '<=', $endDate . ' 23:59:59');
-            })
-            ->groupBy('product_id')
+        $query = $this->model->newQuery()
+            ->selectRaw('product_id, SUM(quantity) as total_quantity, COUNT(*) as movement_count');
+
+        $this->applyDateRangeFilter($query, ['start_date' => $startDate, 'end_date' => $endDate], 'created_at', 'start_date', 'end_date');
+
+        return $query->groupBy('product_id')
             ->orderByDesc('total_quantity')
             ->limit($limit)
             ->with(['product'])
@@ -117,13 +108,7 @@ class InventoryMovementRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery();
 
-        if ($startDate) {
-            $query->where('created_at', '>=', $startDate . ' 00:00:00');
-        }
-
-        if ($endDate) {
-            $query->where('created_at', '<=', $endDate . ' 23:59:59');
-        }
+        $this->applyDateRangeFilter($query, ['start_date' => $startDate, 'end_date' => $endDate], 'created_at', 'start_date', 'end_date');
 
         $summary = $query->selectRaw('type, COUNT(*) as count, SUM(quantity) as total_quantity')
             ->groupBy('type')

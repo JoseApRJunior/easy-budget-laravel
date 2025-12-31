@@ -57,13 +57,8 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
         $this->applyBooleanFilter($query, $filters, 'method', 'method');
         $this->applyBooleanFilter($query, $filters, 'customer_id', 'customer_id');
 
-        if (! empty($filters['date_from'])) {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
-        }
-
-        if (! empty($filters['date_to'])) {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
-        }
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
     }
 
     /**
@@ -97,7 +92,7 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
      */
     public function createFromDTO(PaymentDTO $dto): Payment
     {
-        return $this->create($dto->toArrayWithoutNulls());
+        return $this->create($dto->toDatabaseArray());
     }
 
     /**
@@ -105,6 +100,9 @@ class PaymentRepository extends AbstractTenantRepository implements PaymentRepos
      */
     public function updateFromDTO(int $id, PaymentDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArrayWithoutNulls());
+        $data = $dto->toDatabaseArray();
+        $filteredData = array_filter($data, fn ($value) => $value !== null);
+
+        return $this->update($id, $filteredData);
     }
 }

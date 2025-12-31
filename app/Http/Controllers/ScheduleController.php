@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ScheduleRequest;
 use App\Models\User;
@@ -35,8 +36,8 @@ class ScheduleController extends Controller
      */
     public function index(Request $request): View
     {
-        $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from')) : now()->startOfMonth();
-        $dateTo = $request->input('date_to') ? Carbon::parse($request->input('date_to')) : now()->endOfMonth();
+        $dateFrom = DateHelper::toCarbon($request->input('date_from')) ?? now()->startOfMonth();
+        $dateTo = DateHelper::toCarbon($request->input('date_to')) ?? now()->endOfMonth();
 
         $filters = [
             'status' => $request->input('status'),

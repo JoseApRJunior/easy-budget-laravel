@@ -8,10 +8,10 @@
             title="Dashboard de Orçamentos"
             icon="file-earmark-text"
             :breadcrumb-items="[
-                'Orçamentos' => route('provider.budgets.index'),
-                'Dashboard' => '#'
+                'Dashboard' => route('provider.dashboard'),
+                'Dashboard de Orçamentos' => '#'
             ]">
-            <p class="text-muted mb-0">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
+            <p class="text-muted mb-0 small">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
         </x-page-header>
 
         @php
@@ -29,18 +29,18 @@
         <div class="row g-4 mb-4">
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+                            <div class="avatar-circle bg-primary bg-gradient me-3">
+                                <i class="bi bi-file-earmark-text text-white"></i>
                             </div>
                             <div>
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Total de Orçamentos</small>
-                                <h3 class="fw-bold mb-0 text-dark">{{ $total }}</h3>
+                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total de Orçamentos</h6>
+                                <h3 class="mb-0 fw-bold">{{ $total }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
-                            Quantidade total de orçamentos cadastrados para este tenant.
+                            Quantidade total de orçamentos cadastrados.
                         </p>
                     </div>
                 </div>
@@ -48,18 +48,18 @@
 
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-sm bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                            <div class="avatar-circle bg-success bg-gradient me-3">
+                                <i class="bi bi-check-circle text-white"></i>
                             </div>
                             <div>
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Orçamentos Aprovados</small>
-                                <h3 class="fw-bold mb-0 text-dark">{{ $approved }}</h3>
+                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Orçamentos Aprovados</h6>
+                                <h3 class="mb-0 fw-bold">{{ $approved }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
-                            Propostas aprovadas pelos clientes e prontas para execução.
+                            Propostas aprovadas prontas para execução.
                         </p>
                     </div>
                 </div>
@@ -67,18 +67,18 @@
 
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-sm bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-clock-fill text-warning fs-5"></i>
+                            <div class="avatar-circle bg-warning bg-gradient me-3">
+                                <i class="bi bi-clock-history text-white"></i>
                             </div>
                             <div>
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Orçamentos Pendentes</small>
-                                <h3 class="fw-bold mb-0 text-dark">{{ $pending }}</h3>
+                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Orçamentos Pendentes</h6>
+                                <h3 class="mb-0 fw-bold">{{ $pending }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
-                            Propostas aguardando aprovação ou resposta do cliente.
+                            Propostas aguardando aprovação do cliente.
                         </p>
                     </div>
                 </div>
@@ -86,18 +86,18 @@
 
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-sm bg-info bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-graph-up-arrow text-info fs-5"></i>
+                            <div class="avatar-circle bg-info bg-gradient me-3">
+                                <i class="bi bi-graph-up-arrow text-white"></i>
                             </div>
                             <div>
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Taxa de Aprovação</small>
-                                <h3 class="fw-bold mb-0 text-dark">{{ $approvedRate }}%</h3>
+                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Taxa de Aprovação</h6>
+                                <h3 class="mb-0 fw-bold">{{ $approvedRate }}%</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
-                            Percentual de orçamentos aprovados em relação ao total.
+                            Percentual de orçamentos aprovados.
                         </p>
                     </div>
                 </div>
@@ -108,14 +108,14 @@
         <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-sm bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-cash-stack text-success fs-5"></i>
+                            <div class="avatar-circle bg-success bg-gradient me-3">
+                                <i class="bi bi-cash-stack text-white"></i>
                             </div>
                             <div>
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Valor Total em Orçamentos</small>
-                                <h3 class="fw-bold mb-0 text-dark">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
+                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Valor Total em Orçamentos</h6>
+                                <h3 class="mb-0 fw-bold">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
@@ -127,14 +127,14 @@
 
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="avatar avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                                <i class="bi bi-calculator text-primary fs-5"></i>
+                            <div class="avatar-circle bg-primary bg-gradient me-3">
+                                <i class="bi bi-calculator text-white"></i>
                             </div>
                             <div>
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Ticket Médio</small>
-                                <h3 class="fw-bold mb-0 text-dark">R$ {{ $total > 0 ? number_format($totalValue / $total, 2, ',', '.') : '0,00' }}</h3>
+                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Ticket Médio</h6>
+                                <h3 class="mb-0 fw-bold">R$ {{ $total > 0 ? number_format($totalValue / $total, 2, ',', '.') : '0,00' }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
@@ -163,11 +163,11 @@
 
         <!-- Conteúdo Principal -->
         <div class="row g-4">
-            <!-- Orçamentos Recentes -->
+            <!-- Orçamentos Recentes (8 colunas) -->
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-transparent border-0 py-3">
-                        <h5 class="mb-0 d-flex align-items-center">
+                        <h5 class="mb-0 d-flex align-items-center fw-bold text-dark">
                             <i class="bi bi-clock-history me-2 "></i>
                             <span class="d-none d-sm-inline">Orçamentos Recentes</span>
                             <span class="d-sm-none">Recentes</span>
@@ -179,126 +179,111 @@
                             <div class="desktop-view">
                                 <div class="table-responsive">
                                     <table class="modern-table table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Código</th>
-                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Cliente</th>
-                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Valor Total</th>
-                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Status</th>
-                                            <th class="text-muted small text-uppercase" style="font-size: 0.7rem;">Data</th>
-                                            <th class="text-end text-muted small text-uppercase" style="font-size: 0.7rem;">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recent as $budget)
-                                            @php
-                                                $customer = $budget->customer ?? null;
-                                                $commonData = $customer?->commonData ?? null;
-
-                                                $customerName = $commonData?->company_name ??
-                                                    trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?:
-                                                    'Cliente não informado';
-
-                                                $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
-                                                $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
-                                            @endphp
+                                        <thead>
                                             <tr>
-                                                <td class="fw-bold text-dark">{{ $budget->code }}</td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar avatar-xs me-2 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                                                            <i class="bi bi-person text-primary small"></i>
-                                                        </div>
-                                                        <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
-                                                            {{ $customerName }}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="fw-bold text-dark">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
-                                                <td>
-                                                    <span class="badge rounded-pill" style="background-color: {{ $statusEnum->getColor() }}20; color: {{ $statusEnum->getColor() }}; border: 1px solid {{ $statusEnum->getColor() }}40;">
-                                                        <i class="bi {{ $statusEnum->getIcon() }} me-1"></i>
-                                                        {{ $statusEnum->getDescription() }}
-                                                    </span>
-                                                </td>
-                                                <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
-                                                <td class="text-end">
-                                                    <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                </td>
+                                                <th>Código</th>
+                                                <th>Cliente</th>
+                                                <th>Valor Total</th>
+                                                <th>Status</th>
+                                                <th>Data</th>
+                                                <th class="text-center">Ações</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($recent as $budget)
+                                                @php
+                                                    $customer = $budget->customer ?? null;
+                                                    $commonData = $customer?->commonData ?? null;
+
+                                                    $customerName = $commonData?->company_name ??
+                                                        trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?:
+                                                        'Cliente não informado';
+                                                @endphp
+                                                <tr>
+                                                    <td class="fw-bold text-dark">{{ $budget->code }}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
+                                                                {{ $customerName }}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="fw-bold text-dark">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
+                                                    <td>
+                                                        <x-status-badge :item="$budget" />
+                                                    </td>
+                                                    <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
+                                                    <td class="text-center">
+                                                        <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" />
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Mobile View -->
-                        <div class="mobile-view">
-                            <div class="list-group list-group-flush">
-                                @foreach ($recent as $budget)
-                                    @php
-                                        $customer = $budget->customer ?? null;
-                                        $commonData = $customer?->commonData ?? null;
-                                        $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
-
-                                        $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
-                                        $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
-                                    @endphp
-                                    <a href="{{ route('provider.budgets.show', $budget->code) }}" class="list-group-item list-group-item-action py-3">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="avatar avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                                <i class="bi bi-file-earmark-text text-primary"></i>
+                            <!-- Mobile View -->
+                            <div class="mobile-view">
+                                <div class="list-group list-group-flush">
+                                    @foreach ($recent as $budget)
+                                        @php
+                                            $customer = $budget->customer ?? null;
+                                            $commonData = $customer?->commonData ?? null;
+                                            $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
+                                        @endphp
+                                        <a href="{{ route('provider.budgets.show', $budget->code) }}" class="list-group-item list-group-item-action py-3">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="fw-bold text-dark">{{ $budget->code }}</span>
+                                                        <span class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
+                                                    </div>
+                                                </div>
+                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
                                             </div>
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span class="fw-bold text-dark">{{ $budget->code }}</span>
-                                                    <span class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
+                                            <div class="mb-2">
+                                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
+                                                <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
+                                            </div>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor Total</small>
+                                                    <span class="fw-bold text-primary">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
+                                                </div>
+                                                <div class="col-6 text-end">
+                                                    <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                                    <x-status-badge :item="$budget" />
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="mb-2">
-                                            <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Cliente</small>
-                                            <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Valor Total</small>
-                                                <span class="fw-bold text-primary">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
-                                            </div>
-                                            <div class="col-6 text-end">
-                                                <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</small>
-                                                <span class="badge rounded-pill" style="background-color: {{ $statusEnum->getColor() }}20; color: {{ $statusEnum->getColor() }}; border: 1px solid {{ $statusEnum->getColor() }}40; font-size: 0.7rem;">
-                                                    {{ $statusEnum->getDescription() }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </a>
-                                @endforeach
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @else
-                        <div class="p-5 text-center text-muted">
-                            <i class="bi bi-inbox mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
-                            <p class="mb-1 fw-bold">Nenhum orçamento recente</p>
-                            <p class="small mb-0">Crie novos orçamentos para visualizar aqui.</p>
-                        </div>
-                    @endif
+                        @else
+                            <div class="p-5 text-center text-muted">
+                                <i class="bi bi-inbox mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                                <p class="mb-1 fw-bold">Nenhum orçamento recente</p>
+                                <p class="small mb-0">Crie novos orçamentos para visualizar aqui.</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
-            <!-- Insights e Atalhos -->
+            <!-- Sidebar (4 colunas) -->
             <div class="col-lg-4">
+                <!-- Insights -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent border-0 py-3">
-                        <h6 class="mb-0 fw-bold d-flex align-items-center">
-                            <i class="bi bi-lightbulb me-2 "></i>Insights Rápidos
+                        <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
+                            <i class="bi bi-lightbulb me-2 text-warning"></i>Insights Rápidos
                         </h6>
                     </div>
                     <div class="card-body pt-0">
                         <div class="d-flex flex-column gap-3">
                             <div class="d-flex align-items-start">
-                                <div class="bg-warning bg-opacity-10 p-2 rounded me-3">
+                                <div class="avatar-circle-xs bg-warning bg-opacity-10 p-2 rounded me-3">
                                     <i class="bi bi-clock-fill text-warning"></i>
                                 </div>
                                 <div>
@@ -306,7 +291,7 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-start">
-                                <div class="bg-success bg-opacity-10 p-2 rounded me-3">
+                                <div class="avatar-circle-xs bg-success bg-opacity-10 p-2 rounded me-3">
                                     <i class="bi bi-graph-up-arrow text-success"></i>
                                 </div>
                                 <div>
@@ -314,7 +299,7 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-start">
-                                <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                <div class="avatar-circle-xs bg-primary bg-opacity-10 p-2 rounded me-3">
                                     <i class="bi bi-envelope-check text-primary"></i>
                                 </div>
                                 <div>
@@ -325,16 +310,24 @@
                     </div>
                 </div>
 
+                <!-- Atalhos -->
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-transparent border-0 py-3">
-                        <h6 class="mb-0 fw-bold d-flex align-items-center">
+                        <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
                             <i class="bi bi-link-45deg me-2 text-primary"></i>Atalhos Rápidos
                         </h6>
                     </div>
                     <div class="card-body pt-0 d-grid gap-2">
-                        <x-button type="link" :href="route('provider.budgets.create')" variant="primary" size="sm" icon="plus-circle" label="Novo Orçamento" class="w-100 justify-content-start" />
-                        <x-button type="link" :href="route('provider.budgets.index')" variant="primary" outline size="sm" icon="list-ul" label="Listar Todos" class="w-100 justify-content-start" />
-                        <x-button type="link" :href="route('provider.reports.budgets')" variant="secondary" outline size="sm" icon="file-earmark-bar-graph" label="Relatórios" class="w-100 justify-content-start" />
+                        <a href="{{ route('provider.budgets.create') }}" class="btn btn-sm btn-success">
+                            <i class="bi bi-plus-circle me-2"></i>Novo Orçamento
+                        </a>
+                        <a href="{{ route('provider.budgets.index') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-list-ul me-2"></i>Listar Orçamentos
+                        </a>
+                        <a href="{{ route('provider.budgets.index', ['deleted' => 'only']) }}"
+                            class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-archive me-2"></i>Ver Deletados
+                        </a>
                     </div>
                 </div>
             </div>
@@ -342,17 +335,6 @@
     </div>
 @endsection
 
-@push('styles')
-    <style>
-        .text-code {
-            font-family: 'Courier New', monospace;
-            background-color: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.85em;
-        }
-    </style>
-@endpush
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>

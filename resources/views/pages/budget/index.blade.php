@@ -2,15 +2,31 @@
 
 @section('title', 'Orçamentos')
 
+@push('styles')
+<style>
+    /* Ocultar placeholder nativo do Chrome para inputs de data vazios */
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        color: transparent;
+    }
+    input[type="date"]:focus::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]:valid::-webkit-datetime-edit-fields-wrapper {
+        color: inherit;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid py-1">
     <x-page-header
-        title="Orçamentos"
+        title="Lista de Orçamentos"
         icon="file-earmark-text"
         :breadcrumb-items="[
-            'Orçamentos' => '#'
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
+            'Listar' => '#'
         ]">
-        <p class="text-muted mb-0">Lista de todos os orçamentos registrados no sistema</p>
+        <p class="text-muted mb-0 small">Consulte e gerencie todos os orçamentos registrados no sistema.</p>
     </x-page-header>
 
     <!-- Card de Filtros -->
@@ -21,7 +37,7 @@
     >
         <x-filter-field
             col="col-md-2"
-            name="filter_code"
+            name="code"
             label="Código"
             placeholder="Ex: ORC-001"
             :filters="$filters"
@@ -30,24 +46,22 @@
         <x-filter-field
             type="date"
             col="col-md-2"
-            name="filter_start_date"
-            label="Data Início"
-            placeholder="DD/MM/AAAA"
+            name="start_date"
+            label="Cadastro Inicial"
             :filters="$filters"
         />
 
         <x-filter-field
             type="date"
             col="col-md-2"
-            name="filter_end_date"
-            label="Data Fim"
-            placeholder="DD/MM/AAAA"
+            name="end_date"
+            label="Cadastro Final"
             :filters="$filters"
         />
 
         <x-filter-field
             col="col-md-3"
-            name="filter_customer"
+            name="customer_name"
             label="Cliente"
             placeholder="Nome do cliente..."
             :filters="$filters"
@@ -56,10 +70,10 @@
         <x-filter-field
             type="select"
             col="col-md-2"
-            name="filter_status"
+            name="status"
             label="Status"
             :filters="$filters"
-            :options="['' => 'Todos'] + collect(\App\Enums\BudgetStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->getDescription()])->toArray()"
+            :options="['all' => 'Todos'] + collect(\App\Enums\BudgetStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->getDescription()])->toArray()"
         />
 
         <x-filter-field
@@ -73,16 +87,16 @@
     </x-filter-form>
 
     <!-- Card de Tabela -->
-    <div class="card">
-        <div class="card-header">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 py-3">
             <div class="d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 d-flex align-items-center flex-wrap">
+                <h5 class="mb-0 d-flex align-items-center flex-wrap fw-bold text-dark">
                     <span class="me-2">
                         <i class="bi bi-list-ul me-1"></i>
                         <span class="d-none d-sm-inline">Lista de Orçamentos</span>
                         <span class="d-sm-none">Orçamentos</span>
                     </span>
-                    <span class="text-muted" style="font-size: 0.875rem;">
+                    <span class="text-muted small fw-normal">
                         ({{ $budgets->total() }})
                     </span>
                 </h5>
@@ -116,23 +130,19 @@
                                 <td class="fw-bold text-dark">{{ $budget->code }}</td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar avatar-xs me-2 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                                            <i class="bi bi-person text-primary small"></i>
-                                        </div>
                                         <div class="text-truncate" style="max-width: 200px;">
-                                            @if ($budget->customer && $budget->customer->commonData)
-                                                @if ($budget->customer->commonData->company_name)
-                                                    {{ $budget->customer->commonData->company_name }}
-                                                @else
-                                                    {{ $budget->customer->commonData->first_name }} {{ $budget->customer->commonData->last_name }}
-                                                @endif
-                                            @else
-                                                <span class="text-muted italic">Cliente não informado</span>
-                                            @endif
+                                            @php
+                                                $customerName = 'Cliente não informado';
+                                                if ($budget->customer && $budget->customer->commonData) {
+                                                    $commonData = $budget->customer->commonData;
+                                                    $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                                }
+                                            @endphp
+                                            {{ $customerName ?: 'Cliente não informado' }}
                                         </div>
                                     </div>
                                 </td>
-                                <td class="text-muted small">{{ $budget->created_at->format('d/m/Y') }}</td>
+                                <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
                                 <td class="text-muted small">
                                     @if($budget->due_date)
                                         <span class="{{ $budget->due_date->isPast() ? 'text-danger fw-bold' : '' }}">
@@ -142,22 +152,17 @@
                                         -
                                     @endif
                                 </td>
-                                <td class="fw-bold text-dark">R$ {{ number_format($budget->total, 2, ',', '.') }}</td>
+                                <td class="fw-bold text-dark">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
                                 <td>
-                                    <span class="badge rounded-pill" style="background-color: {{ $budget->status->getColor() }}20; color: {{ $budget->status->getColor() }}; border: 1px solid {{ $budget->status->getColor() }}40;">
-                                        <i class="bi {{ $budget->status->getIcon() }} me-1"></i>
-                                        {{ $budget->status->getDescription() }}
-                                    </span>
+                                    <x-status-badge :item="$budget" statusField="status" />
                                 </td>
                                 <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <x-action-buttons
-                                            :item="$budget"
-                                            resource="budgets"
-                                            identifier="code"
-                                            size="sm"
-                                        />
-                                    </div>
+                                    <x-action-buttons
+                                        :item="$budget"
+                                        resource="budgets"
+                                        identifier="code"
+                                        size="sm"
+                                    />
                                 </td>
                             </tr>
                             @empty
@@ -180,49 +185,47 @@
             <div class="mobile-view">
                 <div class="list-group list-group-flush">
                     @forelse($budgets as $budget)
-                    <div class="list-group-item py-3 border-bottom">
+                    <div class="list-group-item py-3">
                         <a href="{{ route('provider.budgets.show', $budget->code) }}" class="text-decoration-none">
                             <div class="d-flex align-items-center mb-2">
-                                <div class="avatar avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                    <i class="bi bi-file-earmark-text text-primary"></i>
+                                <div class="avatar-circle-sm bg-light me-2">
+                                    <i class="bi bi-file-earmark-text"></i>
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="fw-bold text-dark">{{ $budget->code }}</span>
-                                        <span class="text-muted small">{{ $budget->created_at->format('d/m/Y') }}</span>
+                                        <span class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
                                     </div>
                                 </div>
+                                <i class="bi bi-chevron-right text-muted ms-2"></i>
                             </div>
 
                             <div class="mb-2">
-                                <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Cliente</small>
+                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
                                 <div class="text-dark fw-semibold">
-                                    @if ($budget->customer && $budget->customer->commonData)
-                                        @if ($budget->customer->commonData->company_name)
-                                            {{ $budget->customer->commonData->company_name }}
-                                        @else
-                                            {{ $budget->customer->commonData->first_name }} {{ $budget->customer->commonData->last_name }}
-                                        @endif
-                                    @else
-                                        <span class="text-muted italic small">Não informado</span>
-                                    @endif
+                                    @php
+                                        $customerName = 'Não informado';
+                                        if ($budget->customer && $budget->customer->commonData) {
+                                            $commonData = $budget->customer->commonData;
+                                            $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                        }
+                                    @endphp
+                                    {{ $customerName ?: 'Não informado' }}
                                 </div>
                             </div>
 
-                            <div class="row g-2 mb-2">
+                            <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Valor Total</small>
-                                    <span class="fw-bold text-primary">R$ {{ number_format($budget->total, 2, ',', '.') }}</span>
+                                    <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor Total</small>
+                                    <span class="fw-bold text-primary">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
                                 </div>
                                 <div class="col-6 text-end">
-                                    <small class="text-muted d-block text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">Status</small>
-                                    <span class="badge rounded-pill" style="background-color: {{ $budget->status->getColor() }}20; color: {{ $budget->status->getColor() }}; border: 1px solid {{ $budget->status->getColor() }}40; font-size: 0.7rem;">
-                                        {{ $budget->status->getDescription() }}
-                                    </span>
+                                    <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                    <x-status-badge :item="$budget" />
                                 </div>
                             </div>
                         </a>
-                        <div class="d-flex justify-content-end gap-2">
+                        <div class="d-flex justify-content-end">
                             <x-action-buttons
                                 :item="$budget"
                                 resource="budgets"
@@ -265,6 +268,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Modal de Exclusão
         const deleteModal = document.getElementById('deleteBudgetModal');
         if (deleteModal) {
             deleteModal.addEventListener('show.bs.modal', function(event) {
@@ -273,6 +277,47 @@
                 const form = this.querySelector('form');
                 const baseUrl = "{{ route('provider.budgets.destroy', ':code') }}";
                 form.action = baseUrl.replace(':code', encodeURIComponent(budgetCode));
+            });
+        }
+
+        // Validação de Datas
+        const filterForm = document.getElementById('budgetFilterForm');
+        if (filterForm) {
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = () => {
+                const startDate = document.getElementsByName('filter_start_date')[0];
+                const endDate = document.getElementsByName('filter_end_date')[0];
+                if (!startDate || !endDate || !startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    const message = 'A data inicial não pode ser maior que a data final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.warning(message);
+                    } else {
+                        alert(message);
+                    }
+                    return false;
+                }
+                return true;
+            };
+
+            filterForm.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                    return;
+                }
             });
         }
     });

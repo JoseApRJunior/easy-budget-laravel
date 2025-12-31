@@ -6,6 +6,7 @@ namespace App\DTOs\Invoice;
 
 use App\DTOs\AbstractDTO;
 use App\Enums\InvoiceStatus;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class InvoiceDTO extends AbstractDTO
@@ -37,13 +38,13 @@ readonly class InvoiceDTO extends AbstractDTO
             status: isset($data['status']) ? InvoiceStatus::from($data['status']) : InvoiceStatus::PENDING,
             subtotal: (float) $data['subtotal'],
             total: (float) $data['total'],
-            due_date: Carbon::parse($data['due_date']),
+            due_date: DateHelper::toCarbon($data['due_date'] ?? null) ?? now(),
             code: $data['code'] ?? null,
             discount: (float) ($data['discount'] ?? 0.0),
             payment_method: $data['payment_method'] ?? null,
             payment_id: $data['payment_id'] ?? null,
             transaction_amount: isset($data['transaction_amount']) ? (float) $data['transaction_amount'] : null,
-            transaction_date: isset($data['transaction_date']) ? Carbon::parse($data['transaction_date']) : null,
+            transaction_date: DateHelper::toCarbon($data['transaction_date'] ?? null),
             notes: $data['notes'] ?? null,
             is_automatic: (bool) ($data['is_automatic'] ?? false),
             items: array_map(fn ($item) => InvoiceItemDTO::fromRequest($item), $data['items'] ?? []),
@@ -52,6 +53,27 @@ readonly class InvoiceDTO extends AbstractDTO
     }
 
     public function toArray(): array
+    {
+        return [
+            'service_id' => $this->service_id,
+            'customer_id' => $this->customer_id,
+            'status' => $this->status->value,
+            'subtotal' => $this->subtotal,
+            'total' => $this->total,
+            'due_date' => $this->due_date->toDateString(),
+            'code' => $this->code,
+            'discount' => $this->discount,
+            'payment_method' => $this->payment_method,
+            'payment_id' => $this->payment_id,
+            'transaction_amount' => $this->transaction_amount,
+            'transaction_date' => $this->transaction_date?->toDateTimeString(),
+            'notes' => $this->notes,
+            'is_automatic' => $this->is_automatic,
+            'tenant_id' => $this->tenant_id,
+        ];
+    }
+
+    public function toDatabaseArray(): array
     {
         return [
             'service_id' => $this->service_id,

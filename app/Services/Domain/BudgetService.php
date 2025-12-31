@@ -29,17 +29,13 @@ class BudgetService extends AbstractBaseService
      */
     public function getBudgetsForProvider(array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function () use ($filters) {
-            $perPage = (int) ($filters['per_page'] ?? 10);
-            unset($filters['per_page']);
+        $perPage = (int) ($filters['per_page'] ?? 15);
 
-            $budgets = $this->repository->getPaginatedBudgets(
-                filters: $filters,
-                perPage: $perPage,
-            );
-
-            return ServiceResult::success($budgets);
-        }, 'Erro ao obter orçamentos.');
+        return $this->paginate(
+            filters: $filters,
+            perPage: $perPage,
+            with: ['customer.commonData']
+        );
     }
 
     /**

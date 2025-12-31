@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
+use App\Helpers\DateHelper;
+
 /**
  * Controller para gestão de serviços - Interface Web
  */
@@ -61,7 +63,15 @@ class ServiceController extends Controller
             'end_date' => ['nullable', 'string'],
         ]);
 
-        $result = $this->serviceService->list($filters);
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = DateHelper::parseDate($filters['end_date']);
+        }
+
+        $result = $this->serviceService->paginate($filters);
 
         if ($result->isError()) {
             abort(500, 'Erro ao carregar lista de serviços.');
@@ -71,6 +81,7 @@ class ServiceController extends Controller
             'services' => $result->getData(),
             'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
             'statuses' => ServiceStatus::getOptions(),
+            'filters' => $filters,
         ]);
     }
 

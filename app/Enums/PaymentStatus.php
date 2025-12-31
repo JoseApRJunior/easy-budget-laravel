@@ -6,66 +6,90 @@ namespace App\Enums;
 
 enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
-    /** Pagamento pendente */
-    case PENDING = 'PENDING';
+    case PENDING = 'pending';
+    case PROCESSING = 'processing';
+    case COMPLETED = 'completed';
+    case FAILED = 'failed';
+    case REFUNDED = 'refunded';
 
-    /** Pagamento em processamento */
-    case PROCESSING = 'PROCESSING';
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
 
-    /** Pagamento concluído */
-    case COMPLETED = 'COMPLETED';
+    public static function options(): array
+    {
+        $options = [];
+        foreach (self::cases() as $case) {
+            $options[$case->value] = $case->label();
+        }
+        return $options;
+    }
 
-    /** Pagamento falhou */
-    case FAILED = 'FAILED';
+    public static function labels(): array
+    {
+        return array_map(fn (self $case) => $case->label(), self::cases());
+    }
 
-    /** Pagamento estornado */
-    case REFUNDED = 'REFUNDED';
+    public static function isValid(string $value): bool
+    {
+        return in_array($value, self::values(), true);
+    }
 
-    /**
-     * Retorna uma descrição para cada status.
-     */
-    public function getDescription(): string
+    public function label(): string
     {
         return match ($this) {
-            self::PENDING => 'Pagamento pendente',
-            self::PROCESSING => 'Processando pagamento',
-            self::COMPLETED => 'Pagamento concluído',
-            self::FAILED => 'Pagamento falhou',
-            self::REFUNDED => 'Pagamento estornado',
+            self::PENDING => 'Pendente',
+            self::PROCESSING => 'Em Processamento',
+            self::COMPLETED => 'Concluído',
+            self::FAILED => 'Falhou',
+            self::REFUNDED => 'Estornado',
         };
     }
 
-    /**
-     * Retorna a cor associada a cada status.
-     */
+    public function getDescription(): string
+    {
+        return $this->label();
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::PENDING => 'warning',
+            self::PROCESSING => 'info',
+            self::COMPLETED => 'success',
+            self::FAILED => 'danger',
+            self::REFUNDED => 'secondary',
+        };
+    }
+
     public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => '#ffc107', // Amarelo
-            self::PROCESSING => '#17a2b8', // Azul
-            self::COMPLETED => '#28a745', // Verde
-            self::FAILED => '#dc3545', // Vermelho
-            self::REFUNDED => '#6c757d', // Cinza
+            self::PENDING => '#ffc107',
+            self::PROCESSING => '#17a2b8',
+            self::COMPLETED => '#28a745',
+            self::FAILED => '#dc3545',
+            self::REFUNDED => '#6c757d',
         };
     }
 
-    /**
-     * Retorna o ícone associado a cada status.
-     */
-    public function getIcon(): string
+    public function icon(): string
     {
         return match ($this) {
-            self::PENDING => 'bi-clock',
-            self::PROCESSING => 'bi-arrow-repeat',
-            self::COMPLETED => 'bi-check-circle-fill',
-            self::FAILED => 'bi-x-circle-fill',
-            self::REFUNDED => 'bi-arrow-counterclockwise',
+            self::PENDING => 'clock',
+            self::PROCESSING => 'arrow-repeat',
+            self::COMPLETED => 'check-circle-fill',
+            self::FAILED => 'x-circle-fill',
+            self::REFUNDED => 'arrow-counterclockwise',
         };
     }
 
-    /**
-     * Verifica se o status indica que o pagamento está ativo.
-     */
+    public function getIcon(): string
+    {
+        return 'bi-' . $this->icon();
+    }
+
     public function isActive(): bool
     {
         return match ($this) {
@@ -74,9 +98,6 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         };
     }
 
-    /**
-     * Verifica se o status indica que o pagamento foi finalizado.
-     */
     public function isFinished(): bool
     {
         return match ($this) {
@@ -85,92 +106,42 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         };
     }
 
-    /**
-     * Verifica se o pagamento foi bem-sucedido.
-     */
     public function isSuccessful(): bool
     {
         return $this === self::COMPLETED;
     }
 
-    /**
-     * Retorna transições válidas para cada status.
-     */
     public function getValidTransitions(): array
     {
         return match ($this) {
             self::PENDING => [self::PROCESSING, self::FAILED],
             self::PROCESSING => [self::COMPLETED, self::FAILED],
             self::COMPLETED => [self::REFUNDED],
-            self::FAILED => [self::PENDING], // Retry
-            self::REFUNDED => [], // Final state
+            self::FAILED => [self::PENDING],
+            self::REFUNDED => [],
         };
     }
 
-    /**
-     * Verifica se pode transitar para um status específico.
-     */
     public function canTransitionTo(PaymentStatus $targetStatus): bool
     {
-        return in_array($targetStatus, $this->getValidTransitions());
+        return in_array($targetStatus, $this->getValidTransitions(), true);
     }
 
-    /**
-     * Retorna todos os status disponíveis.
-     */
     public static function getAll(): array
     {
-        return [
-            self::PENDING,
-            self::PROCESSING,
-            self::COMPLETED,
-            self::FAILED,
-            self::REFUNDED,
-        ];
+        return self::cases();
     }
 
-    /**
-     * Retorna apenas os status ativos.
-     */
     public static function getActive(): array
     {
-        return [
-            self::PENDING,
-            self::PROCESSING,
-        ];
+        return array_filter(self::cases(), fn (self $status) => $status->isActive());
     }
 
-    /**
-     * Retorna apenas os status finalizados.
-     */
     public static function getFinished(): array
     {
-        return [
-            self::COMPLETED,
-            self::FAILED,
-            self::REFUNDED,
-        ];
+        return array_filter(self::cases(), fn (self $status) => $status->isFinished());
     }
 
-    /**
-     * Retorna opções formatadas para formulários.
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-        foreach (self::cases() as $status) {
-            if (! $includeFinished && $status->isFinished()) {
-                continue;
-            }
-            $options[$status->value] = $status->getDescription();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Retorna status ordenados.
-     */
     public static function getOrdered(bool $includeFinished = true): array
     {
         $ordered = [
@@ -188,55 +159,96 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         return $ordered;
     }
 
-    /**
-     * Retorna metadados completos.
-     */
     public function getMetadata(): array
     {
         return [
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'icon' => $this->getIcon(),
+            'label' => $this->label(),
+            'description' => $this->label(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
             'is_active' => $this->isActive(),
             'is_finished' => $this->isFinished(),
+            'is_successful' => $this->isSuccessful(),
         ];
     }
 
     /**
-     * Calcula métricas de status.
+     * Cria instância do enum a partir de string
+     */
+    public static function fromString(string $value): ?self
+    {
+        try {
+            return self::from($value);
+        } catch (\ValueError $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Retorna opções formatadas para uso em formulários/selects
+     */
+    public static function getOptions(bool $includeFinished = true): array
+    {
+        $options = [];
+        foreach (self::cases() as $case) {
+            if (! $includeFinished && $case->isFinished()) {
+                continue;
+            }
+            $options[$case->value] = $case->label();
+        }
+
+        return $options;
+    }
+
+    /**
+     * Calcula métricas de status para dashboards
      */
     public static function calculateMetrics(array $statuses): array
     {
         $total = count($statuses);
         if ($total === 0) {
-            return [];
-        }
-
-        $counts = array_count_values(array_map(fn ($s) => $s->value, $statuses));
-        $metrics = [];
-
-        foreach (self::cases() as $case) {
-            $count = $counts[$case->value] ?? 0;
-            $metrics[$case->value] = [
-                'count' => $count,
-                'percentage' => ($count / $total) * 100,
+            return [
+                'total' => 0,
+                'active' => 0,
+                'finished' => 0,
+                'percentages' => [],
             ];
         }
 
-        return $metrics;
-    }
+        $counts = [];
+        $activeCount = 0;
+        $finishedCount = 0;
 
-    /**
-     * Cria instância do enum a partir de string.
-     */
-    public static function fromString(string $value): ?PaymentStatus
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
+        foreach ($statuses as $status) {
+            $statusEnum = $status instanceof self ? $status : self::fromString((string) $status);
+            if (! $statusEnum) {
+                continue;
+            }
+
+            $counts[$statusEnum->value] = ($counts[$statusEnum->value] ?? 0) + 1;
+
+            if ($statusEnum->isActive()) {
+                $activeCount++;
+            }
+
+            if ($statusEnum->isFinished()) {
+                $finishedCount++;
             }
         }
 
-        return null;
+        $percentages = [];
+        foreach ($counts as $value => $count) {
+            $percentages[$value] = round(($count / $total) * 100, 1);
+        }
+
+        return [
+            'total' => $total,
+            'active' => $activeCount,
+            'finished' => $finishedCount,
+            'percentages' => $percentages,
+            'counts' => $counts,
+        ];
     }
 }

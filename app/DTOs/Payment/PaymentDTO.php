@@ -6,6 +6,7 @@ namespace App\DTOs\Payment;
 
 use App\DTOs\AbstractDTO;
 use App\Enums\PaymentStatus;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class PaymentDTO extends AbstractDTO
@@ -34,14 +35,31 @@ readonly class PaymentDTO extends AbstractDTO
             amount: (float) $data['amount'],
             gateway_transaction_id: $data['gateway_transaction_id'] ?? null,
             gateway_response: $data['gateway_response'] ?? null,
-            processed_at: isset($data['processed_at']) ? Carbon::parse($data['processed_at']) : null,
-            confirmed_at: isset($data['confirmed_at']) ? Carbon::parse($data['confirmed_at']) : null,
+            processed_at: DateHelper::toCarbon($data['processed_at'] ?? null),
+            confirmed_at: DateHelper::toCarbon($data['confirmed_at'] ?? null),
             notes: $data['notes'] ?? null,
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }
 
     public function toArray(): array
+    {
+        return [
+            'invoice_id' => $this->invoice_id,
+            'customer_id' => $this->customer_id,
+            'status' => $this->status->value,
+            'method' => $this->method,
+            'amount' => $this->amount,
+            'gateway_transaction_id' => $this->gateway_transaction_id,
+            'gateway_response' => $this->gateway_response,
+            'processed_at' => $this->processed_at?->toDateTimeString(),
+            'confirmed_at' => $this->confirmed_at?->toDateTimeString(),
+            'notes' => $this->notes,
+            'tenant_id' => $this->tenant_id,
+        ];
+    }
+
+    public function toDatabaseArray(): array
     {
         return [
             'invoice_id' => $this->invoice_id,

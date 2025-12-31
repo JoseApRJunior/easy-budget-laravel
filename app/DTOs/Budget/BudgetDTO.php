@@ -6,6 +6,7 @@ namespace App\DTOs\Budget;
 
 use App\DTOs\AbstractDTO;
 use App\Enums\BudgetStatus;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class BudgetDTO extends AbstractDTO
@@ -34,7 +35,7 @@ readonly class BudgetDTO extends AbstractDTO
             customer_id: (int) $data['customer_id'],
             status: isset($data['status']) ? BudgetStatus::from($data['status']) : BudgetStatus::DRAFT,
             code: $data['code'] ?? null,
-            due_date: isset($data['due_date']) ? Carbon::parse($data['due_date']) : null,
+            due_date: DateHelper::toCarbon($data['due_date'] ?? null),
             discount: (float) ($data['discount'] ?? 0.0),
             total: (float) ($data['total'] ?? 0.0),
             description: $data['description'] ?? null,
@@ -42,5 +43,20 @@ readonly class BudgetDTO extends AbstractDTO
             services: $services,
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
+    }
+
+    public function toDatabaseArray(): array
+    {
+        return [
+            'customer_id' => $this->customer_id,
+            'status' => $this->status->value,
+            'code' => $this->code,
+            'due_date' => $this->due_date?->toDateString(),
+            'discount' => $this->discount,
+            'total' => $this->total,
+            'description' => $this->description,
+            'payment_terms' => $this->payment_terms,
+            'tenant_id' => $this->tenant_id,
+        ];
     }
 }

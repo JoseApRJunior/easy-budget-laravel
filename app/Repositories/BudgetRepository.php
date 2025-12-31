@@ -54,13 +54,8 @@ class BudgetRepository extends AbstractTenantRepository
     {
         $query = $this->model->newQuery()->where('status', $status);
 
-        if (! empty($filters['date_from'])) {
-            $query->where('created_at', '>=', $filters['date_from']);
-        }
-
-        if (! empty($filters['date_to'])) {
-            $query->where('created_at', '<=', $filters['date_to']);
-        }
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
 
         return $query->count();
     }
@@ -169,7 +164,7 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function createFromDTO(BudgetDTO $dto): Model
     {
-        return $this->create($dto->toArrayWithoutNulls());
+        return $this->create($dto->toDatabaseArray());
     }
 
     /**
@@ -177,18 +172,26 @@ class BudgetRepository extends AbstractTenantRepository
      */
     public function updateFromDTO(int $id, BudgetDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArrayWithoutNulls());
+        $data = $dto->toDatabaseArray();
+        $filteredData = array_filter($data, fn ($value) => $value !== null);
+
+        return $this->update($id, $filteredData);
     }
 
     /**
-     * Paginação de orçamentos com filtros.
+     * Retorna orçamentos paginados com filtros avançados.
      */
-    public function getPaginatedBudgets(array $filters = [], int $perPage = 10): LengthAwarePaginator
-    {
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+    ): LengthAwarePaginator {
         return $this->model->newQuery()
-            ->with(['customer.commonData'])
+            ->when(! empty($with), fn ($q) => $q->with($with))
             ->tap(fn ($q) => $this->applyAllBudgetFilters($q, $filters))
-            ->latest()
+            ->tap(fn ($q) => $this->applySoftDeleteFilter($q, $filters))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy), fn ($q) => $q->latest())
             ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
 
@@ -197,25 +200,33 @@ class BudgetRepository extends AbstractTenantRepository
      */
     protected function applyAllBudgetFilters(Builder $query, array $filters): void
     {
-        $this->applySearchFilter($query, $filters, ['code']);
+        // Filtro por Código
+        if (! empty($filters['code'])) {
+            $query->where('code', 'like', "%{$filters['code']}%");
+        }
 
-        // Busca por nome do cliente
+        // Busca Geral (Geralmente vinda de um campo 'search')
         if (! empty($filters['search'])) {
             $search = $filters['search'];
-            $query->orWhereHas('customer.commonData', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('company_name', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhereHas('customer.commonData', function ($cq) use ($search) {
+                        $cq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
-        // Filtro por nome do cliente específico (usado em relatórios)
+        // Filtro por nome do cliente específico
         if (! empty($filters['customer_name'])) {
             $customerName = $filters['customer_name'];
             $query->whereHas('customer.commonData', function ($q) use ($customerName) {
-                $q->where('first_name', 'like', "%{$customerName}%")
-                    ->orWhere('last_name', 'like', "%{$customerName}%")
-                    ->orWhere('company_name', 'like', "%{$customerName}%");
+                $q->where(function ($sq) use ($customerName) {
+                    $sq->where('first_name', 'like', "%{$customerName}%")
+                        ->orWhere('last_name', 'like', "%{$customerName}%")
+                        ->orWhere('company_name', 'like', "%{$customerName}%");
+                });
             });
         }
 
@@ -223,7 +234,7 @@ class BudgetRepository extends AbstractTenantRepository
         $query->when(! empty($filters['customer_id']), fn ($q) => $q->where('customer_id', $filters['customer_id']));
         $query->when(! empty($filters['total_min']), fn ($q) => $q->where('total', '>=', $filters['total_min']));
 
-        // Filtros de data (compatibilidade com múltiplos formatos de chave)
+        // Filtros de data
         $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
         $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
     }

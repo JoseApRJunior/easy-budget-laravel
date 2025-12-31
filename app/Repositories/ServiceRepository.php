@@ -116,6 +116,23 @@ class ServiceRepository extends AbstractTenantRepository
     }
 
     /**
+     * Retorna serviços paginados com filtros avançados.
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+    ): \Illuminate\Pagination\LengthAwarePaginator {
+        return $this->model->newQuery()
+            ->when(! empty($with), fn ($q) => $q->with($with))
+            ->tap(fn ($q) => $this->applyAllServiceFilters($q, $filters))
+            ->tap(fn ($q) => $this->applySoftDeleteFilter($q, $filters))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy), fn ($q) => $q->latest())
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
+    }
+
+    /**
      * Busca serviços com filtros avançados, paginação e eager loading.
      */
     public function getFiltered(array $filters = [], ?array $orderBy = null, ?int $limit = null): Collection
@@ -133,8 +150,23 @@ class ServiceRepository extends AbstractTenantRepository
      */
     protected function applyAllServiceFilters(Builder $query, array $filters): void
     {
-        $this->applyBooleanFilter($query, $filters, 'status', 'status');
-        $this->applyBooleanFilter($query, $filters, 'category_id', 'category_id');
+        if (isset($filters['status']) && $filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
+        }
+
+        if (isset($filters['category_id']) && $filters['category_id'] !== 'all') {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        if (isset($filters['price_min'])) {
+            $query->where('total', '>=', $filters['price_min']);
+        }
+
+        if (isset($filters['price_max'])) {
+            $query->where('total', '<=', $filters['price_max']);
+        }
+
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
         $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
         $this->applySearchFilter($query, $filters, ['code', 'description']);
     }
@@ -155,7 +187,7 @@ class ServiceRepository extends AbstractTenantRepository
      */
     public function createFromDTO(ServiceDTO $dto): Model
     {
-        return $this->create($dto->toArray());
+        return $this->create($dto->toDatabaseArray());
     }
 
     /**
@@ -163,6 +195,9 @@ class ServiceRepository extends AbstractTenantRepository
      */
     public function updateFromDTO(int $id, ServiceDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArrayWithoutNulls());
+        $data = $dto->toDatabaseArray();
+        $filteredData = array_filter($data, fn ($value) => $value !== null);
+
+        return $this->update($id, $filteredData);
     }
 }

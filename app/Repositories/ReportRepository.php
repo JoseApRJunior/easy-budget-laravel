@@ -54,13 +54,7 @@ class ReportRepository extends AbstractTenantRepository
         $this->applySearchFilter($query, $filters, ['file_name', 'description', 'hash']);
 
         // Filtros de data (start_date, end_date)
-        if (! empty($filters['start_date'])) {
-            $query->whereDate('created_at', '>=', $filters['start_date']);
-        }
-
-        if (! empty($filters['end_date'])) {
-            $query->whereDate('created_at', '<=', $filters['end_date']);
-        }
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
 
         // Filtros básicos (type, status, format, user_id)
         // O applyFilters trata automaticamente filtros de igualdade e arrays

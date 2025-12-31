@@ -47,352 +47,167 @@ namespace App\Enums;
  */
 enum SupportStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
-    /** Chamado aberto, aguardando atendimento */
-    case ABERTO = 'ABERTO';
+    case OPEN = 'open';
+    case RESPONDED = 'responded';
+    case RESOLVED = 'resolved';
+    case CLOSED = 'closed';
+    case IN_PROGRESS = 'in_progress';
+    case AWAITING_RESPONSE = 'awaiting_response';
+    case CANCELLED = 'cancelled';
 
-    /** Chamado respondido pela equipe */
-    case RESPONDIDO = 'RESPONDIDO';
-
-    /** Chamado resolvido */
-    case RESOLVIDO = 'RESOLVIDO';
-
-    /** Chamado fechado */
-    case FECHADO = 'FECHADO';
-
-    /** Chamado em andamento */
-    case EM_ANDAMENTO = 'EM_ANDAMENTO';
-
-    /** Aguardando resposta do cliente */
-    case AGUARDANDO_RESPOSTA = 'AGUARDANDO_RESPOSTA';
-
-    /** Chamado cancelado */
-    case CANCELADO = 'CANCELADO';
-
-    /**
-     * Retorna uma descrição para cada status
-     */
-    public function getDescription(): string
+    public static function values(): array
     {
-        return match ($this) {
-            self::ABERTO => 'Chamado aberto, aguardando atendimento',
-            self::RESPONDIDO => 'Chamado respondido pela equipe',
-            self::RESOLVIDO => 'Chamado resolvido',
-            self::FECHADO => 'Chamado fechado',
-            self::EM_ANDAMENTO => 'Chamado em andamento',
-            self::AGUARDANDO_RESPOSTA => 'Aguardando resposta do cliente',
-            self::CANCELADO => 'Chamado cancelado',
-        };
+        return array_column(self::cases(), 'value');
     }
 
-    /**
-     * Retorna a cor associada a cada status para interface
-     *
-     * @return string Cor em formato hexadecimal
-     */
-    public function getColor(): string
-    {
-        return match ($this) {
-            self::ABERTO => '#FFA500',              // Laranja
-            self::RESPONDIDO => '#007BFF',          // Azul
-            self::RESOLVIDO => '#28A745',           // Verde
-            self::FECHADO => '#6C757D',             // Cinza
-            self::EM_ANDAMENTO => '#17A2B8',        // Azul claro
-            self::AGUARDANDO_RESPOSTA => '#FFC107', // Amarelo
-            self::CANCELADO => '#DC3545',           // Vermelho
-        };
-    }
-
-    /**
-     * Retorna o ícone associado a cada status
-     *
-     * @return string Nome do ícone para interface
-     */
-    public function getIcon(): string
-    {
-        return match ($this) {
-            self::ABERTO => 'circle',
-            self::RESPONDIDO => 'reply',
-            self::RESOLVIDO => 'check-circle',
-            self::FECHADO => 'times-circle',
-            self::EM_ANDAMENTO => 'cog',
-            self::AGUARDANDO_RESPOSTA => 'clock',
-            self::CANCELADO => 'ban',
-        };
-    }
-
-    /**
-     * Verifica se o status indica que o chamado está ativo
-     *
-     * @return bool True se o chamado estiver ativo
-     */
-    public function isActive(): bool
-    {
-        return match ($this) {
-            self::ABERTO, self::RESPONDIDO, self::EM_ANDAMENTO, self::AGUARDANDO_RESPOSTA => true,
-            self::RESOLVIDO, self::FECHADO, self::CANCELADO => false,
-        };
-    }
-
-    /**
-     * Verifica se o status indica que o chamado foi finalizado
-     *
-     * @return bool True se o chamado estiver finalizado
-     */
-    public function isFinished(): bool
-    {
-        return match ($this) {
-            self::RESOLVIDO, self::FECHADO, self::CANCELADO => true,
-            self::ABERTO, self::RESPONDIDO, self::EM_ANDAMENTO, self::AGUARDANDO_RESPOSTA => false,
-        };
-    }
-
-    /**
-     * Retorna todos os status disponíveis como array
-     *
-     * @return array<string> Lista de todos os status
-     */
-    public static function getAll(): array
-    {
-        return [
-            self::ABERTO,
-            self::RESPONDIDO,
-            self::RESOLVIDO,
-            self::FECHADO,
-            self::EM_ANDAMENTO,
-            self::AGUARDANDO_RESPOSTA,
-            self::CANCELADO,
-        ];
-    }
-
-    /**
-     * Retorna apenas os status ativos
-     *
-     * @return array<string> Lista de status ativos
-     */
-    public static function getActive(): array
-    {
-        return [
-            self::ABERTO,
-            self::RESPONDIDO,
-            self::EM_ANDAMENTO,
-            self::AGUARDANDO_RESPOSTA,
-        ];
-    }
-
-    /**
-     * Retorna apenas os status finalizados
-     *
-     * @return array<string> Lista de status finalizados
-     */
-    public static function getFinished(): array
-    {
-        return [
-            self::RESOLVIDO,
-            self::FECHADO,
-            self::CANCELADO,
-        ];
-    }
-
-    /**
-     * Retorna o próximo status lógico na sequência de atendimento
-     *
-     * @return SupportStatus|null Próximo status ou null se for final
-     */
-    public function getNextStatus(): ?SupportStatus
-    {
-        return match ($this) {
-            self::ABERTO => self::EM_ANDAMENTO,
-            self::EM_ANDAMENTO => self::AGUARDANDO_RESPOSTA,
-            self::AGUARDANDO_RESPOSTA => self::EM_ANDAMENTO,
-            self::RESPONDIDO => self::RESOLVIDO,
-            self::RESOLVIDO => self::FECHADO,
-            default => null, // Status finais não têm próximo
-        };
-    }
-
-    /**
-     * Retorna o status anterior lógico na sequência
-     *
-     * @return SupportStatus|null Status anterior ou null se for inicial
-     */
-    public function getPreviousStatus(): ?SupportStatus
-    {
-        return match ($this) {
-            self::EM_ANDAMENTO => self::ABERTO,
-            self::AGUARDANDO_RESPOSTA => self::EM_ANDAMENTO,
-            self::RESOLVIDO => self::RESPONDIDO,
-            self::FECHADO => self::RESOLVIDO,
-            default => null, // Status iniciais não têm anterior
-        };
-    }
-
-    /**
-     * Verifica se é possível transitar para um determinado status
-     *
-     * @param  SupportStatus  $targetStatus  Status alvo
-     * @return bool True se a transição for válida
-     */
-    public function canTransitionTo(SupportStatus $targetStatus): bool
-    {
-        // Define transições válidas usando strings como chaves
-        $validTransitions = [
-            self::ABERTO->value => [self::EM_ANDAMENTO->value, self::CANCELADO->value],
-            self::EM_ANDAMENTO->value => [self::AGUARDANDO_RESPOSTA->value, self::RESOLVIDO->value, self::CANCELADO->value],
-            self::AGUARDANDO_RESPOSTA->value => [self::EM_ANDAMENTO->value, self::RESOLVIDO->value],
-            self::RESPONDIDO->value => [self::EM_ANDAMENTO->value, self::RESOLVIDO->value, self::CANCELADO->value],
-            self::RESOLVIDO->value => [self::FECHADO->value],
-            self::FECHADO->value => [], // Status final
-            self::CANCELADO->value => [], // Status final
-        ];
-
-        return in_array($targetStatus->value, $validTransitions[$this->value] ?? []);
-    }
-
-    /**
-     * Retorna a ordem de prioridade para exibição
-     *
-     * @return int Ordem (menor número = maior prioridade)
-     */
-    public function getPriorityOrder(): int
-    {
-        return match ($this) {
-            self::ABERTO => 1,
-            self::EM_ANDAMENTO => 2,
-            self::AGUARDANDO_RESPOSTA => 3,
-            self::RESPONDIDO => 4,
-            self::RESOLVIDO => 5,
-            self::FECHADO => 6,
-            self::CANCELADO => 7,
-        };
-    }
-
-    /**
-     * Retorna metadados completos do status
-     *
-     * @return array<string, mixed> Array com descrição, cor, ícone e flags
-     */
-    public function getMetadata(): array
-    {
-        return [
-            'value' => $this->value,
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'icon' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-            'priority_order' => $this->getPriorityOrder(),
-        ];
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     *
-     * @param  string  $value  Valor do status
-     * @return SupportStatus|null Instância do enum ou null se inválido
-     */
-    public static function fromString(string $value): ?SupportStatus
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Retorna opções formatadas para uso em formulários/selects
-     *
-     * @param  bool  $includeFinished  Incluir status finalizados
-     * @return array<string, string> Array associativo [valor => descrição]
-     */
-    public static function getOptions(bool $includeFinished = true): array
+    public static function options(): array
     {
         $options = [];
-
-        foreach (self::cases() as $status) {
-            if (! $includeFinished && $status->isFinished()) {
-                continue;
-            }
-            $options[$status->value] = $status->getDescription();
+        foreach (self::cases() as $case) {
+            $options[$case->value] = $case->label();
         }
-
         return $options;
     }
 
-    /**
-     * Ordena status por prioridade para exibição
-     *
-     * @param  bool  $includeFinished  Incluir status finalizados na ordenação
-     * @return array<SupportStatus> Status ordenados por prioridade
-     */
+    public static function labels(): array
+    {
+        return array_map(fn (self $case) => $case->label(), self::cases());
+    }
+
+    public static function isValid(string $value): bool
+    {
+        return in_array($value, self::values(), true);
+    }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::OPEN => 'Aberto',
+            self::RESPONDED => 'Respondido',
+            self::RESOLVED => 'Resolvido',
+            self::CLOSED => 'Fechado',
+            self::IN_PROGRESS => 'Em Andamento',
+            self::AWAITING_RESPONSE => 'Aguardando Resposta',
+            self::CANCELLED => 'Cancelado',
+        };
+    }
+
+    public function getDescription(): string
+    {
+        return match ($this) {
+            self::OPEN => 'Chamado aberto, aguardando atendimento',
+            self::RESPONDED => 'Chamado respondido pela equipe',
+            self::RESOLVED => 'Chamado resolvido',
+            self::CLOSED => 'Chamado fechado',
+            self::IN_PROGRESS => 'Chamado em andamento',
+            self::AWAITING_RESPONSE => 'Aguardando resposta do cliente',
+            self::CANCELLED => 'Chamado cancelado',
+        };
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::OPEN => 'warning',
+            self::RESPONDED => 'primary',
+            self::RESOLVED => 'success',
+            self::CLOSED => 'secondary',
+            self::IN_PROGRESS => 'info',
+            self::AWAITING_RESPONSE => 'warning',
+            self::CANCELLED => 'danger',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::OPEN => '#FFA500',
+            self::RESPONDED => '#007BFF',
+            self::RESOLVED => '#28A745',
+            self::CLOSED => '#6C757D',
+            self::IN_PROGRESS => '#17A2B8',
+            self::AWAITING_RESPONSE => '#FFC107',
+            self::CANCELLED => '#DC3545',
+        };
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::OPEN => 'envelope-paper',
+            self::RESPONDED => 'reply',
+            self::RESOLVED => 'check-circle',
+            self::CLOSED => 'lock',
+            self::IN_PROGRESS => 'gear',
+            self::AWAITING_RESPONSE => 'clock',
+            self::CANCELLED => 'x-circle',
+        };
+    }
+
+    public function getIcon(): string
+    {
+        return 'bi-' . $this->icon();
+    }
+
+    public function isActive(): bool
+    {
+        return match ($this) {
+            self::OPEN, self::RESPONDED, self::IN_PROGRESS, self::AWAITING_RESPONSE => true,
+            self::RESOLVED, self::CLOSED, self::CANCELLED => false,
+        };
+    }
+
+    public function isFinished(): bool
+    {
+        return ! $this->isActive();
+    }
+
+    public function getValidTransitions(): array
+    {
+        return match ($this) {
+            self::OPEN => [self::IN_PROGRESS, self::CANCELLED],
+            self::IN_PROGRESS => [self::RESPONDED, self::AWAITING_RESPONSE, self::RESOLVED, self::CANCELLED],
+            self::RESPONDED => [self::AWAITING_RESPONSE, self::RESOLVED, self::CLOSED],
+            self::AWAITING_RESPONSE => [self::IN_PROGRESS, self::RESOLVED, self::CANCELLED],
+            self::RESOLVED => [self::CLOSED, self::IN_PROGRESS],
+            self::CLOSED, self::CANCELLED => [self::OPEN],
+        };
+    }
+
+    public function canTransitionTo(SupportStatus $targetStatus): bool
+    {
+        return in_array($targetStatus, $this->getValidTransitions(), true);
+    }
+
     public static function getOrdered(bool $includeFinished = true): array
     {
-        $statuses = self::cases();
-
-        usort($statuses, function (SupportStatus $a, SupportStatus $b) {
-            return $a->getPriorityOrder() <=> $b->getPriorityOrder();
-        });
-
-        if (! $includeFinished) {
-            $statuses = array_filter($statuses, function (SupportStatus $status) {
-                return ! $status->isFinished();
-            });
-        }
-
-        return array_values($statuses);
-    }
-
-    /**
-     * Valida se uma transição de status é permitida
-     *
-     * @param  SupportStatus  $fromStatus  Status atual
-     * @param  SupportStatus  $toStatus  Status alvo
-     * @return bool True se transição for válida
-     */
-    public static function isValidTransition(SupportStatus $fromStatus, SupportStatus $toStatus): bool
-    {
-        // Define transições válidas usando strings como chaves
-        $validTransitions = [
-            self::ABERTO->value => [self::EM_ANDAMENTO->value, self::CANCELADO->value],
-            self::EM_ANDAMENTO->value => [self::AGUARDANDO_RESPOSTA->value, self::RESOLVIDO->value, self::CANCELADO->value],
-            self::AGUARDANDO_RESPOSTA->value => [self::EM_ANDAMENTO->value, self::RESOLVIDO->value],
-            self::RESPONDIDO->value => [self::EM_ANDAMENTO->value, self::RESOLVIDO->value, self::CANCELADO->value],
-            self::RESOLVIDO->value => [self::FECHADO->value],
-            self::FECHADO->value => [], // Status final
-            self::CANCELADO->value => [], // Status final
+        $ordered = [
+            self::OPEN,
+            self::IN_PROGRESS,
+            self::RESPONDED,
+            self::AWAITING_RESPONSE,
         ];
 
-        return in_array($toStatus->value, $validTransitions[$fromStatus->value] ?? []);
-    }
-
-    /**
-     * Calcula métricas de status para dashboards
-     *
-     * @param  array<SupportStatus>  $statuses  Lista de status para análise
-     * @return array<string, int> Métricas [ativo, finalizado, total]
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $total = count($statuses);
-        $active = 0;
-        $finished = 0;
-
-        foreach ($statuses as $status) {
-            if ($status->isActive()) {
-                $active++;
-            } elseif ($status->isFinished()) {
-                $finished++;
-            }
+        if ($includeFinished) {
+            $ordered[] = self::RESOLVED;
+            $ordered[] = self::CLOSED;
+            $ordered[] = self::CANCELLED;
         }
 
+        return $ordered;
+    }
+
+    public function getMetadata(): array
+    {
         return [
-            'total' => $total,
-            'active' => $active,
-            'finished' => $finished,
-            'active_percentage' => $total > 0 ? round(($active / $total) * 100, 1) : 0,
-            'finished_percentage' => $total > 0 ? round(($finished / $total) * 100, 1) : 0,
+            'label' => $this->label(),
+            'description' => $this->getDescription(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
         ];
     }
 }

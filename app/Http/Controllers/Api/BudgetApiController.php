@@ -171,28 +171,28 @@ class BudgetApiController extends Controller
     /**
      * Mostra detalhes de um orçamento.
      */
-    public function show(Budget $budget): JsonResponse
+    public function show(Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id) {
+        if ($code->tenant_id !== Auth::user()->tenant_id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não encontrado.',
             ], 404);
         }
 
-        $budget->load([
+        $code->load([
             'customer',
             'items.category',
             'versions.user',
             'attachments',
         ]);
 
-        $totals = $this->calculationService->calculateTotals($budget);
+        $totals = $this->calculationService->calculateTotals($code);
 
         return response()->json([
             'success' => true,
             'data' => [
-                'budget' => $budget,
+                'budget' => $code,
                 'totals' => $totals,
             ],
             'message' => 'Orçamento encontrado.',
@@ -202,9 +202,9 @@ class BudgetApiController extends Controller
     /**
      * Atualiza orçamento.
      */
-    public function update(Request $request, Budget $budget): JsonResponse
+    public function update(Request $request, Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeEdited()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não pode ser editado.',
@@ -231,7 +231,7 @@ class BudgetApiController extends Controller
         DB::beginTransaction();
 
         // Atualizar dados do orçamento
-        $budget->update([
+        $code->update([
             'customer_id' => $validated['customer_id'],
             'description' => $validated['description'] ?? null,
             'valid_until' => $validated['valid_until'] ?? null,
@@ -242,31 +242,31 @@ class BudgetApiController extends Controller
         $existingItemIds = [];
         foreach ($validated['items'] as $itemData) {
             if (isset($itemData['id'])) {
-                $item = $budget->items()->find($itemData['id']);
+                $item = $code->items()->find($itemData['id']);
                 if ($item) {
                     $item->update($itemData);
                     $existingItemIds[] = $item->id;
                 }
             } else {
-                $newItem = $budget->addItem($itemData);
+                $newItem = $code->addItem($itemData);
                 $existingItemIds[] = $newItem->id;
             }
         }
 
         // Remover itens não incluídos
-        $budget->items()->whereNotIn('id', $existingItemIds)->delete();
+        $code->items()->whereNotIn('id', $existingItemIds)->delete();
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($budget);
+        $this->calculationService->recalculateBudgetItems($code);
 
         // Criar nova versão
-        $budget->createVersion('Orçamento atualizado via API', Auth::id());
+        $code->createVersion('Orçamento atualizado via API', Auth::id());
 
         DB::commit();
 
         return response()->json([
             'success' => true,
-            'data' => $budget->load(['customer', 'items']),
+            'data' => $code->load(['customer', 'items']),
             'message' => 'Orçamento atualizado com sucesso.',
         ]);
     }
@@ -274,9 +274,9 @@ class BudgetApiController extends Controller
     /**
      * Remove orçamento.
      */
-    public function destroy(Budget $budget): JsonResponse
+    public function destroy(Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id) {
+        if ($code->tenant_id !== Auth::user()->tenant_id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não encontrado.',
@@ -287,15 +287,15 @@ class BudgetApiController extends Controller
 
         // Log antes de excluir
         \App\Models\BudgetActionHistory::logAction(
-            $budget->id,
+            $code->id,
             Auth::id(),
             'deleted',
-            $budget->budgetStatus()->value,
+            $code->budgetStatus()->value,
             null,
             'Orçamento excluído via API',
         );
 
-        $budget->delete();
+        $code->delete();
 
         DB::commit();
 
@@ -308,9 +308,9 @@ class BudgetApiController extends Controller
     /**
      * Adiciona item ao orçamento.
      */
-    public function addItem(Request $request, Budget $budget): JsonResponse
+    public function addItem(Request $request, Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeEdited()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Não é possível adicionar itens.',
@@ -328,13 +328,13 @@ class BudgetApiController extends Controller
             'budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        $item = $budget->addItem($validated);
+        $item = $code->addItem($validated);
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($budget);
+        $this->calculationService->recalculateBudgetItems($code);
 
         // Criar nova versão
-        $budget->createVersion('Item adicionado via API', Auth::id());
+        $code->createVersion('Item adicionado via API', Auth::id());
 
         return response()->json([
             'success' => true,
@@ -346,16 +346,16 @@ class BudgetApiController extends Controller
     /**
      * Atualiza item do orçamento.
      */
-    public function updateItem(Request $request, Budget $budget, BudgetItem $item): JsonResponse
+    public function updateItem(Request $request, Budget $code, BudgetItem $item): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeEdited()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Não é possível editar itens.',
             ], 403);
         }
 
-        if ($item->budget_id !== $budget->id) {
+        if ($item->budget_id !== $code->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item não pertence ao orçamento.',
@@ -376,10 +376,10 @@ class BudgetApiController extends Controller
         $item->update($validated);
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($budget);
+        $this->calculationService->recalculateBudgetItems($code);
 
         // Criar nova versão
-        $budget->createVersion('Item atualizado via API', Auth::id());
+        $code->createVersion('Item atualizado via API', Auth::id());
 
         return response()->json([
             'success' => true,
@@ -391,29 +391,29 @@ class BudgetApiController extends Controller
     /**
      * Remove item do orçamento.
      */
-    public function removeItem(Budget $budget, BudgetItem $item): JsonResponse
+    public function removeItem(Budget $code, BudgetItem $item): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeEdited()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Não é possível remover itens.',
             ], 403);
         }
 
-        if ($item->budget_id !== $budget->id) {
+        if ($item->budget_id !== $code->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item não pertence ao orçamento.',
             ], 400);
         }
 
-        $budget->removeItem($item);
+        $code->removeItem($item);
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($budget);
+        $this->calculationService->recalculateBudgetItems($code);
 
         // Criar nova versão
-        $budget->createVersion('Item removido via API', Auth::id());
+        $code->createVersion('Item removido via API', Auth::id());
 
         return response()->json([
             'success' => true,
@@ -424,9 +424,9 @@ class BudgetApiController extends Controller
     /**
      * Envia orçamento para cliente.
      */
-    public function sendToCustomer(Budget $budget): JsonResponse
+    public function sendToCustomer(Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeSent()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeSent()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não pode ser enviado.',
@@ -434,15 +434,15 @@ class BudgetApiController extends Controller
         }
 
         // Alterar status
-        $budget->status = BudgetStatus::PENDING;
-        $budget->save();
+        $code->status = BudgetStatus::PENDING;
+        $code->save();
 
         // Criar nova versão
-        $budget->createVersion('Orçamento enviado via API', Auth::id());
+        $code->createVersion('Orçamento enviado via API', Auth::id());
 
         // Log da ação
         \App\Models\BudgetActionHistory::logAction(
-            $budget->id,
+            $code->id,
             Auth::id(),
             'sent',
             'rascunho',
@@ -452,7 +452,7 @@ class BudgetApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $budget,
+            'data' => $code,
             'message' => 'Orçamento enviado com sucesso.',
         ]);
     }
@@ -460,24 +460,24 @@ class BudgetApiController extends Controller
     /**
      * Aprova orçamento.
      */
-    public function approve(Budget $budget): JsonResponse
+    public function approve(Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeApproved()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeApproved()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não pode ser aprovado.',
             ], 403);
         }
 
-        $budget->status = BudgetStatus::APPROVED;
-        $budget->save();
+        $code->status = BudgetStatus::APPROVED;
+        $code->save();
 
         // Criar nova versão
-        $budget->createVersion('Orçamento aprovado via API', Auth::id());
+        $code->createVersion('Orçamento aprovado via API', Auth::id());
 
         // Log da ação
         \App\Models\BudgetActionHistory::logAction(
-            $budget->id,
+            $code->id,
             Auth::id(),
             'approved',
             'enviado',
@@ -487,7 +487,7 @@ class BudgetApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $budget,
+            'data' => $code,
             'message' => 'Orçamento aprovado com sucesso.',
         ]);
     }
@@ -495,9 +495,9 @@ class BudgetApiController extends Controller
     /**
      * Rejeita orçamento.
      */
-    public function reject(Request $request, Budget $budget): JsonResponse
+    public function reject(Request $request, Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeRejected()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeRejected()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não pode ser rejeitado.',
@@ -508,15 +508,15 @@ class BudgetApiController extends Controller
             'reason' => 'nullable|string|max:1000',
         ]);
 
-        $budget->status = BudgetStatus::REJECTED;
-        $budget->save();
+        $code->status = BudgetStatus::REJECTED;
+        $code->save();
 
         // Criar nova versão
-        $budget->createVersion('Orçamento rejeitado via API', Auth::id());
+        $code->createVersion('Orçamento rejeitado via API', Auth::id());
 
         // Log da ação
         \App\Models\BudgetActionHistory::logAction(
-            $budget->id,
+            $code->id,
             Auth::id(),
             'rejected',
             'enviado',
@@ -526,7 +526,7 @@ class BudgetApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $budget,
+            'data' => $code,
             'message' => 'Orçamento rejeitado.',
         ]);
     }
@@ -534,16 +534,16 @@ class BudgetApiController extends Controller
     /**
      * Obtém versões do orçamento.
      */
-    public function getVersions(Budget $budget): JsonResponse
+    public function getVersions(Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id) {
+        if ($code->tenant_id !== Auth::user()->tenant_id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não encontrado.',
             ], 404);
         }
 
-        $versions = $budget->versions()->with('user')->latestFirst()->get();
+        $versions = $code->versions()->with('user')->latestFirst()->get();
 
         return response()->json([
             'success' => true,
@@ -555,9 +555,9 @@ class BudgetApiController extends Controller
     /**
      * Cria nova versão do orçamento.
      */
-    public function createVersion(Request $request, Budget $budget): JsonResponse
+    public function createVersion(Request $request, Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeEdited()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Não é possível criar versão.',
@@ -569,7 +569,7 @@ class BudgetApiController extends Controller
         ]);
 
         try {
-            $version = $budget->createVersion(
+            $version = $code->createVersion(
                 $validated['changes_description'] ?? 'Nova versão criada via API',
                 Auth::id(),
             );
@@ -591,16 +591,16 @@ class BudgetApiController extends Controller
     /**
      * Restaura versão específica.
      */
-    public function restoreVersion(Budget $budget, BudgetVersion $version): JsonResponse
+    public function restoreVersion(Budget $code, BudgetVersion $version): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id || ! $budget->canBeEdited()) {
+        if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Não é possível restaurar versão.',
             ], 403);
         }
 
-        if ($version->budget_id !== $budget->id) {
+        if ($version->budget_id !== $code->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Versão não pertence ao orçamento.',
@@ -608,11 +608,11 @@ class BudgetApiController extends Controller
         }
 
         try {
-            $budget->restoreVersion($version, Auth::id());
+            $code->restoreVersion($version, Auth::id());
 
             return response()->json([
                 'success' => true,
-                'data' => $budget->load(['items']),
+                'data' => $code->load(['items']),
                 'message' => 'Versão restaurada com sucesso.',
             ]);
 
@@ -627,9 +627,9 @@ class BudgetApiController extends Controller
     /**
      * Gera PDF do orçamento.
      */
-    public function generatePdf(Budget $budget): JsonResponse
+    public function generatePdf(Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id) {
+        if ($code->tenant_id !== Auth::user()->tenant_id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não encontrado.',
@@ -637,7 +637,7 @@ class BudgetApiController extends Controller
         }
 
         try {
-            $pdfPath = $this->pdfService->generatePdf($budget);
+            $pdfPath = $this->pdfService->generatePdf($code);
 
             return response()->json([
                 'success' => true,
@@ -659,9 +659,9 @@ class BudgetApiController extends Controller
     /**
      * Envia orçamento por email.
      */
-    public function emailBudget(Request $request, Budget $budget): JsonResponse
+    public function emailBudget(Request $request, Budget $code): JsonResponse
     {
-        if ($budget->tenant_id !== Auth::user()->tenant_id) {
+        if ($code->tenant_id !== Auth::user()->tenant_id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Orçamento não encontrado.',
@@ -677,7 +677,7 @@ class BudgetApiController extends Controller
 
         try {
             $this->pdfService->emailPdf(
-                $budget,
+                $code,
                 $validated['recipients'],
                 $validated['message'] ?? ''
             );

@@ -16,6 +16,8 @@ interface ReadServiceInterface
 
     public function list(array $filters = []): ServiceResult;
 
+    public function paginate(array $filters = [], int $perPage = 15, array $with = []): ServiceResult;
+
     public function count(array $filters = []): ServiceResult;
 
     public function findMany(array $ids, array $with = []): ServiceResult;

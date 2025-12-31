@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Log;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class EmailLogDTO extends AbstractDTO
@@ -39,10 +40,10 @@ readonly class EmailLogDTO extends AbstractDTO
             status: $data['status'],
             recipient_name: $data['recipient_name'] ?? null,
             sender_name: $data['sender_name'] ?? null,
-            sent_at: isset($data['sent_at']) ? Carbon::parse($data['sent_at']) : null,
-            opened_at: isset($data['opened_at']) ? Carbon::parse($data['opened_at']) : null,
-            clicked_at: isset($data['clicked_at']) ? Carbon::parse($data['clicked_at']) : null,
-            bounced_at: isset($data['bounced_at']) ? Carbon::parse($data['bounced_at']) : null,
+            sent_at: DateHelper::toCarbon($data['sent_at'] ?? null),
+            opened_at: DateHelper::toCarbon($data['opened_at'] ?? null),
+            clicked_at: DateHelper::toCarbon($data['clicked_at'] ?? null),
+            bounced_at: DateHelper::toCarbon($data['bounced_at'] ?? null),
             error_message: $data['error_message'] ?? null,
             metadata: is_string($data['metadata'] ?? []) ? json_decode($data['metadata'], true) : ($data['metadata'] ?? []),
             tracking_id: $data['tracking_id'] ?? null,

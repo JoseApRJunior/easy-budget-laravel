@@ -22,9 +22,7 @@
                         <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
                         <strong>Código do Serviço:</strong> {{ $service->code }}
                         <span class="ms-3"><strong>Status:</strong>
-                            <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}">
-                                {{ $service->serviceStatus->getDescription() }}
-                            </span>
+                            <x-status-badge :item="$service" />
                         </span>
                     </div>
 
@@ -36,7 +34,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="budget_id" class="form-label">
+                                    <label for="budget_id" class="form-label small fw-bold text-muted text-uppercase">
                                         Orçamento <span class="text-danger">*</span>
                                     </label>
                                     <select class="form-select tom-select @error('budget_id') is-invalid @enderror"
@@ -60,7 +58,7 @@
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="category_id" class="form-label">
+                                    <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">
                                         Categoria <span class="text-danger">*</span>
                                     </label>
                                     <select class="form-select tom-select @error('category_id') is-invalid @enderror"
@@ -84,7 +82,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="code" class="form-label">
+                                    <label for="code" class="form-label small fw-bold text-muted text-uppercase">
                                         Código do Serviço
                                     </label>
                                     <input type="text"
@@ -99,7 +97,7 @@
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="status" class="form-label">
+                                    <label for="service_statuses_id" class="form-label small fw-bold text-muted text-uppercase">
                                         Status <span class="text-danger">*</span>
                                     </label>
                                     <select class="form-select tom-select @error('status') is-invalid @enderror"
@@ -124,7 +122,7 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-3">
-                                    <label for="description" class="form-label">Descrição</label>
+                                    <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
                                     <textarea class="form-control @error('description') is-invalid @enderror"
                                         id="description"
                                         name="description"
@@ -141,7 +139,7 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="discount" class="form-label">Desconto (R$)</label>
+                                    <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
                                     <input type="text"
                                         inputmode="numeric"
                                         class="form-control @error('discount') is-invalid @enderror"
@@ -157,7 +155,7 @@
 
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="total" class="form-label">Total (R$)</label>
+                                    <label for="total" class="form-label small fw-bold text-muted text-uppercase">Total (R$)</label>
                                     <input type="text"
                                         inputmode="numeric"
                                         class="form-control @error('total') is-invalid @enderror"
@@ -173,7 +171,7 @@
 
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label for="due_date" class="form-label">Data de Vencimento</label>
+                                    <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
                                     <input type="date"
                                         class="form-control @error('due_date') is-invalid @enderror"
                                         id="due_date"

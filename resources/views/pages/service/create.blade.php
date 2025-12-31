@@ -41,7 +41,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="budget_id" class="form-label">
+                            <label for="budget_id" class="form-label small fw-bold text-muted text-uppercase">
                                 Orçamento <span class="text-danger">*</span>
                             </label>
                             <select class="form-select tom-select @error('budget_id') is-invalid @enderror" id="budget_id"
@@ -63,7 +63,7 @@
 
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="category_id" class="form-label">
+                            <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">
                                 Categoria <span class="text-danger">*</span>
                             </label>
                             <select class="form-select tom-select @error('category_id') is-invalid @enderror"
@@ -101,7 +101,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="code" class="form-label">
+                            <label for="code" class="form-label small fw-bold text-muted text-uppercase">
                                 Código do Serviço <span class="text-muted">(gerado automaticamente)</span>
                             </label>
                             <input type="text" class="form-control" id="code" name="code"
@@ -112,7 +112,7 @@
 
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label for="service_statuses_id" class="form-label">
+                            <label for="service_statuses_id" class="form-label small fw-bold text-muted text-uppercase">
                                 Status <span class="text-danger">*</span>
                             </label>
                             <select class="form-select tom-select @error('service_statuses_id') is-invalid @enderror"
@@ -136,7 +136,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="mb-3">
-                            <label for="description" class="form-label">Descrição</label>
+                            <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
                             <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
                                 rows="3" placeholder="Descreva o serviço a ser realizado...">{{ old('description') }}</textarea>
                             @error('description')
@@ -150,7 +150,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="discount" class="form-label">Desconto (R$)</label>
+                            <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
                             <input type="text" class="form-control @error('discount') is-invalid @enderror"
                                 id="discount" name="discount" value="{{ old('discount', 'R$ 0,00') }}"
                                 inputmode="numeric" placeholder="R$ 0,00">
@@ -162,7 +162,7 @@
 
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="total" class="form-label">Total (R$)</label>
+                            <label for="total" class="form-label small fw-bold text-muted text-uppercase">Total (R$)</label>
                             <input type="text" class="form-control @error('total') is-invalid @enderror"
                                 id="total" name="total" value="{{ old('total', 'R$ 0,00') }}"
                                 inputmode="numeric" readonly min="0" placeholder="0,00" readonly>
@@ -174,7 +174,7 @@
 
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="due_date" class="form-label">Data de Vencimento</label>
+                            <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
                             <input type="text" class="form-control @error('due_date') is-invalid @enderror"
                                 id="due_date" name="due_date" inputmode="numeric" placeholder="dd/mm/aaaa"
                                 value="{{ old('due_date', now()->format('d/m/Y')) }}">
@@ -445,10 +445,12 @@
         });
 
         // Auto-seleção de orçamento se fornecido
-        if ($budget) {
+        @if (isset($budget) && $budget)
             document.getElementById('budget_id').value = '{{ $budget->id }}';
-            addItemBtn.disabled = false;
-        }
+            if (typeof addItemBtn !== 'undefined') {
+                addItemBtn.disabled = false;
+            }
+        @endif
 
         // NÃO adicionar item automaticamente - deixar empty state visível
 

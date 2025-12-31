@@ -6,6 +6,7 @@ namespace App\DTOs\Invoice;
 
 use App\DTOs\AbstractDTO;
 use App\Enums\InvoiceStatus;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class InvoiceUpdateDTO extends AbstractDTO
@@ -33,12 +34,12 @@ readonly class InvoiceUpdateDTO extends AbstractDTO
             status: isset($data['status']) ? InvoiceStatus::from($data['status']) : null,
             subtotal: isset($data['subtotal']) ? (float) $data['subtotal'] : null,
             total: isset($data['total']) ? (float) $data['total'] : null,
-            due_date: isset($data['due_date']) ? Carbon::parse($data['due_date']) : null,
+            due_date: DateHelper::toCarbon($data['due_date'] ?? null),
             discount: isset($data['discount']) ? (float) $data['discount'] : null,
             payment_method: $data['payment_method'] ?? null,
             payment_id: $data['payment_id'] ?? null,
             transaction_amount: isset($data['transaction_amount']) ? (float) $data['transaction_amount'] : null,
-            transaction_date: isset($data['transaction_date']) ? Carbon::parse($data['transaction_date']) : null,
+            transaction_date: DateHelper::toCarbon($data['transaction_date'] ?? null),
             notes: $data['notes'] ?? null,
             items: isset($data['items']) ? array_map(fn ($item) => InvoiceItemDTO::fromRequest($item), $data['items']) : null,
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
@@ -87,5 +88,23 @@ readonly class InvoiceUpdateDTO extends AbstractDTO
         }
 
         return $data;
+    }
+
+    public function toDatabaseArray(): array
+    {
+        return [
+            'customer_id' => $this->customer_id,
+            'status' => $this->status?->value,
+            'subtotal' => $this->subtotal,
+            'total' => $this->total,
+            'due_date' => $this->due_date?->toDateString(),
+            'discount' => $this->discount,
+            'payment_method' => $this->payment_method,
+            'payment_id' => $this->payment_id,
+            'transaction_amount' => $this->transaction_amount,
+            'transaction_date' => $this->transaction_date?->toDateTimeString(),
+            'notes' => $this->notes,
+            'tenant_id' => $this->tenant_id,
+        ];
     }
 }

@@ -12,9 +12,41 @@ enum ScheduleStatus: string implements StatusEnumInterface
     case CANCELLED = 'cancelled';
     case NO_SHOW = 'no_show';
 
-    /**
-     * Retorna uma descrição para o status.
-     */
+    public static function values(): array
+    {    
+        return array_column(self::cases(), 'value');
+    }
+
+    public static function options(): array
+    {
+        $options = [];
+        foreach (self::cases() as $case) {
+            $options[$case->value] = $case->label();
+        }
+        return $options;
+    }
+
+    public static function labels(): array
+    {
+        return array_map(fn (self $case) => $case->label(), self::cases());
+    }
+
+    public static function isValid(string $value): bool
+    {
+        return in_array($value, self::values(), true);
+    }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::PENDING => 'Pendente',
+            self::CONFIRMED => 'Confirmado',
+            self::COMPLETED => 'Concluído',
+            self::CANCELLED => 'Cancelado',
+            self::NO_SHOW => 'Não Compareceu',
+        };
+    }
+
     public function getDescription(): string
     {
         return match ($this) {
@@ -26,10 +58,7 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
-    /**
-     * Retorna a cor associada ao status para interface.
-     */
-    public function getColor(): string
+    public function color(): string
     {
         return match ($this) {
             self::PENDING => 'warning',
@@ -40,23 +69,33 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
-    /**
-     * Retorna o ícone associado ao status.
-     */
-    public function getIcon(): string
+    public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => 'bi-hourglass-split',
-            self::CONFIRMED => 'bi-check-circle',
-            self::COMPLETED => 'bi-check2-circle',
-            self::CANCELLED => 'bi-x-circle',
-            self::NO_SHOW => 'bi-slash-circle',
+            self::PENDING => '#ffc107',
+            self::CONFIRMED => '#007bff',
+            self::COMPLETED => '#28a745',
+            self::CANCELLED => '#dc3545',
+            self::NO_SHOW => '#6c757d',
         };
     }
 
-    /**
-     * Verifica se o status indica atividade.
-     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::PENDING => 'hourglass-split',
+            self::CONFIRMED => 'check-circle',
+            self::COMPLETED => 'check2-circle',
+            self::CANCELLED => 'x-circle',
+            self::NO_SHOW => 'slash-circle',
+        };
+    }
+
+    public function getIcon(): string
+    {
+        return 'bi-' . $this->icon();
+    }
+
     public function isActive(): bool
     {
         return match ($this) {
@@ -65,9 +104,6 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
-    /**
-     * Verifica se o status indica finalização.
-     */
     public function isFinished(): bool
     {
         return match ($this) {
@@ -76,212 +112,45 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
-    /**
-     * Retorna metadados completos do status.
-     */
-    public function getMetadata(): array
+    public function canEdit(): bool
     {
-        return [
-            'value' => $this->value,
-            'label' => $this->getLabel(),
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'icon' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-            'can_edit' => $this->canEdit(),
-            'can_cancel' => $this->canCancel(),
-        ];
+        return ! $this->isFinished();
     }
 
-    /**
-     * Cria instância do enum a partir de string.
-     */
-    public static function fromString(string $value): ?self
+    public function canCancel(): bool
     {
-        return self::isValid($value) ? self::from($value) : null;
+        return $this->isActive();
     }
 
-    /**
-     * Retorna opções formatadas para uso em formulários/selects.
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-        foreach (self::cases() as $status) {
-            if (! $includeFinished && $status->isFinished()) {
-                continue;
-            }
-            $options[$status->value] = $status->getLabel();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Ordena status por prioridade para exibição.
-     */
     public static function getOrdered(bool $includeFinished = true): array
     {
-        $activeStatuses = self::getActiveStatuses();
-        $finalStatuses = self::getFinalStatuses();
-
-        $ordered = [];
-        foreach ($activeStatuses as $status) {
-            $ordered[$status] = self::from($status)->getLabel();
-        }
+        $ordered = [
+            self::PENDING,
+            self::CONFIRMED,
+        ];
 
         if ($includeFinished) {
-            foreach ($finalStatuses as $status) {
-                $ordered[$status] = self::from($status)->getLabel();
-            }
+            $ordered[] = self::COMPLETED;
+            $ordered[] = self::CANCELLED;
+            $ordered[] = self::NO_SHOW;
         }
 
         return $ordered;
     }
 
-    /**
-     * Calcula métricas de status para dashboards.
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $metrics = [
-            'total' => count($statuses),
-            'pending' => 0,
-            'confirmed' => 0,
-            'completed' => 0,
-            'cancelled' => 0,
-            'no_show' => 0,
-            'active' => 0,
-            'finished' => 0,
-        ];
-
-        foreach ($statuses as $status) {
-            if (! ($status instanceof self)) {
-                continue;
-            }
-
-            $metrics[$status->value]++;
-            if ($status->isActive()) {
-                $metrics['active']++;
-            }
-            if ($status->isFinished()) {
-                $metrics['finished']++;
-            }
-        }
-
-        return $metrics;
-    }
-
-    /**
-     * Retorna o label legível para exibição.
-     */
-    public function getLabel(): string
-    {
-        return match ($this) {
-            self::PENDING => 'Pendente',
-            self::CONFIRMED => 'Confirmado',
-            self::COMPLETED => 'Concluído',
-            self::CANCELLED => 'Cancelado',
-            self::NO_SHOW => 'No-show',
-        };
-    }
-
-    /**
-     * Retorna a classe CSS para o badge.
-     */
-    public function getBadgeClass(): string
-    {
-        return match ($this) {
-            self::PENDING => 'warning',
-            self::CONFIRMED => 'primary',
-            self::COMPLETED => 'success',
-            self::CANCELLED => 'danger',
-            self::NO_SHOW => 'secondary',
-        };
-    }
-
-    /**
-     * Retorna todos os valores possíveis.
-     */
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    /**
-     * Verifica se um valor é válido.
-     */
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values());
-    }
-
-    /**
-     * Retorna os status que podem transitar para este status.
-     */
-    public static function getAllowedTransitions(string $currentStatus): array
-    {
-        return match ($currentStatus) {
-            self::PENDING->value => [self::CONFIRMED->value, self::CANCELLED->value],
-            self::CONFIRMED->value => [self::COMPLETED->value, self::CANCELLED->value, self::NO_SHOW->value],
-            default => [], // Status finais não têm transições
-        };
-    }
-
-    /**
-     * Retorna os status finais.
-     */
-    public static function getFinalStatuses(): array
+    public function getMetadata(): array
     {
         return [
-            self::COMPLETED->value,
-            self::CANCELLED->value,
-            self::NO_SHOW->value,
+            'label' => $this->label(),
+            'description' => $this->getDescription(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
+            'can_edit' => $this->canEdit(),
+            'can_cancel' => $this->canCancel(),
         ];
-    }
-
-    /**
-     * Retorna os status ativos (que ainda podem ser modificados).
-     */
-    public static function getActiveStatuses(): array
-    {
-        return [
-            self::PENDING->value,
-            self::CONFIRMED->value,
-        ];
-    }
-
-    /**
-     * Verifica se o status permite edição.
-     */
-    public function canEdit(): bool
-    {
-        return match ($this) {
-            self::PENDING, self::CONFIRMED => true,
-            self::COMPLETED, self::CANCELLED, self::NO_SHOW => false,
-        };
-    }
-
-    /**
-     * Verifica se o status permite cancelamento.
-     */
-    public function canCancel(): bool
-    {
-        return match ($this) {
-            self::PENDING, self::CONFIRMED => true,
-            self::COMPLETED, self::CANCELLED, self::NO_SHOW => false,
-        };
-    }
-
-    /**
-     * Verifica se o status é final (não pode ser modificado).
-     */
-    public function isFinal(): bool
-    {
-        return match ($this) {
-            self::COMPLETED, self::CANCELLED, self::NO_SHOW => true,
-            self::PENDING, self::CONFIRMED => false,
-        };
     }
 }

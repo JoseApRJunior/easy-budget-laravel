@@ -2,96 +2,79 @@
 @section('title', 'Faturas')
 
 @php
-    function formatInvoiceStatus($status)
-    {
-        return match ($status) {
-            'pending' => '<span class="badge bg-warning">Pendente</span>',
-            'paid' => '<span class="badge bg-success">Pago</span>',
-            'cancelled' => '<span class="badge bg-secondary">Cancelado</span>',
-            'overdue' => '<span class="badge bg-danger">Vencido</span>',
-            default => '<span class="badge bg-light text-dark">Indefinido</span>',
-        };
-    }
+    // Nenhuma função auxiliar necessária aqui, usamos x-status-badge
 @endphp
 
 @section('content')
     <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-receipt me-2"></i>Faturas
-                </h1>
-                <p class="text-muted">Lista de todas as faturas registradas no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.dashboard') }}">Faturas</a></li>
-                    <li class="breadcrumb-item active">Listar</li>
-                </ol>
-            </nav>
-        </div>
+        <x-page-header
+            title="Faturas"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                'Listar' => '#'
+            ]">
+            <p class="text-muted mb-0">Lista de todas as faturas registradas no sistema</p>
+        </x-page-header>
 
         {{-- Card de Filtros --}}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
+        <x-filter-form :route="route('provider.invoices.index')" id="filtersFormInvoices" :filters="$filters">
+            <div class="col-md-3">
+                <x-filter-field
+                    label="Buscar"
+                    name="search"
+                    id="search"
+                    :value="$filters['search'] ?? ''"
+                    placeholder="Código, cliente..." />
             </div>
-            <div class="card-body">
-                <form method="GET" action="{{ route('provider.invoices.index') }}" class="row g-3">
-                    <div class="col-md-3">
-                        <label for="search" class="form-label">Buscar</label>
-                        <input type="text" class="form-control" name="search" id="search"
-                            value="{{ old('search', $filters['search'] ?? '') }}" placeholder="Código, cliente...">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" name="status" id="status">
-                            <option value="">Todos</option>
-                            @foreach ($statusOptions as $status)
-                                <option value="{{ $status->value }}"
-                                    {{ old('status', $filters['status'] ?? '') == $status->value ? 'selected' : '' }}>
-                                    {{ $status->getDescription() }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="customer_id" class="form-label">Cliente</label>
-                        <select class="form-select" name="customer_id" id="customer_id">
-                            <option value="">Todos</option>
-                            @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}"
-                                    {{ old('customer_id', $filters['customer_id'] ?? '') == $customer->id ? 'selected' : '' }}>
-                                    {{ $customer->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="date_from" class="form-label">Data inicial</label>
-                        <input type="date" class="form-control" name="date_from" id="date_from"
-                            value="{{ old('date_from', $filters['date_from'] ?? '') }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="date_to" class="form-label">Data final</label>
-                        <input type="date" class="form-control" name="date_to" id="date_to"
-                            value="{{ old('date_to', $filters['date_to'] ?? '') }}">
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex gap-2 flex-nowrap">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-search me-1"></i>Filtrar
-                            </button>
-                            <a href="{{ route('provider.invoices.index') }}" class="btn btn-secondary">
-                                <i class="bi bi-x me-1"></i>Limpar
-                            </a>
-                        </div>
-                    </div>
-                </form>
+            <div class="col-md-2">
+                <x-filter-field
+                    label="Status"
+                    name="status"
+                    id="status"
+                    type="select">
+                    <option value="">Todos</option>
+                    @foreach ($statusOptions as $status)
+                        <option value="{{ $status->value }}"
+                            {{ ($filters['status'] ?? '') == $status->value ? 'selected' : '' }}>
+                            {{ $status->getDescription() }}
+                        </option>
+                    @endforeach
+                </x-filter-field>
             </div>
-        </div>
+            <div class="col-md-3">
+                <x-filter-field
+                    label="Cliente"
+                    name="customer_id"
+                    id="customer_id"
+                    type="select">
+                    <option value="">Todos</option>
+                    @foreach ($customers as $customer)
+                        <option value="{{ $customer->id }}"
+                            {{ ($filters['customer_id'] ?? '') == $customer->id ? 'selected' : '' }}>
+                            {{ $customer->name }}
+                        </option>
+                    @endforeach
+                </x-filter-field>
+            </div>
+            <div class="col-md-2">
+                <x-filter-field
+                    label="Período Inicial"
+                    name="date_from"
+                    id="date_from"
+                    type="date"
+                    :value="$filters['date_from'] ?? ''" />
+            </div>
+            <div class="col-md-2">
+                <x-filter-field
+                    label="Período Final"
+                    name="date_to"
+                    id="date_to"
+                    type="date"
+                    :value="$filters['date_to'] ?? ''" />
+            </div>
+        </x-filter-form>
 
         {{-- Card de Tabela --}}
         <div class="card">
@@ -111,10 +94,7 @@
                     </div>
                     <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                         <div class="d-flex justify-content-start justify-content-lg-end">
-                            <a href="{{ route('provider.invoices.create') }}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus"></i>
-                                <span class="ms-1">Novo</span>
-                            </a>
+                            <x-button type="link" :href="route('provider.invoices.create')" variant="primary" size="sm" icon="plus" label="Novo" />
                         </div>
                     </div>
                 </div>
@@ -143,12 +123,12 @@
                                         <td><strong>R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</strong>
                                         </td>
                                         <td>
-                                            {!! formatInvoiceStatus($invoice->status) !!}
+                                            <x-status-badge :item="$invoice" />
                                         </td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1">
                                                 <x-button type="link" :href="route('provider.invoices.show', $invoice->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                @if ($invoice->status === 'pending')
+                                                @if ($invoice->status === 'PENDING')
                                                     <x-button type="link" :href="route('provider.invoices.edit', $invoice->code)" variant="primary" size="sm" icon="pencil" title="Editar" />
                                                 @endif
                                             </div>
@@ -156,9 +136,11 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted">
-                                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                            <br>Nenhuma fatura encontrada.
+                                        <td colspan="6" class="text-center text-muted py-5">
+                                            <x-empty-state
+                                                icon="receipt"
+                                                title="Nenhuma fatura encontrada"
+                                                description="Tente ajustar seus filtros para encontrar o que procura." />
                                         </td>
                                     </tr>
                                 @endforelse
@@ -169,7 +151,7 @@
 
                 {{-- Mobile View --}}
                 <div class="mobile-view">
-                    <div class="list-group">
+                    <div class="list-group list-group-flush">
                         @forelse($invoices as $invoice)
                             <a href="{{ route('provider.invoices.show', $invoice->code) }}"
                                 class="list-group-item list-group-item-action py-3">
@@ -178,7 +160,7 @@
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold mb-2">{{ $invoice->code }}</div>
                                         <div class="d-flex gap-2 flex-wrap mb-2">
-                                            {!! formatInvoiceStatus($invoice->status) !!}
+                                            <x-status-badge :item="$invoice" />
                                         </div>
                                         <div class="small text-muted">
                                             <div>Cliente: {{ $invoice->customer->name ?? 'N/A' }}</div>
@@ -189,9 +171,11 @@
                                 </div>
                             </a>
                         @empty
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                <br>Nenhuma fatura encontrada.
+                            <div class="text-center py-5 text-muted">
+                                <x-empty-state
+                                    icon="receipt"
+                                    title="Nenhuma fatura encontrada"
+                                    description="Tente ajustar seus filtros para encontrar o que procura." />
                             </div>
                         @endforelse
                     </div>

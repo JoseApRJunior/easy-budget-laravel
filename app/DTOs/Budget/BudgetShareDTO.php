@@ -43,13 +43,17 @@ readonly class BudgetShareDTO extends AbstractDTO
         ];
     }
 
-    public static function fromArray(array $data): static
+    public function toDatabaseArray(): array
     {
-        // @phpstan-ignore-next-line
-        return new static(
+        return $this->toArray();
+    }
+
+    public static function fromRequest(array $data): self
+    {
+        return new self(
             budget_id: (int) $data['budget_id'],
             share_token: $data['share_token'],
-            tenant_id: $data['tenant_id'] ?? null,
+            tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null,
             recipient_email: $data['recipient_email'] ?? null,
             recipient_name: $data['recipient_name'] ?? null,
             message: $data['message'] ?? null,
@@ -61,5 +65,11 @@ readonly class BudgetShareDTO extends AbstractDTO
             last_accessed_at: $data['last_accessed_at'] ?? null,
             rejected_at: $data['rejected_at'] ?? null,
         );
+    }
+
+    /** @deprecated Use fromRequest instead */
+    public static function fromArray(array $data): static
+    {
+        return self::fromRequest($data);
     }
 }

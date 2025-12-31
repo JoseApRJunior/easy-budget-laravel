@@ -31,21 +31,21 @@
                 <form id="filtersFormServices" method="GET" action="{{ route('provider.reports.services') }}">
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="start_date">Data Inicial</label>
-                                <input type="text" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') }}" placeholder="DD/MM/AAAA"
-                                    data-mask="00/00/0000">
-                            </div>
+                            <x-filter-field
+                                type="date"
+                                name="start_date"
+                                label="Data Inicial"
+                                :value="request('start_date')"
+                            />
                         </div>
 
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="end_date">Data Final</label>
-                                <input type="text" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') }}" placeholder="DD/MM/AAAA"
-                                    data-mask="00/00/0000">
-                            </div>
+                            <x-filter-field
+                                type="date"
+                                name="end_date"
+                                label="Data Final"
+                                :value="request('end_date')"
+                            />
                         </div>
 
                         <div class="col-md-3">

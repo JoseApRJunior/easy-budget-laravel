@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Report;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class ReportScheduleDTO extends AbstractDTO
@@ -32,8 +33,8 @@ readonly class ReportScheduleDTO extends AbstractDTO
             parameters: is_string($data['parameters'] ?? []) ? json_decode($data['parameters'], true) : ($data['parameters'] ?? []),
             recipients: is_string($data['recipients'] ?? []) ? json_decode($data['recipients'], true) : ($data['recipients'] ?? []),
             is_active: isset($data['is_active']) ? (bool) $data['is_active'] : true,
-            last_run_at: isset($data['last_run_at']) ? Carbon::parse($data['last_run_at']) : null,
-            next_run_at: isset($data['next_run_at']) ? Carbon::parse($data['next_run_at']) : null,
+            last_run_at: DateHelper::toCarbon($data['last_run_at'] ?? null),
+            next_run_at: DateHelper::toCarbon($data['next_run_at'] ?? null),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

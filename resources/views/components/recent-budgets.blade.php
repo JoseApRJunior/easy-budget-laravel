@@ -1,14 +1,5 @@
 @props( [ 'budgets' => [] ] )
 
-@php
-    $statusClass = [
-        'NOVO'         => 'bg-primary',
-        'EM PROGRESSO' => 'bg-warning',
-        'COMPLETADO'   => 'bg-success',
-        'CANCELADO'    => 'bg-danger',
-    ];
-@endphp
-
 <div class="card hover-card mb-4">
     <div class="card-header bg-success">
         <h5 class="card-title mb-0">Orçamentos Recentes</h5>
@@ -26,10 +17,7 @@
                                         <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
                                         <span class="fw-bold">{{ $budget->first_name }} {{ $budget->last_name }}</span>
                                     <span class="badge bg-secondary">{{ $budget->code }}</span>
-                                    <span class="badge" style="background-color: {{ $budget->color }}">
-                                        <i class="bi {{ $budget->icon }}"></i>
-                                        {{ $budget->name }}
-                                    </span>
+                                    <x-status-badge :item="$budget" statusField="status" />
                                 </div>
                             </div>
 

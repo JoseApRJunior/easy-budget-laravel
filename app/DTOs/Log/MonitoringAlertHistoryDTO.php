@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Log;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class MonitoringAlertHistoryDTO extends AbstractDTO
@@ -41,11 +42,11 @@ readonly class MonitoringAlertHistoryDTO extends AbstractDTO
             endpoint: $data['endpoint'] ?? null,
             additional_data: is_string($data['additional_data'] ?? []) ? json_decode($data['additional_data'], true) : ($data['additional_data'] ?? []),
             is_resolved: isset($data['is_resolved']) ? (bool) $data['is_resolved'] : false,
-            resolved_at: isset($data['resolved_at']) ? Carbon::parse($data['resolved_at']) : null,
+            resolved_at: DateHelper::toCarbon($data['resolved_at'] ?? null),
             resolved_by: isset($data['resolved_by']) ? (int) $data['resolved_by'] : null,
             resolution_notes: $data['resolution_notes'] ?? null,
             notification_sent: isset($data['notification_sent']) ? (bool) $data['notification_sent'] : false,
-            notification_sent_at: isset($data['notification_sent_at']) ? Carbon::parse($data['notification_sent_at']) : null,
+            notification_sent_at: DateHelper::toCarbon($data['notification_sent_at'] ?? null),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

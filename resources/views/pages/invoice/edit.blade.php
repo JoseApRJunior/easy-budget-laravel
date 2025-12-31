@@ -2,35 +2,28 @@
 
 @section('title', 'Editar Fatura')
 @section('content')
-    <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Fatura
-                </h1>
-                <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.show', $invoice->code) }}">{{ $invoice->code }}</a></li>
-                    <li class="breadcrumb-item active">Editar</li>
-                </ol>
-            </nav>
-        </div>
+    <x-page-header
+        title="Editar Fatura"
+        icon="pencil-square"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Faturas' => route('provider.invoices.index'),
+            $invoice->code => route('provider.invoices.show', $invoice->code),
+            'Editar' => '#'
+        ]">
+        <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
+    </x-page-header>
 
-        <form action="{{ route('provider.invoices.update', $invoice->code) }}" method="POST" id="invoiceEditForm">
-            @csrf
-            @method('PUT')
+    <form action="{{ route('provider.invoices.update', $invoice->code) }}" method="POST" id="invoiceEditForm">
+        @csrf
+        @method('PUT')
 
             <div class="row g-4">
                 <!-- Dados da Fatura -->
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-primary fw-bold">
                                 <i class="bi bi-receipt-cutoff me-2"></i>Dados da Fatura
                             </h5>
                         </div>
@@ -38,7 +31,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="customer_id" class="form-label">Cliente *</label>
+                                        <label for="customer_id" class="form-label small fw-bold text-muted text-uppercase">Cliente *</label>
                                         <select class="form-select @error('customer_id') is-invalid @enderror"
                                             name="customer_id" id="customer_id" required>
                                             <option value="">Selecione o cliente</option>
@@ -56,7 +49,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="status" class="form-label">Status *</label>
+                                        <label for="status" class="form-label small fw-bold text-muted text-uppercase">Status *</label>
                                         <select class="form-select @error('status') is-invalid @enderror" name="status"
                                             id="status" required>
                                             @foreach ($statusOptions as $status)
@@ -76,7 +69,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="issue_date" class="form-label">Data de Emissão *</label>
+                                        <label for="issue_date" class="form-label small fw-bold text-muted text-uppercase">Data de Emissão *</label>
                                         <input type="date" class="form-control @error('issue_date') is-invalid @enderror"
                                             name="issue_date" id="issue_date"
                                             value="{{ old('issue_date', $invoice->issue_date?->format('Y-m-d')) }}"
@@ -88,7 +81,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="due_date" class="form-label">Data de Vencimento *</label>
+                                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
                                         <input type="date" class="form-control @error('due_date') is-invalid @enderror"
                                             name="due_date" id="due_date"
                                             value="{{ old('due_date', $invoice->due_date?->format('Y-m-d')) }}" required>
@@ -105,8 +98,8 @@
                 <!-- Itens da Fatura -->
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-success fw-bold">
                                 <i class="bi bi-list-check me-2"></i>Itens da Fatura
                             </h5>
                         </div>
@@ -116,19 +109,26 @@
                                     <div class="item-row mb-3 p-3 border rounded" data-item-id="{{ $item->id }}">
                                         <div class="row align-items-end">
                                             <div class="col-md-4">
-                                                <label class="form-label">Produto *</label>
+                                                <label class="form-label small fw-bold text-muted text-uppercase">Produto *</label>
                                                 <select name="items[{{ $loop->index }}][product_id]"
                                                     class="form-select @error('items.' . $loop->index . '.product_id') is-invalid @enderror"
                                                     required>
                                                     <option value="">Selecione o produto</option>
-                                                    <!-- Aqui você pode adicionar os produtos disponíveis -->
+                                                    @foreach (\App\Models\Product::where('active', true)->get() as $product)
+                                                        <option value="{{ $product->id }}"
+                                                            data-price="{{ $product->price }}"
+                                                            {{ old('items.' . $loop->index . '.product_id', $item->product_id) == $product->id ? 'selected' : '' }}>
+                                                            {{ $product->name }} - R$
+                                                            {{ number_format($product->price, 2, ',', '.') }}
+                                                        </option>
+                                                    @endforeach
                                                 </select>
                                                 @error('items.' . $loop->index . '.product_id')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Quantidade *</label>
+                                                <label class="form-label small fw-bold text-muted text-uppercase">Quantidade *</label>
                                                 <input type="number" name="items[{{ $loop->index }}][quantity]"
                                                     class="form-control quantity-input @error('items.' . $loop->index . '.quantity') is-invalid @enderror"
                                                     value="{{ old('items.' . $loop->index . '.quantity', $item->quantity) }}"
@@ -138,7 +138,7 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label">Valor Unit. *</label>
+                                                <label class="form-label small fw-bold text-muted text-uppercase">Valor Unit. *</label>
                                                 <input type="number" name="items[{{ $loop->index }}][unit_value]"
                                                     class="form-control unit-value-input @error('items.' . $loop->index . '.unit_value') is-invalid @enderror"
                                                     value="{{ old('items.' . $loop->index . '.unit_value', $item->unit_value) }}"
@@ -148,7 +148,7 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label">Total</label>
+                                                <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
                                                 <input type="text" class="form-control total-display"
                                                     value="R$ {{ number_format($item->total, 2, ',', '.') }}" readonly>
                                             </div>
@@ -166,9 +166,7 @@
                                 @endforeach
                             </div>
 
-                            <button type="button" class="btn btn-outline-success btn-sm" id="addItemBtn">
-                                <i class="bi bi-plus-circle me-1"></i>Adicionar Item
-                            </button>
+                            <x-button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
                         </div>
                     </div>
                 </div>
@@ -179,17 +177,17 @@
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title">Resumo da Fatura</h5>
-                            <div class="d-flex justify-content-between">
+                            <h5 class="card-title small fw-bold text-muted text-uppercase mb-3">Resumo da Fatura</h5>
+                            <div class="d-flex justify-content-between mb-2">
                                 <span>Subtotal:</span>
-                                <span id="subtotal">R$ 0,00</span>
+                                <span id="subtotal" class="fw-bold">R$ 0,00</span>
                             </div>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between mb-2">
                                 <span>Desconto:</span>
-                                <span id="discount">R$ 0,00</span>
+                                <span id="discount" class="fw-bold">R$ 0,00</span>
                             </div>
                             <hr>
-                            <div class="d-flex justify-content-between fw-bold">
+                            <div class="d-flex justify-content-between fw-bold fs-5 text-primary">
                                 <span>Total:</span>
                                 <span id="grandTotal">R$ 0,00</span>
                             </div>
@@ -200,14 +198,8 @@
 
             {{-- Botões de Ação (Footer) --}}
             <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <a href="{{ url()->previous(route('provider.invoices.index')) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Cancelar
-                    </a>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Salvar
-                </button>
+                <x-button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
+                <x-button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
             </div>
         </form>
     </div>

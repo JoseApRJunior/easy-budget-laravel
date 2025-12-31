@@ -79,6 +79,29 @@ trait RepositoryFiltersTrait
     }
 
     /**
+     * Aplica filtros de intervalo de data de forma consistente e robusta.
+     * Suporta os formatos [date_from, date_to], [start_date, end_date] ou chaves customizadas.
+     *
+     * @param  Builder  $query  A query do Eloquent
+     * @param  array  $filters  Os filtros recebidos
+     * @param  string  $column  A coluna do banco de dados (ex: 'created_at', 'due_date')
+     * @param  string|null  $paramFrom  O nome do parâmetro 'de' (opcional)
+     * @param  string|null  $paramTo  O nome do parâmetro 'até' (opcional)
+     */
+    public function applyDateRangeFilter(Builder $query, array $filters, string $column = 'created_at', ?string $paramFrom = null, ?string $paramTo = null): Builder
+    {
+        // Se paramFrom e paramTo não forem passados, tentamos os padrões
+        $from = $paramFrom ? ($filters[$paramFrom] ?? null) : ($filters['date_from'] ?? ($filters['start_date'] ?? ($filters['date_start'] ?? null)));
+        $to = $paramTo ? ($filters[$paramTo] ?? null) : ($filters['date_to'] ?? ($filters['end_date'] ?? ($filters['date_end'] ?? null)));
+
+        $startCarbon = \App\Helpers\DateHelper::toCarbon($from);
+        $endCarbon = \App\Helpers\DateHelper::toCarbon($to);
+
+        return $query->when($startCarbon, fn ($q) => $q->where($column, '>=', $startCarbon->startOfDay()))
+            ->when($endCarbon, fn ($q) => $q->where($column, '<=', $endCarbon->endOfDay()));
+    }
+
+    /**
      * Valida se um campo existe no modelo antes de aplicar filtro.
      */
     protected function isValidField(string $field): bool
@@ -207,22 +230,5 @@ trait RepositoryFiltersTrait
         $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
 
         return $query->where($fieldName, $boolValue);
-    }
-
-    /**
-     * Aplica filtro de intervalo de datas.
-     */
-    public function applyDateRangeFilter(
-        Builder $query,
-        array $filters,
-        string $fieldName,
-        string $startKey = 'date_start',
-        string $endKey = 'date_end'
-    ): Builder {
-        $startDate = $filters[$startKey] ?? null;
-        $endDate = $filters[$endKey] ?? null;
-
-        return $query->when($startDate, fn ($q) => $q->where($fieldName, '>=', $startDate . ' 00:00:00'))
-            ->when($endDate, fn ($q) => $q->where($fieldName, '<=', $endDate . ' 23:59:59'));
     }
 }

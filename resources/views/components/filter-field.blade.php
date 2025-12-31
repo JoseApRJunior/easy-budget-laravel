@@ -58,13 +58,11 @@
         @elseif($type === 'date')
             {{-- Campo de Data --}}
             <input
-                type="text"
+                type="date"
                 class="form-control"
                 id="{{ $name }}"
                 name="{{ $name }}"
                 value="{{ $fieldValue }}"
-                placeholder="{{ $placeholder ?: 'DD/MM/AAAA' }}"
-                data-mask="{{ $mask ?: '00/00/0000' }}"
                 {{ $required ? 'required' : '' }}
                 {{ $attributes }}
             >

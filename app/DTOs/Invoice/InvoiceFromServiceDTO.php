@@ -6,6 +6,7 @@ namespace App\DTOs\Invoice;
 
 use App\DTOs\AbstractDTO;
 use App\Enums\InvoiceStatus;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class InvoiceFromServiceDTO extends AbstractDTO
@@ -26,8 +27,8 @@ readonly class InvoiceFromServiceDTO extends AbstractDTO
     {
         return new self(
             service_code: $data['service_code'] ?? '',
-            issue_date: isset($data['issue_date']) ? Carbon::parse($data['issue_date']) : null,
-            due_date: isset($data['due_date']) ? Carbon::parse($data['due_date']) : null,
+            issue_date: DateHelper::toCarbon($data['issue_date'] ?? null),
+            due_date: DateHelper::toCarbon($data['due_date'] ?? null),
             notes: $data['notes'] ?? null,
             items: $data['items'] ?? null,
             is_automatic: (bool) ($data['is_automatic'] ?? true),
@@ -50,5 +51,13 @@ readonly class InvoiceFromServiceDTO extends AbstractDTO
             'discount' => $this->discount,
             'tenant_id' => $this->tenant_id,
         ];
+    }
+
+    public function toDatabaseArray(): array
+    {
+        $data = $this->toArray();
+        unset($data['service_code'], $data['items'], $data['is_automatic']);
+
+        return $data;
     }
 }

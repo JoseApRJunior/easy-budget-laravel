@@ -129,12 +129,7 @@ class InventoryRepository extends AbstractTenantRepository
         // Filtro por período (via movimentos de inventário)
         if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
             $query->whereHas('product.inventoryMovements', function ($q) use ($filters) {
-                if (! empty($filters['start_date'])) {
-                    $q->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
-                }
-                if (! empty($filters['end_date'])) {
-                    $q->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
-                }
+                $this->applyDateRangeFilter($q, $filters, 'created_at', 'start_date', 'end_date');
             });
         }
 
@@ -214,12 +209,7 @@ class InventoryRepository extends AbstractTenantRepository
         // Filtro por período (via movimentos de inventário)
         if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
             $query->whereHas('product.inventoryMovements', function ($q) use ($filters) {
-                if (! empty($filters['start_date'])) {
-                    $q->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
-                }
-                if (! empty($filters['end_date'])) {
-                    $q->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
-                }
+                $this->applyDateRangeFilter($q, $filters, 'created_at', 'start_date', 'end_date');
             });
         }
 
@@ -350,12 +340,7 @@ class InventoryRepository extends AbstractTenantRepository
         // Filtro por período (via movimentos de inventário)
         if (! empty($filters['start_date']) || ! empty($filters['end_date'])) {
             $query->whereHas('product.inventoryMovements', function ($q) use ($filters) {
-                if (! empty($filters['start_date'])) {
-                    $q->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
-                }
-                if (! empty($filters['end_date'])) {
-                    $q->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
-                }
+                $this->applyDateRangeFilter($q, $filters, 'created_at', 'start_date', 'end_date');
             });
         }
 

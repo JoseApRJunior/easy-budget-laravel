@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Budget;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class BudgetActionHistoryDTO extends AbstractDTO
@@ -27,7 +28,7 @@ readonly class BudgetActionHistoryDTO extends AbstractDTO
             action: $data['action'],
             description: $data['description'] ?? null,
             changes: is_string($data['changes'] ?? []) ? json_decode($data['changes'], true) : ($data['changes'] ?? []),
-            created_at: isset($data['created_at']) ? Carbon::parse($data['created_at']) : now(),
+            created_at: DateHelper::toCarbon($data['created_at'] ?? null) ?? now(),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

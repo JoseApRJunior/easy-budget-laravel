@@ -6,6 +6,7 @@ namespace App\DTOs\Service;
 
 use App\DTOs\AbstractDTO;
 use App\Enums\ServiceStatus;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class ServiceDTO extends AbstractDTO
@@ -34,7 +35,7 @@ readonly class ServiceDTO extends AbstractDTO
             description: $data['description'] ?? null,
             discount: (float) ($data['discount'] ?? 0.0),
             total: (float) ($data['total'] ?? 0.0),
-            due_date: isset($data['due_date']) ? Carbon::parse($data['due_date']) : null,
+            due_date: DateHelper::toCarbon($data['due_date'] ?? null),
             reason: $data['reason'] ?? null,
             items: array_map(fn ($item) => ServiceItemDTO::fromRequest($item), $data['items'] ?? []),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null

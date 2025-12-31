@@ -7,6 +7,8 @@ namespace App\DTOs\Product;
 use App\DTOs\AbstractDTO;
 use App\Helpers\CurrencyHelper;
 
+use App\Helpers\DateHelper;
+
 /**
  * DTO para filtragem de Produtos.
  * Agrupa critérios de busca e parâmetros de paginação.
@@ -38,8 +40,8 @@ readonly class ProductFilterDTO extends AbstractDTO
             category: $data['category'] ?? null,
             min_price: isset($data['min_price']) && $data['min_price'] !== '' ? CurrencyHelper::unformat($data['min_price']) : null,
             max_price: isset($data['max_price']) && $data['max_price'] !== '' ? CurrencyHelper::unformat($data['max_price']) : null,
-            start_date: $data['start_date'] ?? null,
-            end_date: $data['end_date'] ?? null,
+            start_date: DateHelper::parseDate($data['start_date'] ?? null),
+            end_date: DateHelper::parseDate($data['end_date'] ?? null),
             all: filter_var($data['all'] ?? false, FILTER_VALIDATE_BOOLEAN),
             per_page: (int) ($data['per_page'] ?? 10),
         );

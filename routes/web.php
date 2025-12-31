@@ -316,6 +316,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::post('/{code}/change-status', [BudgetController::class, 'changeStatus'])->name('change-status');
         Route::delete('/{code}', [BudgetController::class, 'destroy'])->name('destroy');
         Route::get('/{code}/print', [BudgetController::class, 'print'])->name('print');
+        Route::get('/{code}/export-xlsx', [BudgetController::class, 'exportXlsx'])->name('export-xlsx');
         Route::get('/{code}/services/create', [ServiceController::class, 'create'])->name('services.create');
     });
 

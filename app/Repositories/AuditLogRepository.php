@@ -7,7 +7,6 @@ namespace App\Repositories;
 use App\DTOs\AuditLog\AuditLogDTO;
 use App\Models\AuditLog;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -46,6 +45,8 @@ class AuditLogRepository extends AbstractTenantRepository
     public function getFiltered(array $filters = [], int $perPage = 50): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
         $query = $this->model->with(['user', 'tenant']);
+
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
 
         return $this->applyFilters($query, $filters)
             ->latest()

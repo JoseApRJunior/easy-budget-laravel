@@ -44,20 +44,22 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Período Inicial <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="start_date" name="start_date"
-                                    value="{{ $startDate ?? '' }}" placeholder="DD/MM/AAAA"
-                                    data-mask="00/00/0000" >
-                            </div>
+                            <x-filter-field
+                                type="date"
+                                name="start_date"
+                                id="start_date"
+                                label="Período Inicial"
+                                :value="$startDate ?? request('start_date')"
+                            />
                         </div>
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Período Final <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="end_date" name="end_date"
-                                    value="{{ $endDate ?? '' }}" placeholder="DD/MM/AAAA"
-                                    data-mask="00/00/0000" >
-                            </div>
+                            <x-filter-field
+                                type="date"
+                                name="end_date"
+                                id="end_date"
+                                label="Período Final"
+                                :value="$endDate ?? request('end_date')"
+                            />
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
@@ -224,13 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (!form || !startDate || !endDate) return;
 
-    if (typeof VanillaMask !== 'undefined') {
-        new VanillaMask('start_date', 'date');
-        new VanillaMask('end_date', 'date');
-    }
-
     const parseDate = (str) => {
         if (!str) return null;
+        // Suporta YYYY-MM-DD (input date) ou DD/MM/AAAA (antigo)
+        if (str.includes('-')) {
+            const d = new Date(str + 'T00:00:00');
+            return isNaN(d.getTime()) ? null : d;
+        }
         const parts = str.split('/');
         if (parts.length === 3) {
             const d = new Date(parts[2], parts[1] - 1, parts[0]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Budget;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class BudgetVersionDTO extends AbstractDTO
@@ -31,7 +32,7 @@ readonly class BudgetVersionDTO extends AbstractDTO
             budget_data: is_string($data['budget_data']) ? json_decode($data['budget_data'], true) : ($data['budget_data'] ?? []),
             items_data: is_string($data['items_data']) ? json_decode($data['items_data'], true) : ($data['items_data'] ?? []),
             version_total: (float) $data['version_total'],
-            version_date: isset($data['version_date']) ? Carbon::parse($data['version_date']) : now(),
+            version_date: DateHelper::toCarbon($data['version_date'] ?? null) ?? now(),
             changes_description: $data['changes_description'] ?? null,
             is_current: isset($data['is_current']) ? (bool) $data['is_current'] : false,
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null

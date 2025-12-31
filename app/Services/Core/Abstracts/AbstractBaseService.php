@@ -81,6 +81,24 @@ abstract class AbstractBaseService implements CrudServiceInterface
         });
     }
 
+    public function paginate(array $filters = [], int $perPage = 15, array $with = []): ServiceResult
+    {
+        return $this->safeExecute(function () use ($filters, $perPage, $with) {
+            $orderBy = $this->extractOrderByFromFilters($filters);
+
+            if ($this->repository instanceof TenantRepositoryInterface) {
+                return $this->repository->getPaginated($filters, $perPage, $with, $orderBy);
+            }
+
+            // Fallback para repositórios que não são tenant mas podem ter paginação
+            if (method_exists($this->repository, 'getPaginated')) {
+                return $this->repository->getPaginated($filters, $perPage, $with, $orderBy);
+            }
+
+            return $this->error(OperationStatus::ERROR, 'Este repositório não suporta paginação.');
+        });
+    }
+
     public function count(array $filters = []): ServiceResult
     {
         return $this->safeExecute(function () use ($filters) {

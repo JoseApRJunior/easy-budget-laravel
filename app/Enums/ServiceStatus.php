@@ -7,47 +7,108 @@ namespace App\Enums;
 enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
     /** Serviço em elaboração, permite modificações */
-    case DRAFT = 'DRAFT';
+    case DRAFT = 'draft';
 
     /** Serviço pendente de agendamento */
-    case PENDING = 'PENDING';
+    case PENDING = 'pending';
 
     /** Serviço em processo de agendamento */
-    case SCHEDULING = 'SCHEDULING';
+    case SCHEDULING = 'scheduling';
 
     /** Serviço em preparação */
-    case PREPARING = 'PREPARING';
+    case PREPARING = 'preparing';
 
     /** Serviço em andamento */
-    case IN_PROGRESS = 'IN_PROGRESS';
+    case IN_PROGRESS = 'in_progress';
 
     /** Serviço em espera/pausado */
-    case ON_HOLD = 'ON_HOLD';
+    case ON_HOLD = 'on_hold';
 
     /** Serviço agendado */
-    case SCHEDULED = 'SCHEDULED';
+    case SCHEDULED = 'scheduled';
 
     /** Serviço concluído */
-    case COMPLETED = 'COMPLETED';
+    case COMPLETED = 'completed';
 
     /** Serviço concluído parcialmente */
-    case PARTIAL = 'PARTIAL';
+    case PARTIAL = 'partial';
 
     /** Serviço cancelado */
-    case CANCELLED = 'CANCELLED';
+    case CANCELLED = 'cancelled';
 
     /** Serviço não realizado */
-    case NOT_PERFORMED = 'NOT_PERFORMED';
+    case NOT_PERFORMED = 'not_performed';
 
     /** Serviço expirado */
-    case EXPIRED = 'EXPIRED';
+    case EXPIRED = 'expired';
 
     /** Status de aprovação para clientes */
     case APPROVED = 'approved';
+
+    /** Status de rejeição para clientes */
     case REJECTED = 'rejected';
 
     /**
-     * Retorna uma descrição para cada status
+     * Retorna todos os valores do enum
+     */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+    /**
+     * Retorna opções para select [value => label]
+     */
+    public static function options(): array
+    {
+        $options = [];
+        foreach (self::cases() as $case) {
+            $options[$case->value] = $case->label();
+        }
+        return $options;
+    }
+
+    /**
+     * Retorna todos os labels
+     */
+    public static function labels(): array
+    {
+        return array_map(fn($case) => $case->label(), self::cases());
+    }
+
+    /**
+     * Verifica se um valor é válido
+     */
+    public static function isValid(string $value): bool
+    {
+        return in_array($value, self::values(), true);
+    }
+
+    /**
+     * Retorna o label do status
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::DRAFT => 'Rascunho',
+            self::PENDING => 'Pendente',
+            self::SCHEDULING => 'Agendando',
+            self::PREPARING => 'Preparando',
+            self::IN_PROGRESS => 'Em Andamento',
+            self::ON_HOLD => 'Em Espera',
+            self::SCHEDULED => 'Agendado',
+            self::COMPLETED => 'Concluído',
+            self::PARTIAL => 'Parcial',
+            self::CANCELLED => 'Cancelado',
+            self::NOT_PERFORMED => 'Não Realizado',
+            self::EXPIRED => 'Expirado',
+            self::APPROVED => 'Aprovado',
+            self::REJECTED => 'Rejeitado',
+        };
+    }
+
+    /**
+     * Retorna a descrição detalhada
      */
     public function getDescription(): string
     {
@@ -64,65 +125,90 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::CANCELLED => 'Serviço cancelado',
             self::NOT_PERFORMED => 'Serviço não realizado',
             self::EXPIRED => 'Serviço expirado',
-            self::APPROVED => 'Aprovado',
-            self::REJECTED => 'Rejeitado',
+            self::APPROVED => 'Aprovado pelo cliente',
+            self::REJECTED => 'Rejeitado pelo cliente',
         };
     }
 
     /**
-     * Retorna a cor associada a cada status para interface
-     *
-     * @return string Cor em formato hexadecimal
+     * Retorna a cor associada (Tailwind classes ou Hex)
+     */
+    public function color(): string
+    {
+        return match ($this) {
+            self::DRAFT => 'gray',
+            self::PENDING => 'warning',
+            self::SCHEDULING => 'info',
+            self::PREPARING => 'warning',
+            self::IN_PROGRESS => 'primary',
+            self::ON_HOLD => 'secondary',
+            self::SCHEDULED => 'info',
+            self::COMPLETED => 'success',
+            self::PARTIAL => 'success',
+            self::CANCELLED => 'danger',
+            self::NOT_PERFORMED => 'danger',
+            self::EXPIRED => 'danger',
+            self::APPROVED => 'success',
+            self::REJECTED => 'danger',
+        };
+    }
+
+    /**
+     * Retorna a cor Hexadecimal (legado)
      */
     public function getColor(): string
     {
         return match ($this) {
-            self::DRAFT => '#6c757d', // Cinza
-            self::PENDING => '#ffc107', // Amarelo
-            self::SCHEDULING => '#007bff', // Azul
-            self::PREPARING => '#ffc107', // Amarelo
-            self::IN_PROGRESS => '#007bff', // Azul
-            self::ON_HOLD => '#6c757d', // Cinza
-            self::SCHEDULED => '#007bff', // Azul
-            self::COMPLETED => '#28a745', // Verde
-            self::PARTIAL => '#28a745', // Verde
-            self::CANCELLED => '#dc3545', // Vermelho
-            self::NOT_PERFORMED => '#dc3545', // Vermelho
-            self::EXPIRED => '#dc3545', // Vermelho
-            self::APPROVED => '#10B981', // Verde
-            self::REJECTED => '#DC2626', // Vermelho
+            self::DRAFT => '#6c757d',
+            self::PENDING => '#ffc107',
+            self::SCHEDULING => '#007bff',
+            self::PREPARING => '#ffc107',
+            self::IN_PROGRESS => '#007bff',
+            self::ON_HOLD => '#6c757d',
+            self::SCHEDULED => '#007bff',
+            self::COMPLETED => '#28a745',
+            self::PARTIAL => '#28a745',
+            self::CANCELLED => '#dc3545',
+            self::NOT_PERFORMED => '#dc3545',
+            self::EXPIRED => '#dc3545',
+            self::APPROVED => '#10B981',
+            self::REJECTED => '#DC2626',
         };
     }
 
     /**
-     * Retorna o ícone associado a cada status
-     *
-     * @return string Nome do ícone para interface (Bootstrap Icons)
+     * Retorna o ícone associado
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::DRAFT => 'pencil-square',
+            self::PENDING => 'clock',
+            self::SCHEDULING => 'calendar-check',
+            self::PREPARING => 'tools',
+            self::IN_PROGRESS => 'gear',
+            self::ON_HOLD => 'pause-circle',
+            self::SCHEDULED => 'calendar-plus',
+            self::COMPLETED => 'check-circle',
+            self::PARTIAL => 'check-circle-fill',
+            self::CANCELLED => 'x-circle',
+            self::NOT_PERFORMED => 'slash-circle',
+            self::EXPIRED => 'calendar-x',
+            self::APPROVED => 'check-circle',
+            self::REJECTED => 'x-circle',
+        };
+    }
+
+    /**
+     * Retorna o ícone (Bootstrap Icons prefixado)
      */
     public function getIcon(): string
     {
-        return match ($this) {
-            self::DRAFT => 'bi-pencil-square',
-            self::PENDING => 'bi-clock',
-            self::SCHEDULING => 'bi-calendar-check',
-            self::PREPARING => 'bi-tools',
-            self::IN_PROGRESS => 'bi-gear',
-            self::ON_HOLD => 'bi-pause-circle',
-            self::SCHEDULED => 'bi-calendar-plus',
-            self::COMPLETED => 'bi-check-circle',
-            self::PARTIAL => 'bi-check-circle-fill',
-            self::CANCELLED => 'bi-x-circle',
-            self::NOT_PERFORMED => 'bi-slash-circle',
-            self::EXPIRED => 'bi-calendar-x',
-            self::APPROVED => 'bi-check-circle',
-            self::REJECTED => 'bi-x-circle',
-        };
+        return 'bi-' . $this->icon();
     }
 
     /**
      * Verifica se o status indica que o serviço está ativo
-     *
-     * @return bool True se o serviço estiver ativo
      */
     public function isActive(): bool
     {
@@ -136,8 +222,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     /**
      * Verifica se o status indica que o serviço foi finalizado
-     *
-     * @return bool True se o serviço estiver finalizado
      */
     public function isFinished(): bool
     {
@@ -151,8 +235,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     /**
      * Verifica se o status indica que o serviço pode ser executado
-     *
-     * @return bool True se o serviço estiver em estado executável
      */
     public function isExecutable(): bool
     {
@@ -172,9 +254,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         return match ($this) {
             self::DRAFT, self::SCHEDULED, self::PREPARING, self::ON_HOLD,
             self::IN_PROGRESS, self::PARTIAL => true,
-            self::APPROVED, self::REJECTED, self::COMPLETED,
-            self::CANCELLED, self::PENDING,
-            self::SCHEDULING, self::NOT_PERFORMED, self::EXPIRED => false,
+            default => false,
         };
     }
 
@@ -202,35 +282,27 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     }
 
     /**
-     * Retorna a prioridade do status para ordenação
+     * Retorna metadados do status
      */
-    public function getPriorityOrder(): int
+    public function getMetadata(): array
     {
-        return $this->getOrderIndex();
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     *
-     * @param  string  $value  Valor do status
-     * @return self|null Instância do enum ou null se inválido
-     */
-    public static function fromString(string $value): ?self
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
-            }
-        }
-
-        return null;
+        return [
+            'label' => $this->label(),
+            'description' => $this->getDescription(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
+            'is_executable' => $this->isExecutable(),
+            'can_edit' => $this->canEdit(),
+            'order_index' => $this->getOrderIndex(),
+        ];
     }
 
     /**
      * Retorna as transições permitidas para um status
-     *
-     * @param  string  $currentStatus  Status atual
-     * @return array Array de status permitidos
      */
     public static function getAllowedTransitions(string $currentStatus): array
     {
@@ -244,14 +316,12 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::ON_HOLD->value => [self::SCHEDULED->value, self::PREPARING->value, self::IN_PROGRESS->value, self::CANCELLED->value],
             self::CANCELLED->value => [self::DRAFT->value],
             self::EXPIRED->value => [self::DRAFT->value],
-            default => [], // Status finais não têm transições
+            default => [],
         };
     }
 
     /**
      * Retorna todos os status finais
-     *
-     * @return array Array de status finais
      */
     public static function getFinalStatuses(): array
     {
@@ -267,36 +337,28 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     }
 
     /**
-     * Retorna metadados completos do status
-     *
-     * @return array<string, mixed> Array com descrição, cor, ícone e flags
+     * Cria instância do enum a partir de string
      */
-    public function getMetadata(): array
+    public static function fromString(string $value): ?self
     {
-        return [
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'icon' => $this->getIcon(),
-            'isActive' => $this->isActive(),
-            'isFinished' => $this->isFinished(),
-        ];
+        try {
+            return self::from($value);
+        } catch (\ValueError $e) {
+            return null;
+        }
     }
 
     /**
      * Retorna opções formatadas para uso em formulários/selects
-     *
-     * @param  bool  $includeFinished  Incluir status finalizados
-     * @return array<string, string> Array associativo [valor => descrição]
      */
     public static function getOptions(bool $includeFinished = true): array
     {
         $options = [];
-
         foreach (self::cases() as $case) {
             if (! $includeFinished && $case->isFinished()) {
                 continue;
             }
-            $options[$case->value] = $case->getDescription();
+            $options[$case->value] = $case->label();
         }
 
         return $options;
@@ -304,58 +366,69 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     /**
      * Ordena status por prioridade para exibição
-     *
-     * @param  bool  $includeFinished  Incluir status finalizados na ordenação
-     * @return array<self> Status ordenados por prioridade
      */
     public static function getOrdered(bool $includeFinished = true): array
     {
-        $statuses = collect(self::cases())
-            ->sortBy(function (self $case) {
-                return $case->getPriorityOrder();
-            })
-            ->values()
-            ->toArray();
+        $cases = self::cases();
 
         if (! $includeFinished) {
-            $statuses = array_filter($statuses, function (self $case) {
-                return ! $case->isFinished();
-            });
+            $cases = array_filter($cases, fn ($case) => ! $case->isFinished());
         }
 
-        return array_values($statuses);
+        usort($cases, function ($a, $b) {
+            return $a->getOrderIndex() <=> $b->getOrderIndex();
+        });
+
+        return array_values($cases);
     }
 
     /**
      * Calcula métricas de status para dashboards
-     *
-     * @param  array<self>  $statuses  Lista de status para análise
-     * @return array<string, mixed> Métricas calculadas
      */
     public static function calculateMetrics(array $statuses): array
     {
         $total = count($statuses);
-        $active = 0;
-        $finished = 0;
-        $statusCounts = [];
+        if ($total === 0) {
+            return [
+                'total' => 0,
+                'active' => 0,
+                'finished' => 0,
+                'percentages' => [],
+            ];
+        }
+
+        $counts = [];
+        $activeCount = 0;
+        $finishedCount = 0;
 
         foreach ($statuses as $status) {
-            if ($status->isActive()) {
-                $active++;
-            }
-            if ($status->isFinished()) {
-                $finished++;
+            $statusEnum = $status instanceof self ? $status : self::fromString((string) $status);
+            if (! $statusEnum) {
+                continue;
             }
 
-            $statusCounts[$status->value] = ($statusCounts[$status->value] ?? 0) + 1;
+            $counts[$statusEnum->value] = ($counts[$statusEnum->value] ?? 0) + 1;
+
+            if ($statusEnum->isActive()) {
+                $activeCount++;
+            }
+
+            if ($statusEnum->isFinished()) {
+                $finishedCount++;
+            }
+        }
+
+        $percentages = [];
+        foreach ($counts as $value => $count) {
+            $percentages[$value] = round(($count / $total) * 100, 1);
         }
 
         return [
             'total' => $total,
-            'active' => $active,
-            'finished' => $finished,
-            'status_distribution' => $statusCounts,
-            'completion_rate' => $total > 0 ? round(($finished / $total) * 100, 2) : 0,
+            'active' => $activeCount,
+            'finished' => $finishedCount,
+            'percentages' => $percentages,
+            'counts' => $counts,
         ];
     }
 }

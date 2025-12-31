@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Tenant;
 use App\Services\Admin\FinancialControlService;
@@ -41,8 +42,8 @@ class FinancialControlController extends Controller
     public function reports(Request $request): View
     {
         $filters = [
-            'start_date' => $request->get('start_date') ? Carbon::parse($request->get('start_date')) : null,
-            'end_date' => $request->get('end_date') ? Carbon::parse($request->get('end_date')) : null,
+            'start_date' => DateHelper::toCarbon($request->get('start_date')),
+            'end_date' => DateHelper::toCarbon($request->get('end_date')),
             'tenant_id' => $request->get('tenant_id'),
         ];
 
@@ -65,8 +66,8 @@ class FinancialControlController extends Controller
     public function exportReports(Request $request): Response
     {
         $filters = [
-            'start_date' => $request->get('start_date') ? Carbon::parse($request->get('start_date')) : null,
-            'end_date' => $request->get('end_date') ? Carbon::parse($request->get('end_date')) : null,
+            'start_date' => DateHelper::toCarbon($request->get('start_date')),
+            'end_date' => DateHelper::toCarbon($request->get('end_date')),
             'tenant_id' => $request->get('tenant_id'),
         ];
 

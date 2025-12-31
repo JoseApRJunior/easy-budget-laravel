@@ -140,8 +140,8 @@ readonly class CustomerFilterDTO extends AbstractDTO
             'cpf' => $this->cpf,
             'cnpj' => $this->cnpj,
             'phone' => $this->phone,
-            'start_date' => $this->start_date ? \Carbon\Carbon::parse($this->start_date)->format('d/m/Y') : null,
-            'end_date' => $this->end_date ? \Carbon\Carbon::parse($this->end_date)->format('d/m/Y') : null,
+            'start_date' => $this->start_date ? \Carbon\Carbon::parse($this->start_date)->format('Y-m-d') : null,
+            'end_date' => $this->end_date ? \Carbon\Carbon::parse($this->end_date)->format('Y-m-d') : null,
             'all' => $this->all,
             'per_page' => $this->per_page,
         ];

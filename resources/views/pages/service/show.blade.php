@@ -1,25 +1,18 @@
 @extends('layouts.app')
 @section('title', 'Detalhes do Serviço')
 @section('content')
-    <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-gear me-2"></i>Detalhes do Serviço
-                </h1>
-                <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                    <li class="breadcrumb-item active">{{ $service->code }}</li>
-                </ol>
-            </nav>
-        </div>
+    <x-page-header
+        title="Detalhes do Serviço"
+        icon="gear"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Serviços' => route('provider.services.index'),
+            $service->code => '#'
+        ]">
+        <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
+    </x-page-header>
 
-        {{-- Alerta de Faturas Existentes --}}
+    {{-- Alerta de Faturas Existentes --}}
         @if ($service->invoices && $service->invoices->count() > 0)
             <div class="alert alert-info alert-dismissible fade show" role="alert">
                 <i class="bi bi-info-circle me-2"></i>
@@ -42,18 +35,7 @@
                                 <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
                             </div>
                             <div>
-                                @php($statusEnum = $service->serviceStatus)
-                                @if ($statusEnum)
-                                    <span class="badge px-3 py-2" style="background-color: {{ $statusEnum->getColor() }}">
-                                        <i class="bi {{ $statusEnum->getIcon() }} me-1"></i>
-                                        {{ $statusEnum->getDescription() }}
-                                    </span>
-                                @else
-                                    <span class="badge bg-secondary px-3 py-2">
-                                        <i class="bi bi-circle me-1"></i>
-                                        Status não definido
-                                    </span>
-                                @endif
+                                <x-status-badge :item="$service" statusField="status" />
                             </div>
                         </div>
                     </div>
@@ -65,21 +47,21 @@
                                     <i class="bi bi-tag me-2"></i>
                                     Informações Gerais
                                 </h6>
-                                <div class="mb-2">
-                                    <strong>Categoria:</strong>
-                                    <span class="text-muted">{{ $service->category?->name ?? 'Não definida' }}</span>
+                                <div class="mb-3">
+                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Categoria</small>
+                                    <span class="text-dark fw-bold">{{ $service->category?->name ?? 'Não definida' }}</span>
                                 </div>
-                                <div class="mb-2">
-                                    <strong>Orçamento:</strong>
+                                <div class="mb-3">
+                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Orçamento</small>
                                     <a href="{{ route('provider.budgets.show', $service->budget?->code) }}"
-                                        class="text-decoration-none">
+                                        class="text-decoration-none fw-bold">
                                         {{ $service->budget?->code ?? 'N/A' }}
                                     </a>
                                 </div>
                                 @if ($service->due_date)
-                                    <div class="mb-2">
-                                        <strong>Prazo:</strong>
-                                        <span class="text-muted">
+                                    <div class="mb-3">
+                                        <small class="small fw-bold text-muted text-uppercase d-block mb-1">Prazo</small>
+                                        <span class="text-dark fw-bold">
                                             {{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}
                                         </span>
                                     </div>
@@ -90,19 +72,19 @@
                                     <i class="bi bi-currency-dollar me-2"></i>
                                     Valores
                                 </h6>
-                                <div class="mb-2">
-                                    <strong>Total:</strong>
-                                    <span class="text-success fs-5">R$
+                                <div class="mb-3">
+                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Total</small>
+                                    <span class="text-success fw-bold fs-5">R$
                                         {{ number_format($service->total, 2, ',', '.') }}</span>
                                 </div>
-                                <div class="mb-2">
-                                    <strong>Desconto:</strong>
-                                    <span class="text-danger">R$
+                                <div class="mb-3">
+                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Desconto</small>
+                                    <span class="text-danger fw-bold">R$
                                         {{ number_format($service->discount, 2, ',', '.') }}</span>
                                 </div>
-                                <div class="mb-2">
-                                    <strong>Subtotal:</strong>
-                                    <span class="text-muted">R$
+                                <div class="mb-3">
+                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Subtotal</small>
+                                    <span class="text-dark fw-bold">R$
                                         {{ number_format($service->total + $service->discount, 2, ',', '.') }}</span>
                                 </div>
                             </div>
@@ -409,7 +391,6 @@
                     </div>
                 </div>
             </div>
-        </div>
     </div>
 @endsection
 

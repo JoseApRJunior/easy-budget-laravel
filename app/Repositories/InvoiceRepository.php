@@ -97,13 +97,8 @@ class InvoiceRepository extends AbstractTenantRepository
         $this->applyBooleanFilter($query, $filters, 'status', 'status');
         $this->applyBooleanFilter($query, $filters, 'customer_id', 'customer_id');
 
-        if (! empty($filters['date_from'])) {
-            $query->whereDate('due_date', '>=', $filters['date_from']);
-        }
-
-        if (! empty($filters['date_to'])) {
-            $query->whereDate('due_date', '<=', $filters['date_to']);
-        }
+        $this->applyDateRangeFilter($query, $filters, 'due_date', 'date_from', 'date_to');
+        $this->applyDateRangeFilter($query, $filters, 'due_date', 'start_date', 'end_date');
 
         if (! empty($filters['search'])) {
             $search = $filters['search'];
@@ -164,7 +159,7 @@ class InvoiceRepository extends AbstractTenantRepository
      */
     public function createFromDTO(InvoiceDTO $dto): Model
     {
-        return $this->create($dto->toArrayWithoutNulls());
+        return $this->create($dto->toDatabaseArray());
     }
 
     /**
@@ -172,7 +167,10 @@ class InvoiceRepository extends AbstractTenantRepository
      */
     public function updateFromDTO(int $id, InvoiceUpdateDTO $dto): ?Model
     {
-        return $this->update($id, $dto->toArrayWithoutNulls());
+        $data = $dto->toDatabaseArray();
+        $filteredData = array_filter($data, fn ($value) => $value !== null);
+
+        return $this->update($id, $filteredData);
     }
 
     /**

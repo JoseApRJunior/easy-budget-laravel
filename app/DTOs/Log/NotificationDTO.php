@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Log;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class NotificationDTO extends AbstractDTO
@@ -25,7 +26,7 @@ readonly class NotificationDTO extends AbstractDTO
             email: $data['email'],
             message: $data['message'],
             subject: $data['subject'],
-            sent_at: isset($data['sent_at']) ? Carbon::parse($data['sent_at']) : null,
+            sent_at: DateHelper::toCarbon($data['sent_at'] ?? null),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

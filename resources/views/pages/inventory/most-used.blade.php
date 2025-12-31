@@ -31,20 +31,24 @@
                     <form method="GET" action="{{ route('provider.inventory.most-used') }}">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Data Inicial <span class="text-danger">*</span></label>
-                                    <input type="text" name="start_date" id="start_date" class="form-control"
-                                        placeholder="DD/MM/AAAA" value="{{ $filters['start_date'] ?? '' }}"
-                                        data-mask="00/00/0000">
-                                </div>
+                                <x-filter-field
+                                    type="date"
+                                    name="start_date"
+                                    id="start_date"
+                                    label="Data Inicial"
+                                    :value="$filters['start_date'] ?? request('start_date')"
+                                    required
+                                />
                             </div>
                             <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Data Final <span class="text-danger">*</span></label>
-                                    <input type="text" name="end_date" id="end_date" class="form-control"
-                                        placeholder="DD/MM/AAAA" value="{{ $filters['end_date'] ?? '' }}"
-                                        data-mask="00/00/0000">
-                                </div>
+                                <x-filter-field
+                                    type="date"
+                                    name="end_date"
+                                    id="end_date"
+                                    label="Data Final"
+                                    :value="$filters['end_date'] ?? request('end_date')"
+                                    required
+                                />
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
@@ -408,13 +412,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (!form || !startDate || !endDate) return;
 
-    if (typeof VanillaMask !== 'undefined') {
-        new VanillaMask('start_date', 'date');
-        new VanillaMask('end_date', 'date');
-    }
-
     const parseDate = (str) => {
         if (!str) return null;
+        // Suporta YYYY-MM-DD (input date) ou DD/MM/AAAA (antigo)
+        if (str.includes('-')) {
+            const d = new Date(str + 'T00:00:00');
+            return isNaN(d.getTime()) ? null : d;
+        }
         const parts = str.split('/');
         if (parts.length === 3) {
             const d = new Date(parts[2], parts[1] - 1, parts[0]);

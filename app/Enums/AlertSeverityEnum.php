@@ -11,6 +11,30 @@ enum AlertSeverityEnum: string
     case ERROR = 'error';
     case CRITICAL = 'critical';
 
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+    public static function options(): array
+    {
+        $options = [];
+        foreach (self::cases() as $case) {
+            $options[$case->value] = $case->label();
+        }
+        return $options;
+    }
+
+    public static function labels(): array
+    {
+        return array_map(fn (self $case) => $case->label(), self::cases());
+    }
+
+    public static function isValid(string $value): bool
+    {
+        return in_array($value, self::values(), true);
+    }
+
     public function label(): string
     {
         return match ($this) {
@@ -34,6 +58,16 @@ enum AlertSeverityEnum: string
     public function color(): string
     {
         return match ($this) {
+            self::INFO => 'info',
+            self::WARNING => 'warning',
+            self::ERROR => 'danger',
+            self::CRITICAL => 'danger',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
             self::INFO => '#3b82f6',
             self::WARNING => '#f59e0b',
             self::ERROR => '#ef4444',
@@ -44,11 +78,16 @@ enum AlertSeverityEnum: string
     public function icon(): string
     {
         return match ($this) {
-            self::INFO => 'bi-info-circle',
-            self::WARNING => 'bi-exclamation-triangle',
-            self::ERROR => 'bi-x-circle',
-            self::CRITICAL => 'bi-exclamation-octagon',
+            self::INFO => 'info-circle',
+            self::WARNING => 'exclamation-triangle',
+            self::ERROR => 'x-circle',
+            self::CRITICAL => 'exclamation-octagon',
         };
+    }
+
+    public function getIcon(): string
+    {
+        return 'bi-' . $this->icon();
     }
 
     public function priority(): int
@@ -75,9 +114,24 @@ enum AlertSeverityEnum: string
     {
         return match ($this) {
             self::INFO => 0,
-            self::WARNING => 5, // 5 minutos
-            self::ERROR => 1, // 1 minuto
-            self::CRITICAL => 0, // Imediato
+            self::WARNING => 5,
+            self::ERROR => 1,
+            self::CRITICAL => 0,
         };
+    }
+
+    public function getMetadata(): array
+    {
+        return [
+            'label' => $this->label(),
+            'description' => $this->description(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'priority' => $this->priority(),
+            'should_notify' => $this->shouldNotify(),
+            'notification_delay' => $this->notificationDelay(),
+        ];
     }
 }

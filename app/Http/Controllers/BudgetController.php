@@ -12,6 +12,7 @@ use App\Models\Budget;
 use App\Models\User;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CustomerService;
+use App\Helpers\DateHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,15 @@ class BudgetController extends Controller
     {
         $this->authorize('viewAny', Budget::class);
         $filters = $request->all();
+
+        // Normalizar datas para o banco
+        if (isset($filters['start_date'])) {
+            $filters['start_date'] = DateHelper::parseDate($filters['start_date']);
+        }
+        if (isset($filters['end_date'])) {
+            $filters['end_date'] = DateHelper::parseDate($filters['end_date']);
+        }
+
         $result = $this->budgetService->getBudgetsForProvider($filters);
 
         if ($result->isError()) {
@@ -84,7 +94,13 @@ class BudgetController extends Controller
     public function store(BudgetStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Budget::class);
-        $dto = BudgetDTO::fromRequest($request->validated());
+
+        $validated = $request->validated();
+        if (isset($validated['due_date'])) {
+            $validated['due_date'] = DateHelper::parseDate($validated['due_date']);
+        }
+
+        $dto = BudgetDTO::fromRequest($validated);
         $result = $this->budgetService->create($dto);
 
         return $this->redirectBackWithServiceResult(
@@ -153,21 +169,17 @@ class BudgetController extends Controller
         $budget = $result->getData();
         $this->authorize('update', $budget);
 
-        $dto = BudgetDTO::fromRequest($request->validated());
+        $validated = $request->validated();
+        if (isset($validated['due_date'])) {
+            $validated['due_date'] = DateHelper::parseDate($validated['due_date']);
+        }
 
-        \Illuminate\Support\Facades\Log::info('[BudgetController@update] DTO criado', [
-            'dto' => $dto->toArray(),
-        ]);
+        $dto = BudgetDTO::fromRequest($validated);
+        $updateResult = $this->budgetService->update($budget->id, $dto);
 
-        $updateResult = $this->budgetService->update($code, $dto);
-
-        \Illuminate\Support\Facades\Log::info('[BudgetController@update] Resultado do serviço', [
-            'success' => $updateResult->isSuccess(),
-            'message' => $updateResult->getMessage(),
-        ]);
-
-        return $this->redirectBackWithServiceResult(
+        return $this->redirectWithServiceResult(
             $updateResult,
+            route('provider.budgets.index'),
             'Orçamento atualizado com sucesso!'
         );
     }
@@ -269,5 +281,28 @@ class BudgetController extends Controller
         }
 
         return view('pages.budget.pdf_budget', compact('budget', 'provider'));
+    }
+
+    /**
+     * Exportar orçamento para Excel (XLSX).
+     */
+    public function exportXlsx(string $code)
+    {
+        $result = $this->budgetService->findByCode($code, [
+            'customer.commonData',
+            'services.serviceItems',
+        ]);
+
+        if ($result->isError()) {
+            abort(404, 'Orçamento não encontrado.');
+        }
+
+        $budget = $result->getData();
+        $this->authorize('view', $budget);
+
+        // Por enquanto, redireciona para o print ou implementa a exportação real
+        // se houver uma biblioteca de Excel instalada (como Maatwebsite/Laravel-Excel)
+        // Para este exemplo, vamos apenas retornar uma mensagem ou implementar básico
+        return redirect()->back()->with('info', 'Funcionalidade de exportação XLSX para orçamento individual em desenvolvimento.');
     }
 }

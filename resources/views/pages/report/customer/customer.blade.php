@@ -47,21 +47,21 @@
                         </div>
 
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="start_date">Data de Cadastro Inicial</label>
-                                <input type="text" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}" placeholder="DD/MM/AAAA"
-                                    data-mask="00/00/0000">
-                            </div>
+                            <x-filter-field
+                                type="date"
+                                name="start_date"
+                                label="Data de Cadastro Inicial"
+                                :value="request('start_date')"
+                            />
                         </div>
 
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="end_date">Data de Cadastro Final</label>
-                                <input type="text" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}" placeholder="DD/MM/AAAA"
-                                    data-mask="00/00/0000">
-                            </div>
+                            <x-filter-field
+                                type="date"
+                                name="end_date"
+                                label="Data de Cadastro Final"
+                                :value="request('end_date')"
+                            />
                         </div>
 
                         <div class="col-12">

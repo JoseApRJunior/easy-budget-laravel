@@ -2,6 +2,20 @@
 
 @section('title', 'Produtos')
 
+@push('styles')
+<style>
+    /* Ocultar placeholder nativo do Chrome para inputs de data vazios */
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        color: transparent;
+    }
+    input[type="date"]:focus::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]:valid::-webkit-datetime-edit-fields-wrapper {
+        color: inherit;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid py-1">
     <x-page-header
@@ -22,140 +36,125 @@
                     <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
                 </div>
                 <div class="card-body">
-                    <form id="filtersFormProducts" method="GET" action="{{ route('provider.products.index') }}">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="search" class="form-label small fw-bold text-muted text-uppercase">Buscar</label>
-                                    <input type="text" class="form-control" id="search" name="search"
-                                        value="{{ old('search', $filters['search'] ?? '') }}"
-                                        placeholder="Nome, SKU ou Descrição">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="category" class="form-label small fw-bold text-muted text-uppercase">Categoria</label>
-                                    <select class="form-select tom-select" id="category" name="category">
-                                        <option value="">Todas as categorias</option>
-                                        @foreach ($categories as $category)
-                                        @if ($category->parent_id === null)
-                                        @if ($category->children->isEmpty())
+                    <x-filter-form :action="route('provider.products.index')" id="filtersFormProducts">
+                        <x-filter-field
+                            col="col-md-4"
+                            name="search"
+                            label="Buscar"
+                            placeholder="Nome, SKU ou Descrição"
+                            :filters="$filters"
+                        />
+
+                        <x-filter-field
+                            type="select"
+                            col="col-md-2"
+                            name="category"
+                            label="Categoria"
+                            :filters="$filters"
+                        >
+                            <option value="">Todas as categorias</option>
+                            @foreach ($categories as $category)
+                                @if ($category->parent_id === null)
+                                    @if ($category->children->isEmpty())
                                         <option value="{{ $category->slug }}"
-                                            {{ old('category', $filters['category'] ?? '') == $category->slug ? 'selected' : '' }}>
+                                            {{ ($filters['category'] ?? '') == $category->slug ? 'selected' : '' }}>
                                             {{ $category->name }}
                                         </option>
-                                        @else
+                                    @else
                                         <optgroup label="{{ $category->name }}">
                                             <option value="{{ $category->slug }}"
-                                                {{ old('category', $filters['category'] ?? '') == $category->slug ? 'selected' : '' }}>
+                                                {{ ($filters['category'] ?? '') == $category->slug ? 'selected' : '' }}>
                                                 {{ $category->name }} (Geral)
                                             </option>
                                             @foreach ($category->children as $subcategory)
-                                            <option value="{{ $subcategory->slug }}"
-                                                {{ old('category', $filters['category'] ?? '') == $subcategory->slug ? 'selected' : '' }}>
-                                                {{ $subcategory->name }}
-                                            </option>
+                                                <option value="{{ $subcategory->slug }}"
+                                                    {{ ($filters['category'] ?? '') == $subcategory->slug ? 'selected' : '' }}>
+                                                    {{ $subcategory->name }}
+                                                </option>
                                             @endforeach
                                         </optgroup>
-                                        @endif
-                                        @endif
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="active" class="form-label small fw-bold text-muted text-uppercase">Status</label>
-                                    <select class="form-select tom-select" id="active" name="active">
-                                        @php($selectedActive = $filters['active'] ?? '1')
-                                        <option value="1" {{ $selectedActive === '1' ? 'selected' : '1' }}>
-                                            Ativo
-                                        </option>
-                                        <option value="0" {{ $selectedActive === '0' ? 'selected' : '1' }}>
-                                            Inativo
-                                        </option>
-                                        <option value="all" {{ $selectedActive === 'all' ? 'selected' : '1' }}>
-                                            Todos
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por página</label>
-                                    <select class="form-select tom-select" id="per_page" name="per_page">
-                                        @php($pp = (int) ($filters['per_page'] ?? 10))
-                                        <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
-                                        <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
-                                        <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="deleted" class="form-label small fw-bold text-muted text-uppercase">Registros</label>
-                                    <select name="deleted" id="deleted" class="form-select tom-select">
-                                        @php($selectedDeleted = $filters['deleted'] ?? 'current')
-                                        <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : 'current' }}>
-                                            Atuais
-                                        </option>
-                                        <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : 'current' }}>
-                                            Deletados
-                                        </option>
-                                        <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : 'current' }}>
-                                            Todos
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="min_price" class="form-label small fw-bold text-muted text-uppercase">Preço Mínimo</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="text" class="form-control currency-brl" id="min_price"
-                                            name="min_price"
-                                            value="{{ old('min_price', $filters['min_price'] ?? '') }}"
-                                            inputmode="decimal" placeholder="0,00">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="max_price" class="form-label small fw-bold text-muted text-uppercase">Preço Máximo</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">R$</span>
-                                        <input type="text" class="form-control currency-brl" id="max_price"
-                                            name="max_price"
-                                            value="{{ old('max_price', $filters['max_price'] ?? '') }}"
-                                            inputmode="decimal" placeholder="0,00">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro Inicial</label>
-                                    <input type="text" class="form-control" id="start_date" name="start_date"
-                                        value="{{ old('start_date', $filters['start_date'] ?? '') }}"
-                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Cadastro Final</label>
-                                    <input type="text" class="form-control" id="end_date" name="end_date"
-                                        value="{{ old('end_date', $filters['end_date'] ?? '') }}"
-                                        placeholder="DD/MM/AAAA" data-mask="00/00/0000">
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterProducts" />
-                                    <x-button type="link" :href="route('provider.products.index')" variant="outline-secondary" icon="x" label="Limpar" />
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                                    @endif
+                                @endif
+                            @endforeach
+                        </x-filter-field>
+
+                        <x-filter-field
+                            type="select"
+                            col="col-md-2"
+                            name="active"
+                            label="Status"
+                            :filters="$filters"
+                        >
+                            @php($selectedActive = $filters['active'] ?? '1')
+                            <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>Ativo</option>
+                            <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>Inativo</option>
+                            <option value="all" {{ $selectedActive === 'all' ? 'selected' : '' }}>Todos</option>
+                        </x-filter-field>
+
+                        <x-filter-field
+                            type="select"
+                            col="col-md-2"
+                            name="per_page"
+                            label="Por página"
+                            :filters="$filters"
+                        >
+                            @php($pp = (int) ($filters['per_page'] ?? 10))
+                            <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
+                            <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
+                            <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
+                        </x-filter-field>
+
+                        <x-filter-field
+                            type="select"
+                            col="col-md-2"
+                            name="deleted"
+                            label="Registros"
+                            :filters="$filters"
+                        >
+                            @php($selectedDeleted = $filters['deleted'] ?? 'current')
+                            <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>Atuais</option>
+                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>Deletados</option>
+                            <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>Todos</option>
+                        </x-filter-field>
+
+                        <x-filter-field
+                            col="col-md-2"
+                            name="min_price"
+                            label="Preço Mínimo"
+                            placeholder="0,00"
+                            class="currency-brl"
+                            inputmode="decimal"
+                            prefix="R$"
+                            :filters="$filters"
+                        />
+
+                        <x-filter-field
+                            col="col-md-2"
+                            name="max_price"
+                            label="Preço Máximo"
+                            placeholder="0,00"
+                            class="currency-brl"
+                            inputmode="decimal"
+                            prefix="R$"
+                            :filters="$filters"
+                        />
+
+                        <x-filter-field
+                            type="date"
+                            col="col-md-2"
+                            name="start_date"
+                            label="Cadastro Inicial"
+                            :filters="$filters"
+                        />
+
+                        <x-filter-field
+                            type="date"
+                            col="col-md-2"
+                            name="end_date"
+                            label="Cadastro Final"
+                            :filters="$filters"
+                        />
+                    </x-filter-form>
                 </div>
             </div>
 
@@ -243,10 +242,7 @@
                                             @endif
                                         </td>
                                         <td class="text-nowrap">
-                                            <span
-                                                class="modern-badge {{ $product->deleted_at ? 'badge-deleted' : ($product->active ? 'badge-active' : 'badge-inactive') }}">
-                                                {{ $product->deleted_at ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo') }}
-                                            </span>
+                                            <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
                                         </td>
                                         <td class="text-center">
                                             <div class="action-btn-group">
@@ -303,10 +299,7 @@
                                         <div class="fw-semibold mb-1">{{ $product->name }}</div>
                                         <div class="d-flex gap-2 flex-wrap mb-2">
                                             <span class="badge bg-secondary">{{ $product->sku }}</span>
-                                            <span
-                                                class="modern-badge {{ $product->deleted_at ? 'badge-deleted' : ($product->active ? 'badge-active' : 'badge-inactive') }}">
-                                                {{ $product->deleted_at ? 'Deletado' : ($product->active ? 'Ativo' : 'Inativo') }}
-                                            </span>
+                                            <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>

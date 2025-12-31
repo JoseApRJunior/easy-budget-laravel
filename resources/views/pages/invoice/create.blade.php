@@ -2,40 +2,33 @@
 
 @section('title', 'Nova Fatura')
 @section('content')
-    <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-plus-circle me-2"></i>Nova Fatura
-                </h1>
-                <p class="text-muted mb-0">Preencha os dados para criar uma nova fatura</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item active">Nova</li>
-                </ol>
-            </nav>
-        </div>
+    <x-page-header
+        title="Nova Fatura"
+        icon="plus-circle"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Faturas' => route('provider.invoices.index'),
+            'Nova' => '#'
+        ]">
+        <p class="text-muted mb-0">Preencha os dados para criar uma nova fatura</p>
+    </x-page-header>
 
-        <form action="{{ route('provider.invoices.store') }}" method="POST" id="invoiceForm">
-            @csrf
+    <form action="{{ route('provider.invoices.store') }}" method="POST" id="invoiceForm">
+        @csrf
 
             <div class="row g-4">
                 <!-- Dados da Fatura -->
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-primary fw-bold">
                                 <i class="bi bi-receipt-cutoff me-2"></i>Dados da Fatura
                             </h5>
                         </div>
                         <div class="card-body">
                             <!-- Serviço -->
                             <div class="mb-3">
-                                <label for="service_code" class="form-label">Serviço *</label>
+                                <label for="service_code" class="form-label small fw-bold text-muted text-uppercase">Serviço *</label>
                                 <div class="input-group">
                                     <input type="text" class="form-control @error('service_code') is-invalid @enderror"
                                         name="service_code" id="service_code"
@@ -59,7 +52,7 @@
 
                             <!-- Cliente -->
                             <div class="mb-3">
-                                <label for="customer_id" class="form-label">Cliente *</label>
+                                <label for="customer_id" class="form-label small fw-bold text-muted text-uppercase">Cliente *</label>
                                 <select class="form-select @error('customer_id') is-invalid @enderror" name="customer_id"
                                     id="customer_id" required>
                                     <option value="">Selecione o cliente</option>
@@ -78,7 +71,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="issue_date" class="form-label">Data de Emissão *</label>
+                                        <label for="issue_date" class="form-label small fw-bold text-muted text-uppercase">Data de Emissão *</label>
                                         <input type="date" class="form-control @error('issue_date') is-invalid @enderror"
                                             name="issue_date" id="issue_date"
                                             value="{{ old('issue_date', now()->format('Y-m-d')) }}" required>
@@ -89,7 +82,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="due_date" class="form-label">Data de Vencimento *</label>
+                                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
                                         <input type="date" class="form-control @error('due_date') is-invalid @enderror"
                                             name="due_date" id="due_date"
                                             value="{{ old('due_date', now()->addDays(30)->format('Y-m-d')) }}" required>
@@ -102,7 +95,7 @@
 
                             <!-- Status -->
                             <div class="mb-3">
-                                <label for="status" class="form-label">Status *</label>
+                                <label for="status" class="form-label small fw-bold text-muted text-uppercase">Status *</label>
                                 <select class="form-select @error('status') is-invalid @enderror" name="status"
                                     id="status" required>
                                     @foreach ($statusOptions as $status)
@@ -123,8 +116,8 @@
                 <!-- Itens da Fatura -->
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
+                        <div class="card-header bg-white py-3">
+                            <h5 class="mb-0 text-success fw-bold">
                                 <i class="bi bi-list-check me-2"></i>Itens da Fatura
                             </h5>
                         </div>
@@ -133,7 +126,7 @@
                                 <div class="item-row mb-3 p-3 border rounded">
                                     <div class="row align-items-end">
                                         <div class="col-md-4">
-                                            <label class="form-label">Produto *</label>
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Produto *</label>
                                             <select name="items[0][product_id]"
                                                 class="form-select product-select @error('items.0.product_id') is-invalid @enderror"
                                                 required>
@@ -151,7 +144,7 @@
                                             @enderror
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label">Quantidade *</label>
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Quantidade *</label>
                                             <input type="number" name="items[0][quantity]"
                                                 class="form-control quantity-input @error('items.0.quantity') is-invalid @enderror"
                                                 value="{{ old('items.0.quantity', 1) }}" step="0.01" min="0.01"
@@ -161,7 +154,7 @@
                                             @enderror
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Valor Unit. *</label>
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Valor Unit. *</label>
                                             <input type="number" name="items[0][unit_value]"
                                                 class="form-control unit-value-input @error('items.0.unit_value') is-invalid @enderror"
                                                 value="{{ old('items.0.unit_value', 0) }}" step="0.01" min="0.01"
@@ -171,7 +164,7 @@
                                             @enderror
                                         </div>
                                         <div class="col-md-2">
-                                            <label class="form-label">Total</label>
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
                                             <input type="text" class="form-control total-display" value="R$ 0,00"
                                                 readonly>
                                         </div>
@@ -185,9 +178,7 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="btn btn-outline-success btn-sm" id="addItemBtn">
-                                <i class="bi bi-plus-circle me-1"></i>Adicionar Item
-                            </button>
+                            <x-button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
                         </div>
                     </div>
                 </div>
@@ -198,17 +189,17 @@
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title">Resumo da Fatura</h5>
-                            <div class="d-flex justify-content-between">
+                            <h5 class="card-title small fw-bold text-muted text-uppercase mb-3">Resumo da Fatura</h5>
+                            <div class="d-flex justify-content-between mb-2">
                                 <span>Subtotal:</span>
-                                <span id="subtotal">R$ 0,00</span>
+                                <span id="subtotal" class="fw-bold">R$ 0,00</span>
                             </div>
-                            <div class="d-flex justify-content-between">
+                            <div class="d-flex justify-content-between mb-2">
                                 <span>Desconto:</span>
-                                <span id="discount">R$ 0,00</span>
+                                <span id="discount" class="fw-bold">R$ 0,00</span>
                             </div>
                             <hr>
-                            <div class="d-flex justify-content-between fw-bold">
+                            <div class="d-flex justify-content-between fw-bold fs-5 text-primary">
                                 <span>Total:</span>
                                 <span id="grandTotal">R$ 0,00</span>
                             </div>
@@ -219,14 +210,8 @@
 
             {{-- Botões de Ação (Footer) --}}
             <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <a href="{{ url()->previous(route('provider.invoices.index')) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Cancelar
-                    </a>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Criar
-                </button>
+                <x-button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
+                <x-button type="submit" variant="primary" icon="check-circle" label="Criar Fatura" />
             </div>
         </form>
     </div>

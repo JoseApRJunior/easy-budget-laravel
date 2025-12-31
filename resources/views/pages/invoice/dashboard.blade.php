@@ -4,25 +4,15 @@
 
 @section('content')
     <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-receipt me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Faturas</span>
-                        <span class="d-sm-none">Faturas</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Dashboard de Faturas</li>
-                    </ol>
-                </nav>
-            </div>
+        <x-page-header
+            title="Dashboard de Faturas"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => '#'
+            ]">
             <p class="text-muted mb-0 small">Acompanhe suas faturas, recebimentos e pendências.</p>
-        </div>
+        </x-page-header>
 
         @php
             $total = $stats['total_invoices'] ?? 0;
@@ -179,9 +169,7 @@
                                             <tr>
                                                 <td><code class="text-code">{{ $inv->code }}</code></td>
                                                 <td>{{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</td>
-                                                <td><span class="badge"
-                                                        style="background: {{ $inv->invoiceStatus?->getColor() }}">{{ $inv->invoiceStatus?->getDescription() }}</span>
-                                                </td>
+                                                <td><x-status-badge :item="$inv" /></td>
                                                 <td>R$ {{ number_format($inv->total, 2, ',', '.') }}</td>
                                                 <td>{{ optional($inv->due_date)->format('d/m/Y') }}</td>
                                                 <td class="text-end">

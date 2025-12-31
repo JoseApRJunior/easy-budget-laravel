@@ -3,14 +3,14 @@
 @section('title', 'Novo Orçamento')
 
 @section('content')
-<div class="container-fluid py-1">
     <x-page-header
         title="Novo Orçamento"
         icon="file-earmark-plus"
         :breadcrumb-items="[
-                'Orçamentos' => route('provider.budgets.index'),
-                'Novo' => '#'
-            ]">
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
+            'Novo' => '#'
+        ]">
         <p class="text-muted mb-0">Preencha os dados para criar um novo orçamento</p>
     </x-page-header>
 
@@ -37,12 +37,20 @@
                             id="customer_id" name="customer_id" required>
                             <option value="">Selecione um cliente...</option>
                             @foreach ($customers as $customer)
+                            @php
+                                $customerName = 'Nome não informado';
+                                if ($customer->commonData) {
+                                    $commonData = $customer->commonData;
+                                    $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                }
+                                $doc = 'Sem documento';
+                                if ($customer->commonData) {
+                                    $doc = $customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($customer->commonData->cpf);
+                                }
+                            @endphp
                             <option value="{{ $customer->id }}"
                                 {{ (old('customer_id') == $customer->id || ($selectedCustomer && $selectedCustomer->id == $customer->id)) ? 'selected' : '' }}>
-                                {{ $customer->commonData
-                                            ? ($customer->commonData->company_name ?: ($customer->commonData->first_name . ' ' . $customer->commonData->last_name))
-                                            : 'Nome não informado' }}
-                                ({{ $customer->commonData ? ($customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($customer->commonData->cpf)) : 'Sem documento' }})
+                                {{ $customerName }} ({{ $doc }})
                             </option>
                             @endforeach
                         </select>
@@ -53,16 +61,15 @@
 
                     <!-- Data de Vencimento -->
                     <div class="col-md-6">
-                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
-                        <input type="date" id="due_date" name="due_date"
-                            class="form-control @error('due_date') is-invalid @enderror"
-                            value="{{ old('due_date') }}"
-                            min="{{ date('Y-m-d') }}" required>
-                        <div class="form-text text-muted small">
-                            <i class="bi bi-info-circle me-1"></i>A data de vencimento deve ser igual ou posterior a hoje.
-                        </div>
+                        <x-filter-field
+                            type="date"
+                            name="due_date"
+                            label="Data de Vencimento *"
+                            :value="old('due_date', date('Y-m-d', strtotime('+7 days')))"
+                            required
+                        />
                         @error('due_date')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -71,8 +78,8 @@
                         <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
                         <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
                             rows="4" maxlength="255" placeholder="Ex: Projeto de reforma da cozinha...">{{ old('description') }}</textarea>
-                        <div class="d-flex justify-content-end">
-                            <small id="char-count" class="text-muted mt-2">255 caracteres restantes</small>
+                        <div class="d-flex justify-content-end mt-1">
+                            <small id="char-count" class="text-muted small">255 caracteres restantes</small>
                         </div>
                         @error('description')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -91,16 +98,13 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between mt-4">
-                    <div>
-                        <x-back-button index-route="provider.budgets.index" label="Cancelar" />
-                    </div>
-                    <x-button type="submit" icon="check-circle" label="Criar" />
+                <div class="d-flex justify-content-between align-items-center mt-5">
+                    <x-button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="x-circle" label="Cancelar" />
+                    <x-button type="submit" variant="primary" icon="check-circle" label="Criar Orçamento" />
                 </div>
             </form>
         </div>
     </div>
-</div>
 @endsection
 
 @push('scripts')

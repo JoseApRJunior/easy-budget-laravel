@@ -40,4 +40,9 @@ readonly class InvoiceItemDTO extends AbstractDTO
             'tenant_id' => $this->tenant_id,
         ];
     }
+
+    public function toDatabaseArray(): array
+    {
+        return $this->toArray();
+    }
 }

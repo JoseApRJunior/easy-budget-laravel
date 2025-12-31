@@ -121,28 +121,28 @@ Route::middleware('auth')->group(function () {
         // CRUD básico
         Route::get('/', [BudgetApiController::class, 'index'])->name('index');
         Route::post('/', [BudgetApiController::class, 'store'])->name('store');
-        Route::get('/{budget}', [BudgetApiController::class, 'show'])->name('show');
-        Route::put('/{budget}', [BudgetApiController::class, 'update'])->name('update');
-        Route::delete('/{budget}', [BudgetApiController::class, 'destroy'])->name('destroy');
+        Route::get('/{code}', [BudgetApiController::class, 'show'])->name('show');
+        Route::put('/{code}', [BudgetApiController::class, 'update'])->name('update');
+        Route::delete('/{code}', [BudgetApiController::class, 'destroy'])->name('destroy');
 
         // Itens do orçamento
-        Route::post('/{budget}/items', [BudgetApiController::class, 'addItem'])->name('add-item');
-        Route::put('/{budget}/items/{item}', [BudgetApiController::class, 'updateItem'])->name('update-item');
-        Route::delete('/{budget}/items/{item}', [BudgetApiController::class, 'removeItem'])->name('remove-item');
+        Route::post('/{code}/items', [BudgetApiController::class, 'addItem'])->name('add-item');
+        Route::put('/{code}/items/{item}', [BudgetApiController::class, 'updateItem'])->name('update-item');
+        Route::delete('/{code}/items/{item}', [BudgetApiController::class, 'removeItem'])->name('remove-item');
 
         // Workflow de aprovação
-        Route::post('/{budget}/send', [BudgetApiController::class, 'sendToCustomer'])->name('send');
-        Route::post('/{budget}/approve', [BudgetApiController::class, 'approve'])->name('approve');
-        Route::post('/{budget}/reject', [BudgetApiController::class, 'reject'])->name('reject');
+        Route::post('/{code}/send', [BudgetApiController::class, 'sendToCustomer'])->name('send');
+        Route::post('/{code}/approve', [BudgetApiController::class, 'approve'])->name('approve');
+        Route::post('/{code}/reject', [BudgetApiController::class, 'reject'])->name('reject');
 
         // Versionamento
-        Route::get('/{budget}/versions', [BudgetApiController::class, 'getVersions'])->name('versions');
-        Route::post('/{budget}/create-version', [BudgetApiController::class, 'createVersion'])->name('create-version');
-        Route::post('/{budget}/restore-version/{version}', [BudgetApiController::class, 'restoreVersion'])->name('restore-version');
+        Route::get('/{code}/versions', [BudgetApiController::class, 'getVersions'])->name('versions');
+        Route::post('/{code}/create-version', [BudgetApiController::class, 'createVersion'])->name('create-version');
+        Route::post('/{code}/restore-version/{version}', [BudgetApiController::class, 'restoreVersion'])->name('restore-version');
 
         // PDF e documentos
-        Route::get('/{budget}/pdf', [BudgetApiController::class, 'generatePdf'])->name('generate-pdf');
-        Route::post('/{budget}/email', [BudgetApiController::class, 'emailBudget'])->name('email');
+        Route::get('/{code}/pdf', [BudgetApiController::class, 'generatePdf'])->name('generate-pdf');
+        Route::post('/{code}/email', [BudgetApiController::class, 'emailBudget'])->name('email');
 
         // Templates
         Route::get('/templates', [BudgetApiController::class, 'getTemplates'])->name('templates');

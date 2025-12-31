@@ -32,20 +32,22 @@
             <form method="GET" action="{{ route('provider.inventory.stock-turnover') }}">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="start_date" class="form-label small fw-bold text-muted text-uppercase">Data Inicial</label>
-                            <input type="text" name="start_date" id="start_date" class="form-control"
-                                placeholder="DD/MM/AAAA" value="{{ $filters['start_date'] ?? '' }}"
-                                data-mask="00/00/0000">
-                        </div>
+                        <x-filter-field
+                            type="date"
+                            name="start_date"
+                            id="start_date"
+                            label="Data Inicial"
+                            :value="$filters['start_date'] ?? ''"
+                        />
                     </div>
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="end_date" class="form-label small fw-bold text-muted text-uppercase">Data Final</label>
-                            <input type="text" name="end_date" id="end_date" class="form-control"
-                                placeholder="DD/MM/AAAA" value="{{ $filters['end_date'] ?? '' }}"
-                                data-mask="00/00/0000">
-                        </div>
+                        <x-filter-field
+                            type="date"
+                            name="end_date"
+                            id="end_date"
+                            label="Data Final"
+                            :value="$filters['end_date'] ?? ''"
+                        />
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">

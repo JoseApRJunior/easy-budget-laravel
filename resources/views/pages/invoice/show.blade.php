@@ -2,28 +2,19 @@
 
 @section('title', 'Detalhes da Fatura')
 @section('content')
-    <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-receipt me-2"></i>Detalhes da Fatura
-                </h1>
-                <p class="text-muted mb-0">Visualize todas as informações da fatura {{ $invoice->code }}</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item active">{{ $invoice->code }}</li>
-                </ol>
-            </nav>
+    <x-page-header
+        title="Detalhes da Fatura"
+        icon="receipt"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Faturas' => route('provider.invoices.index'),
+            $invoice->code => '#'
+        ]">
+        <div class="d-flex gap-2">
+            <x-button type="link" :href="route('provider.invoices.print', $invoice)" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
         </div>
+    </x-page-header>
 
-        <a href="{{ route('provider.invoices.print', $invoice) }}" class="btn btn-outline-secondary" target="_blank">
-            <i class="bi bi-printer me-1"></i>Imprimir
-        </a>
-    </div>
     <div class="row g-4">
         <!-- Informações Principais -->
         <div class="col-md-8">
@@ -37,19 +28,7 @@
                                 Gerada em {{ $invoice->created_at->format('d/m/Y H:i') }}
                             </p>
                         </div>
-                        @php
-                            $status = $invoice->status;
-                            $badgeClass = match ($status) {
-                                'pending' => 'bg-warning',
-                                'paid' => 'bg-success',
-                                'overdue' => 'bg-danger',
-                                'cancelled' => 'bg-secondary',
-                                default => 'bg-light text-dark',
-                            };
-                        @endphp
-                        <span class="badge {{ $badgeClass }} fs-6">
-                            {{ $status->name ?? ucfirst($status) }}
-                        </span>
+                        <x-status-badge :item="$invoice" />
                     </div>
 
                     <!-- Dados do Cliente e Empresa -->
@@ -87,7 +66,7 @@
                             <h6 class="text-muted">Data de Vencimento</h6>
                             <p class="mb-0">
                                 {{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}
-                                @if ($invoice->due_date)
+                                @if ($invoice->due_date && $invoice->status === 'pending')
                                     @if ($invoice->due_date < now())
                                         <span class="badge bg-danger ms-2">Vencida</span>
                                     @elseif($invoice->due_date->diffInDays(now()) <= 7)
@@ -225,9 +204,7 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <span class="badge {{ $badgeClass }} fs-6 w-100 py-2">
-                            {{ $status->name ?? ucfirst($status) }}
-                        </span>
+                        <x-status-badge :item="$invoice" class="w-100 py-2 fs-6" />
                     </div>
 
                     @if ($invoice->due_date)

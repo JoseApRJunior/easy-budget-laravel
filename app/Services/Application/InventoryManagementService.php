@@ -96,12 +96,12 @@ class InventoryManagementService extends AbstractBaseService
 
             $displayFilters = $filterDto->toDisplayArray();
 
-            // Formatar datas para exibição no padrão brasileiro (d/m/Y)
+            // Formatar datas para exibição no padrão ISO (Y-m-d) para input type="date"
             if (! empty($displayFilters['start_date'])) {
-                $displayFilters['start_date'] = \Carbon\Carbon::parse($displayFilters['start_date'])->format('d/m/Y');
+                $displayFilters['start_date'] = \Carbon\Carbon::parse($displayFilters['start_date'])->format('Y-m-d');
             }
             if (! empty($displayFilters['end_date'])) {
-                $displayFilters['end_date'] = \Carbon\Carbon::parse($displayFilters['end_date'])->format('d/m/Y');
+                $displayFilters['end_date'] = \Carbon\Carbon::parse($displayFilters['end_date'])->format('Y-m-d');
             }
 
             return [
@@ -188,12 +188,12 @@ class InventoryManagementService extends AbstractBaseService
             $movements = $query->latest()->paginate($filters['per_page'] ?? 10);
 
             $displayFilters = $filters;
-            // Formatar datas para exibição no padrão brasileiro (d/m/Y)
+            // Formatar datas para exibição no padrão ISO (Y-m-d) para input type="date"
             if (! empty($displayFilters['start_date'])) {
-                $displayFilters['start_date'] = \Carbon\Carbon::parse($displayFilters['start_date'])->format('d/m/Y');
+                $displayFilters['start_date'] = \Carbon\Carbon::parse($displayFilters['start_date'])->format('Y-m-d');
             }
             if (! empty($displayFilters['end_date'])) {
-                $displayFilters['end_date'] = \Carbon\Carbon::parse($displayFilters['end_date'])->format('d/m/Y');
+                $displayFilters['end_date'] = \Carbon\Carbon::parse($displayFilters['end_date'])->format('Y-m-d');
             }
 
             return [
@@ -352,8 +352,8 @@ class InventoryManagementService extends AbstractBaseService
                 'stockTurnover' => $paginatedProducts,
                 'categories' => \App\Models\Category::all(),
                 'filters' => [
-                    'start_date' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
-                    'end_date' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
+                    'start_date' => $startDate ? \Carbon\Carbon::parse($startDate)->format('Y-m-d') : null,
+                    'end_date' => $endDate ? \Carbon\Carbon::parse($endDate)->format('Y-m-d') : null,
                     'category_id' => $categoryId,
                     'search' => $search,
                 ],
@@ -544,8 +544,8 @@ class InventoryManagementService extends AbstractBaseService
                     ],
                 ],
                 'filters' => [
-                    'start_date' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
-                    'end_date' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
+                    'start_date' => $startDate ? \Carbon\Carbon::parse($startDate)->format('Y-m-d') : null,
+                    'end_date' => $endDate ? \Carbon\Carbon::parse($endDate)->format('Y-m-d') : null,
                     'category_id' => $filters['category_id'] ?? null,
                     'limit' => $filters['limit'] ?? 10,
                     'min_quantity' => $filters['min_quantity'] ?? 0,
@@ -725,8 +725,8 @@ class InventoryManagementService extends AbstractBaseService
                 'reportData' => $reportData,
                 'filters' => $filters,
                 'type' => $reportType,
-                'startDate' => $startDate ? \Carbon\Carbon::parse($startDate)->format('d/m/Y') : null,
-                'endDate' => $endDate ? \Carbon\Carbon::parse($endDate)->format('d/m/Y') : null,
+                'startDate' => $startDate ? \Carbon\Carbon::parse($startDate)->format('Y-m-d') : null,
+                'endDate' => $endDate ? \Carbon\Carbon::parse($endDate)->format('Y-m-d') : null,
                 'isInitial' => false,
                 'categories' => \App\Models\Category::whereNull('parent_id')->with('children')->get(),
             ];

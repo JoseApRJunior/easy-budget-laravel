@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Report;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class ReportExecutionDTO extends AbstractDTO
@@ -29,8 +30,8 @@ readonly class ReportExecutionDTO extends AbstractDTO
             report_definition_id: (int) $data['report_definition_id'],
             user_id: (int) $data['user_id'],
             status: $data['status'],
-            started_at: isset($data['started_at']) ? Carbon::parse($data['started_at']) : null,
-            completed_at: isset($data['completed_at']) ? Carbon::parse($data['completed_at']) : null,
+            started_at: DateHelper::toCarbon($data['started_at'] ?? null),
+            completed_at: DateHelper::toCarbon($data['completed_at'] ?? null),
             parameters: is_string($data['parameters'] ?? []) ? json_decode($data['parameters'], true) : ($data['parameters'] ?? []),
             result_path: $data['result_path'] ?? null,
             result_size: isset($data['result_size']) ? (int) $data['result_size'] : null,

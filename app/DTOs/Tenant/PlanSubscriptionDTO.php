@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Tenant;
 
 use App\DTOs\AbstractDTO;
+use App\Helpers\DateHelper;
 use Carbon\Carbon;
 
 readonly class PlanSubscriptionDTO extends AbstractDTO
@@ -32,14 +33,14 @@ readonly class PlanSubscriptionDTO extends AbstractDTO
             plan_id: (int) $data['plan_id'],
             status: $data['status'] ?? 'pending',
             transaction_amount: (float) $data['transaction_amount'],
-            start_date: Carbon::parse($data['start_date'] ?? now()),
-            end_date: isset($data['end_date']) ? Carbon::parse($data['end_date']) : null,
-            transaction_date: isset($data['transaction_date']) ? Carbon::parse($data['transaction_date']) : null,
+            start_date: DateHelper::toCarbon($data['start_date'] ?? null) ?? now(),
+            end_date: DateHelper::toCarbon($data['end_date'] ?? null),
+            transaction_date: DateHelper::toCarbon($data['transaction_date'] ?? null),
             payment_method: $data['payment_method'] ?? null,
             payment_id: $data['payment_id'] ?? null,
             public_hash: $data['public_hash'] ?? null,
-            last_payment_date: isset($data['last_payment_date']) ? Carbon::parse($data['last_payment_date']) : null,
-            next_payment_date: isset($data['next_payment_date']) ? Carbon::parse($data['next_payment_date']) : null,
+            last_payment_date: DateHelper::toCarbon($data['last_payment_date'] ?? null),
+            next_payment_date: DateHelper::toCarbon($data['next_payment_date'] ?? null),
             tenant_id: isset($data['tenant_id']) ? (int) $data['tenant_id'] : null
         );
     }

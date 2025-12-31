@@ -3,16 +3,16 @@
 @section('title', 'Editar Orçamento')
 
 @section('content')
-<div class="container-fluid py-1">
     <x-page-header
         title="Editar Orçamento"
         icon="pencil-square"
         :breadcrumb-items="[
-                'Orçamentos' => route('provider.budgets.index'),
-                $budget->code => route('provider.budgets.show', $budget->code),
-                'Editar' => '#'
-            ]">
-        <p class="text-muted mb-0">Atualize as informações do orçamento</p>
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
+            $budget->code => route('provider.budgets.show', $budget->code),
+            'Editar' => '#'
+        ]">
+        <p class="text-muted mb-0">Atualize as informações do orçamento <strong>{{ $budget->code }}</strong></p>
     </x-page-header>
 
     <form id="edit-budget-form" action="{{ route('provider.budgets.update', $budget->code) }}" method="POST">
@@ -23,11 +23,9 @@
             <!-- Informações Básicas -->
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent py-3">
+                    <div class="card-header bg-transparent border-0 py-3">
                         <h5 class="mb-0 d-flex align-items-center text-dark fw-bold">
-                            <div class="avatar avatar-xs bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
-                                <i class="bi bi-info-circle text-primary" style="font-size: 0.8rem;"></i>
-                            </div>
+                            <i class="bi bi-info-circle me-2"></i>
                             <span>Informações Básicas</span>
                         </h5>
                     </div>
@@ -44,17 +42,18 @@
 
                             <!-- Data de Vencimento -->
                             <div class="col-md-3">
-                                <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
-                                <input type="date" id="due_date" name="due_date"
-                                    class="form-control @error('due_date') is-invalid @enderror"
-                                    value="{{ old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : '') }}"
-                                    min="{{ date('Y-m-d') }}"
-                                    required>
+                                <x-filter-field
+                                    type="date"
+                                    name="due_date"
+                                    label="Data de Vencimento"
+                                    :value="old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : '')"
+                                    required
+                                />
                                 <div class="form-text text-muted small">
                                     <i class="bi bi-info-circle me-1"></i>A data de vencimento deve ser igual ou posterior a hoje.
                                 </div>
                                 @error('due_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -100,11 +99,9 @@
             <!-- Valores -->
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent py-3">
+                    <div class="card-header bg-transparent border-0 py-3">
                         <h5 class="mb-0 d-flex align-items-center text-dark fw-bold">
-                            <div class="avatar avatar-xs bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
-                                <i class="bi bi-cash-stack text-success" style="font-size: 0.8rem;"></i>
-                            </div>
+                            <i class="bi bi-cash-stack me-2"></i>
                             <span>Valores</span>
                         </h5>
                     </div>
@@ -148,14 +145,11 @@
         </div>
 
         <!-- Botões -->
-        <div class="d-flex justify-content-between mt-4">
-            <div>
-                <x-back-button index-route="provider.budgets.index" label="Cancelar" />
-            </div>
-            <x-button type="submit" icon="check-circle" label="Salvar" />
+        <div class="d-flex justify-content-between align-items-center mt-5">
+            <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="outline-secondary" icon="x-circle" label="Cancelar" />
+            <x-button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
         </div>
     </form>
-</div>
 @endsection
 
 @push('scripts')
