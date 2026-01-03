@@ -163,26 +163,13 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     }
 
     /**
-     * Retorna metadados do status
+     * Retorna metadados completos do status
      */
     public function getMetadata(): array
-    {        return array_merge($this->defaultMetadata(), [
+    {
+        return array_merge($this->defaultMetadata(), [
             'priority_order' => $this->getPriorityOrder(),
             'is_chargeable' => $this->isChargeable(),
         ]);
-    }
-
-    private function defaultMetadata(): array
-    {        return [
-            'value' => $this->value,
-            'label' => $this->label(),
-            'description' => $this->getDescription(),
-            'color' => $this->color(),
-            'color_hex' => $this->getColor(),
-            'icon' => $this->icon(),
-            'icon_class' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-        ];
     }
 }

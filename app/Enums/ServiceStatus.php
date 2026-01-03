@@ -170,7 +170,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getIcon(): string
     {
-        return 'bi-' . $this->icon();
+        return 'bi bi-' . $this->icon();
     }
 
     /**

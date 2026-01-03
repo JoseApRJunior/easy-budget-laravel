@@ -65,7 +65,7 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     public function getIcon(): string
     {
-        return 'bi-' . $this->icon();
+        return 'bi-'.$this->icon();
     }
 
     public function isActive(): bool
@@ -137,25 +137,13 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         return $ordered;
     }
 
+    /**
+     * Retorna metadados completos do status
+     */
     public function getMetadata(): array
     {
         return array_merge($this->defaultMetadata(), [
             'is_successful' => $this->isSuccessful(),
         ]);
-    }
-
-    private function defaultMetadata(): array
-    {
-        return [
-            'value' => $this->value,
-            'label' => $this->label(),
-            'description' => $this->getDescription(),
-            'color' => $this->color(),
-            'color_hex' => $this->getColor(),
-            'icon' => $this->icon(),
-            'icon_class' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-        ];
     }
 }

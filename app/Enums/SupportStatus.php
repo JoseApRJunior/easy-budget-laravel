@@ -47,6 +47,8 @@ namespace App\Enums;
  */
 enum SupportStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case OPEN = 'open';
     case RESPONDED = 'responded';
     case RESOLVED = 'resolved';
@@ -199,16 +201,9 @@ enum SupportStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     public function getMetadata(): array
     {
-        return [
-            'label' => $this->label(),
-            'description' => $this->getDescription(),
-            'color' => $this->color(),
-            'color_hex' => $this->getColor(),
-            'icon' => $this->icon(),
-            'icon_class' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-        ];
+        return array_merge($this->defaultMetadata(), [
+            'valid_transitions' => $this->getValidTransitions(),
+        ]);
     }
 
     /**

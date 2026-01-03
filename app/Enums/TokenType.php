@@ -128,21 +128,6 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
         ]);
     }
 
-    private function defaultMetadata(): array
-    {
-        return [
-            'value' => $this->value,
-            'label' => $this->getDescription(), // TokenType não tem label(), usa getDescription()
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'color_hex' => $this->getColor(),
-            'icon' => $this->getIcon(),
-            'icon_class' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-        ];
-    }
-
     /**
      * Retorna o tempo de expiração padrão para cada tipo (em minutos)
      */

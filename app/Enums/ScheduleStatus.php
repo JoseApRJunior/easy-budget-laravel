@@ -6,6 +6,8 @@ use App\Contracts\Interfaces\StatusEnumInterface;
 
 enum ScheduleStatus: string implements StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case PENDING = 'pending';
     case CONFIRMED = 'confirmed';
     case COMPLETED = 'completed';
@@ -140,18 +142,10 @@ enum ScheduleStatus: string implements StatusEnumInterface
 
     public function getMetadata(): array
     {
-        return [
-            'label' => $this->label(),
-            'description' => $this->getDescription(),
-            'color' => $this->color(),
-            'color_hex' => $this->getColor(),
-            'icon' => $this->icon(),
-            'icon_class' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
+        return array_merge($this->defaultMetadata(), [
             'can_edit' => $this->canEdit(),
             'can_cancel' => $this->canCancel(),
-        ];
+        ]);
     }
 
     /**

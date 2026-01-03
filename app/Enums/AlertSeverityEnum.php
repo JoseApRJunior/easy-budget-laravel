@@ -4,36 +4,14 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum AlertSeverityEnum: string
+enum AlertSeverityEnum: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case INFO = 'info';
     case WARNING = 'warning';
     case ERROR = 'error';
     case CRITICAL = 'critical';
-
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    public static function labels(): array
-    {
-        return array_map(fn (self $case) => $case->label(), self::cases());
-    }
-
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
 
     public function label(): string
     {
@@ -45,7 +23,7 @@ enum AlertSeverityEnum: string
         };
     }
 
-    public function description(): string
+    public function getDescription(): string
     {
         return match ($this) {
             self::INFO => 'Informação geral, não requer ação imediata',
@@ -87,7 +65,7 @@ enum AlertSeverityEnum: string
 
     public function getIcon(): string
     {
-        return 'bi-' . $this->icon();
+        return 'bi-'.$this->icon();
     }
 
     public function priority(): int
@@ -98,6 +76,16 @@ enum AlertSeverityEnum: string
             self::ERROR => 3,
             self::CRITICAL => 4,
         };
+    }
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function isFinished(): bool
+    {
+        return false;
     }
 
     public function shouldNotify(): bool
@@ -123,8 +111,9 @@ enum AlertSeverityEnum: string
     public function getMetadata(): array
     {
         return [
+            'value' => $this->value,
             'label' => $this->label(),
-            'description' => $this->description(),
+            'description' => $this->getDescription(),
             'color' => $this->color(),
             'color_hex' => $this->getColor(),
             'icon' => $this->icon(),
@@ -132,6 +121,8 @@ enum AlertSeverityEnum: string
             'priority' => $this->priority(),
             'should_notify' => $this->shouldNotify(),
             'notification_delay' => $this->notificationDelay(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
         ];
     }
 }

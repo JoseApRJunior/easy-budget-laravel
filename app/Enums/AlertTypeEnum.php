@@ -4,38 +4,16 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum AlertTypeEnum: string
+enum AlertTypeEnum: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case PERFORMANCE = 'performance';
     case SECURITY = 'security';
     case AVAILABILITY = 'availability';
     case RESOURCE = 'resource';
     case BUSINESS = 'business';
     case SYSTEM = 'system';
-
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    public static function labels(): array
-    {
-        return array_map(fn (self $case) => $case->label(), self::cases());
-    }
-
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
 
     public function label(): string
     {
@@ -49,7 +27,7 @@ enum AlertTypeEnum: string
         };
     }
 
-    public function description(): string
+    public function getDescription(): string
     {
         return match ($this) {
             self::PERFORMANCE => 'Alertas relacionados à performance do sistema',
@@ -99,18 +77,31 @@ enum AlertTypeEnum: string
 
     public function getIcon(): string
     {
-        return 'bi-' . $this->icon();
+        return 'bi-'.$this->icon();
+    }
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function isFinished(): bool
+    {
+        return false;
     }
 
     public function getMetadata(): array
     {
         return [
+            'value' => $this->value,
             'label' => $this->label(),
-            'description' => $this->description(),
+            'description' => $this->getDescription(),
             'color' => $this->color(),
             'color_hex' => $this->getColor(),
             'icon' => $this->icon(),
             'icon_class' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
         ];
     }
 }

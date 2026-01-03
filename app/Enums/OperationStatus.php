@@ -118,8 +118,6 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
 
     /**
      * Retorna metadados completos do status
-     *
-     * @return array<string, mixed> Array com descrição, cor, ícone e flags
      */
     public function getMetadata(): array
     {
@@ -127,18 +125,6 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
             'is_success' => $this->isSuccess(),
             'is_error' => $this->isError(),
         ]);
-    }
-
-    private function defaultMetadata(): array
-    {
-        return [
-            'value' => $this->value,
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'icon' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-        ];
     }
 
     /**
