@@ -20,8 +20,44 @@
 6. [Case Sensitivity](#-case-sensitivity)
 7. [Exemplos Práticos](#-exemplos-práticos)
 8. [Padrão de Filtragem de Data](#-11-date-filtering-patterns---padrão-de-filtragem-de-data)
+9. [Geração de Códigos Únicos](#-12-unique-code-generation-patterns)
 
 ---
+
+### 🆔 12. UNIQUE CODE GENERATION PATTERNS
+
+Para módulos que exigem códigos sequenciais únicos (Orçamentos, Serviços), utilizamos o padrão de reinício mensal com 6 dígitos sequenciais para garantir escalabilidade e organização.
+
+#### Padrão de Formato:
+`PREFIX-YYYY-MM-000000`
+
+- **PREFIX:** 3 ou 4 letras identificadoras (ex: `ORC`, `SERV`)
+- **YYYY:** Ano com 4 dígitos
+- **MM:** Mês com 2 dígitos
+- **000000:** Sequencial de 6 dígitos (reinicia a cada mês)
+
+#### Exemplo de Implementação no Repository:
+```php
+public function generateUniqueCode(): string
+{
+    $year = date('Y');
+    $month = date('m');
+    $lastRecord = $this->getLastByMonth($year, $month);
+    
+    $sequential = 1;
+    if ($lastRecord) {
+        $sequential = $this->extractSequentialNumber($lastRecord->code) + 1;
+    }
+    
+    return sprintf('PREFIX-%s-%s-%06d', $year, $month, $sequential);
+}
+```
+
+#### Regras Importantes:
+- **Tenant Isolation:** A busca pelo último registro deve sempre respeitar o `tenant_id`.
+- **Monthly Reset:** O contador deve reiniciar em 1 no primeiro dia de cada mês.
+- **Scalability:** O uso de 6 dígitos permite até 999.999 registros por mês por empresa.
+- **Concurrency:** Em cenários de alta concorrência, utilizar `GET_LOCK()` do banco de dados para evitar duplicidade.
 
 ### 🏗️ Estrutura Básica de Enum
 

@@ -88,6 +88,14 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
      */
     abstract protected function makeModel(): Model;
 
+    /**
+     * Retorna uma nova query builder para o modelo.
+     */
+    protected function newQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return $this->model->newQuery();
+    }
+
     // --------------------------------------------------------------------------
     // IMPLEMENTAÇÃO DOS MÉTODOS BÁSICOS DO BaseRepositoryInterface
     // --------------------------------------------------------------------------

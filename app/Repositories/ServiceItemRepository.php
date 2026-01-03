@@ -34,7 +34,7 @@ class ServiceItemRepository extends AbstractTenantRepository
      */
     public function createFromDTO(ServiceItemDTO $dto, int $serviceId): ServiceItem
     {
-        return $this->model->newQuery()->create(array_merge(
+        return $this->create(array_merge(
             $dto->toArrayWithoutNulls(),
             ['service_id' => $serviceId]
         ));

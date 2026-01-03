@@ -61,13 +61,11 @@
 
                     <!-- Data de Vencimento -->
                     <div class="col-md-6">
-                        <x-filter-field
-                            type="date"
-                            name="due_date"
-                            label="Data de Vencimento *"
-                            :value="old('due_date', date('Y-m-d', strtotime('+7 days')))"
-                            required
-                        />
+                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
+                        <input type="date" class="form-control @error('due_date') is-invalid @enderror"
+                            id="due_date" name="due_date"
+                            value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', date('Y-m-d', strtotime('+7 days'))), 'Y-m-d', date('Y-m-d', strtotime('+7 days'))) }}"
+                            required>
                         @error('due_date')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror

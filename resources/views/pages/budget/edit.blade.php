@@ -42,13 +42,11 @@
 
                             <!-- Data de Vencimento -->
                             <div class="col-md-3">
-                                <x-filter-field
-                                    type="date"
-                                    name="due_date"
-                                    label="Data de Vencimento"
-                                    :value="old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : '')"
-                                    required
-                                />
+                                <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
+                                <input type="date" class="form-control @error('due_date') is-invalid @enderror"
+                                    id="due_date" name="due_date"
+                                    value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : ''), 'Y-m-d', $budget->due_date ? $budget->due_date->format('Y-m-d') : '') }}"
+                                    required>
                                 <div class="form-text text-muted small">
                                     <i class="bi bi-info-circle me-1"></i>A data de vencimento deve ser igual ou posterior a hoje.
                                 </div>
@@ -114,7 +112,7 @@
                                     <span class="input-group-text bg-light text-muted">R$</span>
                                     <input type="text" id="total_display"
                                         class="form-control bg-light @error('total') is-invalid @enderror"
-                                        value="{{ old('total', number_format($budget->total, 2, ',', '.')) }}"
+                                        value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('total', $budget->total))) }}"
                                         readonly tabindex="-1">
                                     <input type="hidden" id="total" name="total" value="{{ old('total', $budget->total) }}">
                                 </div>
@@ -130,7 +128,7 @@
                                     <span class="input-group-text bg-light text-muted">R$</span>
                                     <input type="text" id="discount_display"
                                         class="form-control bg-light @error('discount') is-invalid @enderror"
-                                        value="{{ old('discount', number_format($budget->discount, 2, ',', '.')) }}"
+                                        value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('discount', $budget->discount))) }}"
                                         readonly tabindex="-1">
                                     <input type="hidden" id="discount" name="discount" value="{{ old('discount', $budget->discount) }}">
                                 </div>
@@ -165,35 +163,6 @@
                 const remaining = maxLength - this.value.length;
                 charCount.textContent = remaining + ' caracteres restantes';
             });
-        }
-
-        // Currency formatting (only for form submission)
-        try {
-            var form = document.getElementById('edit-budget-form');
-            if (form) {
-                form.addEventListener('submit', function(event) {
-                    console.log('[budget:edit] Form submitted, processing fields...');
-                    const fields = ['total', 'discount'];
-                    fields.forEach(function(id) {
-                        const input = document.getElementById(id);
-                        const displayInput = document.getElementById(id + '_display');
-                        if (input && displayInput) {
-                            let val = displayInput.value;
-                            let num = 0;
-                            if (window.parseCurrencyBRLToNumber) {
-                                num = window.parseCurrencyBRLToNumber(val);
-                            } else {
-                                var digits = val.replace(/\D/g, '');
-                                num = parseInt(digits || '0', 10) / 100;
-                            }
-                            input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
-                            console.log(`[budget:edit] Processed ${id}: ${input.value}`);
-                        }
-                    });
-                });
-            }
-        } catch (e) {
-            console.error('[budget:edit] Error in submit handler:', e);
         }
     });
 </script>

@@ -56,13 +56,13 @@
             >{{ $fieldValue }}</textarea>
 
         @elseif($type === 'date')
-            {{-- Campo de Data --}}
+            {{-- Campo de Data (Padrão type="date") --}}
             <input
                 type="date"
                 class="form-control"
                 id="{{ $name }}"
                 name="{{ $name }}"
-                value="{{ $fieldValue }}"
+                value="{{ \App\Helpers\DateHelper::formatDateOrDefault($fieldValue, 'Y-m-d', $fieldValue) }}"
                 {{ $required ? 'required' : '' }}
                 {{ $attributes }}
             >

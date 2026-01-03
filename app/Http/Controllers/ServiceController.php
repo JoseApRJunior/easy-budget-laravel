@@ -146,8 +146,10 @@ class ServiceController extends Controller
             return redirect()->back()->withInput()->with('error', $result->getMessage());
         }
 
-        return redirect()->route('provider.services.show', $result->getData()->code)
-            ->with('success', 'Serviço criado com sucesso!');
+        return $this->redirectBackWithServiceResult(
+            $result,
+            'Serviço criado com sucesso! Você pode cadastrar outro agora.'
+        );
     }
 
     /**

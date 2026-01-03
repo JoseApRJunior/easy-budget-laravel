@@ -142,10 +142,10 @@
                                     <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
                                     <input type="text"
                                         inputmode="numeric"
-                                        class="form-control @error('discount') is-invalid @enderror"
+                                        class="form-control currency-brl @error('discount') is-invalid @enderror"
                                         id="discount"
                                         name="discount"
-                                        value="{{ old('discount', number_format($service->discount, 2, ',', '.')) }}"
+                                        value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('discount', $service->discount)), 2, false) }}"
                                         placeholder="0,00">
                                     @error('discount')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -161,7 +161,7 @@
                                         class="form-control @error('total') is-invalid @enderror"
                                         id="total"
                                         name="total"
-                                        value="{{ old('total', number_format($service->total, 2, ',', '.')) }}"
+                                        value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('total', $service->total)), 2, false) }}"
                                         placeholder="0,00">
                                     @error('total')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -176,7 +176,7 @@
                                         class="form-control @error('due_date') is-invalid @enderror"
                                         id="due_date"
                                         name="due_date"
-                                        value="{{ old('due_date', $service->due_date?->format('Y-m-d')) }}">
+                                        value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $service->due_date?->format('Y-m-d')), 'Y-m-d', $service->due_date?->format('Y-m-d') ?? '') }}">
                                     @error('due_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -194,28 +194,6 @@
                                         });
                                         document.querySelectorAll('.item-total').forEach(function(el) {
                                             new VanillaMask(el, 'currency');
-                                        });
-                                    }
-                                    var form = document.querySelector('form');
-                                    if (form) {
-                                        form.addEventListener('submit', function() {
-                                            var fields = [];
-                                            var discountEl = document.querySelector('[name="discount"]');
-                                            var totalEl = document.querySelector('[name="total"]');
-                                            if (discountEl) fields.push(discountEl);
-                                            if (totalEl) fields.push(totalEl);
-                                            document.querySelectorAll('.unit-value').forEach(function(el) {
-                                                fields.push(el);
-                                            });
-                                            document.querySelectorAll('.item-total').forEach(function(el) {
-                                                fields.push(el);
-                                            });
-                                            fields.forEach(function(input) {
-                                                if (window.parseCurrencyBRLToNumber) {
-                                                    var num = window.parseCurrencyBRLToNumber(input.value);
-                                                    input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
-                                                }
-                                            });
                                         });
                                     }
                                 } catch (e) {}
@@ -275,7 +253,7 @@
                                                     inputmode="numeric"
                                                     class="form-control unit-value"
                                                     name="items[{{ $index }}][unit_value]"
-                                                    value="{{ $old['unit_value'] ?? '' }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['unit_value'] ?? 0), 2, false) }}"
                                                     required readonly>
                                             </div>
                                             <div class="col-md-2">
@@ -284,7 +262,7 @@
                                                     inputmode="numeric"
                                                     class="form-control item-total"
                                                     name="items[{{ $index }}][total]"
-                                                    value="{{ $old['total'] ?? '' }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['total'] ?? 0), 2, false) }}"
                                                     readonly>
                                             </div>
                                             <div class="col-md-2">
@@ -341,7 +319,7 @@
                                                     inputmode="numeric"
                                                     class="form-control unit-value"
                                                     name="items[{{ $index }}][unit_value]"
-                                                    value="{{ number_format($item->unit_value, 2, ',', '.') }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, false) }}"
                                                     required readonly>
                                             </div>
                                             <div class="col-md-2">
@@ -350,7 +328,7 @@
                                                     inputmode="numeric"
                                                     class="form-control item-total"
                                                     name="items[{{ $index }}][total]"
-                                                    value="{{ number_format($item->total, 2, ',', '.') }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format($item->total, 2, false) }}"
                                                     readonly>
                                             </div>
                                             <div class="col-md-2">
@@ -418,7 +396,7 @@
                 <label class="form-label">Valor Unit.</label>
                 <input type="text"
                     inputmode="numeric"
-                    class="form-control unit-value"
+                    class="form-control unit-value currency-brl"
                     name="items[__INDEX__][unit_value]"
                     required readonly>
             </div>
@@ -426,7 +404,7 @@
                 <label class="form-label">Total</label>
                 <input type="text"
                     inputmode="numeric"
-                    class="form-control item-total"
+                    class="form-control item-total currency-brl"
                     name="items[__INDEX__][total]"
                     readonly>
             </div>
@@ -589,6 +567,12 @@
                     });
                 }
 
+                // Inicializar máscaras no novo item
+                if (window.VanillaMask) {
+                    new VanillaMask(unitValueInput, 'currency');
+                    new VanillaMask(totalInput, 'currency');
+                }
+
                 // Inicializar cálculos para itens existentes
                 calculateTotal();
             }
@@ -620,7 +604,7 @@
             if (dEl) {
                 discount = window.parseCurrencyBRLToNumber ? (window.parseCurrencyBRLToNumber(dEl.value) || 0) : (parseFloat((dEl.value || '0').replace(/\./g, '').replace(',', '.')) || 0);
             }
-            const finalTotal = sum - discount;
+            const finalTotal = Math.max(0, sum - discount);
 
             var totalEl = document.getElementById('total');
             if (totalEl) {

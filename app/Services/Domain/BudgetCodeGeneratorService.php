@@ -46,7 +46,7 @@ class BudgetCodeGeneratorService
      * Gera um código único para orçamento dentro do tenant.
      *
      * Usa database locks para garantir concorrência segura e evitar duplicatas.
-     * Padrão: ORC-2025-11-0001 (ORC-ANO-MES-SEQUENCIAL)
+     * Padrão: ORC-2025-11-000001 (ORC-ANO-MES-SEQUENCIAL)
      *
      * @param  string|null  $prefix  Prefixo customizado (padrão: ORC)
      * @return ServiceResult<string> Resultado da operação com código gerado
@@ -110,7 +110,7 @@ class BudgetCodeGeneratorService
         }
 
         return sprintf(
-            '%s-%s-%s-%04d',
+            '%s-%s-%s-%06d',
             $prefix,
             $year,
             $month,
@@ -121,7 +121,7 @@ class BudgetCodeGeneratorService
     /**
      * Extrai o número sequencial de um código.
      *
-     * @param  string  $code  Código completo (ex: ORC-2025-11-0001)
+     * @param  string  $code  Código completo (ex: ORC-2025-11-000001)
      * @return int Número sequencial
      */
     private function extractSequentialNumber(string $code): int
@@ -191,8 +191,8 @@ class BudgetCodeGeneratorService
      */
     public function validateCodeFormat(string $code): bool
     {
-        // Padrão: ORC-YYYY-MM-XXXX ou código customizado com letras e números
-        $pattern = '/^[A-Z]{3}-[0-9]{4}-[0-9]{2}-[0-9]{4}$/';
+        // Padrão: ORC-YYYY-MM-XXXXXX ou código customizado com letras e números
+        $pattern = '/^[A-Z]{3}-[0-9]{4}-[0-9]{2}-[0-9]{6}$/';
 
         // Também aceita códigos customizados
         $customPattern = '/^[A-Z]{2,5}-[A-Z0-9-]+$/';

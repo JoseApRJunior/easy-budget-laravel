@@ -32,25 +32,59 @@ class ServiceRepository extends AbstractTenantRepository
 
     /**
      * Gera código único para o serviço dentro do tenant.
-     * Padrão: SRV000001
+     * Padrão: SERV-2026-01-000001
      */
     public function generateUniqueCode(): string
     {
-        $lastService = $this->model->newQuery()
-            ->where('code', 'LIKE', 'SRV%')
-            ->withTrashed()
-            ->orderBy('code', 'desc')
-            ->first();
+        $year = date('Y');
+        $month = date('m');
 
-        if (! $lastService) {
-            return 'SRV000001';
+        $lastService = $this->getLastServiceByMonth($year, $month);
+
+        $sequential = 1;
+        if ($lastService) {
+            $sequential = $this->extractSequentialNumber($lastService->code) + 1;
         }
 
-        // Extrai apenas os números do código
-        $lastNumber = (int) filter_var($lastService->code, FILTER_SANITIZE_NUMBER_INT);
-        $nextNumber = $lastNumber + 1;
+        return sprintf(
+            'SERV-%s-%s-%06d',
+            $year,
+            $month,
+            $sequential
+        );
+    }
 
-        return 'SRV'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+    /**
+     * Busca o último serviço criado em um determinado mês/ano.
+     */
+    public function getLastServiceByMonth(string $year, string $month): ?Service
+    {
+        return $this->model->newQuery()
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->where('code', 'LIKE', 'SERV-%')
+            ->orderBy('code', 'desc')
+            ->first();
+    }
+
+    /**
+     * Extrai o número sequencial de um código.
+     * Padrão esperado: SERV-YYYY-MM-XXXX
+     */
+    private function extractSequentialNumber(string $code): int
+    {
+        $parts = explode('-', $code);
+
+        if (count($parts) >= 4) {
+            return (int) $parts[3];
+        }
+
+        // Caso seja o padrão antigo SRV000001
+        if (str_starts_with($code, 'SRV') && ! str_contains($code, '-')) {
+            return (int) filter_var($code, FILTER_SANITIZE_NUMBER_INT);
+        }
+
+        return 1;
     }
 
     /**

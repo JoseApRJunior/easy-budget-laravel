@@ -90,10 +90,19 @@ class BudgetUpdateRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Converte valores vazios para null
-        if ($this->discount === '') {
-            $this->merge(['discount' => null]);
+        // Unformat currency values
+        if ($this->has('discount')) {
+            $this->merge([
+                'discount' => \App\Helpers\CurrencyHelper::unformat($this->discount),
+            ]);
         }
+        if ($this->has('total')) {
+            $this->merge([
+                'total' => \App\Helpers\CurrencyHelper::unformat($this->total),
+            ]);
+        }
+
+        // Converte valores vazios para null
         if ($this->due_date === '') {
             $this->merge(['due_date' => null]);
         }

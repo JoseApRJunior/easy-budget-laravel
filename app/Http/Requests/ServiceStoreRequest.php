@@ -16,6 +16,26 @@ class ServiceStoreRequest extends FormRequest
     }
 
     /**
+     * Prepara os dados para validação.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'discount' => \App\Helpers\CurrencyHelper::unformat($this->discount),
+        ]);
+
+        if ($this->has('items')) {
+            $items = $this->items;
+            foreach ($items as $key => $item) {
+                if (isset($item['unit_value'])) {
+                    $items[$key]['unit_value'] = \App\Helpers\CurrencyHelper::unformat($item['unit_value']);
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
+    }
+
+    /**
      * Retorna as regras de validação que se aplicam à requisição.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
