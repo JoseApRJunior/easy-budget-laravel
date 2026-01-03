@@ -5,23 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\DTOs\Service\ServiceDTO;
+use App\Enums\ServiceStatus;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ServiceStoreRequest;
 use App\Http\Requests\ServiceUpdateRequest;
 use App\Models\Service;
-use App\Enums\ServiceStatus;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CategoryService;
 use App\Services\Domain\ProductService;
 use App\Services\Domain\ServiceService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-
-use App\Helpers\DateHelper;
 
 /**
  * Controller para gestão de serviços - Interface Web
@@ -122,12 +119,17 @@ class ServiceController extends Controller
         $budgetsResult = $this->budgetService->getBudgetsForProvider(['per_page' => 100]);
         $budgets = $budgetsResult->isSuccess() ? $budgetsResult->getData() : [];
 
+        // Gera o próximo código para preview
+        $nextCodeResult = $this->serviceService->generateNextCode();
+        $nextCode = $nextCodeResult->isSuccess() ? $nextCodeResult->getData() : 'SRV000001';
+
         return view('pages.service.create', [
             'budget' => $budget,
             'budgets' => $budgets,
-            'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
-            'products' => $this->productService->list()->getData(),
-            'statusOptions' => ServiceStatus::cases(),
+            'categories' => $this->categoryService->list(['type' => 'service'])->getData() ?? collect(),
+            'products' => $this->productService->list()->getData() ?? collect(),
+            'statusOptions' => [ServiceStatus::DRAFT], // Apenas rascunho na criação
+            'nextCode' => $nextCode,
         ]);
     }
 
@@ -137,7 +139,7 @@ class ServiceController extends Controller
     public function store(ServiceStoreRequest $request): RedirectResponse
     {
         $this->authorize('create', Service::class);
-        $dto = ServiceDTO::fromRequest($request->validated());
+        $dto = ServiceDTO::fromRequest($request->getValidatedData());
         $result = $this->serviceService->create($dto);
 
         if ($result->isError()) {

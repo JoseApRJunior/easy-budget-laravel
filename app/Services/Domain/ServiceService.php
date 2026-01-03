@@ -70,6 +70,17 @@ class ServiceService extends AbstractBaseService
     }
 
     /**
+     * Gera o próximo código disponível para um novo serviço.
+     */
+    public function generateNextCode(): ServiceResult
+    {
+        return $this->safeExecute(function () {
+            $code = $this->repository->generateUniqueCode();
+            return ServiceResult::success($code);
+        }, 'Erro ao gerar código de serviço.');
+    }
+
+    /**
      * Cria um novo serviço usando DTO.
      */
     public function create(array|ServiceDTO $data): ServiceResult
@@ -79,17 +90,17 @@ class ServiceService extends AbstractBaseService
 
             return DB::transaction(function () use ($dto) {
                 // Prepara dados - o código pode vir no DTO ou ser gerado
-                $serviceData = $dto->toArray();
+                $serviceData = $dto->toDatabaseArray();
                 if (empty($serviceData['code'])) {
-                    $serviceData['code'] = 'SRV-'.strtoupper(bin2hex(random_bytes(4)));
+                    $serviceData['code'] = $this->repository->generateUniqueCode();
                 }
 
-                $service = $this->repository->createFromDTO($dto);
-
-                // Atualiza o código se foi gerado aqui
-                if (empty($dto->code)) {
-                    $service->update(['code' => $serviceData['code']]);
+                // Garante que o status seja draft se não for informado
+                if (empty($serviceData['status'])) {
+                    $serviceData['status'] = ServiceStatus::DRAFT->value;
                 }
+
+                $service = $this->repository->create($serviceData);
 
                 if (! empty($dto->items)) {
                     foreach ($dto->items as $itemDto) {

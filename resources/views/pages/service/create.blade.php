@@ -47,13 +47,17 @@
                             <select class="form-select tom-select @error('budget_id') is-invalid @enderror" id="budget_id"
                                 name="budget_id" required>
                                 <option value="">Selecione um orçamento</option>
+                                @if($budgets && is_iterable($budgets))
                                 @foreach ($budgets as $budgetOption)
+                                @if($budgetOption && isset($budgetOption->id))
                                 <option value="{{ $budgetOption->id }}"
                                     {{ old('budget_id') == $budgetOption->id || ($budget && $budget->id == $budgetOption->id) ? 'selected' : '' }}>
                                     {{ $budgetOption->code }} - R$
                                     {{ number_format($budgetOption->total, 2, ',', '.') }}
                                 </option>
+                                @endif
                                 @endforeach
+                                @endif
                             </select>
                             @error('budget_id')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -69,7 +73,9 @@
                             <select class="form-select tom-select @error('category_id') is-invalid @enderror"
                                 id="category_id" name="category_id" required>
                                 <option value="">Selecione uma categoria</option>
+                                @if($categories && is_iterable($categories))
                                 @foreach ($categories as $category)
+                                @if($category && isset($category->id))
                                 @if ($category->children->isEmpty())
                                 <option value="{{ $category->id }}"
                                     {{ old('category_id') == $category->id ? 'selected' : '' }}>
@@ -82,14 +88,18 @@
                                         {{ $category->name }} (Geral)
                                     </option>
                                     @foreach ($category->children as $subcategory)
+                                    @if($subcategory && isset($subcategory->id))
                                     <option value="{{ $subcategory->id }}"
                                         {{ old('category_id') == $subcategory->id ? 'selected' : '' }}>
                                         {{ $subcategory->name }}
                                     </option>
+                                    @endif
                                     @endforeach
                                 </optgroup>
                                 @endif
+                                @endif
                                 @endforeach
+                                @endif
                             </select>
                             @error('category_id')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -105,8 +115,8 @@
                                 Código do Serviço <span class="text-muted">(gerado automaticamente)</span>
                             </label>
                             <input type="text" class="form-control" id="code" name="code"
-                                value="{{ old('code') }}" readonly placeholder="Será gerado automaticamente">
-                            <div class="form-text">Código será gerado automaticamente ao salvar.</div>
+                                value="{{ old('code', $nextCode) }}" readonly placeholder="Será gerado automaticamente">
+                            <div class="form-text">Código pré-visualizado. Será confirmado ao salvar.</div>
                         </div>
                     </div>
 
@@ -116,15 +126,15 @@
                                 Status <span class="text-danger">*</span>
                             </label>
                             <select class="form-select tom-select @error('service_statuses_id') is-invalid @enderror"
-                                id="service_statuses_id" name="service_statuses_id" required>
-                                <option value="">Selecione um status</option>
+                                id="service_statuses_id" name="service_statuses_id" required disabled>
                                 @foreach ($statusOptions as $status)
-                                <option value="{{ $status->value }}"
-                                    {{ old('service_statuses_id', \App\Enums\ServiceStatus::DRAFT->value) == $status->value ? 'selected' : '' }}>
-                                    {{ $status->getDescription() }}
+                                <option value="{{ $status->value }}" selected>
+                                    {{ $status->label() }}
                                 </option>
                                 @endforeach
                             </select>
+                            <input type="hidden" name="service_statuses_id" value="{{ \App\Enums\ServiceStatus::DRAFT->value }}">
+                            <div class="form-text">Novos serviços são criados como Rascunho por padrão.</div>
                             @error('service_statuses_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -445,12 +455,13 @@
         });
 
         // Auto-seleção de orçamento se fornecido
-        @if (isset($budget) && $budget)
-            document.getElementById('budget_id').value = '{{ $budget->id }}';
+        const budgetId = "{{ optional($budget)->id ?? '' }}";
+        if (budgetId) {
+            document.getElementById('budget_id').value = budgetId;
             if (typeof addItemBtn !== 'undefined') {
                 addItemBtn.disabled = false;
             }
-        @endif
+        }
 
         // NÃO adicionar item automaticamente - deixar empty state visível
 

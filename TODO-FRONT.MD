@@ -39,17 +39,35 @@ O padrão de relatórios deve seguir a estrutura de filtros com estado inicial v
 #### Padrão de Campos de Formulário (Create/Edit)
 Para campos de entrada em formulários, seguir a estrutura utilizada no Budget Create:
 - **Label:** `form-label small fw-bold text-muted text-uppercase`.
-- **Input de Data:** `type="date"` (nativo do navegador para melhor UX mobile) ou `type="text"` com máscara se necessário. Sempre definir `min="{{ date('Y-m-d') }}"` para campos de vencimento/prazo.
-- **Selects:** Utilizar a classe `tom-select` para busca dinâmica.
+- **Input de Data:** Priorizar `type="text"` com máscara `DD/MM/AAAA` e `placeholder="DD/MM/AAAA"`. 
+  - **Motivo:** Evita conflitos com `TomSelect` e garante consistência visual em todos os navegadores.
+  - **Implementação:** Utilizar a biblioteca `VanillaMask` para formatação automática e inicializar no `DOMContentLoaded`.
+- **Selects:** Utilizar a classe `tom-select` para busca dinâmica. 
+  - **Importante:** Sempre inicializar o `TomSelect` em novos elementos dinâmicos (como linhas de itens) para garantir o funcionamento da busca.
+  - **Exemplo de Inicialização Dinâmica:**
+    ```javascript
+    const initTomSelect = (element) => {
+        if (element && !element.tomselect) {
+            new TomSelect(element, {
+                create: false,
+                sortField: { field: "text", order: "asc" }
+            });
+        }
+    };
+    
+    // Ao adicionar nova linha:
+    const newSelect = row.querySelector('.tom-select');
+    initTomSelect(newSelect);
+    ```
 
 Exemplo de campo de data:
 ```blade
 <div class="col-md-6">
     <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
-    <input type="date" id="due_date" name="due_date"
+    <input type="text" id="due_date" name="due_date"
         class="form-control @error('due_date') is-invalid @enderror"
         value="{{ old('due_date') }}"
-        min="{{ date('Y-m-d') }}" required>
+        inputmode="numeric" placeholder="DD/MM/AAAA" required>
     @error('due_date')
     <div class="invalid-feedback">{{ $message }}</div>
     @enderror

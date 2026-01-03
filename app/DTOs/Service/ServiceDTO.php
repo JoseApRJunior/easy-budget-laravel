@@ -30,7 +30,7 @@ readonly class ServiceDTO extends AbstractDTO
         return new self(
             budget_id: isset($data['budget_id']) ? (int) $data['budget_id'] : null,
             category_id: (int) $data['category_id'],
-            status: isset($data['status']) ? ServiceStatus::from($data['status']) : ServiceStatus::PENDING,
+            status: isset($data['status']) ? ServiceStatus::from($data['status']) : ServiceStatus::DRAFT,
             code: $data['code'] ?? null,
             description: $data['description'] ?? null,
             discount: (float) ($data['discount'] ?? 0.0),

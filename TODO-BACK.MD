@@ -218,77 +218,72 @@ if (InvoiceStatus::isValid($someValue)) {
 
 ---
 
-### 📋 Exemplos Práticos
+### 🛡️ 11. STATUS ENUM INTERFACE - Padronização de Status
 
-#### Exemplo 1: Filtro por Status
+> **✅ OBRIGATÓRIO:** Todo Enum de status (Budget, Service, Invoice, etc.) deve implementar a `StatusEnumInterface`.
+
+#### Estrutura Recomendada
+Utilize a trait `HasStatusEnumMethods` para implementar automaticamente os métodos da interface.
 
 ```php
-// No controller
-public function index(Request $request)
+namespace App\Enums;
+
+use App\Contracts\Interfaces\StatusEnumInterface;
+use App\Traits\Enums\HasStatusEnumMethods;
+
+enum ServiceStatus: string implements StatusEnumInterface
 {
-    $status = $request->input('status');
+    use HasStatusEnumMethods;
 
-    if ($status && !InvoiceStatus::isValid($status)) {
-        return back()->withErrors(['status' => 'Status inválido']);
-    }
-
-    $query = Invoice::where('tenant_id', tenant('id'));
-
-    if ($status) {
-        $query->where('status', $status);
-    }
-
-    return view('invoices.index', ['invoices' => $query->paginate(15)]);
+    case DRAFT = 'draft';
+    // ... cases
 }
 ```
 
-#### Exemplo 2: Atualização de Status
-
-```php
-// No controller
-public function updateStatus(Invoice $invoice, Request $request)
-{
-    $validated = $request->validate([
-        'status' => ['required', 'string', Rule::in(InvoiceStatus::values())],
-    ]);
-
-    $status = InvoiceStatus::from($validated['status']);
-
-    $invoice->update(['status' => $status->value]);
-
-    return redirect()->back()->with('success', 'Status atualizado com sucesso!');
-}
-```
-
-#### Exemplo 3: Verificação de Status
-
-```php
-// Em um service
-public function canPay(Invoice $invoice): bool
-{
-    return $invoice->status === InvoiceStatus::PENDING->value
-        || $invoice->status === InvoiceStatus::OVERDUE->value;
-}
-
-public function isPaid(Invoice $invoice): bool
-{
-    return $invoice->status === InvoiceStatus::PAID->value;
-}
-```
+#### Benefícios
+- **getOptions():** Retorna opções prontas para o Select do Blade.
+- **getMetadata():** Retorna cor, ícone e label para badges.
+- **isFinished() / isActive():** Facilita lógica de negócio (ex: não editar se finalizado).
 
 ---
 
-### 📅 11. DATE FILTERING PATTERNS - Padrão de Filtragem de Data
+### 📅 12. DATE FILTERING & DTO PATTERNS - Normalização de Datas
 
-#### Repositórios e Traits
-- **Precisão:** Sempre utilizar intervalos de tempo (datetime) em vez de `whereDate` para garantir consistência entre diferentes bancos de dados e precisão de segundos.
-- **Intervalo:**
-  - Data Inicial: `00:00:00`
-  - Data Final: `23:59:59`
-- **Trait:** Utilizar a `RepositoryFiltersTrait` com o método `applyDateRangeFilter`.
+#### Normalização no Controller (Filtros)
+Datas vindas do Frontend (`DD/MM/AAAA`) devem ser convertidas para `Y-m-d` antes de consultas.
 
-Exemplo na `RepositoryFiltersTrait`:
 ```php
+use App\Helpers\DateHelper;
+
+public function index(Request $request)
+{
+    $filters = $request->validate([
+        'start_date' => 'nullable|string',
+        'end_date' => 'nullable|string',
+    ]);
+
+    if (!empty($filters['start_date'])) {
+        $filters['start_date'] = DateHelper::parseDate($filters['start_date']);
+    }
+    // ...
+}
+```
+
+#### Normalização no DTO
+Use `DateHelper::toCarbon()` ou `DateHelper::parseDate()` no `fromRequest`.
+
+```php
+public static function fromRequest(array $data): self
+{
+    return new self(
+        // Para campos Carbon no DTO
+        due_date: DateHelper::toCarbon($data['due_date'] ?? null),
+        
+        // Para campos string (Y-m-d) no DTO
+        birth_date: DateHelper::parseDate($data['birth_date'] ?? null),
+    );
+}
+```
 protected function applyDateRangeFilter($query, $startDate, $endDate, $column = 'created_at')
 {
     if ($startDate) {

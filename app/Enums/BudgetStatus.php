@@ -12,6 +12,7 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     case PENDING = 'pending';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
+    case IN_PROGRESS = 'in_progress';
     case CANCELLED = 'cancelled';
     case COMPLETED = 'completed';
 
@@ -25,6 +26,7 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
             self::PENDING => 'Pendente',
             self::APPROVED => 'Aprovado',
             self::REJECTED => 'Rejeitado',
+            self::IN_PROGRESS => 'Em Andamento',
             self::CANCELLED => 'Cancelado',
             self::COMPLETED => 'Concluído',
         };
@@ -36,12 +38,13 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     public function getDescription(): string
     {
         return match ($this) {
-            self::DRAFT => 'Orçamento em elaboração',
+            self::DRAFT => 'Orçamento em elaboração, permite modificações',
             self::PENDING => 'Aguardando aprovação do cliente',
-            self::APPROVED => 'Orçamento aprovado',
-            self::REJECTED => 'Orçamento rejeitado',
+            self::APPROVED => 'Aprovado pelo cliente',
+            self::REJECTED => 'Rejeitado pelo cliente',
+            self::IN_PROGRESS => 'Serviços vinculados em execução',
             self::CANCELLED => 'Orçamento cancelado',
-            self::COMPLETED => 'Orçamento concluído',
+            self::COMPLETED => 'Orçamento finalizado com sucesso',
         };
     }
 
@@ -55,8 +58,9 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
             self::PENDING => 'warning',
             self::APPROVED => 'success',
             self::REJECTED => 'danger',
+            self::IN_PROGRESS => 'primary',
             self::CANCELLED => 'gray',
-            self::COMPLETED => 'primary',
+            self::COMPLETED => 'success',
         };
     }
 
@@ -68,10 +72,11 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
         return match ($this) {
             self::DRAFT => '#6c757d',
             self::PENDING => '#ffc107',
-            self::APPROVED => '#28a745',
-            self::REJECTED => '#dc3545',
+            self::APPROVED => '#10B981',
+            self::REJECTED => '#DC2626',
+            self::IN_PROGRESS => '#007bff',
             self::CANCELLED => '#6c757d',
-            self::COMPLETED => '#007bff',
+            self::COMPLETED => '#10B981',
         };
     }
 
@@ -85,6 +90,7 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
             self::PENDING => 'hourglass-split',
             self::APPROVED => 'check-circle-fill',
             self::REJECTED => 'x-circle-fill',
+            self::IN_PROGRESS => 'play-circle-fill',
             self::CANCELLED => 'x-circle',
             self::COMPLETED => 'check-circle',
         };
@@ -95,7 +101,7 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
      */
     public function getIcon(): string
     {
-        return 'bi-' . $this->icon();
+        return 'bi-'.$this->icon();
     }
 
     /**
@@ -169,7 +175,7 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     public static function getAllowedTransitions(string $statusValue): array
     {
         $status = self::tryFrom($statusValue);
-        if (!$status) {
+        if (! $status) {
             return [];
         }
 

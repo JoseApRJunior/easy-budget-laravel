@@ -31,6 +31,29 @@ class ServiceRepository extends AbstractTenantRepository
     }
 
     /**
+     * Gera código único para o serviço dentro do tenant.
+     * Padrão: SRV000001
+     */
+    public function generateUniqueCode(): string
+    {
+        $lastService = $this->model->newQuery()
+            ->where('code', 'LIKE', 'SRV%')
+            ->withTrashed()
+            ->orderBy('code', 'desc')
+            ->first();
+
+        if (! $lastService) {
+            return 'SRV000001';
+        }
+
+        // Extrai apenas os números do código
+        $lastNumber = (int) filter_var($lastService->code, FILTER_SANITIZE_NUMBER_INT);
+        $nextNumber = $lastNumber + 1;
+
+        return 'SRV'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Lista serviços por status dentro do tenant atual.
      */
     public function listByStatuses(array $statuses, ?array $orderBy = null, ?int $limit = null): Collection
