@@ -21,7 +21,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h5 class="text-muted fw-normal mt-0 text-truncate">Total de Requisições</h5>
-                            <h3 class="my-2 py-1">{{ number_format( $stats[ 'total_requests' ] ) }}</h3>
+                            <h3 class="my-2 py-1">{{ \App\Helpers\CurrencyHelper::format( $stats[ 'total_requests' ], 0, false ) }}</h3>
                         </div>
                         <div class="col-6">
                             <div class="text-end">
@@ -39,7 +39,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h5 class="text-muted fw-normal mt-0 text-truncate">Tempo Médio</h5>
-                            <h3 class="my-2 py-1">{{ number_format( $stats[ 'avg_response_time' ], 2 ) }}ms</h3>
+                            <h3 class="my-2 py-1">{{ \App\Helpers\CurrencyHelper::format( $stats[ 'avg_response_time' ], 2, false ) }}ms</h3>
                         </div>
                         <div class="col-6">
                             <div class="text-end">
@@ -57,7 +57,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h5 class="text-muted fw-normal mt-0 text-truncate">Memória Média</h5>
-                            <h3 class="my-2 py-1">{{ number_format( $stats[ 'avg_memory_usage' ] / 1024 / 1024, 1 ) }}MB</h3>
+                            <h3 class="my-2 py-1">{{ \App\Helpers\CurrencyHelper::format( $stats[ 'avg_memory_usage' ] / 1024 / 1024, 1, false ) }}MB</h3>
                         </div>
                         <div class="col-6">
                             <div class="text-end">
@@ -75,7 +75,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h5 class="text-muted fw-normal mt-0 text-truncate">Taxa de Cache</h5>
-                            <h3 class="my-2 py-1">{{ number_format( $stats[ 'cache_hit_rate' ], 1 ) }}%</h3>
+                            <h3 class="my-2 py-1">{{ \App\Helpers\CurrencyHelper::format( $stats[ 'cache_hit_rate' ], 1, false ) }}%</h3>
                         </div>
                         <div class="col-6">
                             <div class="text-end">
@@ -145,13 +145,13 @@
                                         <td>
                                             @if ( $metric[ 'responseTime' ] > 1000 )
                                                 <span class="text-danger fw-bold"><i class="mdi mdi-alert-circle"></i>
-                                                    {{ number_format( $metric[ 'responseTime' ], 2 ) }}ms</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format( $metric[ 'responseTime' ], 2, false ) }}ms</span>
                                             @elseif ( $metric[ 'responseTime' ] > 500 )
                                                 <span class="text-warning fw-bold"><i class="mdi mdi-alert"></i>
-                                                    {{ number_format( $metric[ 'responseTime' ], 2 ) }}ms</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format( $metric[ 'responseTime' ], 2, false ) }}ms</span>
                                             @else
                                                 <span class="text-success"><i class="mdi mdi-check-circle"></i>
-                                                    {{ number_format( $metric[ 'responseTime' ], 2 ) }}ms</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format( $metric[ 'responseTime' ], 2, false ) }}ms</span>
                                             @endif
                                         </td>
                                         <td>

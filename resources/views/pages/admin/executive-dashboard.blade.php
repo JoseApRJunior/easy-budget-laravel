@@ -28,7 +28,7 @@
                         <div class="d-flex align-items-center justify-content-center mb-2">
                             <i class="bi bi-activity fs-1 text-primary me-2"></i>
                             <div>
-                                <h3 class="mb-0">{{ number_format($kpis['total_requests']) }}</h3>
+                                <h3 class="mb-0">{{ \App\Helpers\CurrencyHelper::format($kpis['total_requests'], 0, false) }}</h3>
                                 <small class="text-muted">Requisições (24h)</small>
                             </div>
                         </div>

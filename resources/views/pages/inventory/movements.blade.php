@@ -170,11 +170,11 @@
                             </td>
                             <td class="px-3 text-center fw-bold">
                                 @if($movement->type === 'entry')
-                                <span class="text-success">+{{ number_format($movement->quantity, 0, ',', '.') }}</span>
+                                <span class="text-success">+{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}</span>
                                 @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
-                                <span class="text-danger">-{{ number_format($movement->quantity, 0, ',', '.') }}</span>
+                                <span class="text-danger">-{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}</span>
                                 @else
-                                <span class="text-dark">{{ number_format($movement->quantity, 0, ',', '.') }}</span>
+                                <span class="text-dark">{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}</span>
                                 @endif
                             </td>
                             <td class="px-3 text-center fw-bold text-dark">
@@ -186,7 +186,7 @@
                                     $currentQuantity -= $movement->quantity;
                                 }
                                 @endphp
-                                {{ number_format($currentQuantity, 0, ',', '.') }}
+                                {{ \App\Helpers\CurrencyHelper::format($currentQuantity, 0, false) }}
                             </td>
                             <td class="px-3">
                                 <small class="text-muted" title="{{ $movement->reason }}">
@@ -260,11 +260,11 @@
                                     <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Qtd</div>
                                     <div class="fw-bold {{ $movement->type === 'entry' ? 'text-success' : ($movement->type === 'exit' || $movement->type === 'subtraction' ? 'text-danger' : '') }}">
                                         @if($movement->type === 'entry')
-                                            +{{ number_format($movement->quantity, 0, ',', '.') }}
+                                            +{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
                                         @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
-                                            -{{ number_format($movement->quantity, 0, ',', '.') }}
+                                            -{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
                                         @else
-                                            {{ number_format($movement->quantity, 0, ',', '.') }}
+                                            {{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
                                         @endif
                                     </div>
                                 </div>
@@ -279,7 +279,7 @@
                                             $currentQuantity -= $movement->quantity;
                                         }
                                         @endphp
-                                        {{ number_format($currentQuantity, 0, ',', '.') }}
+                                        {{ \App\Helpers\CurrencyHelper::format($currentQuantity, 0, false) }}
                                     </div>
                                 </div>
                             </div>

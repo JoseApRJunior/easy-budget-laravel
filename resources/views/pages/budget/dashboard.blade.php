@@ -22,7 +22,7 @@
             $totalValue = $stats['total_budget_value'] ?? 0;
             $recent = $stats['recent_budgets'] ?? collect();
 
-            $approvedRate = $total > 0 ? number_format(($approved / $total) * 100, 1, ',', '.') : 0;
+            $approvedRate = $total > 0 ? \App\Helpers\CurrencyHelper::format(($approved / $total) * 100, 1, false) : 0;
         @endphp
 
         <!-- Cards de Métricas -->
@@ -115,7 +115,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Valor Total em Orçamentos</h6>
-                                <h3 class="mb-0 fw-bold">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
+                                <h3 class="mb-0 fw-bold">{{ \App\Helpers\CurrencyHelper::format($totalValue) }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
@@ -134,7 +134,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Ticket Médio</h6>
-                                <h3 class="mb-0 fw-bold">R$ {{ $total > 0 ? number_format($totalValue / $total, 2, ',', '.') : '0,00' }}</h3>
+                                <h3 class="mb-0 fw-bold">{{ $total > 0 ? \App\Helpers\CurrencyHelper::format($totalValue / $total) : '0,00' }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0 lh-sm">
@@ -208,7 +208,7 @@
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td class="fw-bold text-dark">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
+                                                    <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</td>
                                                     <td>
                                                         <x-status-badge :item="$budget" />
                                                     </td>
@@ -249,7 +249,7 @@
                                             <div class="row g-2">
                                                 <div class="col-6">
                                                     <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor Total</small>
-                                                    <span class="fw-bold text-primary">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
+                                                    <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</span>
                                                 </div>
                                                 <div class="col-6 text-end">
                                                     <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>

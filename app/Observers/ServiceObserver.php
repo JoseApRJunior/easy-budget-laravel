@@ -20,8 +20,28 @@ class ServiceObserver
     }
 
     /**
-     * Handle the Service \"updated\" event.
-     * Gera fatura automaticamente quando o serviço muda para status \"completed\"
+     * Handle the Service "saved" event.
+     */
+    public function saved(Service $service): void
+    {
+        if ($service->budget_id) {
+            $this->updateBudgetTotal($service->budget_id);
+        }
+    }
+
+    /**
+     * Handle the Service "deleted" event.
+     */
+    public function deleted(Service $service): void
+    {
+        if ($service->budget_id) {
+            $this->updateBudgetTotal($service->budget_id);
+        }
+    }
+
+    /**
+     * Handle the Service "updated" event.
+     * Gera fatura automaticamente quando o serviço muda para status "completed"
      */
     public function updated(Service $service): void
     {
@@ -33,13 +53,30 @@ class ServiceObserver
             'original_status' => $service->getOriginal('status'),
         ]);
 
-        // Verificar se o status mudou para \"completed\"
+        // Verificar se o status mudou para "completed"
         if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {
             Log::info('Service status changed to completed, generating automatic invoice', [
                 'service_id' => $service->id,
                 'service_code' => $service->code,
             ]);
             $this->generateAutomaticInvoice($service);
+        }
+    }
+
+    /**
+     * Atualiza o total do orçamento pai.
+     */
+    private function updateBudgetTotal(int $budgetId): void
+    {
+        $budget = \App\Models\Budget::find($budgetId);
+        if ($budget) {
+            $total = $budget->services()->sum('total');
+            $budget->update(['total' => $total]);
+
+            Log::info('Budget total synchronized via ServiceObserver', [
+                'budget_id' => $budgetId,
+                'new_total' => $total
+            ]);
         }
     }
 

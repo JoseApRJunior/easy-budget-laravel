@@ -75,5 +75,23 @@ class InvoiceStoreRequest extends FormRequest
                 $this->merge(['service_id' => $service->id]);
             }
         }
+
+        // Desformatar valores monetários globais
+        $monetaryFields = ['subtotal', 'discount', 'total'];
+        foreach ($monetaryFields as $field) {
+            if ($this->has($field)) {
+                $this->merge([$field => \App\Helpers\CurrencyHelper::unformat($this->input($field))]);
+            }
+        }
+
+        if ($this->has('items')) {
+            $items = $this->items;
+            foreach ($items as $key => $item) {
+                if (isset($item['unit_value'])) {
+                    $items[$key]['unit_value'] = \App\Helpers\CurrencyHelper::unformat($item['unit_value']);
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
     }
 }

@@ -128,7 +128,7 @@
                         {{ \Carbon\Carbon::parse($budget->due_date)->format('d/m/Y') }}
                     </td>
                     <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">R$
-                        {{ number_format($budget->total, 2, ',', '.') }}
+                        {{ \App\Helpers\CurrencyHelper::format($budget->total) }}
                     </td>
                     <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
                         <span style="color: {{ $budget->color }} !important; border-bottom: 2px solid {{ $budget->color }} !important;">
@@ -144,7 +144,7 @@
                         <strong>Total:</strong>
                     </td>
                     <td style="text-align: right; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        <strong>R$ {{ number_format($totals['sum'], 2, ',', '.') }}</strong>
+                        <strong>{{ \App\Helpers\CurrencyHelper::format($totals['sum']) }}</strong>
                     </td>
                     <td style="text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;"></td>
                 </tr>
@@ -164,11 +164,11 @@
                 </td>
                 <td style="width: 33.33%; text-align: center;">
                     <span style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Valor Total:</span>
-                    <span style="font-size: 14px; font-weight: bold; color: #333;">R$ {{ number_format($totals['sum'], 2, ',', '.') }}</span>
+                    <span style="font-size: 14px; font-weight: bold; color: #333;">{{ \App\Helpers\CurrencyHelper::format($totals['sum']) }}</span>
                 </td>
                 <td style="width: 33.33%; text-align: center;">
                     <span style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Média por Orçamento:</span>
-                    <span style="font-size: 14px; font-weight: bold; color: #333;">R$ {{ number_format($totals['avg'], 2, ',', '.') }}</span>
+                    <span style="font-size: 14px; font-weight: bold; color: #333;">{{ \App\Helpers\CurrencyHelper::format($totals['avg']) }}</span>
                 </td>
             </tr>
         </table>

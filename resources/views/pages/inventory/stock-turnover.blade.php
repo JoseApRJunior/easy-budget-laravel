@@ -92,7 +92,7 @@
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Produtos</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold display-6">{{ number_format($reportData['total_products'], 0, ',', '.') }}</h5>
+                        <h5 class="mb-0 fw-bold display-6">{{ \App\Helpers\CurrencyHelper::format($reportData['total_products'], 0, false) }}</h5>
                     </div>
                 </div>
             </div>
@@ -107,7 +107,7 @@
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Entradas</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold display-6"><span class="text-success small">+</span>{{ number_format($reportData['total_entries'], 0, ',', '.') }}</h5>
+                        <h5 class="mb-0 fw-bold display-6"><span class="text-success small">+</span>{{ \App\Helpers\CurrencyHelper::format($reportData['total_entries'], 0, false) }}</h5>
                     </div>
                 </div>
             </div>
@@ -122,7 +122,7 @@
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Saídas</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold display-6"><span class="text-danger small">-</span>{{ number_format($reportData['total_exits'], 0, ',', '.') }}</h5>
+                        <h5 class="mb-0 fw-bold display-6"><span class="text-danger small">-</span>{{ \App\Helpers\CurrencyHelper::format($reportData['total_exits'], 0, false) }}</h5>
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Giro Médio</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold display-6">{{ number_format($reportData['average_turnover'], 2, ',', '.') }}</h5>
+                        <h5 class="mb-0 fw-bold display-6">{{ \App\Helpers\CurrencyHelper::format($reportData['average_turnover'], 2, false) }}</h5>
                     </div>
                 </div>
             </div>
@@ -229,20 +229,20 @@
                                     <td class="text-muted small">{{ $item->category->name ?? 'Geral' }}</td>
                                     <td class="text-center">
                                         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
-                                            {{ number_format($item->inventory->quantity ?? 0, 0, ',', '.') }}
+                                            {{ \App\Helpers\CurrencyHelper::format($item->inventory->quantity ?? 0, 0, false) }}
                                         </span>
                                     </td>
                                     <td class="text-center text-muted small">
-                                        {{ number_format($item->average_stock, 1, ',', '.') }}
+                                        {{ \App\Helpers\CurrencyHelper::format($item->average_stock, 1, false) }}
                                     </td>
                                     <td class="text-center">
-                                        <span class="text-success fw-bold">+{{ number_format($item->total_entries, 0, ',', '.') }}</span>
+                                        <span class="text-success fw-bold">+{{ \App\Helpers\CurrencyHelper::format($item->total_entries, 0, false) }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="text-danger fw-bold">-{{ number_format($item->total_exits, 0, ',', '.') }}</span>
+                                        <span class="text-danger fw-bold">-{{ \App\Helpers\CurrencyHelper::format($item->total_exits, 0, false) }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="fw-bold text-dark">{{ number_format($turnover, 2, ',', '.') }}</span>
+                                        <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($turnover, 2, false) }}</span>
                                     </td>
                                     <td class="text-center">
                                         <span class="modern-badge badge-{{ $classificationColor }}"
@@ -311,19 +311,19 @@
                                 <div class="row g-2 mb-3  rounded p-2 mx-0">
                                     <div class="col-6">
                                         <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Estoque</small>
-                                        <span class="fw-bold small">{{ number_format($item->inventory->quantity ?? 0, 0, ',', '.') }}</span>
+                                        <span class="fw-bold small">{{ \App\Helpers\CurrencyHelper::format($item->inventory->quantity ?? 0, 0, false) }}</span>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Giro</small>
-                                        <span class="fw-bold small text-primary">{{ number_format($turnover, 2, ',', '.') }}</span>
+                                        <span class="fw-bold small text-primary">{{ \App\Helpers\CurrencyHelper::format($turnover, 2, false) }}</span>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Entradas (+)</small>
-                                        <span class="text-success fw-bold small">{{ number_format($item->total_entries, 0, ',', '.') }}</span>
+                                        <span class="text-success fw-bold small">{{ \App\Helpers\CurrencyHelper::format($item->total_entries, 0, false) }}</span>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Saídas (-)</small>
-                                        <span class="text-danger fw-bold small">{{ number_format($item->total_exits, 0, ',', '.') }}</span>
+                                        <span class="text-danger fw-bold small">{{ \App\Helpers\CurrencyHelper::format($item->total_exits, 0, false) }}</span>
                                     </div>
                                 </div>
 

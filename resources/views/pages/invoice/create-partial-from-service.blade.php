@@ -100,13 +100,13 @@
                                         </td>
                                         <td class="text-end">
                                             R$ <span
-                                                class="unit-value">{{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                class="unit-value">{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, false) }}</span>
                                             <input type="hidden" name="items[{{ $index }}][unit_value]"
                                                 value="{{ $item->unit_value }}">
                                         </td>
                                         <td class="text-end">
                                             R$ <span
-                                                class="total-item">{{ number_format($item->total, 2, ',', '.') }}</span>
+                                                class="total-item">{{ \App\Helpers\CurrencyHelper::format($item->total, 2, false) }}</span>
                                         </td>
                                         <td class="text-end">
                                             R$ <span class="partial-total text-primary fw-bold">0,00</span>

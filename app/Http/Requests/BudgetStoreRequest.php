@@ -103,6 +103,20 @@ class BudgetStoreRequest extends FormRequest
             ]);
         }
 
+        // Unformat item values
+        if ($this->has('items')) {
+            $items = $this->items;
+            foreach ($items as $key => $item) {
+                if (isset($item['unit_value'])) {
+                    $items[$key]['unit_value'] = \App\Helpers\CurrencyHelper::unformat($item['unit_value']);
+                }
+                if (isset($item['total'])) {
+                    $items[$key]['total'] = \App\Helpers\CurrencyHelper::unformat($item['total']);
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
+
         // Converte valores vazios para null
         if ($this->due_date === '') {
             $this->merge(['due_date' => null]);

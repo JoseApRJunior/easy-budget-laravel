@@ -93,7 +93,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Analisados</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold">{{ number_format($analyzedCount, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold">{{ \App\Helpers\CurrencyHelper::format($analyzedCount, 0, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Saídas</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold">{{ number_format($totalUsage, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold">{{ \App\Helpers\CurrencyHelper::format($totalUsage, 0, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -121,7 +121,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-warning">R$ {{ number_format($totalValue, 2, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-warning">{{ \App\Helpers\CurrencyHelper::format($totalValue) }}</h5>
                 </div>
             </div>
         </div>
@@ -135,7 +135,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Média Uso</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-primary">{{ number_format($averageUsage, 1, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($averageUsage, 1, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -205,12 +205,12 @@
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
-                                                    <div class="fw-bold text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</div>
-                                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ number_format($product['average_usage'], 2, ',', '.') }}/dia</div>
+                                                    <div class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($product['total_usage'], 0, false) }}</div>
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ \App\Helpers\CurrencyHelper::format($product['average_usage'], 2, false) }}/dia</div>
                                                 </td>
                                                 <td class="text-end">
-                                                    <div class="fw-bold text-dark">R$ {{ number_format($product['total_value'], 2, ',', '.') }}</div>
-                                                    <div class="small text-muted" style="font-size: 0.7rem;">R$ {{ number_format($product['unit_price'], 2, ',', '.') }} un.</div>
+                                                    <div class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($product['total_value']) }}</div>
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">{{ \App\Helpers\CurrencyHelper::format($product['unit_price']) }} un.</div>
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="d-flex align-items-center justify-content-center gap-2 px-2">
@@ -221,7 +221,7 @@
                                                                  aria-valuemin="0" aria-valuemax="100">
                                                             </div>
                                                         </div>
-                                                        <small class="fw-bold text-muted">{{ number_format($product['percentage_of_total'], 1, ',', '.') }}%</small>
+                                                        <small class="fw-bold text-muted">{{ \App\Helpers\CurrencyHelper::format($product['percentage_of_total'], 1, false) }}%</small>
                                                     </div>
                                                 </td>
                                                 <td class="text-center">
@@ -267,22 +267,22 @@
                                         <div class="row g-2 mb-3 bg-light rounded p-2 mx-0">
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Saídas</small>
-                                                <span class="fw-bold small text-primary">{{ number_format($product['total_usage'], 0, ',', '.') }}</span>
+                                                <span class="fw-bold small text-primary">{{ \App\Helpers\CurrencyHelper::format($product['total_usage'], 0, false) }}</span>
                                             </div>
                                             <div class="col-4 text-center border-start border-end">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">% Total</small>
-                                                <span class="fw-bold small">{{ number_format($product['percentage_of_total'], 1, ',', '.') }}%</span>
+                                                <span class="fw-bold small">{{ \App\Helpers\CurrencyHelper::format($product['percentage_of_total'], 1, false) }}%</span>
                                             </div>
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Estoque</small>
-                                                <span class="fw-bold small">{{ number_format($product['current_stock'], 0, ',', '.') }}</span>
+                                                <span class="fw-bold small">{{ \App\Helpers\CurrencyHelper::format($product['current_stock'], 0, false) }}</span>
                                             </div>
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Valor Total</small>
-                                                <span class="fw-bold small">R$ {{ number_format($product['total_value'], 2, ',', '.') }}</span>
+                                                <span class="fw-bold small">{{ \App\Helpers\CurrencyHelper::format($product['total_value']) }}</span>
                                             </div>
                                             <div class="action-btn-group d-flex gap-1">
                                                 <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" size="sm" title="Ver Produto" />
@@ -338,7 +338,7 @@
                                                 <span class="badge bg-success text-white">Forte</span>
                                             </div>
                                             <h5 class="mb-1 fw-bold text-dark">{{ $summary['abc_analysis']['class_a']['count'] }} produtos</h5>
-                                            <div class="text-muted small">{{ number_format($summary['abc_analysis']['class_a']['percentage'], 1, ',', '.') }}% do volume total</div>
+                                            <div class="text-muted small">{{ \App\Helpers\CurrencyHelper::format($summary['abc_analysis']['class_a']['percentage'], 1, false) }}% do volume total</div>
                                         </div>
                                     </div>
                                 </div>
@@ -350,7 +350,7 @@
                                                 <span class="badge bg-warning text-white">Médio</span>
                                             </div>
                                             <h5 class="mb-1 fw-bold text-dark">{{ $summary['abc_analysis']['class_b']['count'] }} produtos</h5>
-                                            <div class="text-muted small">{{ number_format($summary['abc_analysis']['class_b']['percentage'], 1, ',', '.') }}% do volume total</div>
+                                            <div class="text-muted small">{{ \App\Helpers\CurrencyHelper::format($summary['abc_analysis']['class_b']['percentage'], 1, false) }}% do volume total</div>
                                         </div>
                                     </div>
                                 </div>
@@ -362,7 +362,7 @@
                                                 <span class="badge bg-info text-white">Baixo</span>
                                             </div>
                                             <h5 class="mb-1 fw-bold text-dark">{{ $summary['abc_analysis']['class_c']['count'] }} produtos</h5>
-                                            <div class="text-muted small">{{ number_format($summary['abc_analysis']['class_c']['percentage'], 1, ',', '.') }}% do volume total</div>
+                                            <div class="text-muted small">{{ \App\Helpers\CurrencyHelper::format($summary['abc_analysis']['class_c']['percentage'], 1, false) }}% do volume total</div>
                                         </div>
                                     </div>
                                 </div>

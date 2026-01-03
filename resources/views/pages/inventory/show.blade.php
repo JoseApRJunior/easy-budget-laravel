@@ -38,11 +38,11 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="text-muted small text-uppercase fw-bold d-block mb-1">Preço de Venda</label>
-                                <p class="h4 text-success mb-0">R$ {{ number_format($product->price ?? 0, 2, ',', '.') }}</p>
+                                <p class="h4 text-success mb-0">{{ \App\Helpers\CurrencyHelper::format($product->price ?? 0) }}</p>
                             </div>
                             <div class="col-md-4">
                                 <label class="text-muted small text-uppercase fw-bold d-block mb-1">Preço de Custo</label>
-                                <p class="h4 text-muted mb-0">R$ {{ number_format($product->cost_price ?? 0, 2, ',', '.') }}</p>
+                                <p class="h4 text-muted mb-0">{{ \App\Helpers\CurrencyHelper::format($product->cost_price ?? 0) }}</p>
                             </div>
                             <div class="col-md-4">
                                 <label class="text-muted small text-uppercase fw-bold d-block mb-1">Margem</label>
@@ -53,7 +53,7 @@
                                             $marginClass = $margin >= 30 ? 'success' : ($margin >= 15 ? 'warning' : 'danger');
                                         @endphp
                                         <span class="text-{{ $marginClass }}">
-                                            {{ number_format($margin, 1, ',', '.') }}%
+                                            {{ \App\Helpers\CurrencyHelper::format($margin, 1, false) }}%
                                         </span>
                                     @else
                                         <span class="text-muted">N/A</span>
@@ -72,32 +72,32 @@
                                     class="bi bi-clipboard-data text-white"></i></div>
                             <div>
                                 <h6 class="text-muted mb-1">Estoque</h6>
-                                <h5 class="mb-0">Total: {{ $inventory?->quantity ?? 0 }}</h5>
+                                <h5 class="mb-0">Total: {{ \App\Helpers\CurrencyHelper::format($inventory?->quantity ?? 0, 0, false) }}</h5>
                             </div>
                         </div>
                         <div class="row text-center g-2">
                             <div class="col-6">
                                 <div class="border rounded p-2">
                                     <div class="text-muted small">Reservado</div>
-                                    <div class="h6 mb-0 text-info">{{ $inventory?->reserved_quantity ?? 0 }}</div>
+                                    <div class="h6 mb-0 text-info">{{ \App\Helpers\CurrencyHelper::format($inventory?->reserved_quantity ?? 0, 0, false) }}</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="border rounded p-2">
                                     <div class="text-muted small text-success">Disponível</div>
-                                    <div class="h6 mb-0 text-success fw-bold">{{ $inventory?->available_quantity ?? 0 }}</div>
+                                    <div class="h6 mb-0 text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($inventory?->available_quantity ?? 0, 0, false) }}</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="border rounded p-2">
                                     <div class="text-muted small">Mín</div>
-                                    <div class="h6 mb-0">{{ $inventory?->min_quantity ?? 0 }}</div>
+                                    <div class="h6 mb-0">{{ \App\Helpers\CurrencyHelper::format($inventory?->min_quantity ?? 0, 0, false) }}</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="border rounded p-2">
                                     <div class="text-muted small">Máx</div>
-                                    <div class="h6 mb-0">{{ $inventory?->max_quantity ?? '-' }}</div>
+                                    <div class="h6 mb-0">{{ $inventory?->max_quantity ? \App\Helpers\CurrencyHelper::format($inventory->max_quantity, 0, false) : '-' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -133,7 +133,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-3 text-center">
                         <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Entradas</h6>
-                        <h4 class="mb-1 text-success fw-bold">{{ number_format($summary['total_entries'], 0, ',', '.') }}</h4>
+                        <h4 class="mb-1 text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($summary['total_entries'], 0, false) }}</h4>
                         <small class="text-muted">{{ $summary['count_entries'] }} movimentações</small>
                     </div>
                 </div>
@@ -142,7 +142,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-3 text-center">
                         <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Saídas</h6>
-                        <h4 class="mb-1 text-danger fw-bold">{{ number_format($summary['total_exits'], 0, ',', '.') }}</h4>
+                        <h4 class="mb-1 text-danger fw-bold">{{ \App\Helpers\CurrencyHelper::format($summary['total_exits'], 0, false) }}</h4>
                         <small class="text-muted">{{ $summary['count_exits'] }} movimentações</small>
                     </div>
                 </div>
@@ -152,7 +152,7 @@
                     <div class="card-body p-3 text-center">
                         <h6 class="text-muted small text-uppercase fw-bold mb-2">Saldo no Período</h6>
                         <h4 class="mb-1 fw-bold {{ $summary['balance'] >= 0 ? 'text-primary' : 'text-danger' }}">
-                            {{ number_format($summary['balance'], 0, ',', '.') }}
+                            {{ \App\Helpers\CurrencyHelper::format($summary['balance'], 0, false) }}
                         </h4>
                         <small class="text-muted">Entradas - Saídas</small>
                     </div>
@@ -162,7 +162,7 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body p-3 text-center">
                         <h6 class="text-muted small text-uppercase fw-bold mb-2">Outros Ajustes</h6>
-                        <h4 class="mb-1 text-warning fw-bold">{{ number_format($summary['total_adjustments'], 0, ',', '.') }}</h4>
+                        <h4 class="mb-1 text-warning fw-bold">{{ \App\Helpers\CurrencyHelper::format($summary['total_adjustments'], 0, false) }}</h4>
                         <small class="text-muted">{{ $summary['count_adjustments'] }} movimentações</small>
                     </div>
                 </div>

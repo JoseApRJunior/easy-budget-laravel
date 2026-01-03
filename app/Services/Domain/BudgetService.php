@@ -140,7 +140,10 @@ class BudgetService extends AbstractBaseService
                     }
                 }
 
-                return ServiceResult::success($budget, 'Orçamento criado com sucesso.');
+                // Atualiza o total do orçamento baseado nos serviços criados
+                $this->updateBudgetTotal($budget->id);
+
+                return ServiceResult::success($budget->fresh(), 'Orçamento criado com sucesso.');
             });
         });
     }
@@ -196,9 +199,24 @@ class BudgetService extends AbstractBaseService
                     }
                 }
 
+                // Atualiza o total do orçamento baseado nos serviços atualizados
+                $this->updateBudgetTotal($budget->id);
+
                 return ServiceResult::success($budget->fresh(), 'Orçamento atualizado com sucesso.');
             });
         });
+    }
+
+    /**
+     * Atualiza o valor total do orçamento com base na soma dos seus serviços.
+     */
+    private function updateBudgetTotal(int $budgetId): void
+    {
+        $budget = $this->repository->find($budgetId);
+        if ($budget) {
+            $total = $budget->services()->sum('total');
+            $this->repository->update($budget->id, ['total' => $total]);
+        }
     }
 
     /**

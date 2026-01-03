@@ -40,7 +40,7 @@
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Receita Total</h5>
-                    <h3>R$ {{ number_format($plan->planSubscriptions()->sum('transaction_amount'), 2, ',', '.') }}</h3>
+                    <h3>{{ \App\Helpers\CurrencyHelper::format($plan->planSubscriptions()->sum('transaction_amount')) }}</h3>
                 </div>
             </div>
         </div>
@@ -129,7 +129,7 @@
                                     </td>
                                     <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
                                     <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
-                                    <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
+                                    <td>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</td>
                                     <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">

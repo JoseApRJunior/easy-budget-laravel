@@ -101,7 +101,6 @@ class ScheduleController extends Controller
         // Buscar o serviço pelo código usando o repositório
         $service = $this->serviceRepository->findByCode($serviceCode, $tenantId, [
             'customer.commonData',
-            'serviceStatus',
         ]);
 
         if (! $service) {

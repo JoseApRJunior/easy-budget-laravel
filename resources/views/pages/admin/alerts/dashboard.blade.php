@@ -207,8 +207,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="text-sm">Performance Geral</span>
-                                <span
-                                    class="text-sm text-{{ $systemStatus['performance'] >= 95 ? 'success' : ($systemStatus['performance'] >= 90 ? 'warning' : 'danger') }}">{{ number_format($systemStatus['performance'], 1) }}%</span>
+                                <span class="text-sm text-{{ $systemStatus['performance'] >= 95 ? 'success' : ($systemStatus['performance'] >= 90 ? 'warning' : 'danger') }}">{{ \App\Helpers\CurrencyHelper::format($systemStatus['performance'], 1, false) }}%</span>
                             </div>
                             <div class="progress">
                                 <div class="progress-bar bg-{{ $systemStatus['performance'] >= 95 ? 'success' : ($systemStatus['performance'] >= 90 ? 'warning' : 'danger') }}"
@@ -220,7 +219,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="text-sm">Disponibilidade</span>
                                 <span
-                                    class="text-sm text-{{ $systemStatus['availability'] >= 99 ? 'success' : 'warning' }}">{{ number_format($systemStatus['availability'], 1) }}%</span>
+                                    class="text-sm text-{{ $systemStatus['availability'] >= 99 ? 'success' : 'warning' }}">{{ \App\Helpers\CurrencyHelper::format($systemStatus['availability'], 1, false) }}%</span>
                             </div>
                             <div class="progress">
                                 <div class="progress-bar bg-{{ $systemStatus['availability'] >= 99 ? 'success' : 'warning' }}"

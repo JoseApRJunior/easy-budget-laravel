@@ -12,9 +12,9 @@
                                 <small class="text-muted">Código: {{ $service->code }}</small>
                             </div>
                             <div>
-                                <span class="badge bg-{{ $service->serviceStatus->color ?? 'secondary' }} fs-6 px-3 py-2">
-                                    <i class="bi bi-{{ $service->serviceStatus->icon ?? 'circle' }} me-1"></i>
-                                    {{ $service->serviceStatus->name }}
+                                <span class="badge bg-{{ $service->status->color() }} fs-6 px-3 py-2">
+                                    <i class="bi bi-{{ $service->status->icon() }} me-1"></i>
+                                    {{ $service->status->label() }}
                                 </span>
                             </div>
                         </div>
@@ -66,8 +66,8 @@
                                         <h5 class="mb-1">{{ $service->budget?->code }}</h5>
                                         <p class="text-muted mb-0">{{ $service->budget?->description }}</p>
                                         <p class="mb-0">
-                                            <strong>Total: R$
-                                                {{ number_format($service->budget?->total, 2, ',', '.') }}</strong>
+                                            <strong>Total:
+                                                {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
                                         </p>
                                     </div>
                                 </div>
@@ -94,11 +94,11 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Valor:</strong><br>
-                                                R$ {{ number_format($service->total, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($service->total) }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Desconto:</strong><br>
-                                                R$ {{ number_format($service->discount, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($service->discount) }}
                                             </div>
                                         </div>
 
@@ -115,7 +115,7 @@
                             </div>
                         </div>
 
-                        @if ($service->serviceStatus->slug === 'enviado')
+                        @if ($service->status->value === 'pending')
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card border-warning">

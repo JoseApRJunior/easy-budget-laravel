@@ -104,21 +104,21 @@
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between">
                                 Total Bruto:
-                                <span class="fw-semibold">R$ {{ number_format($budget->total, 2, ',', '.') }}</span>
+                                <span class="fw-semibold">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
                             </li>
                             @if ($cancelled_total > 0)
                                 <li class="list-group-item d-flex justify-content-between text-danger">
                                     Cancelados:
-                                    <span>- R$ {{ number_format($cancelled_total, 2, ',', '.') }}</span>
+                                    <span>- R$ {{ \App\Helpers\CurrencyHelper::format($cancelled_total) }}</span>
                                 </li>
                             @endif
                             <li class="list-group-item d-flex justify-content-between text-danger">
                                 Descontos:
-                                <span>- R$ {{ number_format($total_discount, 2, ',', '.') }}</span>
+                                <span>- R$ {{ \App\Helpers\CurrencyHelper::format($total_discount) }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between h5 mb-0">
                                 <strong>Total:</strong>
-                                <strong class="text-success">R$ {{ number_format($real_total, 2, ',', '.') }}</strong>
+                                <strong class="text-success">R$ {{ \App\Helpers\CurrencyHelper::format($real_total) }}</strong>
                             </li>
                         </ul>
                         <hr>
@@ -175,7 +175,7 @@
                         <div class="card-header p-3 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-tag me-2"></i>{{ $service->category->name }}</h5>
                             <span class="badge"
-                                style="background-color: {{ $service->serviceStatus->getColor() }};">{{ $service->serviceStatus->getDescription() }}</span>
+                                style="background-color: {{ $service->status->getColor() }};">{{ $service->status->getDescription() }}</span>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-4">
@@ -190,16 +190,16 @@
                                     <ul class="list-group list-group-flush text-end">
                                         <li class="list-group-item">
                                             Total: <span class="fw-bold text-success">R$
-                                                {{ number_format($service->total, 2, ',', '.') }}</span>
+                                                {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                                         </li>
                                         @if ($service->discount > 0)
                                             <li class="list-group-item">
                                                 Desconto: <span class="fw-bold text-danger">- R$
-                                                    {{ number_format($service->discount, 2, ',', '.') }}</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
                                             </li>
                                             <li class="list-group-item">
                                                 Subtotal: <span class="fw-bold">R$
-                                                    {{ number_format($service->total - $service->discount, 2, ',', '.') }}</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount) }}</span>
                                             </li>
                                         @endif
                                     </ul>

@@ -52,8 +52,7 @@
                                 @if($budgetOption && isset($budgetOption->id))
                                 <option value="{{ $budgetOption->id }}"
                                     {{ old('budget_id') == $budgetOption->id || ($budget && $budget->id == $budgetOption->id) ? 'selected' : '' }}>
-                                    {{ $budgetOption->code }} - R$
-                                    {{ number_format($budgetOption->total, 2, ',', '.') }}
+                                    {{ $budgetOption->code }} - {{ \App\Helpers\CurrencyHelper::format($budgetOption->total) }}
                                 </option>
                                 @endif
                                 @endforeach
@@ -225,7 +224,7 @@
                                                     @foreach ($products as $product)
                                                     <option value="{{ $product->id }}" data-price="{{ $product->price }}"
                                                         {{ $item['product_id'] == $product->id ? 'selected' : '' }}>
-                                                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                                     </option>
                                                     @endforeach
                                                 </select>
@@ -287,7 +286,7 @@
                     <option value="">Selecione um produto</option>
                     @foreach ($products as $product)
                     <option value="{{ $product->id }}" data-price="{{ $product->price }}">
-                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                     </option>
                     @endforeach
                 </select>
@@ -303,13 +302,13 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label">Valor Unit.</label>
-                <input type="text" inputmode="numeric" class="form-control unit-value" name="items[__INDEX__][unit_value]"
-                    placeholder="R$ 0,00" required readonly data-mask="currency">
+                <input type="text" inputmode="numeric" class="form-control unit-value currency-brl" name="items[__INDEX__][unit_value]"
+                    placeholder="0,00" required readonly data-mask="currency">
             </div>
             <div class="col-md-2">
                 <label class="form-label">Total</label>
-                <input type="text" inputmode="numeric" class="form-control item-total" name="items[__INDEX__][total]"
-                    placeholder="R$ 0,00" readonly data-mask="currency">
+                <input type="text" inputmode="numeric" class="form-control item-total currency-brl" name="items[__INDEX__][total]"
+                    placeholder="0,00" readonly data-mask="currency">
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
@@ -389,9 +388,17 @@
                 // Preencher valor unitário quando produto for selecionado
                 productSelect.addEventListener('change', function() {
                     const price = this.options[this.selectedIndex].dataset.price;
-                    const num = parseFloat(price || '0');
-                    unitValueInput.value = window.formatCurrencyBRL ? window.formatCurrencyBRL(num) : (
-                        num.toFixed ? num.toFixed(2).replace('.', ',') : num);
+                    if (window.formatCurrencyBRL) {
+                        unitValueInput.value = window.formatCurrencyBRL(price || '0');
+                    } else {
+                        const num = parseFloat(price || '0');
+                        unitValueInput.value = isFinite(num) ? num.toFixed(2).replace('.', ',') : '0,00';
+                    }
+
+                    // Disparar evento input para atualizar máscara e cálculos
+                    unitValueInput.dispatchEvent(new Event('input', {
+                        bubbles: true
+                    }));
                     calculateTotal();
                 });
 

@@ -29,7 +29,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6>Taxa de Sucesso</h6>
-                                <h3>{{ number_format($success_rate ?? 0, 1) }}%</h3>
+                                <h3>{{ \App\Helpers\CurrencyHelper::format($success_rate ?? 0, 1, false) }}%</h3>
                             </div>
                             <i class="bi bi-check-circle fs-1 opacity-50"></i>
                         </div>
@@ -55,7 +55,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6>Execuções/Hora</h6>
-                                <h3>{{ number_format($executions_per_hour ?? 0, 1) }}k</h3>
+                                <h3>{{ \App\Helpers\CurrencyHelper::format($executions_per_hour ?? 0, 1, false) }}k</h3>
                             </div>
                             <i class="bi bi-activity fs-1 opacity-50"></i>
                         </div>
@@ -92,7 +92,7 @@
                                             <td><span
                                                     class="badge bg-{{ $middleware['status'] == 'Ativo' ? 'success' : 'danger' }}">{{ $middleware['status'] }}</span>
                                             </td>
-                                            <td>{{ number_format($middleware['executions']) }}</td>
+                                            <td>{{ \App\Helpers\CurrencyHelper::format($middleware['executions'], 0, false) }}</td>
                                             <td>{{ $middleware['average_time'] }}ms</td>
                                             <td>{{ $middleware['last_execution'] }}</td>
                                         </tr>

@@ -74,18 +74,18 @@
                                 </h6>
                                 <div class="mb-3">
                                     <small class="small fw-bold text-muted text-uppercase d-block mb-1">Total</small>
-                                    <span class="text-success fw-bold fs-5">R$
-                                        {{ number_format($service->total, 2, ',', '.') }}</span>
+                                    <span class="text-success fw-bold fs-5">
+                                        {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                                 </div>
                                 <div class="mb-3">
                                     <small class="small fw-bold text-muted text-uppercase d-block mb-1">Desconto</small>
-                                    <span class="text-danger fw-bold">R$
-                                        {{ number_format($service->discount, 2, ',', '.') }}</span>
+                                    <span class="text-danger fw-bold">
+                                        {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
                                 </div>
                                 <div class="mb-3">
                                     <small class="small fw-bold text-muted text-uppercase d-block mb-1">Subtotal</small>
-                                    <span class="text-dark fw-bold">R$
-                                        {{ number_format($service->total + $service->discount, 2, ',', '.') }}</span>
+                                    <span class="text-dark fw-bold">
+                                        {{ \App\Helpers\CurrencyHelper::format($service->total + $service->discount) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -136,16 +136,16 @@
                                                             @endif
                                                         </div>
                                                     </td>
-                                                    <td>{{ $item->quantity }}</td>
-                                                    <td>R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                                    <td><strong>R$ {{ number_format($item->total, 2, ',', '.') }}</strong></td>
+                                                    <td>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</td>
+                                                    <td>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                                                    <td><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot>
                                             <tr class="table-light">
                                                 <th colspan="3">Total dos Itens:</th>
-                                                <th>R$ {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}</th>
+                                                <th>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -163,9 +163,9 @@
                                                     <div class="fw-semibold mb-2">{{ $item->product?->name ?? 'Produto não encontrado' }}</div>
                                                     <div class="small text-muted mb-2">
                                                         <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
-                                                        <span><strong>Unit:</strong> R$ {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                        <span><strong>Unit:</strong> {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span>
                                                     </div>
-                                                    <div class="text-success fw-semibold">Total: R$ {{ number_format($item->total, 2, ',', '.') }}</div>
+                                                    <div class="text-success fw-semibold">Total: {{ \App\Helpers\CurrencyHelper::format($item->total) }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -173,7 +173,7 @@
                                     <div class="list-group-item bg-light">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <strong>Total dos Itens:</strong>
-                                            <strong class="text-success">R$ {{ number_format($service->serviceItems->sum('total'), 2, ',', '.') }}</strong>
+                                            <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
                                         </div>
                                     </div>
                                 </div>

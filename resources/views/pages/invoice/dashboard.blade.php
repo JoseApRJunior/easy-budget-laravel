@@ -25,7 +25,7 @@
             $toReceive = $stats['total_pending'] ?? 0;
             $recent = $stats['recent_invoices'] ?? collect();
             $breakdown = $stats['status_breakdown'] ?? [];
-            $paidRate = $total > 0 ? number_format(($paid / $total) * 100, 1, ',', '.') : 0;
+            $paidRate = $total > 0 ? \App\Helpers\CurrencyHelper::format(($paid / $total) * 100) : 0;
         @endphp
 
         <div class="row g-4 mb-4">
@@ -104,19 +104,19 @@
                             <div class="col">
                                 <div class="border rounded p-3">
                                     <div class="text-muted small">Faturado</div>
-                                    <div class="h5 mb-0">R$ {{ number_format($billed, 2, ',', '.') }}</div>
+                                    <div class="h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($billed) }}</div>
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="border rounded p-3">
                                     <div class="text-muted small">Recebido</div>
-                                    <div class="h5 mb-0">R$ {{ number_format($received, 2, ',', '.') }}</div>
+                                    <div class="h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($received) }}</div>
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="border rounded p-3">
                                     <div class="text-muted small">A Receber</div>
-                                    <div class="h5 mb-0">R$ {{ number_format($toReceive, 2, ',', '.') }}</div>
+                                    <div class="h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($toReceive) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -170,7 +170,7 @@
                                                 <td><code class="text-code">{{ $inv->code }}</code></td>
                                                 <td>{{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</td>
                                                 <td><x-status-badge :item="$inv" /></td>
-                                                <td>R$ {{ number_format($inv->total, 2, ',', '.') }}</td>
+                                                <td>{{ \App\Helpers\CurrencyHelper::format($inv->total) }}</td>
                                                 <td>{{ optional($inv->due_date)->format('d/m/Y') }}</td>
                                                 <td class="text-end">
                                                     <x-button type="link" :href="route('provider.invoices.show', $inv->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
@@ -205,7 +205,7 @@
                                                     </div>
                                                     <div class="small text-muted">
                                                         <div>Cliente: {{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</div>
-                                                        <div>Total: R$ {{ number_format($inv->total, 2, ',', '.') }}</div>
+                                                        <div>Total: {{ \App\Helpers\CurrencyHelper::format($inv->total) }}</div>
                                                     </div>
                                                 </div>
                                                 <i class="bi bi-chevron-right text-muted ms-2"></i>

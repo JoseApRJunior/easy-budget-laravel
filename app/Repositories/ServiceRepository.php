@@ -123,6 +123,14 @@ class ServiceRepository extends AbstractTenantRepository
     }
 
     /**
+     * Soma o valor total de todos os serviços dentro do tenant atual.
+     */
+    public function sumTotal(): float
+    {
+        return (float) $this->model->newQuery()->sum('total');
+    }
+
+    /**
      * Conta serviços ativos dentro do tenant atual.
      */
     public function countActive(): int
@@ -196,7 +204,7 @@ class ServiceRepository extends AbstractTenantRepository
     {
         return $this->model->newQuery()
             ->tap(fn ($q) => $this->applyAllServiceFilters($q, $filters))
-            ->with(['category', 'budget.customer', 'serviceStatus'])
+            ->with(['category', 'budget.customer'])
             ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy), fn ($q) => $q->latest())
             ->when($limit, fn ($q) => $q->limit($limit))
             ->get();

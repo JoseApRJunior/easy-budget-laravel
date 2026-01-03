@@ -134,8 +134,8 @@
                                                 @foreach (\App\Models\Product::where('active', true)->get() as $product)
                                                     <option value="{{ $product->id }}"
                                                         data-price="{{ $product->price }}">
-                                                        {{ $product->name }} - R$
-                                                        {{ number_format($product->price, 2, ',', '.') }}
+                                                        {{ $product->name }} -
+                                                        {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -155,9 +155,9 @@
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label small fw-bold text-muted text-uppercase">Valor Unit. *</label>
-                                            <input type="number" name="items[0][unit_value]"
-                                                class="form-control unit-value-input @error('items.0.unit_value') is-invalid @enderror"
-                                                value="{{ old('items.0.unit_value', 0) }}" step="0.01" min="0.01"
+                                            <input type="text" name="items[0][unit_value]"
+                                                class="form-control unit-value-input currency-brl @error('items.0.unit_value') is-invalid @enderror"
+                                                value="{{ \App\Helpers\CurrencyHelper::format(old('items.0.unit_value', 0)) }}"
                                                 required>
                                             @error('items.0.unit_value')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -165,7 +165,7 @@
                                         </div>
                                         <div class="col-md-2">
                                             <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
-                                            <input type="text" class="form-control total-display" value="R$ 0,00"
+                                            <input type="text" class="form-control total-display" value="0,00"
                                                 readonly>
                                         </div>
                                         <div class="col-md-1">
@@ -192,16 +192,19 @@
                             <h5 class="card-title small fw-bold text-muted text-uppercase mb-3">Resumo da Fatura</h5>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Subtotal:</span>
-                                <span id="subtotal" class="fw-bold">R$ 0,00</span>
+                                <span id="subtotal" class="fw-bold">0,00</span>
+                                <input type="hidden" name="subtotal" id="subtotal_input" value="0">
                             </div>
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Desconto:</span>
-                                <span id="discount" class="fw-bold">R$ 0,00</span>
+                                <span id="discount" class="fw-bold">0,00</span>
+                                <input type="hidden" name="discount" id="discount_input" value="0">
                             </div>
                             <hr>
                             <div class="d-flex justify-content-between fw-bold fs-5 text-primary">
                                 <span>Total:</span>
-                                <span id="grandTotal">R$ 0,00</span>
+                                <span id="grandTotal">0,00</span>
+                                <input type="hidden" name="total" id="total_input" value="0">
                             </div>
                         </div>
                     </div>
@@ -224,15 +227,34 @@
 
                 document.querySelectorAll('.item-row').forEach(function(row) {
                     const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
-                    const unitValue = parseFloat(row.querySelector('.unit-value-input').value) || 0;
+                    const unitValueInput = row.querySelector('.unit-value-input');
+                    const unitValue = typeof parseCurrencyBRLToNumber === 'function' 
+                        ? parseCurrencyBRLToNumber(unitValueInput.value) 
+                        : parseFloat(unitValueInput.value) || 0;
+                    
                     const total = quantity * unitValue;
 
-                    row.querySelector('.total-display').value = 'R$ ' + total.toFixed(2).replace('.', ',');
+                    row.querySelector('.total-display').value = (typeof formatCurrencyBRL === 'function' 
+                        ? formatCurrencyBRL(total) 
+                        : total.toFixed(2).replace('.', ','));
+                    
                     subtotal += total;
                 });
 
-                document.getElementById('subtotal').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
-                document.getElementById('grandTotal').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+                const formattedSubtotal = (typeof formatCurrencyBRL === 'function' 
+                    ? formatCurrencyBRL(subtotal) 
+                    : subtotal.toFixed(2).replace('.', ','));
+                
+                document.getElementById('subtotal').textContent = formattedSubtotal;
+                document.getElementById('grandTotal').textContent = formattedSubtotal;
+
+                // Atualizar campos ocultos para o backend
+                document.getElementById('subtotal_input').value = (typeof formatCurrencyBRL === 'function' 
+                    ? formatCurrencyBRL(subtotal) 
+                    : subtotal.toFixed(2).replace('.', ','));
+                document.getElementById('total_input').value = (typeof formatCurrencyBRL === 'function' 
+                    ? formatCurrencyBRL(subtotal) 
+                    : subtotal.toFixed(2).replace('.', ','));
             }
 
             // Preencher valor unitário quando produto for selecionado
@@ -240,15 +262,21 @@
                 if (e.target.classList.contains('product-select')) {
                     const price = e.target.selectedOptions[0]?.dataset.price || 0;
                     const itemRow = e.target.closest('.item-row');
-                    itemRow.querySelector('.unit-value-input').value = price;
+                    const unitValueInput = itemRow.querySelector('.unit-value-input');
+                    
+                    unitValueInput.value = typeof formatCurrencyBRL === 'function' 
+                        ? formatCurrencyBRL(price) 
+                        : price;
+                    
+                    // Disparar evento de input para atualizar a máscara e o total
+                    unitValueInput.dispatchEvent(new Event('input', { bubbles: true }));
                     calculateTotals();
                 }
             });
 
             // Recalcular totais quando os valores mudarem
             document.addEventListener('input', function(e) {
-                if (e.target.classList.contains('quantity-input') || e.target.classList.contains(
-                        'unit-value-input')) {
+                if (e.target.classList.contains('quantity-input') || e.target.classList.contains('unit-value-input')) {
                     calculateTotals();
                 }
             });
@@ -273,18 +301,18 @@
             <div class="item-row mb-3 p-3 border rounded">
                 <div class="row align-items-end">
                     <div class="col-md-4">
-                        <label class="form-label">Produto *</label>
+                        <label class="form-label small fw-bold text-muted text-uppercase">Produto *</label>
                         <select name="items[${newIndex}][product_id]" class="form-select product-select" required>
                             <option value="">Selecione o produto</option>
                             @foreach (\App\Models\Product::where('active', true)->get() as $product)
                                 <option value="{{ $product->id }}" data-price="{{ $product->price }}">
-                                    {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                    {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Quantidade *</label>
+                        <label class="form-label small fw-bold text-muted text-uppercase">Quantidade *</label>
                         <input type="number"
                                name="items[${newIndex}][quantity]"
                                class="form-control quantity-input"
@@ -294,18 +322,16 @@
                                required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label">Valor Unit. *</label>
-                        <input type="number"
+                        <label class="form-label small fw-bold text-muted text-uppercase">Valor Unit. *</label>
+                        <input type="text"
                                name="items[${newIndex}][unit_value]"
-                               class="form-control unit-value-input"
-                               value="0"
-                               step="0.01"
-                               min="0.01"
+                               class="form-control unit-value-input currency-brl"
+                               value="0,00"
                                required>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Total</label>
-                        <input type="text" class="form-control total-display" value="R$ 0,00" readonly>
+                        <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
+                        <input type="text" class="form-control total-display" value="0,00" readonly>
                     </div>
                     <div class="col-md-1">
                         <button type="button" class="btn btn-danger btn-sm remove-item" title="Remover item">
@@ -318,7 +344,11 @@
 
                 itemsContainer.insertAdjacentHTML('beforeend', newItemHtml);
 
-                // Mostrar botão de remover em todos os itens quando houver mais de 1
+                // Re-inicializar máscaras para os novos campos
+                if (typeof window.initVanillaMask === 'function') {
+                    window.initVanillaMask();
+                }
+                
                 updateRemoveButtons();
             });
 

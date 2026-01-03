@@ -25,7 +25,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Produtos</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($totalProducts, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($totalProducts, 0, false) }}</h5>
                     <div class="mt-2">
                         <x-button type="link" :href="route('provider.inventory.index')" variant="link" size="sm" label="Ver todos" icon="chevron-right" icon-right class="p-0 text-decoration-none" />
                     </div>
@@ -42,7 +42,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($sufficientStockProducts, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($sufficientStockProducts, 0, false) }}</h5>
                     <div class="mt-2">
                         <x-button type="link" :href="route('provider.inventory.index', ['status' => 'sufficient'])" variant="link" size="sm" label="Ver produtos" icon="chevron-right" icon-right class="text-success p-0 text-decoration-none" />
                     </div>
@@ -59,7 +59,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($lowStockProducts, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($lowStockProducts, 0, false) }}</h5>
                     <div class="mt-2">
                         <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-warning small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
                     </div>
@@ -76,7 +76,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($outOfStockProducts, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($outOfStockProducts, 0, false) }}</h5>
                     <div class="mt-2">
                         <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-danger small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
                     </div>
@@ -93,8 +93,8 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Reservados</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($reservedItemsCount, 0, ',', '.') }}</h5>
-                    <div class="mt-1 text-muted small">Total: {{ number_format($totalReservedQuantity, 0, ',', '.') }} un.</div>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($reservedItemsCount, 0, false) }}</h5>
+                    <div class="mt-1 text-muted small">Total: {{ \App\Helpers\CurrencyHelper::format($totalReservedQuantity, 0, false) }} un.</div>
                 </div>
             </div>
         </div>
@@ -110,7 +110,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total em Estoque</h6>
-                            <h3 class="mb-0 fw-bold text-success">R$ {{ number_format($totalInventoryValue, 2, ',', '.') }}</h3>
+                            <h3 class="mb-0 fw-bold text-success">{{ \App\Helpers\CurrencyHelper::format($totalInventoryValue) }}</h3>
                         </div>
                     </div>
                 </div>
@@ -184,10 +184,10 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <div class="fw-bold text-danger">{{ number_format($item->available_quantity, 0, ',', '.') }}</div>
+                                                <div class="fw-bold text-danger">{{ \App\Helpers\CurrencyHelper::format($item->available_quantity, 0, false) }}</div>
                                             </td>
                                             <td class="text-center">
-                                                <div class="small text-muted">{{ number_format($item->min_quantity, 0, ',', '.') }}</div>
+                                                <div class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</div>
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
@@ -221,10 +221,10 @@
                                             <div class="fw-bold text-dark small">{{ $item->product->name }}</div>
                                             <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $item->product->sku }}</small>
                                         </div>
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ number_format($item->available_quantity, 0, ',', '.') }} un</span>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ \App\Helpers\CurrencyHelper::format($item->available_quantity, 0, false) }} un</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Mín: {{ number_format($item->min_quantity, 0, ',', '.') }}</small>
+                                        <small class="text-muted">Mín: {{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</small>
                                         <div class="d-flex gap-1">
                                             <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" />
                                             <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
@@ -283,10 +283,10 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <div class="fw-bold text-primary">{{ number_format($item->quantity, 0, ',', '.') }}</div>
+                                                <div class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</div>
                                             </td>
                                             <td class="text-center">
-                                                <div class="small text-muted">{{ number_format($item->max_quantity, 0, ',', '.') }}</div>
+                                                <div class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</div>
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
@@ -320,10 +320,10 @@
                                             <div class="fw-bold text-dark small">{{ $item->product->name }}</div>
                                             <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $item->product->sku }}</small>
                                         </div>
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">{{ number_format($item->quantity, 0, ',', '.') }} un</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }} un</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Máx: {{ number_format($item->max_quantity, 0, ',', '.') }}</small>
+                                        <small class="text-muted">Máx: {{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</small>
                                         <div class="d-flex gap-1">
                                             <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" />
                                             <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
@@ -405,7 +405,7 @@
                                                 </span>
                                             </td>
                                             <td class="text-center fw-bold small text-body">
-                                                {{ number_format($movement->quantity, 0, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
                                             </td>
                                             <td class="small text-muted">
                                                 {{ $movement->user->name ?? 'Sistema' }}
@@ -434,7 +434,7 @@
                                             <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $movement->product->sku }}</small>
                                         </div>
                                         <div class="text-end">
-                                            <div class="fw-bold text-dark small">{{ number_format($movement->quantity, 0, ',', '.') }} un</div>
+                                            <div class="fw-bold text-dark small">{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }} un</div>
                                             <small class="text-muted" style="font-size: 0.65rem;">{{ $movement->created_at->format('d/m/y H:i') }}</small>
                                         </div>
                                     </div>

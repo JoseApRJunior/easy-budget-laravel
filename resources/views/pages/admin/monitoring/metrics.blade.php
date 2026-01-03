@@ -54,7 +54,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-play-circle fs-1 text-success mb-2"></i>
                                         <h5 class="card-title">Total de Execuções</h5>
-                                        <h3 class="text-success">{{ number_format($total_executions) }}</h3>
+                                        <h3 class="text-success">{{ \App\Helpers\CurrencyHelper::format($total_executions, 0, false) }}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -64,7 +64,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-speedometer2 fs-1 text-warning mb-2"></i>
                                         <h5 class="card-title">Tempo Médio</h5>
-                                        <h3 class="text-warning">{{ number_format($average_response_time, 4) }}s</h3>
+                                        <h3 class="text-warning">{{ \App\Helpers\CurrencyHelper::format($average_response_time, 4, false) }}s</h3>
                                     </div>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@
                                     <div class="card-body">
                                         <i class="bi bi-check-circle fs-1 text-info mb-2"></i>
                                         <h5 class="card-title">Taxa de Sucesso</h5>
-                                        <h3 class="text-info">{{ number_format($success_rate, 2) }}%</h3>
+                                        <h3 class="text-info">{{ \App\Helpers\CurrencyHelper::format($success_rate, 2, false) }}%</h3>
                                     </div>
                                 </div>
                             </div>
@@ -130,13 +130,13 @@
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
-                                                        {{ number_format($middleware['metrics']['total_executions']) }}
+                                                        {{ \App\Helpers\CurrencyHelper::format($middleware['metrics']['total_executions'], 0, false) }}
                                                     </td>
                                                     <td class="text-center">
-                                                        {{ number_format($middleware['metrics']['average_response_time'] * 1000, 2) }}
+                                                        {{ \App\Helpers\CurrencyHelper::format($middleware['metrics']['average_response_time'] * 1000, 2, false) }}
                                                         ms</td>
                                                     <td class="text-center">
-                                                        {{ number_format($middleware['metrics']['average_memory_usage'] / 1024, 2) }}
+                                                        {{ \App\Helpers\CurrencyHelper::format($middleware['metrics']['average_memory_usage'] / 1024, 2, false) }}
                                                         KB</td>
                                                     <td class="text-center">
                                                         <div class="progress" style="height: 20px;">
@@ -145,7 +145,7 @@
                                                                 style="width: {{ $middleware['metrics']['success_rate'] }}%;"
                                                                 aria-valuenow="{{ $middleware['metrics']['success_rate'] }}"
                                                                 aria-valuemin="0" aria-valuemax="100">
-                                                                {{ number_format($middleware['metrics']['success_rate'], 1) }}%
+                                                                {{ \App\Helpers\CurrencyHelper::format($middleware['metrics']['success_rate'], 1, false) }}%
                                                             </div>
                                                         </div>
                                                     </td>

@@ -79,15 +79,17 @@
                         @endphp
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between">Total Bruto: <span
-                                    class="fw-semibold">R$ {{ number_format( $budget->total, 2, ',', '.' ) }}</span></li>
+                                    class="fw-semibold">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span></li>
                             @if( $cancelled_total > 0 )
                                 <li class="list-group-item d-flex justify-content-between text-danger">Cancelados: <span>- R$
-                                        {{ number_format( $cancelled_total, 2, ',', '.' ) }}</span></li>
+                                        {{ \App\Helpers\CurrencyHelper::format($cancelled_total) }}</span></li>
                             @endif
-                            <li class="list-group-item d-flex justify-content-between text-danger">Descontos: <span>- R$
-                                    {{ number_format( $total_discount, 2, ',', '.' ) }}</span></li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Desconto Aplicado
+                                <span class="badge bg-info rounded-pill">
+                                    {{ \App\Helpers\CurrencyHelper::format($total_discount) }}</span></li>
                             <li class="list-group-item d-flex justify-content-between h5 mb-0"><strong>Total:</strong>
-                                <strong class="text-success">R$ {{ number_format( $real_total, 2, ',', '.' ) }}</strong></li>
+                                <strong class="text-success">R$ {{ \App\Helpers\CurrencyHelper::format($real_total) }}</strong></li>
                         </ul>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
@@ -137,12 +139,14 @@
                                 <div class="col-md-4">
                                     <ul class="list-group list-group-flush text-end">
                                         <li class="list-group-item">Total: <span class="fw-bold text-success">R$
-                                                {{ number_format( $service->total, 2, ',', '.' ) }}</span></li>
+                                                {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span></li>
                                         @if( $service->discount > 0 )
                                             <li class="list-group-item">Desconto: <span class="fw-bold text-danger">- R$
-                                                    {{ number_format( $service->discount, 2, ',', '.' ) }}</span></li>
-                                            <li class="list-group-item">Subtotal: <span class="fw-bold">R$
-                                                    {{ number_format( $service->total - $service->discount, 2, ',', '.' ) }}</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span></li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Valor Final
+                                                <span class="badge bg-success rounded-pill">
+                                                    {{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount) }}</span>
                                             </li>
                                         @endif
                                     </ul>
@@ -169,7 +173,7 @@
                     </div>
                     <div class="modal-body">
                         <p>Você confirma a aprovação do orçamento <strong>{{ $budget->code }}</strong> no valor de <strong
-                                class="text-success">R$ {{ number_format( $real_total, 2, ',', '.' ) }}</strong>?</p>
+                                class="text-success">R$ {{ \App\Helpers\CurrencyHelper::format($real_total) }}</strong>?</p>
                         <p class="text-muted small">Ao aprovar, o prestador será notificado para iniciar o trabalho.</p>
                     </div>
                     <div class="modal-footer">

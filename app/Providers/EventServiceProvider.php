@@ -33,6 +33,7 @@ use App\Observers\BudgetObserver;
 use App\Observers\BudgetStatusObserver;
 use App\Observers\InventoryObserver;
 use App\Observers\ServiceObserver;
+use App\Observers\ServiceItemObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -128,7 +129,7 @@ class EventServiceProvider extends ServiceProvider
         Service::observe([ServiceObserver::class, $inventoryObserver]);
 
         Budget::observe([BudgetObserver::class, BudgetStatusObserver::class, $inventoryObserver]);
-        ServiceItem::observe([$inventoryObserver]);
+        ServiceItem::observe([ServiceItemObserver::class, $inventoryObserver]);
 
         // Registra observers adicionais se necessário
         $this->registerAdditionalEventListeners();

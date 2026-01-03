@@ -28,7 +28,7 @@
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold display-6">{{ number_format($lowStockProducts->total(), 0, ',', '.') }}</h5>
+                        <h5 class="mb-0 fw-bold display-6">{{ \App\Helpers\CurrencyHelper::format($lowStockProducts->total(), 0, false) }}</h5>
                         <a href="#low-stock-section" class="btn btn-link text-danger p-0" title="Ver detalhes">
                             <i class="bi bi-arrow-down-circle fs-4"></i>
                         </a>
@@ -47,7 +47,7 @@
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Alto</h6>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
-                        <h5 class="mb-0 fw-bold display-6">{{ number_format($highStockProducts->total(), 0, ',', '.') }}</h5>
+                        <h5 class="mb-0 fw-bold display-6">{{ \App\Helpers\CurrencyHelper::format($highStockProducts->total(), 0, false) }}</h5>
                         <a href="#high-stock-section" class="btn btn-link text-primary p-0" title="Ver detalhes">
                             <i class="bi bi-arrow-up-circle fs-4"></i>
                         </a>
@@ -141,15 +141,15 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="fw-bold {{ $item->quantity <= 0 ? 'text-danger' : 'text-danger' }}">
-                                                {{ number_format($item->quantity, 0, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}
                                             </div>
                                         </td>
                                         <td class="text-center text-muted">
-                                            {{ number_format($item->min_quantity, 0, ',', '.') }}
+                                            {{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}
                                         </td>
                                         <td class="text-center">
                                             <span class="text-danger fw-bold">
-                                                -{{ number_format($difference, 0, ',', '.') }}
+                                                -{{ \App\Helpers\CurrencyHelper::format($difference, 0, false) }}
                                             </span>
                                         </td>
                                         <td class="text-center">
@@ -202,15 +202,15 @@
                                         <div class="row g-2 mb-3 bg-light rounded p-2 mx-0 mt-2">
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Atual</small>
-                                                <span class="fw-bold small {{ $item->quantity <= 0 ? 'text-danger' : 'text-danger' }}">{{ number_format($item->quantity, 0, ',', '.') }}</span>
+                                                <span class="fw-bold small {{ $item->quantity <= 0 ? 'text-danger' : 'text-danger' }}">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</span>
                                             </div>
                                             <div class="col-4 text-center border-start border-end">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Mínimo</small>
-                                                <span class="small text-muted">{{ number_format($item->min_quantity, 0, ',', '.') }}</span>
+                                                <span class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</span>
                                             </div>
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Dif.</small>
-                                                <span class="fw-bold text-danger small">-{{ number_format($difference, 0, ',', '.') }}</span>
+                                                <span class="fw-bold text-danger small">-{{ \App\Helpers\CurrencyHelper::format($difference, 0, false) }}</span>
                                             </div>
                                         </div>
 
@@ -332,15 +332,15 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="fw-bold text-primary">
-                                                {{ number_format($item->quantity, 0, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}
                                             </div>
                                         </td>
                                         <td class="text-center text-muted">
-                                            {{ number_format($item->max_quantity, 0, ',', '.') }}
+                                            {{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}
                                         </td>
                                         <td class="text-center">
                                             <span class="text-primary fw-bold">
-                                                +{{ number_format($excess, 0, ',', '.') }}
+                                                +{{ \App\Helpers\CurrencyHelper::format($excess, 0, false) }}
                                             </span>
                                         </td>
                                         <td class="text-center">
@@ -393,15 +393,15 @@
                                         <div class="row g-2 mb-3 bg-light rounded p-2 mx-0 mt-2">
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Atual</small>
-                                                <span class="fw-bold small text-primary">{{ number_format($item->quantity, 0, ',', '.') }}</span>
+                                                <span class="fw-bold small text-primary">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</span>
                                             </div>
                                             <div class="col-4 text-center border-start border-end">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Máximo</small>
-                                                <span class="small text-muted">{{ number_format($item->max_quantity, 0, ',', '.') }}</span>
+                                                <span class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</span>
                                             </div>
                                             <div class="col-4 text-center">
                                                 <small class="text-muted d-block small text-uppercase" style="font-size: 0.6rem;">Excesso</small>
-                                                <span class="fw-bold text-primary small">+{{ number_format($excess, 0, ',', '.') }}</span>
+                                                <span class="fw-bold text-primary small">+{{ \App\Helpers\CurrencyHelper::format($excess, 0, false) }}</span>
                                             </div>
                                         </div>
 

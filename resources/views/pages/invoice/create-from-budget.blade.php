@@ -12,11 +12,11 @@
                         <div><strong>Cliente:</strong> {{ $budget->customer->name ?? '-' }}</div>
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <div><strong>Total do Orçamento:</strong> R$ {{ number_format($budget->total, 2, ',', '.') }}</div>
-                        <div><strong>Total Faturado:</strong> R$ {{ number_format($alreadyBilled, 2, ',', '.') }}</div>
+                        <div><strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</div>
+                        <div><strong>Total Faturado:</strong> {{ \App\Helpers\CurrencyHelper::format($alreadyBilled) }}</div>
                         <div><strong>Saldo Disponível:</strong> <span id="remaining-balance"
                                 class="text-{{ $remainingBalance > 0 ? 'success' : 'danger' }}">R$
-                                {{ number_format($remainingBalance, 2, ',', '.') }}</span></div>
+                                {{ \App\Helpers\CurrencyHelper::format($remainingBalance) }}</span></div>
                     </div>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                 <div class="card-body">
                     <div class="alert alert-info">
                         <strong>Selecione os itens para faturar:</strong> O total selecionado não pode exceder o saldo
-                        disponível de <strong>R$ {{ number_format($remainingBalance, 2, ',', '.') }}</strong>
+                        disponível de <strong>{{ \App\Helpers\CurrencyHelper::format($remainingBalance) }}</strong>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped">
@@ -77,7 +77,7 @@
                                                     data-original-unit-value="{{ $item->unit_value }}" />
                                             </td>
                                             <td class="text-end original-total">R$
-                                                {{ number_format($item->total, 2, ',', '.') }}</td>
+                                                {{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                                             <td class="text-end selected-total" data-item-id="{{ $item->id }}">R$ 0,00
                                             </td>
                                         </tr>
@@ -124,7 +124,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Desconto</label>
                             <input type="text" inputmode="numeric" class="form-control" name="discount" id="discount"
-                                value="R$ {{ number_format($budget->discount ?? 0, 2, ',', '.') }}" />
+                                value="{{ \App\Helpers\CurrencyHelper::format($budget->discount ?? 0, 2, false) }}" />
                             <script>
                                 document.addEventListener('DOMContentLoaded', function() {
                                     try {

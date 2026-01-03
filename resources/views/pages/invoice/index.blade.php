@@ -120,7 +120,7 @@
                                         <td><strong>{{ $invoice->code }}</strong></td>
                                         <td>{{ $invoice->customer->name ?? 'N/A' }}</td>
                                         <td>{{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}</td>
-                                        <td><strong>R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</strong>
+                                        <td><strong>{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</strong>
                                         </td>
                                         <td>
                                             <x-status-badge :item="$invoice" />
@@ -164,7 +164,7 @@
                                         </div>
                                         <div class="small text-muted">
                                             <div>Cliente: {{ $invoice->customer->name ?? 'N/A' }}</div>
-                                            <div>Total: R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</div>
+                                            <div>Total: {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</div>
                                         </div>
                                     </div>
                                     <i class="bi bi-chevron-right text-muted ms-2"></i>

@@ -145,7 +145,7 @@
                                         <td>
                                             {!! StatusHelper::status_badge( $service->status ) !!}
                                         </td>
-                                        <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
+                                        <td>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                         <td class="text-end">
                                             <x-button type="link" :href="route('provider.services.show', $service->code)"
                                                     variant="info" size="sm" icon="eye" title="Visualizar" />

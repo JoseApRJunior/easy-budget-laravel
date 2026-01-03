@@ -195,8 +195,8 @@
           <tr>
             <td>{{ $item->description }}</td>
             <td class="text-center">{{ $item->quantity }}</td>
-            <td class="text-right">R$ {{ number_format( $item->unit_price, 2, ',', '.' ) }}</td>
-            <td class="text-right">R$ {{ number_format( $item->total_price, 2, ',', '.' ) }}</td>
+            <td class="text-right">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_price) }}</td>
+            <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->total_price) }}</td>
           </tr>
         @empty
           <tr>
@@ -209,7 +209,7 @@
           <tr class="total-row">
             <td colspan="3" class="text-right"><strong>TOTAL GERAL:</strong></td>
             <td class="text-right">
-              <strong>R$ {{ number_format( $budget->total_amount, 2, ',', '.' ) }}</strong>
+              <strong>R$ {{ \App\Helpers\CurrencyHelper::format($budget->total_amount) }}</strong>
             </td>
           </tr>
         </tfoot>

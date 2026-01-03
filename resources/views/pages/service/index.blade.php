@@ -145,7 +145,7 @@
                                             <td class="text-muted small">
                                                 {{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}
                                             </td>
-                                            <td class="fw-bold text-dark">R$ {{ number_format($service->total, 2, ',', '.') }}</td>
+                                            <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                             <td>
                                                 <x-status-badge :item="$service" statusField="status" />
                                             </td>

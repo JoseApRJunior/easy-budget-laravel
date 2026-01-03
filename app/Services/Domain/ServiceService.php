@@ -40,12 +40,19 @@ class ServiceService extends AbstractBaseService
 
             $recent = $this->repository->getFiltered([], ['created_at' => 'desc'], 10);
 
+            // Calcular o valor total de todos os serviços
+            $totalValue = $this->repository->sumTotal();
+
             $dashboardData = [
                 'total_services' => $total,
                 'status_breakdown' => $stats,
                 'recent_services' => $recent,
-                'approved_services' => $stats[ServiceStatus::APPROVED->value] ?? 0,
+                'completed_services' => $stats[ServiceStatus::COMPLETED->value] ?? 0,
+                'in_progress_services' => $stats[ServiceStatus::IN_PROGRESS->value] ?? 0,
                 'pending_services' => $stats[ServiceStatus::PENDING->value] ?? 0,
+                'cancelled_services' => $stats[ServiceStatus::CANCELLED->value] ?? 0,
+                'total_service_value' => $totalValue,
+                'approved_services' => $stats[ServiceStatus::APPROVED->value] ?? 0,
                 'rejected_services' => $stats[ServiceStatus::REJECTED->value] ?? 0,
             ];
 
@@ -109,7 +116,9 @@ class ServiceService extends AbstractBaseService
                     }
                 }
 
-                return ServiceResult::success($service, 'Serviço criado com sucesso.');
+                $this->updateServiceTotal($service->id);
+
+                return ServiceResult::success($service->fresh(), 'Serviço criado com sucesso.');
             });
         });
     }
@@ -141,9 +150,23 @@ class ServiceService extends AbstractBaseService
                     }
                 }
 
+                $this->updateServiceTotal($service->id);
+
                 return ServiceResult::success($service->fresh(), 'Serviço atualizado com sucesso.');
             });
         });
+    }
+
+    /**
+     * Atualiza o valor total do serviço com base na soma dos seus itens.
+     */
+    private function updateServiceTotal(int $serviceId): void
+    {
+        $service = $this->repository->find($serviceId);
+        if ($service) {
+            $total = $service->serviceItems()->sum('total');
+            $this->repository->update($service->id, ['total' => $total]);
+        }
     }
 
     /**

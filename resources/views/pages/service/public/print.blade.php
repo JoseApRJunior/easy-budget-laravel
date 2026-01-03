@@ -114,7 +114,7 @@
           </h5>
           <strong>Código:</strong> {{ $service->budget->code }}<br>
           <strong>Descrição:</strong> {{ $service->budget->description }}<br>
-          <strong>Total do Orçamento:</strong> R$ {{ number_format( $service->budget->total, 2, ',', '.' ) }}<br>
+          <strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($service->budget->total) }}<br>
           <strong>Status:</strong>
           <span class="badge bg-{{ $service->budget->budgetStatus->color ?? 'secondary' }} status-badge">
             {{ $service->budget->budgetStatus->name }}
@@ -150,20 +150,20 @@
 
         <div class="col-md-6">
           <strong>Status Atual:</strong><br>
-          <span class="badge bg-{{ $service->serviceStatus->color ?? 'secondary' }} status-badge fs-5 mb-3">
-            <i class="bi bi-{{ $service->serviceStatus->icon ?? 'circle' }} me-2"></i>
-            {{ $service->serviceStatus->name }}
+          <span class="badge bg-{{ $service->status->color() }} status-badge fs-5 mb-3">
+            <i class="bi bi-{{ $service->status->icon() }} me-2"></i>
+            {{ $service->status->label() }}
           </span><br><br>
 
           <strong>Valor do Serviço:</strong><br>
-          R$ {{ number_format( $service->total, 2, ',', '.' ) }}<br><br>
+          {{ \App\Helpers\CurrencyHelper::format($service->total) }}<br><br>
 
           <strong>Desconto:</strong><br>
-          R$ {{ number_format( $service->discount, 2, ',', '.' ) }}<br><br>
+          {{ \App\Helpers\CurrencyHelper::format($service->discount) }}<br><br>
 
           <div class="total-highlight">
-            <strong class="fs-4">Valor Final: R$
-              {{ number_format( $service->total - $service->discount, 2, ',', '.' ) }}</strong>
+            <strong class="fs-4">Valor Final:
+              {{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount) }}</strong>
           </div>
         </div>
       </div>
@@ -192,8 +192,8 @@
                 <tr>
                   <td>{{ $item->product->name }}</td>
                   <td class="text-center">{{ $item->quantity }}</td>
-                  <td class="text-end">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
-                  <td class="text-end">R$ {{ number_format( $item->total, 2, ',', '.' ) }}</td>
+                  <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                  <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                 </tr>
               @endforeach
             </tbody>

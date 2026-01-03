@@ -135,7 +135,7 @@
                                     @foreach ($reportData as $row)
                                         <tr>
                                             @foreach ($row as $val)
-                                                <td>{{ is_numeric($val) && !str_contains($val, 'R$') ? number_format((float)$val, 0, ',', '.') : $val }}</td>
+                                                <td>{{ is_numeric($val) && !str_contains($val, 'R$') ? \App\Helpers\CurrencyHelper::format((float)$val, 0, false) : $val }}</td>
                                             @endforeach
                                         </tr>
                                     @endforeach
@@ -160,7 +160,7 @@
                                                 @foreach ($row as $key => $val)
                                                     <div class="d-flex justify-content-between align-items-center mb-2 last-child-mb-0">
                                                         <span class="small fw-bold text-muted text-uppercase me-2" style="font-size: 0.7rem;">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
-                                                        <span class="small text-body text-end">{{ is_numeric($val) && !str_contains($val, 'R$') ? number_format((float)$val, 0, ',', '.') : $val }}</span>
+                                                        <span class="small text-body text-end">{{ is_numeric($val) && !str_contains($val, 'R$') ? \App\Helpers\CurrencyHelper::format((float)$val, 0, false) : $val }}</span>
                                                     </div>
                                                 @endforeach
                                             </div>

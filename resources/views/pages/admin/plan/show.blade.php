@@ -40,7 +40,7 @@
                         </tr>
                         <tr>
                             <th>Preço:</th>
-                            <td>R$ {{ number_format($plan->price, 2, ',', '.') }}</td>
+                            <td>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
                         </tr>
                         <tr>
                             <th>Status:</th>
@@ -126,19 +126,19 @@
                         </tr>
                         <tr>
                             <th>Receita Total:</th>
-                            <td><strong>R$ {{ number_format($stats['total_revenue'], 2, ',', '.') }}</strong></td>
+                            <td><strong>{{ \App\Helpers\CurrencyHelper::format($stats['total_revenue']) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Receita Mensal:</th>
-                            <td><strong>R$ {{ number_format($stats['monthly_revenue'], 2, ',', '.') }}</strong></td>
+                            <td><strong>{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Taxa de Churn:</th>
-                            <td>{{ number_format($stats['churn_rate'], 2, ',', '.') }}%</td>
+                            <td>{{ \App\Helpers\CurrencyHelper::format($stats['churn_rate'], 2, false) }}%</td>
                         </tr>
                         <tr>
                             <th>Taxa de Conversão:</th>
-                            <td>{{ number_format($stats['conversion_rate'], 2, ',', '.') }}%</td>
+                            <td>{{ \App\Helpers\CurrencyHelper::format($stats['conversion_rate'], 2, false) }}%</td>
                         </tr>
                     </table>
                 </div>
@@ -190,7 +190,7 @@
                                             </td>
                                             <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
                                             <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
-                                            <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
+                                            <td>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</td>
                                             <td>
                                                 <x-button type="link" :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                             </td>

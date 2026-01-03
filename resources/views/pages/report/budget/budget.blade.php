@@ -163,7 +163,7 @@
                                                 {{ $budget->customer->name ?? 'Cliente não informado' }}</p>
                                             <small class="text-muted">
                                                 <span class="text-code">{{ $budget->created_at->format('d/m/Y') }}</span>
-                                                • R$ {{ number_format($budget->total, 2, ',', '.') }}
+                                                • {{ \App\Helpers\CurrencyHelper::format($budget->total) }}
                                                 •
                                                 {{ is_string($budget->status) ? ucfirst($budget->status) : $budget->status->value }}
                                             </small>
@@ -233,7 +233,7 @@
                                                 </small>
                                             </td>
                                             <td>
-                                                <strong>R$ {{ number_format($budget->total, 2, ',', '.') }}</strong>
+                                                <strong>{{ \App\Helpers\CurrencyHelper::format($budget->total) }}</strong>
                                             </td>
                                             <td>
                                                 <span

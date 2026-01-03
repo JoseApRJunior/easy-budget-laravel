@@ -289,9 +289,9 @@
                   <br><small>{{ $item->product->description }}</small>
                 @endif
               </td>
-              <td class="text-center">{{ number_format( $item->quantity, 2, ',', '.' ) }}</td>
-              <td class="text-right">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
-              <td class="text-right"><strong>R$ {{ number_format( $item->total, 2, ',', '.' ) }}</strong></td>
+              <td class="text-center">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 2, false) }}</td>
+                <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                <td class="text-right"><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></td>
             </tr>
           @endforeach
         </tbody>
@@ -307,7 +307,7 @@
       <table class="summary-table">
         <tr>
           <td>Subtotal:</td>
-          <td class="text-right">R$ {{ number_format( $invoice->invoiceItems->sum( 'total' ), 2, ',', '.' ) }}</td>
+          <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($invoice->invoiceItems->sum('total')) }}</td>
         </tr>
         <tr>
           <td>Desconto:</td>
@@ -319,7 +319,7 @@
         </tr>
         <tr class="total-row">
           <td>Total:</td>
-          <td class="text-right">R$ {{ number_format( $invoice->total_amount, 2, ',', '.' ) }}</td>
+          <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($invoice->total_amount) }}</td>
         </tr>
       </table>
     </div>

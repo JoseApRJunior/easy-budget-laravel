@@ -96,11 +96,11 @@
             $netTotal = $budget->total;
             @endphp
             <div class="col-6">
-                <p class="mb-1"><strong>Subtotal (Serviços):</strong> R$ {{ number_format( $servicesSubtotal, 2, ',', '.' ) }}</p>
-                <p class="mb-1"><strong>Desconto do Orçamento:</strong> R$ {{ number_format( $discountValue, 2, ',', '.' ) }}</p>
+                <p class="mb-1"><strong>Subtotal (Serviços):</strong> R$ {{ \App\Helpers\CurrencyHelper::format($servicesSubtotal) }}</p>
+                <p class="mb-1"><strong>Desconto do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($discountValue) }}</p>
             </div>
             <div class="col-6">
-                <p class="mb-1"><strong>Total:</strong> R$ {{ number_format( $netTotal, 2, ',', '.' ) }}</p>
+                <p class="mb-1"><strong>Total:</strong> R$ {{ \App\Helpers\CurrencyHelper::format($netTotal) }}</p>
                 <p class="mb-0"><strong>Data de Vencimento:</strong> {{ $budget->due_date->format( 'd/m/Y' ) }}</p>
             </div>
         </div>
@@ -148,13 +148,13 @@
                                 @endif
                             </td>
                             <td class="text-center">{{ $item->quantity }}</td>
-                            <td class="text-end">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
-                            <td class="text-end">R$ {{ number_format( $item->quantity * $item->unit_value, 2, ',', '.' ) }}</td>
+                            <td class="text-end">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                            <td class="text-end">R$ {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</td>
                         </tr>
                         @endforeach
                         <tr>
                             <td colspan="3" class="text-end border-top pt-2"><strong>Total do Serviço:</strong></td>
-                            <td class="text-end border-top pt-2"><strong>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</strong>
+                            <td class="text-end border-top pt-2"><strong>R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</strong>
                             </td>
                         </tr>
                     </tbody>
@@ -175,7 +175,7 @@
                 <h6 class="mb-0">VALOR TOTAL DO ORÇAMENTO</h6>
             </div>
             <div class="col-6 text-end">
-                <h4 class="mb-0">R$ {{ number_format( $netTotal, 2, ',', '.' ) }}</h4>
+                <h4 class="mb-0">R$ {{ \App\Helpers\CurrencyHelper::format($netTotal) }}</h4>
             </div>
         </div>
     </div>

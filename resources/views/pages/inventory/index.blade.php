@@ -31,7 +31,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($stats['total_items'] ?? 0, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($stats['total_items'] ?? 0, 0, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-success">R$ {{ number_format($stats['total_inventory_value'] ?? 0, 2, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-success">{{ \App\Helpers\CurrencyHelper::format($stats['total_inventory_value'] ?? 0) }}</h5>
                 </div>
             </div>
         </div>
@@ -57,7 +57,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($stats['sufficient_stock_items_count'] ?? 0, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($stats['sufficient_stock_items_count'] ?? 0, 0, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -70,7 +70,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Baixo</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($stats['low_stock_items_count'] ?? 0, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($stats['low_stock_items_count'] ?? 0, 0, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($stats['out_of_stock_items_count'] ?? 0, 0, ',', '.') }}</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($stats['out_of_stock_items_count'] ?? 0, 0, false) }}</h5>
                 </div>
             </div>
         </div>
@@ -96,7 +96,7 @@
                         </div>
                         <h6 class="text-muted mb-0 small fw-bold text-uppercase">Taxa Uso</h6>
                     </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ number_format($stats['usage_rate'] ?? 0, 1, ',', '.') }}%</h5>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($stats['usage_rate'] ?? 0, 1, false) }}%</h5>
                 </div>
             </div>
         </div>
@@ -293,22 +293,22 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <div class="fw-bold">{{ number_format($currentQuantity, 0, ',', '.') }}</div>
+                                                <div class="fw-bold">{{ \App\Helpers\CurrencyHelper::format($currentQuantity, 0, false) }}</div>
                                                 @if($minQuantity > 0)
-                                                    <div class="small text-muted" style="font-size: 0.7rem;">Mín: {{ number_format($minQuantity, 0, ',', '.') }}</div>
+                                                    <div class="small text-muted" style="font-size: 0.7rem;">Mín: {{ \App\Helpers\CurrencyHelper::format($minQuantity, 0, false) }}</div>
                                                 @endif
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-{{ $inventory->available_quantity > 0 ? 'primary' : 'secondary' }} rounded-pill px-2">
-                                                    {{ number_format($inventory->available_quantity, 0, ',', '.') }}
+                                                    {{ \App\Helpers\CurrencyHelper::format($inventory->available_quantity, 0, false) }}
                                                 </span>
                                                 @if($inventory->reserved_quantity > 0)
-                                                    <div class="small text-info" style="font-size: 0.7rem;">{{ number_format($inventory->reserved_quantity, 0, ',', '.') }} res.</div>
+                                                    <div class="small text-info" style="font-size: 0.7rem;">{{ \App\Helpers\CurrencyHelper::format($inventory->reserved_quantity, 0, false) }} res.</div>
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                <div class="fw-bold text-body">R$ {{ number_format($totalValue, 2, ',', '.') }}</div>
-                                                <div class="small text-muted" style="font-size: 0.7rem;">R$ {{ number_format($unitValue, 2, ',', '.') }} un.</div>
+                                                <div class="fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($totalValue) }}</div>
+                                                <div class="small text-muted" style="font-size: 0.7rem;">{{ \App\Helpers\CurrencyHelper::format($unitValue) }} un.</div>
                                             </td>
                                             <td class="text-center">
                                                 <span class="modern-badge {{ $statusClass }}">
@@ -383,22 +383,22 @@
                                     <div class="row g-2 mb-3 bg-light rounded p-2 mx-0 border">
                                         <div class="col-4 text-center">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">Total</small>
-                                            <span class="fw-bold text-dark">{{ number_format($currentQuantity, 0, ',', '.') }}</span>
+                                            <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($currentQuantity, 0, false) }}</span>
                                         </div>
                                         <div class="col-4 text-center border-start border-end">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">Reserv.</small>
-                                            <span class="text-info">{{ number_format($inventory->reserved_quantity, 0, ',', '.') }}</span>
+                                            <span class="text-info">{{ \App\Helpers\CurrencyHelper::format($inventory->reserved_quantity, 0, false) }}</span>
                                         </div>
                                         <div class="col-4 text-center">
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">Dispon.</small>
-                                            <span class="fw-bold text-primary">{{ number_format($inventory->available_quantity, 0, ',', '.') }}</span>
+                                            <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($inventory->available_quantity, 0, false) }}</span>
                                         </div>
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <small class="text-muted d-block text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">Valor Total</small>
-                                            <span class="fw-bold text-dark">R$ {{ number_format($currentQuantity * $product->price, 2, ',', '.') }}</span>
+                                            <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($currentQuantity * $product->price) }}</span>
                                         </div>
                                         <div class="d-flex gap-1">
                                             <x-button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" size="sm" title="Ver Inventário" />

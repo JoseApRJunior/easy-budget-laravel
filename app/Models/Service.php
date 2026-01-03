@@ -129,7 +129,14 @@ class Service extends Model
      */
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->hasOneThrough(
+            Customer::class,
+            Budget::class,
+            'id', // Local key on budgets (matches budget_id on services)
+            'id', // Local key on customers (matches customer_id on budgets)
+            'budget_id', // Local key on services
+            'customer_id' // Local key on budgets
+        );
     }
 
     /**

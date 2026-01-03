@@ -108,14 +108,11 @@
                             <!-- Valor Total -->
                             <div class="col-md-6">
                                 <label for="total" class="form-label small fw-bold text-muted text-uppercase">Valor Total</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light text-muted">R$</span>
-                                    <input type="text" id="total_display"
-                                        class="form-control bg-light @error('total') is-invalid @enderror"
-                                        value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('total', $budget->total))) }}"
-                                        readonly tabindex="-1">
-                                    <input type="hidden" id="total" name="total" value="{{ old('total', $budget->total) }}">
-                                </div>
+                                <input type="text" id="total_display"
+                                    class="form-control bg-light currency-brl @error('total') is-invalid @enderror"
+                                    value="{{ \App\Helpers\CurrencyHelper::format(old('total', $budget->total)) }}"
+                                    readonly tabindex="-1">
+                                <input type="hidden" id="total" name="total" value="{{ old('total', $budget->total) }}">
                                 @error('total')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -124,14 +121,11 @@
                             <!-- Desconto -->
                             <div class="col-md-6">
                                 <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light text-muted">R$</span>
-                                    <input type="text" id="discount_display"
-                                        class="form-control bg-light @error('discount') is-invalid @enderror"
-                                        value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('discount', $budget->discount))) }}"
-                                        readonly tabindex="-1">
-                                    <input type="hidden" id="discount" name="discount" value="{{ old('discount', $budget->discount) }}">
-                                </div>
+                                <input type="text" id="discount_display"
+                                    class="form-control bg-light currency-brl @error('discount') is-invalid @enderror"
+                                    value="{{ \App\Helpers\CurrencyHelper::format(old('discount', $budget->discount)) }}"
+                                    readonly tabindex="-1">
+                                <input type="hidden" id="discount" name="discount" value="{{ old('discount', $budget->discount) }}">
                                 @error('discount')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -153,6 +147,12 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar máscaras de moeda
+        if (typeof VanillaMask === 'function') {
+            new VanillaMask('total_display', 'currency');
+            new VanillaMask('discount_display', 'currency');
+        }
+
         // Character counter for description
         const description = document.getElementById('description');
         const charCount = document.getElementById('char-count');

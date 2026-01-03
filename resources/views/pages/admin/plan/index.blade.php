@@ -40,7 +40,7 @@
             <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5 class="card-title">Receita Mensal</h5>
-                    <h3>R$ {{ number_format($stats['monthly_revenue'], 2, ',', '.') }}</h3>
+                    <h3>{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</h3>
                 </div>
             </div>
         </div>
@@ -120,7 +120,7 @@
                                         @endif
                                     </td>
                                     <td>{{ Str::limit($plan->description, 50) }}</td>
-                                    <td>R$ {{ number_format($plan->price, 2, ',', '.') }}</td>
+                                    <td>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
                                     <td>
                                         @php
                                             $statusClass = match($plan->status) {

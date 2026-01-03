@@ -13,7 +13,7 @@
     // Caso o status seja um Enum (como BudgetStatus)
     if ($statusValue !== null && ($statusValue instanceof \App\Contracts\Interfaces\StatusEnumInterface || method_exists($statusValue, 'getMetadata'))) {
         $metadata = $statusValue->getMetadata();
-        $label = $metadata['description'];
+        $label = $metadata['label'] ?? $metadata['description'];
         $color = $metadata['color'] ?? '#6c757d';
         $icon = $metadata['icon'] ?? null;
 

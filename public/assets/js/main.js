@@ -22,6 +22,7 @@ export function initTomSelect(selector, options = {}) {
          allowEmptyOption: true,
          maxOptions: null, // Mostra todas as opções (importante para categorias)
          plugins: ['dropdown_input'], // Adiciona campo de busca no dropdown
+         dropdownParent: 'body', // Resolve problemas de overflow/z-index fixando no body
          render: {
              option: function(data, escape) {
                  // Estilização customizada para optgroups ou níveis de hierarquia

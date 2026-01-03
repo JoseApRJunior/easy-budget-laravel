@@ -55,19 +55,19 @@
                         <tr>
                             <td>{{ $item->product->name ?? 'N/A' }}</td>
                             <td class="text-center">{{ $item->quantity }}</td>
-                            <td class="text-end">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                            <td class="text-end">R$ {{ number_format($item->total, 2, ',', '.') }}</td>
+                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
                         <th colspan="3" class="text-end">Subtotal:</th>
-                        <th class="text-end">R$ {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</th>
+                        <th class="text-end">{{ \App\Helpers\CurrencyHelper::format($invoice->invoiceItems->sum('total')) }}</th>
                     </tr>
                     <tr>
                         <th colspan="3" class="text-end">Total:</th>
-                        <th class="text-end">R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</th>
+                        <th class="text-end">{{ \App\Helpers\CurrencyHelper::format($invoice->total_amount) }}</th>
                     </tr>
                 </tfoot>
             </table>

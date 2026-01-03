@@ -152,7 +152,7 @@
                                         -
                                     @endif
                                 </td>
-                                <td class="fw-bold text-dark">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
+                                <td class="fw-bold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</td>
                                 <td>
                                     <x-status-badge :item="$budget" statusField="status" />
                                 </td>
@@ -217,7 +217,7 @@
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor Total</small>
-                                    <span class="fw-bold text-primary">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
+                                    <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</span>
                                 </div>
                                 <div class="col-6 text-end">
                                     <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>

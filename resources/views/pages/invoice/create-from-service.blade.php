@@ -106,18 +106,18 @@
                                     <tr>
                                         <th style="width:50%">Subtotal:</th>
                                         <td class="text-end">R$
-                                            {{ number_format($invoiceData['subtotal'], 2, ',', '.') }}
+                                            {{ \App\Helpers\CurrencyHelper::format($invoiceData['subtotal']) }}
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Desconto:</th>
                                         <td class="text-end text-danger">- R$
-                                            {{ number_format($invoiceData['discount'], 2, ',', '.') }}</td>
+                                            {{ \App\Helpers\CurrencyHelper::format($invoiceData['discount']) }}</td>
                                     </tr>
                                     <tr class="h5">
                                         <th>Total:</th>
                                         <td class="text-end text-success">R$
-                                            {{ number_format($invoiceData['total'], 2, ',', '.') }}</td>
+                                            {{ \App\Helpers\CurrencyHelper::format($invoiceData['total']) }}</td>
                                     </tr>
                                 </tbody>
                             </table>

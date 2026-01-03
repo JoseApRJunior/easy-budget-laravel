@@ -60,7 +60,7 @@
                             <div class="form-group">
                                 <label for="price_min">Preço Mínimo</label>
                                 <input type="text" class="form-control money-input" id="price_min" name="price_min"
-                                    value="{{ request('price_min') ? number_format(request('price_min'), 2, ',', '.') : '' }}"
+                                    value="{{ request('price_min') ? \App\Helpers\CurrencyHelper::format(request('price_min'), 2, false) : '' }}"
                                     placeholder="0,00" maxlength="20">
                             </div>
                         </div>
@@ -69,7 +69,7 @@
                             <div class="form-group">
                                 <label for="price_max">Preço Máximo</label>
                                 <input type="text" class="form-control money-input" id="price_max" name="price_max"
-                                    value="{{ request('price_max') ? number_format(request('price_max'), 2, ',', '.') : '' }}"
+                                    value="{{ request('price_max') ? \App\Helpers\CurrencyHelper::format(request('price_max'), 2, false) : '' }}"
                                     placeholder="0,00" maxlength="20">
                             </div>
                         </div>
@@ -144,7 +144,7 @@
                                             <p class="text-muted small mb-2">{{ Str::limit($service->description, 50) }}
                                             </p>
                                             <small class="text-muted">
-                                                R$ {{ number_format($service->price, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($service->price) }}
                                             </small>
                                         </div>
                                         <i class="bi bi-chevron-right text-muted ms-2"></i>
@@ -196,7 +196,7 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <strong>R$ {{ number_format($service->price, 2, ',', '.') }}</strong>
+                                                <strong>{{ \App\Helpers\CurrencyHelper::format($service->price) }}</strong>
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">

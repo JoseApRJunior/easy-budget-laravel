@@ -39,7 +39,7 @@
                                 <td>{{ $product['name'] }}</td>
                                 <td>{{ $product['code'] }}</td>
                                 <td>{{ $product['description'] }}</td>
-                                <td class="text-end">R$ {{ number_format($product['price'], 2, ',', '.') }}</td>
+                                <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($product['price']) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -67,12 +67,12 @@
                                 <div class="col-4 text-center">
                                     <h6 class="text-muted mb-1">Valor Total em Estoque</h6>
                                     <h4 class="text-dark mb-0">R$
-                                        {{ number_format(collect($products)->sum('price'), 2, ',', '.') }}</h4>
+                                        {{ \App\Helpers\CurrencyHelper::format(collect($products)->sum('price')) }}</h4>
                                 </div>
                                 <div class="col-4 text-center">
                                     <h6 class="text-muted mb-1">Preço Médio</h6>
                                     <h4 class="text-dark mb-0">R$
-                                        {{ number_format(collect($products)->avg('price'), 2, ',', '.') }}</h4>
+                                        {{ \App\Helpers\CurrencyHelper::format(collect($products)->avg('price')) }}</h4>
                                 </div>
                             </div>
                         </div>

@@ -35,7 +35,7 @@
                             <tr>
                                 <td>{{ $service['name'] }}</td>
                                 <td>{{ $service['description'] }}</td>
-                                <td class="text-end">R$ {{ number_format($service['price'], 2, ',', '.') }}</td>
+                                <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($service['price']) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -62,13 +62,13 @@
                                 </div>
                                 <div class="col-4 text-center">
                                     <h6 class="text-muted mb-1">Valor Total</h6>
-                                    <h4 class="text-dark mb-0">R$
-                                        {{ number_format(collect($services)->sum('price'), 2, ',', '.') }}</h4>
+                                    <h4 class="text-dark mb-0">
+                                        {{ \App\Helpers\CurrencyHelper::format(collect($services)->sum('price')) }}</h4>
                                 </div>
                                 <div class="col-4 text-center">
                                     <h6 class="text-muted mb-1">Preço Médio</h6>
-                                    <h4 class="text-dark mb-0">R$
-                                        {{ number_format(collect($services)->avg('price'), 2, ',', '.') }}</h4>
+                                    <h4 class="text-dark mb-0">
+                                        {{ \App\Helpers\CurrencyHelper::format(collect($services)->avg('price')) }}</h4>
                                 </div>
                             </div>
                         </div>

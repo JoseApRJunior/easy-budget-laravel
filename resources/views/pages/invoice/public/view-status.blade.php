@@ -67,7 +67,7 @@
                                         <p class="text-muted mb-0">{{ $invoice->service->description }}</p>
                                         <p class="mb-0">
                                             <strong>Total: R$
-                                                {{ number_format($invoice->service->total, 2, ',', '.') }}</strong>
+                                                {{ \App\Helpers\CurrencyHelper::format($invoice->service->total) }}</strong>
                                         </p>
                                     </div>
                                 </div>
@@ -86,15 +86,15 @@
                                         <div class="row">
                                             <div class="col-md-4">
                                                 <strong>Valor Subtotal:</strong><br>
-                                                R$ {{ number_format($invoice->subtotal, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Desconto:</strong><br>
-                                                R$ {{ number_format($invoice->discount, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong class="text-success fs-5">Total: R$
-                                                    {{ number_format($invoice->total, 2, ',', '.') }}</strong>
+                                                    {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</strong>
                                             </div>
                                         </div>
 

@@ -122,10 +122,10 @@
           </h5>
           <strong>Código:</strong> {{ $invoice->service->code }}<br>
           <strong>Descrição:</strong> {{ $invoice->service->description }}<br>
-          <strong>Valor do Serviço:</strong> R$ {{ number_format( $invoice->service->total, 2, ',', '.' ) }}<br>
+          <strong>Valor do Serviço:</strong> {{ \App\Helpers\CurrencyHelper::format($invoice->service->total) }}<br>
           <strong>Status:</strong>
-          <span class="badge bg-{{ $invoice->service->serviceStatus->color ?? 'secondary' }} status-badge">
-            {{ $invoice->service->serviceStatus->name }}
+          <span class="badge bg-{{ $invoice->service->status->color() }} status-badge">
+            {{ $invoice->service->status->label() }}
           </span>
         </div>
       </div>
@@ -141,10 +141,10 @@
       <div class="row">
         <div class="col-md-6">
           <strong>Valor Subtotal:</strong><br>
-          R$ {{ number_format( $invoice->subtotal, 2, ',', '.' ) }}<br><br>
+          {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}<br><br>
 
           <strong>Desconto:</strong><br>
-          R$ {{ number_format( $invoice->discount, 2, ',', '.' ) }}<br><br>
+          {{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}<br><br>
 
           @if( $invoice->due_date )
             <strong>Data de Vencimento:</strong><br>
@@ -212,15 +212,15 @@
             <tfoot>
               <tr>
                 <th colspan="3" class="text-end">Subtotal:</th>
-                <th class="text-end">R$ {{ number_format( $invoice->subtotal, 2, ',', '.' ) }}</th>
+                <th class="text-end">{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</th>
               </tr>
               <tr>
                 <th colspan="3" class="text-end">Desconto:</th>
-                <th class="text-end">R$ {{ number_format( $invoice->discount, 2, ',', '.' ) }}</th>
+                <th class="text-end">{{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}</th>
               </tr>
               <tr>
                 <th colspan="3" class="text-end"><strong>Total:</strong></th>
-                <th class="text-end"><strong>R$ {{ number_format( $invoice->total, 2, ',', '.' ) }}</strong></th>
+                <th class="text-end"><strong>{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</strong></th>
               </tr>
             </tfoot>
           </table>
@@ -241,7 +241,7 @@
         @endif
 
         @if( $invoice->transaction_amount )
-          <strong>Valor da Transação:</strong> R$ {{ number_format( $invoice->transaction_amount, 2, ',', '.' ) }}<br>
+          <strong>Valor da Transação:</strong> {{ \App\Helpers\CurrencyHelper::format($invoice->transaction_amount) }}<br>
         @endif
 
         @if( $invoice->transaction_date )

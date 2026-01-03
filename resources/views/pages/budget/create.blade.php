@@ -71,6 +71,15 @@
                         @enderror
                     </div>
 
+                    <!-- Valores (Somente Leitura) -->
+                    <div class="col-md-6">
+                        <label for="total_display" class="form-label small fw-bold text-muted text-uppercase">Valor Total Estimado</label>
+                        <input type="text" id="total_display"
+                            class="form-control bg-light currency-brl"
+                            value="0,00" readonly tabindex="-1">
+                        <div class="form-text text-muted small">O valor final será calculado após adicionar os serviços.</div>
+                    </div>
+
                     <!-- Descrição -->
                     <div class="col-12">
                         <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
@@ -108,6 +117,11 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar máscara de moeda para o total
+        if (typeof VanillaMask === 'function') {
+            new VanillaMask('total_display', 'currency');
+        }
+
         // Character counter for description
         const description = document.getElementById('description');
         const charCount = document.getElementById('char-count');

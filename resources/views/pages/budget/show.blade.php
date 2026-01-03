@@ -128,17 +128,17 @@
 
                     <div class="info-item mb-3">
                         <small class="small fw-bold text-muted text-uppercase d-block mb-1">Subtotal (Serviços)</small>
-                        <h5 class="mb-0 text-dark fw-bold">R$ {{ number_format($servicesSubtotal, 2, ',', '.') }}</h5>
+                        <h5 class="mb-0 text-dark fw-bold">R$ {{ \App\Helpers\CurrencyHelper::format($servicesSubtotal) }}</h5>
                     </div>
 
                     <div class="info-item mb-3">
                         <small class="small fw-bold text-muted text-uppercase d-block mb-1">Desconto</small>
-                        <h5 class="mb-0 text-warning fw-bold">R$ {{ number_format($budget->discount, 2, ',', '.') }}</h5>
+                        <h5 class="mb-0 text-warning fw-bold">R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</h5>
                     </div>
 
                     <div class="info-item">
                         <small class="small fw-bold text-muted text-uppercase d-block mb-1">Total Geral</small>
-                        <h4 class="mb-0 text-success fw-bold">R$ {{ number_format($budget->total, 2, ',', '.') }}</h4>
+                        <h4 class="mb-0 text-success fw-bold">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</h4>
                     </div>
                 </div>
             </div>
@@ -233,10 +233,10 @@
                                         <td>{{ $service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') : '-' }}
                                         </td>
                                         <td class="text-end text-warning fw-semibold">
-                                            R$ {{ number_format($service->discount, 2, ',', '.') }}
+                                            R$ {{ \App\Helpers\CurrencyHelper::format($service->discount) }}
                                         </td>
                                         <td class="text-end text-primary fw-bold">
-                                            R$ {{ number_format($service->total, 2, ',', '.') }}
+                                            R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}
                                         </td>
                                         <td class="text-center">
                                             <x-action-buttons
@@ -277,7 +277,7 @@
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <small class="small fw-bold text-muted text-uppercase d-block mb-1">Valor Total</small>
-                                        <span class="fw-bold text-primary">R$ {{ number_format($service->total, 2, ',', '.') }}</span>
+                                        <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                                     </div>
                                     <div class="col-6 text-end">
                                         <small class="small fw-bold text-muted text-uppercase d-block mb-1">Status</small>

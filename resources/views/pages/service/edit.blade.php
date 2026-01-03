@@ -45,7 +45,7 @@
                                         @foreach($budgets as $budgetOption)
                                         <option value="{{ $budgetOption->id }}"
                                             {{ (old('budget_id', $service->budget_id) == $budgetOption->id) ? 'selected' : '' }}>
-                                            {{ $budgetOption->code }} - R$ {{ number_format($budgetOption->total, 2, ',', '.') }}
+                                            {{ $budgetOption->code }} - {{ \App\Helpers\CurrencyHelper::format($budgetOption->total) }}
                                         </option>
                                         @endforeach
                                     </select>
@@ -106,7 +106,7 @@
                                         required>
                                         @foreach($statusOptions as $status)
                                         <option value="{{ $status->value }}"
-                                            {{ old('status', $service->status->value ?? $service->serviceStatus->value) == $status->value ? 'selected' : '' }}>
+                                            {{ old('status', $service->status->value) == $status->value ? 'selected' : '' }}>
                                             {{ $status->getDescription() }}
                                         </option>
                                         @endforeach
@@ -227,7 +227,7 @@
                                                     <option value="{{ $product->id }}"
                                                         data-price="{{ $product->price }}"
                                                         {{ (string)($old['product_id'] ?? '') === (string)$product->id ? 'selected' : '' }}>
-                                                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                                     </option>
                                                     @endforeach
                                                 </select>
@@ -251,7 +251,7 @@
                                                 <label class="form-label">Valor Unit.</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control unit-value"
+                                                    class="form-control unit-value currency-brl"
                                                     name="items[{{ $index }}][unit_value]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['unit_value'] ?? 0), 2, false) }}"
                                                     required readonly>
@@ -260,7 +260,7 @@
                                                 <label class="form-label">Total</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control item-total"
+                                                    class="form-control item-total currency-brl"
                                                     name="items[{{ $index }}][total]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['total'] ?? 0), 2, false) }}"
                                                     readonly>
@@ -293,7 +293,7 @@
                                                     <option value="{{ $product->id }}"
                                                         data-price="{{ $product->price }}"
                                                         {{ $item->product_id == $product->id ? 'selected' : '' }}>
-                                                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                                     </option>
                                                     @endforeach
                                                 </select>
@@ -317,7 +317,7 @@
                                                 <label class="form-label">Valor Unit.</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control unit-value"
+                                                    class="form-control unit-value currency-brl"
                                                     name="items[{{ $index }}][unit_value]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, false) }}"
                                                     required readonly>
@@ -326,7 +326,7 @@
                                                 <label class="form-label">Total</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control item-total"
+                                                    class="form-control item-total currency-brl"
                                                     name="items[{{ $index }}][total]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format($item->total, 2, false) }}"
                                                     readonly>
@@ -372,7 +372,7 @@
                     <option value="">Selecione um produto</option>
                     @foreach($products as $product)
                     <option value="{{ $product->id }}" data-price="{{ $product->price }}">
-                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                     </option>
                     @endforeach
                 </select>
@@ -396,7 +396,7 @@
                 <label class="form-label">Valor Unit.</label>
                 <input type="text"
                     inputmode="numeric"
-                    class="form-control unit-value currency-brl"
+                    class="form-control unit-value"
                     name="items[__INDEX__][unit_value]"
                     required readonly>
             </div>
@@ -404,7 +404,7 @@
                 <label class="form-label">Total</label>
                 <input type="text"
                     inputmode="numeric"
-                    class="form-control item-total currency-brl"
+                    class="form-control item-total"
                     name="items[__INDEX__][total]"
                     readonly>
             </div>
@@ -643,8 +643,11 @@
                         unitValueInput.value = window.formatCurrencyBRL(price || '0');
                     } else {
                         var v = parseFloat(price || '0');
-                        unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '';
+                        unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '0,00';
                     }
+                    
+                    // Disparar evento input para atualizar máscara e cálculos
+                    unitValueInput.dispatchEvent(new Event('input', { bubbles: true }));
                     calculateTotal();
                 });
             }

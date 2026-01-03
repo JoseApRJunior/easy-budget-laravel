@@ -25,7 +25,7 @@
             $totalValue = $stats['total_service_value'] ?? 0;
             $recent = $stats['recent_services'] ?? collect();
 
-            $completionRate = $total > 0 ? number_format(($completed / $total) * 100, 1, ',', '.') : 0;
+            $completionRate = $total > 0 ? \App\Helpers\CurrencyHelper::format(($completed / $total) * 100, 1, false) : 0;
         @endphp
 
         <!-- Cards de Métricas -->
@@ -118,7 +118,7 @@
                             </div>
                             <div>
                                 <h6 class="text-muted mb-1">Valor Total em Serviços</h6>
-                                <h3 class="mb-0">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
+                                <h3 class="mb-0">{{ \App\Helpers\CurrencyHelper::format($totalValue) }}</h3>
                             </div>
                         </div>
                         <p class="text-muted small mb-0">
@@ -190,7 +190,7 @@
                                                 <td>
                                                     <x-status-badge :item="$service" />
                                                 </td>
-                                                <td>R$ {{ number_format($service->total, 2, ',', '.') }}</td>
+                                                <td>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                                 <td>{{ $service->created_at->format('d/m/Y') }}</td>
                                                 <td>
                                                     <x-button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
@@ -214,7 +214,7 @@
                                                 <div class="small text-muted mb-2">{{ $service->budget->customer->commonData->first_name ?? 'N/A' }}</div>
                                                 <div class="d-flex gap-2 flex-wrap align-items-center">
                                                     <x-status-badge :item="$service" />
-                                                    <span class="small text-muted">R$ {{ number_format($service->total, 2, ',', '.') }}</span>
+                                                    <span class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                                                     <span class="small text-muted">{{ $service->created_at->format('d/m/Y') }}</span>
                                                 </div>
                                             </div>

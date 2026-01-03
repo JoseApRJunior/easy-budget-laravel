@@ -80,7 +80,7 @@
                         <div class="col-md-4">
                             <h6 class="text-muted">Valor Total</h6>
                             <p class="mb-0 fs-5 text-success fw-bold">
-                                R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}
+                                {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}
                             </p>
                         </div>
                     </div>
@@ -111,18 +111,18 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-center">{{ $item->quantity }}</td>
-                                                <td class="text-end">R$
-                                                    {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                                <td class="text-end fw-bold">R$
-                                                    {{ number_format($item->total, 2, ',', '.') }}</td>
+                                                <td class="text-end">
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                                                <td class="text-end fw-bold">
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
                                         <tr class="table-light">
                                             <th colspan="3" class="text-end">Subtotal:</th>
-                                            <th class="text-end">R$
-                                                {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}
+                                            <th class="text-end">
+                                                {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}
                                             </th>
                                         </tr>
                                     </tfoot>
@@ -141,11 +141,11 @@
                                                 <div class="fw-semibold mb-2">{{ $item->product->name ?? 'N/A' }}</div>
                                                 <div class="small text-muted mb-2">
                                                     <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
-                                                    <span><strong>Unit:</strong> R$
-                                                        {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                    <span><strong>Unit:</strong>
+                                                        {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span>
                                                 </div>
-                                                <div class="text-success fw-semibold">Total: R$
-                                                    {{ number_format($item->total, 2, ',', '.') }}</div>
+                                                <div class="text-success fw-semibold">Total:
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->total) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -153,8 +153,8 @@
                                 <div class="list-group-item bg-light">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <strong>Subtotal:</strong>
-                                        <strong class="text-success">R$
-                                            {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</strong>
+                                        <strong class="text-success">
+                                            {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -181,16 +181,16 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal:</span>
-                        <span>R$ {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</span>
+                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Desconto:</span>
-                        <span>R$ 0,00</span>
+                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between fw-bold">
                         <span>Total:</span>
-                        <span class="text-success">R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</span>
+                        <span class="text-success">{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</span>
                     </div>
                 </div>
             </div>
