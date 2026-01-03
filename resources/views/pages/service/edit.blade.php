@@ -3,15 +3,16 @@
 @section('title', 'Editar Serviço')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Editar Serviço"
-        icon="pencil-square"
+        icon="tools"
         :breadcrumb-items="[
-                'Serviços' => route('provider.services.index'),
-                $service->code => route('provider.services.show', $service->code),
-                'Editar' => '#'
-            ]">
+            'Dashboard' => route('provider.dashboard'),
+            'Serviços' => route('provider.services.index'),
+            $service->code => route('provider.services.show', $service->code),
+            'Editar' => '#'
+        ]">
         <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
     </x-page-header>
     <div class="row">
@@ -176,6 +177,7 @@
                                         class="form-control @error('due_date') is-invalid @enderror"
                                         id="due_date"
                                         name="due_date"
+                                        min="{{ date('Y-m-d') }}"
                                         value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $service->due_date?->format('Y-m-d')), 'Y-m-d', $service->due_date?->format('Y-m-d') ?? '') }}">
                                     @error('due_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -217,7 +219,7 @@
                                     @php($oldItems = old('items'))
                                     @if(is_array($oldItems) && count($oldItems) > 0)
                                     @foreach($oldItems as $index => $old)
-                                    <div class="item-row border rounded p-3 mb-3 bg-light">
+                                    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
                                         <div class="row align-items-end">
                                             <div class="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
@@ -283,7 +285,7 @@
                                     @endforeach
                                     @else
                                     @foreach($service->serviceItems as $index => $item)
-                                    <div class="item-row border rounded p-3 mb-3 bg-light">
+                                    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
                                         <div class="row align-items-end">
                                             <div class="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
@@ -364,7 +366,7 @@
 
 <!-- Template para novos itens -->
 <template id="itemTemplate">
-    <div class="item-row border rounded p-3 mb-3 bg-light">
+    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
         <div class="row align-items-end">
             <div class="col-md-4">
                 <label class="form-label">Produto/Serviço</label>
@@ -645,7 +647,7 @@
                         var v = parseFloat(price || '0');
                         unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '0,00';
                     }
-                    
+
                     // Disparar evento input para atualizar máscara e cálculos
                     unitValueInput.dispatchEvent(new Event('input', { bubbles: true }));
                     calculateTotal();
@@ -754,31 +756,5 @@
 </script>
 @endpush
 
-@push('styles')
-<style>
-    .remove-item.btn {
-        transition: transform .05s ease-in-out, box-shadow .2s ease;
-    }
 
-    .remove-item.btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, .08);
-    }
-
-    .item-row .soft-disabled {
-        opacity: .5;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .remove-item.btn.btn-outline-danger {
-            color: #f28b82;
-            border-color: #f28b82;
-        }
-
-        .remove-item.btn.btn-outline-danger:hover {
-            background-color: rgba(220, 53, 69, .15);
-        }
-    }
-</style>
-@endpush
 @endsection

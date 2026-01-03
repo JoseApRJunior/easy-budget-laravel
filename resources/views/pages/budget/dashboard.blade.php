@@ -214,7 +214,13 @@
                                                     </td>
                                                     <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
                                                     <td class="text-center">
-                                                        <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" />
+                                                        <x-action-buttons
+                                                            :item="$budget"
+                                                            resource="budgets"
+                                                            identifier="code"
+                                                            :can-delete="false"
+                                                            size="sm"
+                                                        />
                                                     </td>
                                                 </tr>
                                             @endforeach

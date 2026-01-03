@@ -6,7 +6,7 @@ namespace App\Services\Application;
 
 use App\Models\Budget;
 use App\Models\BudgetCalculationSettings;
-use App\Models\BudgetItem;
+use App\Models\ServiceItem;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
 
@@ -32,32 +32,13 @@ class BudgetCalculationService
         $taxesTotal = 0;
         $itemsCount = 0;
 
-        foreach ($budget->items as $item) {
-            $itemTotal = $this->calculateItemTotal($item, $settings);
+        foreach ($budget->services as $service) {
+            foreach ($service->serviceItems as $item) {
+                // No novo modelo, unit_price é unit_value e total_price/net_total são total
+                $itemTotal = $item->total;
 
-            // Aplicar desconto do item
-            if ($item->discount_percentage > 0) {
-                $itemDiscount = $itemTotal * ($item->discount_percentage / 100);
-                $itemTotal -= $itemDiscount;
-                $discountTotal += $itemDiscount;
-            }
-
-            // Aplicar impostos do item
-            if ($item->tax_percentage > 0) {
-                $itemTax = $itemTotal * ($item->tax_percentage / 100);
-                $itemTotal += $itemTax;
-                $taxesTotal += $itemTax;
-            }
-
-            $subtotal += $itemTotal;
-            $itemsCount++;
-
-            // Atualizar total do item se necessário
-            if ($settings['auto_calculate']) {
-                $item->update([
-                    'total_price' => $this->roundValue($item->quantity * $item->unit_price, $settings),
-                    'net_total' => $this->roundValue($itemTotal, $settings),
-                ]);
+                $subtotal += $itemTotal;
+                $itemsCount++;
             }
         }
 
@@ -90,26 +71,6 @@ class BudgetCalculationService
     }
 
     /**
-     * Calcula o total de um item específico.
-     */
-    private function calculateItemTotal(BudgetItem $item, array $settings): float
-    {
-        $total = $item->quantity * $item->unit_price;
-
-        // Aplicar configurações de imposto
-        $taxSettings = $settings['tax_settings'] ?? [];
-
-        if (isset($taxSettings['tax_inclusive']) && $taxSettings['tax_inclusive']) {
-            // Se o preço já inclui imposto, calcular o valor base
-            if ($item->tax_percentage > 0) {
-                $total = $total / (1 + ($item->tax_percentage / 100));
-            }
-        }
-
-        return $total;
-    }
-
-    /**
      * Arredonda valor conforme configurações.
      */
     private function roundValue(float $value, array $settings): float
@@ -120,9 +81,9 @@ class BudgetCalculationService
     }
 
     /**
-     * Recalcula todos os itens de um orçamento.
+     * Recalcula todos os itens (serviços) de um orçamento.
      */
-    public function recalculateBudgetItems(Budget $budget): ServiceResult
+    public function recalculateServiceItems(Budget $budget): ServiceResult
     {
         try {
             DB::beginTransaction();
@@ -144,7 +105,7 @@ class BudgetCalculationService
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao recalcular itens do orçamento: '.$e->getMessage()
+                'Erro ao recalcular itens do serviço: '.$e->getMessage()
             );
         }
     }
@@ -152,7 +113,7 @@ class BudgetCalculationService
     /**
      * Calcula margem de lucro de um item.
      */
-    public function calculateProfitMargin(BudgetItem $item): float
+    public function calculateProfitMargin(ServiceItem $item): float
     {
         $settings = BudgetCalculationSettings::getForTenant($item->tenant_id);
 
@@ -160,12 +121,14 @@ class BudgetCalculationService
             return 0;
         }
 
-        $cost = $item->metadata['cost'] ?? 0;
-        if ($cost <= 0 || $item->unit_price <= 0) {
+        // Buscar custo do produto associado
+        $cost = $item->product->cost_price ?? 0;
+
+        if ($cost <= 0 || $item->unit_value <= 0) {
             return 0;
         }
 
-        return (($item->unit_price - $cost) / $item->unit_price) * 100;
+        return (($item->unit_value - $cost) / $item->unit_value) * 100;
     }
 
     /**
@@ -173,21 +136,27 @@ class BudgetCalculationService
      */
     public function calculateBudgetStats(Budget $budget): array
     {
-        $items = $budget->items;
+        $items = collect();
+        foreach ($budget->services as $service) {
+            foreach ($service->serviceItems as $item) {
+                $items->push($item);
+            }
+        }
+
         $totals = $this->calculateTotals($budget);
 
         $stats = [
             'totals' => $totals,
             'items' => [
                 'count' => $items->count(),
-                'with_discount' => $items->where('discount_percentage', '>', 0)->count(),
-                'with_tax' => $items->where('tax_percentage', '>', 0)->count(),
-                'categories' => $items->groupBy('budget_item_category_id')->count(),
+                'with_discount' => 0, // Descontos agora são por serviço/item totalizado
+                'with_tax' => 0,
+                'categories' => $budget->services->groupBy('category_id')->count(),
             ],
             'averages' => [
-                'item_price' => $items->count() > 0 ? $items->avg('unit_price') : 0,
-                'discount_percentage' => $items->count() > 0 ? $items->avg('discount_percentage') : 0,
-                'tax_percentage' => $items->count() > 0 ? $items->avg('tax_percentage') : 0,
+                'item_price' => $items->count() > 0 ? $items->avg('unit_value') : 0,
+                'discount_percentage' => 0,
+                'tax_percentage' => 0,
             ],
         ];
 
@@ -203,27 +172,45 @@ class BudgetCalculationService
         $warnings = [];
 
         // Verificar se há itens sem preço
-        $itemsWithoutPrice = $budget->items->where('unit_price', '<=', 0);
+        $itemsWithoutPrice = collect();
+        foreach ($budget->services as $service) {
+            foreach ($service->serviceItems as $item) {
+                if ($item->unit_value <= 0) {
+                    $itemsWithoutPrice->push($item);
+                }
+            }
+        }
+
         if ($itemsWithoutPrice->count() > 0) {
             $errors[] = 'Existem itens sem preço definido.';
         }
 
         // Verificar se há itens com quantidade zero ou negativa
-        $invalidQuantity = $budget->items->where('quantity', '<=', 0);
+        $invalidQuantity = collect();
+        foreach ($budget->services as $service) {
+            foreach ($service->serviceItems as $item) {
+                if ($item->quantity <= 0) {
+                    $invalidQuantity->push($item);
+                }
+            }
+        }
+
         if ($invalidQuantity->count() > 0) {
             $errors[] = 'Existem itens com quantidade inválida.';
         }
 
-        // Verificar descontos acima de 100%
-        $highDiscounts = $budget->items->where('discount_percentage', '>', 100);
-        if ($highDiscounts->count() > 0) {
-            $errors[] = 'Existem itens com desconto acima de 100%.';
+        // Avisar sobre itens sem produto
+        $itemsWithoutProduct = collect();
+        foreach ($budget->services as $service) {
+            foreach ($service->serviceItems as $item) {
+                if (empty($item->product_id)) {
+                    $itemsWithoutProduct->push($item);
+                }
+            }
         }
 
-        // Avisar sobre itens sem categoria
-        $itemsWithoutCategory = $budget->items->whereNull('budget_item_category_id');
-        if ($itemsWithoutCategory->count() > 0) {
-            $warnings[] = 'Existem itens sem categoria definida.';
+        if ($itemsWithoutProduct->count() > 0) {
+            $warnings[] = 'Existem itens sem produto definido.';
         }
 
         // Verificar se o total é muito baixo

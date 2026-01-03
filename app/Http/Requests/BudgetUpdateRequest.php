@@ -41,7 +41,7 @@ class BudgetUpdateRequest extends FormRequest
             'total' => 'required|numeric|min:0|max:9999999.99',
             'discount' => 'nullable|numeric|min:0|max:999999.99',
             'description' => 'nullable|string|max:1000',
-            'due_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:today',
             'payment_terms' => 'nullable|string|max:2000',
             'items' => 'nullable|array',
             'services' => 'nullable|array',
@@ -60,6 +60,8 @@ class BudgetUpdateRequest extends FormRequest
             'total.numeric' => 'O valor total deve ser um número.',
             'discount.numeric' => 'O desconto deve ser um valor numérico.',
             'discount.min' => 'O desconto não pode ser negativo.',
+            'due_date.date' => 'A data de vencimento deve ser uma data válida.',
+            'due_date.after_or_equal' => 'A data de vencimento deve ser hoje ou uma data posterior.',
             'description.max' => 'A descrição não pode ter mais de 1000 caracteres.',
             'payment_terms.max' => 'Os termos de pagamento não podem ter mais de 2000 caracteres.',
         ];

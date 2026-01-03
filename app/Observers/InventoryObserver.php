@@ -7,7 +7,6 @@ namespace App\Observers;
 use App\Enums\BudgetStatus;
 use App\Enums\ServiceStatus;
 use App\Models\Budget;
-use App\Models\BudgetItem;
 use App\Models\Service;
 use App\Models\ServiceItem;
 use App\Services\Domain\InventoryService;

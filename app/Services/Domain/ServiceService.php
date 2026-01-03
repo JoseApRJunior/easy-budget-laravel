@@ -43,9 +43,22 @@ class ServiceService extends AbstractBaseService
             // Calcular o valor total de todos os serviços
             $totalValue = $this->repository->sumTotal();
 
+            // Formatar a distribuição por status com cores e labels
+            $statusBreakdown = [];
+            foreach ($stats as $statusValue => $count) {
+                $statusEnum = ServiceStatus::tryFrom($statusValue);
+                if ($statusEnum) {
+                    $statusBreakdown[$statusValue] = [
+                        'count' => (int) $count,
+                        'color' => $statusEnum->getColor(),
+                        'label' => $statusEnum->label(),
+                    ];
+                }
+            }
+
             $dashboardData = [
                 'total_services' => $total,
-                'status_breakdown' => $stats,
+                'status_breakdown' => $statusBreakdown,
                 'recent_services' => $recent,
                 'completed_services' => $stats[ServiceStatus::COMPLETED->value] ?? 0,
                 'in_progress_services' => $stats[ServiceStatus::IN_PROGRESS->value] ?? 0,

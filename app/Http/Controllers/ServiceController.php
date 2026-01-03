@@ -157,7 +157,7 @@ class ServiceController extends Controller
      */
     public function show(string $code): View
     {
-        $result = $this->serviceService->findByCode($code, ['budget.customer', 'category', 'items.product', 'statusHistory']);
+        $result = $this->serviceService->findByCode($code, ['budget.customer', 'category', 'serviceItems.product']);
 
         if ($result->isError()) {
             abort(404, $result->getMessage());
@@ -174,7 +174,7 @@ class ServiceController extends Controller
      */
     public function edit(string $code): View
     {
-        $result = $this->serviceService->findByCode($code, ['items.product']);
+        $result = $this->serviceService->findByCode($code, ['serviceItems.product']);
 
         if ($result->isError()) {
             abort(404, $result->getMessage());
@@ -185,8 +185,10 @@ class ServiceController extends Controller
 
         return view('pages.service.edit', [
             'service' => $service,
-            'categories' => $this->categoryService->list(['type' => 'service'])->getData(),
-            'products' => $this->productService->list()->getData(),
+            'categories' => $this->categoryService->list(['type' => 'service'])->getData() ?? collect(),
+            'products' => $this->productService->list()->getData() ?? collect(),
+            'budgets' => $this->budgetService->list()->getData() ?? collect(),
+            'statusOptions' => ServiceStatus::cases(),
         ]);
     }
 

@@ -3,6 +3,7 @@
 @section('title', 'Novo Orçamento')
 
 @section('content')
+<div class="container-fluid py-1">
     <x-page-header
         title="Novo Orçamento"
         icon="file-earmark-plus"
@@ -64,6 +65,7 @@
                         <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
                         <input type="date" class="form-control @error('due_date') is-invalid @enderror"
                             id="due_date" name="due_date"
+                            min="{{ date('Y-m-d') }}"
                             value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', date('Y-m-d', strtotime('+7 days'))), 'Y-m-d', date('Y-m-d', strtotime('+7 days'))) }}"
                             required>
                         @error('due_date')
@@ -112,6 +114,7 @@
             </form>
         </div>
     </div>
+</div>
 @endsection
 
 @push('scripts')

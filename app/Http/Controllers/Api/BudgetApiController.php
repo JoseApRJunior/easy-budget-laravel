@@ -7,8 +7,9 @@ namespace App\Http\Controllers\Api;
 use App\Enums\BudgetStatus;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Budget;
-use App\Models\BudgetItem;
 use App\Models\BudgetVersion;
+use App\Models\Service;
+use App\Models\ServiceItem;
 use App\Services\Application\BudgetCalculationService;
 use App\Services\Application\BudgetTemplateService;
 use App\Services\Infrastructure\BudgetPdfService;
@@ -49,7 +50,7 @@ class BudgetApiController extends Controller
         $page = $request->get('page', 1);
 
         $query = Budget::where('tenant_id', $user->tenant_id)
-            ->with(['customer', 'items']);
+            ->with(['customer', 'services.serviceItems']);
 
         // Aplicar filtros
         if (! empty($filters['search'])) {
@@ -121,7 +122,6 @@ class BudgetApiController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100',
             'items.*.tax_percentage' => 'nullable|numeric|min:0|max:100',
-            'items.*.budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
         DB::beginTransaction();
@@ -138,13 +138,34 @@ class BudgetApiController extends Controller
             'global_discount_percentage' => $validated['global_discount_percentage'] ?? 0,
         ]);
 
-        // Adicionar itens
+        // Criar serviço padrão
+        $service = Service::create([
+            'budget_id' => $budget->id,
+            'tenant_id' => $user->tenant_id,
+            'description' => 'Serviços do Orçamento',
+            'status' => 'pendente',
+            'total' => 0,
+        ]);
+
+        // Adicionar itens ao serviço
         foreach ($validated['items'] as $itemData) {
-            $budget->addItem($itemData);
+            ServiceItem::create([
+                'service_id' => $service->id,
+                'tenant_id' => $user->tenant_id,
+                'description' => $itemData['title'],
+                'long_description' => $itemData['description'] ?? null,
+                'quantity' => $itemData['quantity'],
+                'unit' => $itemData['unit'],
+                'unit_value' => $itemData['unit_price'],
+                'discount_percentage' => $itemData['discount_percentage'] ?? 0,
+                'tax_percentage' => $itemData['tax_percentage'] ?? 0,
+                'total' => ($itemData['quantity'] * $itemData['unit_price']) * (1 - ($itemData['discount_percentage'] ?? 0) / 100),
+            ]);
         }
 
         // Calcular totais
-        $this->calculationService->recalculateBudgetItems($budget);
+        $this->calculationService->calculateTotals($budget);
+        $budget->updateCalculatedTotals();
 
         // Criar versão inicial
         $budget->createVersion('Orçamento criado via API', $user->id);
@@ -163,7 +184,7 @@ class BudgetApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $budget->load(['customer', 'items']),
+            'data' => $budget->load(['customer', 'services.serviceItems']),
             'message' => 'Orçamento criado com sucesso.',
         ], 201);
     }
@@ -182,7 +203,7 @@ class BudgetApiController extends Controller
 
         $code->load([
             'customer',
-            'items.category',
+            'services.serviceItems.product',
             'versions.user',
             'attachments',
         ]);
@@ -217,7 +238,7 @@ class BudgetApiController extends Controller
             'valid_until' => 'nullable|date|after:today',
             'global_discount_percentage' => 'nullable|numeric|min:0|max:100',
             'items' => 'required|array|min:1',
-            'items.*.id' => 'nullable|integer|exists:budget_items,id',
+            'items.*.id' => 'nullable|integer|exists:service_items,id',
             'items.*.title' => 'required|string|max:255',
             'items.*.description' => 'nullable|string|max:1000',
             'items.*.quantity' => 'required|numeric|min:0.01',
@@ -225,7 +246,6 @@ class BudgetApiController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.discount_percentage' => 'nullable|numeric|min:0|max:100',
             'items.*.tax_percentage' => 'nullable|numeric|min:0|max:100',
-            'items.*.budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
         DB::beginTransaction();
@@ -239,25 +259,54 @@ class BudgetApiController extends Controller
         ]);
 
         // Atualizar itens
+        $service = $code->services()->first() ?? Service::create([
+            'budget_id' => $code->id,
+            'tenant_id' => Auth::user()->tenant_id,
+            'description' => 'Serviços do Orçamento',
+            'status' => 'pendente',
+            'total' => 0,
+        ]);
+
         $existingItemIds = [];
         foreach ($validated['items'] as $itemData) {
             if (isset($itemData['id'])) {
-                $item = $code->items()->find($itemData['id']);
+                $item = $service->serviceItems()->find($itemData['id']);
                 if ($item) {
-                    $item->update($itemData);
+                    $item->update([
+                        'description' => $itemData['title'],
+                        'long_description' => $itemData['description'] ?? null,
+                        'quantity' => $itemData['quantity'],
+                        'unit' => $itemData['unit'],
+                        'unit_value' => $itemData['unit_price'],
+                        'discount_percentage' => $itemData['discount_percentage'] ?? 0,
+                        'tax_percentage' => $itemData['tax_percentage'] ?? 0,
+                        'total' => ($itemData['quantity'] * $itemData['unit_price']) * (1 - ($itemData['discount_percentage'] ?? 0) / 100),
+                    ]);
                     $existingItemIds[] = $item->id;
                 }
             } else {
-                $newItem = $code->addItem($itemData);
+                $newItem = ServiceItem::create([
+                    'service_id' => $service->id,
+                    'tenant_id' => Auth::user()->tenant_id,
+                    'description' => $itemData['title'],
+                    'long_description' => $itemData['description'] ?? null,
+                    'quantity' => $itemData['quantity'],
+                    'unit' => $itemData['unit'],
+                    'unit_value' => $itemData['unit_price'],
+                    'discount_percentage' => $itemData['discount_percentage'] ?? 0,
+                    'tax_percentage' => $itemData['tax_percentage'] ?? 0,
+                    'total' => ($itemData['quantity'] * $itemData['unit_price']) * (1 - ($itemData['discount_percentage'] ?? 0) / 100),
+                ]);
                 $existingItemIds[] = $newItem->id;
             }
         }
 
-        // Remover itens não incluídos
-        $code->items()->whereNotIn('id', $existingItemIds)->delete();
+        // Remover itens não incluídos do serviço principal
+        $service->serviceItems()->whereNotIn('id', $existingItemIds)->delete();
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($code);
+        $this->calculationService->calculateTotals($code);
+        $code->updateCalculatedTotals();
 
         // Criar nova versão
         $code->createVersion('Orçamento atualizado via API', Auth::id());
@@ -266,7 +315,7 @@ class BudgetApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $code->load(['customer', 'items']),
+            'data' => $code->load(['customer', 'services.serviceItems']),
             'message' => 'Orçamento atualizado com sucesso.',
         ]);
     }
@@ -325,13 +374,32 @@ class BudgetApiController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'tax_percentage' => 'nullable|numeric|min:0|max:100',
-            'budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        $item = $code->addItem($validated);
+        $service = $code->services()->first() ?? Service::create([
+            'budget_id' => $code->id,
+            'tenant_id' => Auth::user()->tenant_id,
+            'description' => 'Serviços do Orçamento',
+            'status' => 'pendente',
+            'total' => 0,
+        ]);
+
+        $item = ServiceItem::create([
+            'service_id' => $service->id,
+            'tenant_id' => Auth::user()->tenant_id,
+            'description' => $validated['title'],
+            'long_description' => $validated['description'] ?? null,
+            'quantity' => $validated['quantity'],
+            'unit' => $validated['unit'],
+            'unit_value' => $validated['unit_price'],
+            'discount_percentage' => $validated['discount_percentage'] ?? 0,
+            'tax_percentage' => $validated['tax_percentage'] ?? 0,
+            'total' => ($validated['quantity'] * $validated['unit_price']) * (1 - ($validated['discount_percentage'] ?? 0) / 100),
+        ]);
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($code);
+        $this->calculationService->calculateTotals($code);
+        $code->updateCalculatedTotals();
 
         // Criar nova versão
         $code->createVersion('Item adicionado via API', Auth::id());
@@ -346,7 +414,7 @@ class BudgetApiController extends Controller
     /**
      * Atualiza item do orçamento.
      */
-    public function updateItem(Request $request, Budget $code, BudgetItem $item): JsonResponse
+    public function updateItem(Request $request, Budget $code, ServiceItem $item): JsonResponse
     {
         if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
@@ -355,7 +423,9 @@ class BudgetApiController extends Controller
             ], 403);
         }
 
-        if ($item->budget_id !== $code->id) {
+        // Verificar se o item pertence a um serviço deste orçamento
+        $service = $item->service;
+        if (! $service || $service->budget_id !== $code->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item não pertence ao orçamento.',
@@ -370,13 +440,22 @@ class BudgetApiController extends Controller
             'unit_price' => 'required|numeric|min:0',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'tax_percentage' => 'nullable|numeric|min:0|max:100',
-            'budget_item_category_id' => 'nullable|integer|exists:budget_item_categories,id',
         ]);
 
-        $item->update($validated);
+        $item->update([
+            'description' => $validated['title'],
+            'long_description' => $validated['description'] ?? null,
+            'quantity' => $validated['quantity'],
+            'unit' => $validated['unit'],
+            'unit_value' => $validated['unit_price'],
+            'discount_percentage' => $validated['discount_percentage'] ?? 0,
+            'tax_percentage' => $validated['tax_percentage'] ?? 0,
+            'total' => ($validated['quantity'] * $validated['unit_price']) * (1 - ($validated['discount_percentage'] ?? 0) / 100),
+        ]);
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($code);
+        $this->calculationService->calculateTotals($code);
+        $code->updateCalculatedTotals();
 
         // Criar nova versão
         $code->createVersion('Item atualizado via API', Auth::id());
@@ -391,7 +470,7 @@ class BudgetApiController extends Controller
     /**
      * Remove item do orçamento.
      */
-    public function removeItem(Budget $code, BudgetItem $item): JsonResponse
+    public function removeItem(Budget $code, ServiceItem $item): JsonResponse
     {
         if ($code->tenant_id !== Auth::user()->tenant_id || ! $code->canBeEdited()) {
             return response()->json([
@@ -400,17 +479,20 @@ class BudgetApiController extends Controller
             ], 403);
         }
 
-        if ($item->budget_id !== $code->id) {
+        // Verificar se o item pertence a um serviço deste orçamento
+        $service = $item->service;
+        if (! $service || $service->budget_id !== $code->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Item não pertence ao orçamento.',
             ], 400);
         }
 
-        $code->removeItem($item);
+        $item->delete();
 
         // Recalcular totais
-        $this->calculationService->recalculateBudgetItems($code);
+        $this->calculationService->calculateTotals($code);
+        $code->updateCalculatedTotals();
 
         // Criar nova versão
         $code->createVersion('Item removido via API', Auth::id());
@@ -612,8 +694,8 @@ class BudgetApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $code->load(['items']),
-                'message' => 'Versão restaurada com sucesso.',
+                'data' => $code->load(['services.serviceItems']),
+                'message' => 'Token renovado com sucesso.',
             ]);
 
         } catch (\Exception $e) {

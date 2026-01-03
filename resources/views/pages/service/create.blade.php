@@ -3,11 +3,12 @@
 @section('title', 'Novo Serviço')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Novo Serviço"
-        icon="plus-circle"
+        icon="tools"
         :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
                 'Serviços' => route('provider.services.index'),
                 'Novo' => '#'
             ]">
@@ -15,6 +16,7 @@
     </x-page-header>
 
     <div class="card border-0 shadow-sm">
+
         <div class="card-body p-4">
             @if ($errors->any())
             <div class="alert alert-danger" role="alert">
@@ -33,7 +35,6 @@
                 <x-button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" />
             </div>
             @endif
-
             <form id="serviceForm" method="POST" action="{{ route('provider.services.store') }}">
                 @csrf
 
@@ -190,6 +191,7 @@
                             <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
                             <input type="date" class="form-control @error('due_date') is-invalid @enderror"
                                 id="due_date" name="due_date"
+                                min="{{ date('Y-m-d') }}"
                                 value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', now()->format('Y-m-d')), 'Y-m-d', now()->format('Y-m-d')) }}"
                                 required>
                             @error('due_date')
@@ -215,7 +217,7 @@
                             <!-- Itens serão adicionados dinamicamente -->
                             @if(old('items'))
                                 @foreach(old('items') as $index => $item)
-                                    <div class="item-row border rounded p-3 mb-3 bg-light">
+                                    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
                                         <div class="row align-items-end">
                                             <div class="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
@@ -276,9 +278,10 @@
     </div>
 </div>
 
+
 <!-- Template para novos itens -->
 <template id="itemTemplate">
-    <div class="item-row border rounded p-3 mb-3 bg-light">
+    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
         <div class="row align-items-end">
             <div class="col-md-4">
                 <label class="form-label">Produto/Serviço</label>

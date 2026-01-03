@@ -83,54 +83,64 @@
                         </div>
                     </div>
 
-                    <!-- Itens do Orçamento -->
+                    <!-- Serviços e Itens do Orçamento -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <h5 class="text-primary mb-3">Itens do Orçamento</h5>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th width="5%">#</th>
-                                            <th width="45%">Descrição</th>
-                                            <th width="10%" class="text-center">Qtd</th>
-                                            <th width="15%" class="text-end">Valor Unit.</th>
-                                            <th width="15%" class="text-end">Subtotal</th>
-                                            <th width="10%" class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($budget->items as $index => $item)
-                                        <tr>
-                                            <td>{{ $index + 1 }}</td>
-                                            <td>
-                                                <strong>{{ $item->service_name }}</strong>
-                                                @if($item->description)
-                                                <br><small class="text-muted">{{ $item->description }}</small>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">{{ $item->quantity }}</td>
-                                            <td class="text-end">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                            <td class="text-end">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>
-                                            <td class="text-center">
-                                                <x-button 
-                                                    type="button" 
-                                                    variant="info" 
-                                                    size="sm" 
-                                                    icon="eye"
-                                                    onclick="showItemDetails({{ json_encode($item) }})" />
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">
-                                                Nenhum item encontrado neste orçamento
-                                            </td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                            <h5 class="text-primary mb-3">Serviços e Itens</h5>
+                            @forelse($budget->services as $service)
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ $service->category?->name ?? 'Serviço' }}</h6>
+                                        <span class="badge" style="background-color: {{ $service->status?->getColor() ?? '#6c757d' }}">
+                                            {{ $service->status?->getDescription() ?? 'Pendente' }}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        @if($service->description)
+                                            <p class="text-muted small mb-3">{{ $service->description }}</p>
+                                        @endif
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Produto/Serviço</th>
+                                                        <th class="text-center">Qtd</th>
+                                                        <th class="text-end">Valor Unit.</th>
+                                                        <th class="text-end">Subtotal</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @forelse($service->serviceItems as $item)
+                                                        <tr>
+                                                            <td>
+                                                                <strong>{{ $item->product?->name ?? 'Item' }}</strong>
+                                                                @if($item->product?->description)
+                                                                    <br><small class="text-muted">{{ $item->product->description }}</small>
+                                                                @endif
+                                                            </td>
+                                                            <td class="text-center">{{ $item->quantity }}</td>
+                                                            <td class="text-end">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
+                                                            <td class="text-end">R$ {{ number_format($item->quantity * $item->unit_value, 2, ',', '.') }}</td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-muted">Nenhum item neste serviço</td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="3" class="text-end">Total do Serviço:</th>
+                                                        <th class="text-end">R$ {{ number_format($service->total, 2, ',', '.') }}</th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="alert alert-info text-center">Nenhum serviço encontrado neste orçamento</div>
+                            @endforelse
                         </div>
                     </div>
 

@@ -3,14 +3,14 @@
 @section('title', 'Dashboard de Serviços')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <x-page-header 
-            title="Dashboard de Serviços" 
-            icon="tools" 
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dashboard de Serviços"
+            icon="tools"
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
                 'Serviços' => route('provider.services.index'),
-                'Dashboard' => '#'
+                'Métricas' => '#'
             ]"
         >
             <p class="text-muted mb-0">Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance.</p>
@@ -168,32 +168,43 @@
                             <div class="desktop-view">
                                 <div class="table-responsive">
                                     <table class="modern-table table mb-0">
-                                    <thead class="table-light">
+                                    <thead>
                                         <tr>
                                             <th>Código</th>
                                             <th>Cliente</th>
-                                            <th>Status</th>
                                             <th>Valor</th>
+                                            <th>Status</th>
                                             <th>Data</th>
-                                            <th>Ações</th>
+                                            <th class="text-center">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($recent as $service)
+                                            @php
+                                                $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
+                                            @endphp
                                             <tr>
+                                                <td class="fw-bold text-dark">{{ $service->code }}</td>
                                                 <td>
-                                                    <code class="text-code">{{ $service->code }}</code>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
+                                                            {{ $customerName }}
+                                                        </div>
+                                                    </div>
                                                 </td>
-                                                <td>
-                                                    {{ $service->budget->customer->commonData->first_name ?? 'N/A' }}
-                                                </td>
+                                                <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                                 <td>
                                                     <x-status-badge :item="$service" />
                                                 </td>
-                                                <td>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
-                                                <td>{{ $service->created_at->format('d/m/Y') }}</td>
-                                                <td>
-                                                    <x-button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <td class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</td>
+                                                <td class="text-center">
+                                                    <x-action-buttons
+                                                        :item="$service"
+                                                        resource="services"
+                                                        identifier="code"
+                                                        :can-delete="false"
+                                                        size="sm"
+                                                    />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -206,19 +217,32 @@
                         <div class="mobile-view">
                             <div class="list-group list-group-flush">
                                 @foreach ($recent as $service)
+                                    @php
+                                        $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
+                                    @endphp
                                     <a href="{{ route('provider.services.show', $service->code) }}" class="list-group-item list-group-item-action py-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-tools text-muted me-2 mt-1"></i>
+                                        <div class="d-flex align-items-center mb-2">
                                             <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-1">{{ $service->code }}</div>
-                                                <div class="small text-muted mb-2">{{ $service->budget->customer->commonData->first_name ?? 'N/A' }}</div>
-                                                <div class="d-flex gap-2 flex-wrap align-items-center">
-                                                    <x-status-badge :item="$service" />
-                                                    <span class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                                                    <span class="small text-muted">{{ $service->created_at->format('d/m/Y') }}</span>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="fw-bold text-dark">{{ $service->code }}</span>
+                                                    <span class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</span>
                                                 </div>
                                             </div>
                                             <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
+                                            <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
+                                                <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                                <x-status-badge :item="$service" />
+                                            </div>
                                         </div>
                                     </a>
                                 @endforeach
@@ -239,40 +263,57 @@
 
             <!-- Insights e Atalhos -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
+                <!-- Insights -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
+                            <i class="bi bi-lightbulb me-2 text-warning"></i>Insights Rápidos
                         </h6>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0 small text-muted">
-                            <li class="mb-2">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                Serviços concluídos geram receita garantida para seu negócio.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-clock-fill text-warning me-2"></i>
-                                Acompanhe serviços em andamento para manter prazos.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-graph-up-arrow text-primary me-2"></i>
-                                Monitore a taxa de conclusão para otimizar processos.
-                            </li>
-                        </ul>
+                    <div class="card-body pt-0">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-circle-xs bg-success bg-opacity-10 p-2 rounded me-3">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                </div>
+                                <div>
+                                    <p class="small mb-0 text-muted">Serviços concluídos geram receita garantida para seu negócio.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-circle-xs bg-warning bg-opacity-10 p-2 rounded me-3">
+                                    <i class="bi bi-clock-fill text-warning"></i>
+                                </div>
+                                <div>
+                                    <p class="small mb-0 text-muted">Acompanhe serviços em andamento para manter prazos.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-circle-xs bg-primary bg-opacity-10 p-2 rounded me-3">
+                                    <i class="bi bi-graph-up-arrow text-primary"></i>
+                                </div>
+                                <div>
+                                    <p class="small mb-0 text-muted">Monitore a taxa de conclusão para otimizar processos.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Atalhos -->
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-link-45deg me-2"></i>Atalhos
+                    <div class="card-header bg-transparent border-0 py-3">
+                        <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
+                            <i class="bi bi-link-45deg me-2 text-primary"></i>Atalhos Rápidos
                         </h6>
                     </div>
-                    <div class="card-body d-grid gap-2">
-                        <x-button type="link" :href="route('provider.services.create')" variant="success" size="sm" icon="plus-circle" label="Novo Serviço" />
-                        <x-button type="link" :href="route('provider.services.index')" variant="primary" outline size="sm" icon="tools" label="Listar Serviços" />
-                        <x-button type="link" :href="route('provider.reports.services')" variant="secondary" outline size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
+                    <div class="card-body pt-0 d-grid gap-2">
+                        <a href="{{ route('provider.services.index') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-tools me-2"></i>Listar Serviços
+                        </a>
+                        <a href="{{ route('provider.reports.services') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Serviços
+                        </a>
                     </div>
                 </div>
             </div>

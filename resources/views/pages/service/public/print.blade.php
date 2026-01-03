@@ -170,7 +170,7 @@
     </div>
 
     <!-- Itens do serviço (se houver) -->
-    @if( $service->items && $service->items->count() > 0 )
+    @if( $service->serviceItems && $service->serviceItems->count() > 0 )
       <div class="info-box">
         <h5 class="text-muted mb-3">
           <i class="bi bi-list-ul me-2"></i>
@@ -188,9 +188,9 @@
               </tr>
             </thead>
             <tbody>
-              @foreach( $service->items as $item )
+              @foreach( $service->serviceItems as $item )
                 <tr>
-                  <td>{{ $item->product->name }}</td>
+                  <td>{{ $item->product?->name ?? 'Produto não encontrado' }}</td>
                   <td class="text-center">{{ $item->quantity }}</td>
                   <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
                   <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>

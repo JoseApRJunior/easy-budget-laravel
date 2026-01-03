@@ -45,6 +45,7 @@
                                 <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
                                 <input type="date" class="form-control @error('due_date') is-invalid @enderror"
                                     id="due_date" name="due_date"
+                                    min="{{ date('Y-m-d') }}"
                                     value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : ''), 'Y-m-d', $budget->due_date ? $budget->due_date->format('Y-m-d') : '') }}"
                                     required>
                                 <div class="form-text text-muted small">

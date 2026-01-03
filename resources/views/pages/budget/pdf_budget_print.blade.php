@@ -136,12 +136,12 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach( $service->items as $item )
+                                    @foreach( $service->serviceItems as $item )
                                         <tr>
                                             <td>
-                                                <p class="fw-medium mb-0">{{ $item->name }}</p>
-                                                @if( $item->description )
-                                                    <small class="text-secondary">{{ $item->description }}</small>
+                                                <p class="fw-medium mb-0">{{ $item->product?->name ?? 'Produto não encontrado' }}</p>
+                                                @if( $item->product?->description )
+                                                    <small class="text-secondary">{{ $item->product->description }}</small>
                                                 @endif
                                             </td>
                                             <td class="text-center">{{ $item->quantity }}</td>

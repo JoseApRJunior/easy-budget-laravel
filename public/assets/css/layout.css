@@ -194,10 +194,10 @@ header {
    z-index: 1;
 }
 
-/* Filtros de busca precisam de z-index maior para o dropdown aparecer por cima */
-.card:has(.tom-select),
-.card:has(.ts-wrapper) {
-    z-index: 1050; /* Aumentado para ficar acima do footer e outros elementos */
+/* Filtros de busca precisam de z-index maior para o dropdown aparecer por cima apenas quando em uso */
+.card:has(.tom-select:focus),
+.card:has(.ts-wrapper:focus-within) {
+    z-index: 1050; /* Aumentado apenas durante o foco para não sobrepor outros elementos permanentemente */
 }
 
 /* Botões personalizados */

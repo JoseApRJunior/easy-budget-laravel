@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\DTOs\Budget\BudgetDTO;
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\BudgetStoreRequest;
 use App\Http\Requests\BudgetUpdateRequest;
@@ -12,7 +13,6 @@ use App\Models\Budget;
 use App\Models\User;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\CustomerService;
-use App\Helpers\DateHelper;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -103,9 +103,20 @@ class BudgetController extends Controller
         $dto = BudgetDTO::fromRequest($validated);
         $result = $this->budgetService->create($dto);
 
+        if ($result->isSuccess()) {
+            $budget = $result->getData();
+
+            return $this->redirectWithServiceResult(
+                'provider.budgets.edit',
+                $result,
+                'Orçamento criado com sucesso!',
+                ['code' => $budget->code]
+            );
+        }
+
         return $this->redirectBackWithServiceResult(
             $result,
-            'Orçamento criado com sucesso! Você pode cadastrar outro agora.'
+            'Orçamento criado com sucesso!'
         );
     }
 
@@ -177,9 +188,8 @@ class BudgetController extends Controller
         $dto = BudgetDTO::fromRequest($validated);
         $updateResult = $this->budgetService->update($budget->id, $dto);
 
-        return $this->redirectWithServiceResult(
+        return $this->redirectBackWithServiceResult(
             $updateResult,
-            route('provider.budgets.index'),
             'Orçamento atualizado com sucesso!'
         );
     }

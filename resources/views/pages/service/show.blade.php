@@ -1,9 +1,10 @@
 @extends('layouts.app')
 @section('title', 'Detalhes do Serviço')
 @section('content')
+<div class="container-fluid py-4">
     <x-page-header
         title="Detalhes do Serviço"
-        icon="gear"
+        icon="tools"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
             'Serviços' => route('provider.services.index'),
@@ -143,7 +144,7 @@
                                             @endforeach
                                         </tbody>
                                         <tfoot>
-                                            <tr class="table-light">
+                                            <tr class="table-secondary">
                                                 <th colspan="3">Total dos Itens:</th>
                                                 <th>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</th>
                                             </tr>
@@ -170,7 +171,7 @@
                                             </div>
                                         </div>
                                     @endforeach
-                                    <div class="list-group-item bg-light">
+                                    <div class="list-group-item bg-body-secondary">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <strong>Total dos Itens:</strong>
                                             <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
@@ -289,7 +290,7 @@
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             @if ($service->canBeEdited())
-                                <x-button 
+                                <x-button
                                     href="{{ route('provider.services.edit', $service->code) }}"
                                     variant="outline-primary"
                                     icon="bi bi-pencil">
@@ -297,7 +298,7 @@
                                 </x-button>
                             @endif
                             @if ($service->budget)
-                                <x-button 
+                                <x-button
                                     href="{{ route('provider.budgets.show', $service->budget->code) }}"
                                     variant="outline-info"
                                     icon="bi bi-receipt">
@@ -308,7 +309,7 @@
                             {{-- Botões de Fatura --}}
                             @if ($service->status->isFinished() || $service->status->value === 'COMPLETED')
                                 {{-- Serviço finalizado - pode criar fatura completa --}}
-                                <x-button 
+                                <x-button
                                     href="{{ route('provider.invoices.create.from-service', $service->code) }}"
                                     variant="outline-success"
                                     icon="bi bi-receipt">
@@ -316,16 +317,16 @@
                                 </x-button>
                             @elseif($service->status->isActive() && $service->serviceItems && $service->serviceItems->count() > 0)
                                 {{-- Serviço ativo com itens - pode criar fatura parcial --}}
-                                <x-button 
+                                <x-button
                                     href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
                                     variant="outline-warning"
                                     icon="bi bi-receipt">
                                     Criar Fatura Parcial
                                 </x-button>
                             @endif
-                            <x-button 
-                                type="button" 
-                                variant="outline-success" 
+                            <x-button
+                                type="button"
+                                variant="outline-success"
                                 onclick="window.print()"
                                 icon="bi bi-printer">
                                 Imprimir
@@ -339,8 +340,8 @@
         {{-- Botões de Ação (Footer) --}}
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex gap-2">
-                <x-button 
-                    href="{{ url()->previous(route('provider.services.index')) }}" 
+                <x-button
+                    href="{{ url()->previous(route('provider.services.index')) }}"
                     variant="outline-secondary"
                     icon="bi bi-arrow-left">
                     Voltar
@@ -351,17 +352,17 @@
             </small>
             <div class="d-flex gap-2">
                 @if ($service->canBeEdited())
-                    <x-button 
-                        href="{{ route('provider.services.edit', $service->code) }}" 
+                    <x-button
+                        href="{{ route('provider.services.edit', $service->code) }}"
                         variant="primary"
                         icon="bi bi-pencil-fill">
                         Editar
                     </x-button>
                 @endif
-                <x-button 
-                    type="button" 
-                    variant="outline-danger" 
-                    data-bs-toggle="modal" 
+                <x-button
+                    type="button"
+                    variant="outline-danger"
+                    data-bs-toggle="modal"
                     data-bs-target="#deleteModal"
                     icon="bi bi-trash-fill">
                     Excluir
@@ -392,6 +393,7 @@
                 </div>
             </div>
     </div>
+</div>
 @endsection
 
 @push('styles')

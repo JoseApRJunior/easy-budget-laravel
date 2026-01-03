@@ -182,7 +182,7 @@
     </div>
 
     <!-- Itens da fatura (se houver) -->
-    @if( $invoice->items && $invoice->items->count() > 0 )
+    @if( $invoice->invoiceItems && $invoice->invoiceItems->count() > 0 )
       <div class="info-box">
         <h5 class="text-muted mb-3">
           <i class="bi bi-list-ul me-2"></i>
@@ -200,9 +200,9 @@
               </tr>
             </thead>
             <tbody>
-              @foreach( $invoice->items as $item )
+              @foreach( $invoice->invoiceItems as $item )
                 <tr>
-                  <td>{{ $item->product->name }}</td>
+                  <td>{{ $item->product?->name ?? 'Produto não encontrado' }}</td>
                   <td class="text-center">{{ $item->quantity }}</td>
                   <td class="text-end">R$ {{ number_format( $item->unit_price, 2, ',', '.' ) }}</td>
                   <td class="text-end">R$ {{ number_format( $item->total, 2, ',', '.' ) }}</td>

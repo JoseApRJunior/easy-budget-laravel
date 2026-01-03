@@ -117,7 +117,7 @@ class BudgetShareService extends AbstractBaseService
             ]);
 
             // Carrega o orçamento com relacionamentos necessários
-            $budget = $this->budgetRepository->find($share->budget_id, ['customer', 'items', 'user']);
+            $budget = $this->budgetRepository->find($share->budget_id, ['customer', 'services.serviceItems']);
 
             if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
