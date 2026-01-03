@@ -6,6 +6,8 @@ namespace App\Enums;
 
 enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     /** Serviço em elaboração, permite modificações */
     case DRAFT = 'draft';
 
@@ -47,42 +49,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     /** Status de rejeição para clientes */
     case REJECTED = 'rejected';
-
-    /**
-     * Retorna todos os valores do enum
-     */
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    /**
-     * Retorna opções para select [value => label]
-     */
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    /**
-     * Retorna todos os labels
-     */
-    public static function labels(): array
-    {
-        return array_map(fn($case) => $case->label(), self::cases());
-    }
-
-    /**
-     * Verifica se um valor é válido
-     */
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
 
     /**
      * Retorna o label do status
@@ -286,7 +252,17 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      */
     public function getMetadata(): array
     {
+        return array_merge($this->defaultMetadata(), [
+            'is_executable' => $this->isExecutable(),
+            'can_edit' => $this->canEdit(),
+            'order_index' => $this->getOrderIndex(),
+        ]);
+    }
+
+    private function defaultMetadata(): array
+    {
         return [
+            'value' => $this->value,
             'label' => $this->label(),
             'description' => $this->getDescription(),
             'color' => $this->color(),
@@ -295,9 +271,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             'icon_class' => $this->getIcon(),
             'is_active' => $this->isActive(),
             'is_finished' => $this->isFinished(),
-            'is_executable' => $this->isExecutable(),
-            'can_edit' => $this->canEdit(),
-            'order_index' => $this->getOrderIndex(),
         ];
     }
 

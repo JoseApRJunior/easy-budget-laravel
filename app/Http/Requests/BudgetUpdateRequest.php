@@ -36,7 +36,7 @@ class BudgetUpdateRequest extends FormRequest
             ],
             'status' => [
                 'nullable',
-                Rule::in(array_column(BudgetStatus::cases(), 'value')),
+                Rule::in(BudgetStatus::values()),
             ],
             'total' => 'required|numeric|min:0|max:9999999.99',
             'discount' => 'nullable|numeric|min:0|max:999999.99',

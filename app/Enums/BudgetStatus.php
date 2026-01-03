@@ -6,48 +6,14 @@ namespace App\Enums;
 
 enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case DRAFT = 'draft';
     case PENDING = 'pending';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';
     case CANCELLED = 'cancelled';
     case COMPLETED = 'completed';
-
-    /**
-     * Retorna todos os valores do enum
-     */
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    /**
-     * Retorna opções para select [value => label]
-     */
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    /**
-     * Retorna todos os labels
-     */
-    public static function labels(): array
-    {
-        return array_map(fn($case) => $case->label(), self::cases());
-    }
-
-    /**
-     * Verifica se um valor é válido
-     */
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
 
     /**
      * Retorna o label do status
@@ -183,46 +149,6 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     }
 
     /**
-     * Retorna metadados do status
-     */
-    public function getMetadata(): array
-    {
-        return [
-            'label' => $this->label(),
-            'description' => $this->getDescription(),
-            'color' => $this->color(),
-            'color_hex' => $this->getColor(),
-            'icon' => $this->icon(),
-            'icon_class' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
-            'can_edit' => $this->canEdit(),
-            'can_delete' => $this->canDelete(),
-            'order_index' => $this->getOrderIndex(),
-        ];
-    }
-
-    /**
-     * Retorna transições permitidas para um status (array de strings)
-     */
-    public static function getAllowedTransitions(string $statusValue): array
-    {
-        $status = self::tryFrom($statusValue);
-        if (! $status) {
-            return [];
-        }
-
-        $transitions = [];
-        foreach (self::cases() as $targetStatus) {
-            if ($status->canTransitionTo($targetStatus)) {
-                $transitions[] = $targetStatus->value;
-            }
-        }
-
-        return $transitions;
-    }
-
-    /**
      * Retorna o índice de ordem para classificação
      */
     public function getOrderIndex(): int
@@ -238,98 +164,49 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     }
 
     /**
-     * Cria instância do enum a partir de string
+     * Retorna transições permitidas para um status (array de strings)
      */
-    public static function fromString(string $value): ?self
+    public static function getAllowedTransitions(string $statusValue): array
     {
-        try {
-            return self::from($value);
-        } catch (\ValueError $e) {
-            return null;
+        $status = self::tryFrom($statusValue);
+        if (!$status) {
+            return [];
         }
+
+        $transitions = [];
+        foreach (self::cases() as $targetStatus) {
+            if ($status->canTransitionTo($targetStatus)) {
+                $transitions[] = $targetStatus->value;
+            }
+        }
+
+        return $transitions;
     }
 
     /**
-     * Retorna opções formatadas para uso em formulários/selects
+     * Retorna metadados do status
      */
-    public static function getOptions(bool $includeFinished = true): array
+    public function getMetadata(): array
     {
-        $options = [];
-        foreach (self::cases() as $case) {
-            if (! $includeFinished && $case->isFinished()) {
-                continue;
-            }
-            $options[$case->value] = $case->label();
-        }
-
-        return $options;
+        return array_merge($this->defaultMetadata(), [
+            'can_edit' => $this->canEdit(),
+            'can_delete' => $this->canDelete(),
+            'order_index' => $this->getOrderIndex(),
+        ]);
     }
 
-    /**
-     * Ordena status por prioridade para exibição
-     */
-    public static function getOrdered(bool $includeFinished = true): array
+    private function defaultMetadata(): array
     {
-        $cases = self::cases();
-
-        if (! $includeFinished) {
-            $cases = array_filter($cases, fn ($case) => ! $case->isFinished());
-        }
-
-        usort($cases, function ($a, $b) {
-            return $a->getOrderIndex() <=> $b->getOrderIndex();
-        });
-
-        return array_values($cases);
-    }
-
-    /**
-     * Calcula métricas de status para dashboards
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $total = count($statuses);
-        if ($total === 0) {
-            return [
-                'total' => 0,
-                'active' => 0,
-                'finished' => 0,
-                'percentages' => [],
-            ];
-        }
-
-        $counts = [];
-        $activeCount = 0;
-        $finishedCount = 0;
-
-        foreach ($statuses as $status) {
-            $statusEnum = $status instanceof self ? $status : self::fromString((string) $status);
-            if (! $statusEnum) {
-                continue;
-            }
-
-            $counts[$statusEnum->value] = ($counts[$statusEnum->value] ?? 0) + 1;
-
-            if ($statusEnum->isActive()) {
-                $activeCount++;
-            }
-
-            if ($statusEnum->isFinished()) {
-                $finishedCount++;
-            }
-        }
-
-        $percentages = [];
-        foreach ($counts as $value => $count) {
-            $percentages[$value] = round(($count / $total) * 100, 1);
-        }
-
         return [
-            'total' => $total,
-            'active' => $activeCount,
-            'finished' => $finishedCount,
-            'percentages' => $percentages,
-            'counts' => $counts,
+            'value' => $this->value,
+            'label' => $this->label(),
+            'description' => $this->getDescription(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
         ];
     }
 }

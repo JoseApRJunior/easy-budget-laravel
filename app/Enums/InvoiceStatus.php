@@ -6,6 +6,8 @@ namespace App\Enums;
 
 enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     /** Fatura pendente de pagamento */
     case PENDING = 'pending';
 
@@ -17,42 +19,6 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     /** Fatura vencida */
     case OVERDUE = 'overdue';
-
-    /**
-     * Retorna todos os valores do enum
-     */
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    /**
-     * Retorna opções para select [value => label]
-     */
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    /**
-     * Retorna todos os labels
-     */
-    public static function labels(): array
-    {
-        return array_map(fn($case) => $case->label(), self::cases());
-    }
-
-    /**
-     * Verifica se um valor é válido
-     */
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
 
     /**
      * Retorna o label do status
@@ -200,115 +166,23 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
      * Retorna metadados do status
      */
     public function getMetadata(): array
-    {
-        return [
+    {        return array_merge($this->defaultMetadata(), [
+            'priority_order' => $this->getPriorityOrder(),
+            'is_chargeable' => $this->isChargeable(),
+        ]);
+    }
+
+    private function defaultMetadata(): array
+    {        return [
+            'value' => $this->value,
             'label' => $this->label(),
             'description' => $this->getDescription(),
             'color' => $this->color(),
             'color_hex' => $this->getColor(),
             'icon' => $this->icon(),
             'icon_class' => $this->getIcon(),
-            'is_pending' => $this->isPending(),
             'is_active' => $this->isActive(),
             'is_finished' => $this->isFinished(),
-            'is_chargeable' => $this->isChargeable(),
-            'priority_order' => $this->getPriorityOrder(),
-        ];
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     */
-    public static function fromString(string $value): ?self
-    {
-        try {
-            return self::from($value);
-        } catch (\ValueError $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Retorna opções formatadas para uso em formulários/selects
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            if (! $includeFinished && $case->isFinished()) {
-                continue;
-            }
-            $options[$case->value] = $case->label();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Ordena status por prioridade para exibição
-     */
-    public static function getOrdered(bool $includeFinished = true): array
-    {
-        $cases = self::cases();
-
-        if (! $includeFinished) {
-            $cases = array_filter($cases, fn ($case) => ! $case->isFinished());
-        }
-
-        usort($cases, function ($a, $b) {
-            return $a->getPriorityOrder() <=> $b->getPriorityOrder();
-        });
-
-        return array_values($cases);
-    }
-
-    /**
-     * Calcula métricas de status para dashboards
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $total = count($statuses);
-        if ($total === 0) {
-            return [
-                'total' => 0,
-                'active' => 0,
-                'finished' => 0,
-                'percentages' => [],
-            ];
-        }
-
-        $counts = [];
-        $activeCount = 0;
-        $finishedCount = 0;
-
-        foreach ($statuses as $status) {
-            $statusEnum = $status instanceof self ? $status : self::fromString((string) $status);
-            if (! $statusEnum) {
-                continue;
-            }
-
-            $counts[$statusEnum->value] = ($counts[$statusEnum->value] ?? 0) + 1;
-
-            if ($statusEnum->isActive()) {
-                $activeCount++;
-            }
-
-            if ($statusEnum->isFinished()) {
-                $finishedCount++;
-            }
-        }
-
-        $percentages = [];
-        foreach ($counts as $value => $count) {
-            $percentages[$value] = round(($count / $total) * 100, 1);
-        }
-
-        return [
-            'total' => $total,
-            'active' => $activeCount,
-            'finished' => $finishedCount,
-            'percentages' => $percentages,
-            'counts' => $counts,
         ];
     }
 }

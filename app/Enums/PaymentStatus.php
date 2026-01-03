@@ -6,35 +6,13 @@ namespace App\Enums;
 
 enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case PENDING = 'pending';
     case PROCESSING = 'processing';
     case COMPLETED = 'completed';
     case FAILED = 'failed';
     case REFUNDED = 'refunded';
-
-    public static function values(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    public static function labels(): array
-    {
-        return array_map(fn (self $case) => $case->label(), self::cases());
-    }
-
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
 
     public function label(): string
     {
@@ -161,94 +139,23 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     public function getMetadata(): array
     {
+        return array_merge($this->defaultMetadata(), [
+            'is_successful' => $this->isSuccessful(),
+        ]);
+    }
+
+    private function defaultMetadata(): array
+    {
         return [
+            'value' => $this->value,
             'label' => $this->label(),
-            'description' => $this->label(),
+            'description' => $this->getDescription(),
             'color' => $this->color(),
             'color_hex' => $this->getColor(),
             'icon' => $this->icon(),
             'icon_class' => $this->getIcon(),
             'is_active' => $this->isActive(),
             'is_finished' => $this->isFinished(),
-            'is_successful' => $this->isSuccessful(),
-        ];
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     */
-    public static function fromString(string $value): ?self
-    {
-        try {
-            return self::from($value);
-        } catch (\ValueError $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Retorna opções formatadas para uso em formulários/selects
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            if (! $includeFinished && $case->isFinished()) {
-                continue;
-            }
-            $options[$case->value] = $case->label();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Calcula métricas de status para dashboards
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $total = count($statuses);
-        if ($total === 0) {
-            return [
-                'total' => 0,
-                'active' => 0,
-                'finished' => 0,
-                'percentages' => [],
-            ];
-        }
-
-        $counts = [];
-        $activeCount = 0;
-        $finishedCount = 0;
-
-        foreach ($statuses as $status) {
-            $statusEnum = $status instanceof self ? $status : self::fromString((string) $status);
-            if (! $statusEnum) {
-                continue;
-            }
-
-            $counts[$statusEnum->value] = ($counts[$statusEnum->value] ?? 0) + 1;
-
-            if ($statusEnum->isActive()) {
-                $activeCount++;
-            }
-
-            if ($statusEnum->isFinished()) {
-                $finishedCount++;
-            }
-        }
-
-        $percentages = [];
-        foreach ($counts as $value => $count) {
-            $percentages[$value] = round(($count / $total) * 100, 1);
-        }
-
-        return [
-            'total' => $total,
-            'active' => $activeCount,
-            'finished' => $finishedCount,
-            'percentages' => $percentages,
-            'counts' => $counts,
         ];
     }
 }

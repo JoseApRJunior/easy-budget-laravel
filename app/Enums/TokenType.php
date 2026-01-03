@@ -12,6 +12,8 @@ namespace App\Enums;
  */
 enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     /** Token para verificação de e-mail */
     case EMAIL_VERIFICATION = 'email_verification';
 
@@ -118,133 +120,27 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
 
     /**
      * Retorna metadados completos do tipo de token
-     *
-     * @return array<string, mixed> Array com descrição, cor, ícone e flags
      */
     public function getMetadata(): array
     {
+        return array_merge($this->defaultMetadata(), [
+            'default_expiration_minutes' => $this->getDefaultExpirationMinutes(),
+        ]);
+    }
+
+    private function defaultMetadata(): array
+    {
         return [
             'value' => $this->value,
+            'label' => $this->getDescription(), // TokenType não tem label(), usa getDescription()
             'description' => $this->getDescription(),
             'color' => $this->getColor(),
+            'color_hex' => $this->getColor(),
             'icon' => $this->getIcon(),
+            'icon_class' => $this->getIcon(),
             'is_active' => $this->isActive(),
             'is_finished' => $this->isFinished(),
-            'default_expiration_minutes' => $this->getDefaultExpirationMinutes(),
         ];
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     *
-     * @param  string  $value  Valor do tipo
-     * @return TokenType|null Instância do enum ou null se inválido
-     */
-    public static function fromString(string $value): ?self
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Retorna opções formatadas para uso em formulários/selects
-     *
-     * @param  bool  $includeFinished  Incluir tipos finalizados
-     * @return array<string, string> Array associativo [valor => descrição]
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-
-        foreach (self::cases() as $type) {
-            if (! $includeFinished && $type->isFinished()) {
-                continue;
-            }
-            $options[$type->value] = $type->getDescription();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Ordena tipos por categoria para exibição
-     *
-     * @param  bool  $includeFinished  Incluir tipos finalizados na ordenação
-     * @return array<TokenType> Tipos ordenados por categoria
-     */
-    public static function getOrdered(bool $includeFinished = true): array
-    {
-        $types = self::cases();
-
-        usort($types, function (TokenType $a, TokenType $b) {
-            // Ordem: EMAIL, PASSWORD, ACCOUNT, 2FA, EMAIL_CHANGE, PHONE, PAYMENT, SUBSCRIPTION
-            $order = [
-                self::EMAIL_VERIFICATION->value => 1,
-                self::EMAIL_CHANGE_VERIFICATION->value => 2,
-                self::PASSWORD_RESET->value => 3,
-                self::ACCOUNT_CONFIRMATION->value => 4,
-                self::TWO_FACTOR_AUTH->value => 5,
-                self::PHONE_VERIFICATION->value => 6,
-                self::PAYMENT_VERIFICATION->value => 7,
-                self::SUBSCRIPTION_VERIFICATION->value => 8,
-            ];
-
-            return ($order[$a->value] ?? 99) <=> ($order[$b->value] ?? 99);
-        });
-
-        return $types;
-    }
-
-    /**
-     * Calcula métricas de tipos para dashboards
-     *
-     * @param  array<TokenType>  $types  Lista de tipos para análise
-     * @return array<string, int> Métricas [ativo, finalizado, total]
-     */
-    public static function calculateMetrics(array $types): array
-    {
-        $total = count($types);
-        $active = 0;
-        $finished = 0;
-
-        foreach ($types as $type) {
-            if ($type->isActive()) {
-                $active++;
-            } elseif ($type->isFinished()) {
-                $finished++;
-            }
-        }
-
-        return [
-            'total' => $total,
-            'active' => $active,
-            'finished' => $finished,
-            'active_percentage' => $total > 0 ? round(($active / $total) * 100, 1) : 0,
-            'finished_percentage' => $total > 0 ? round(($finished / $total) * 100, 1) : 0,
-        ];
-    }
-
-    /**
-     * Retorna todos os tipos válidos como array
-     *
-     * @return array<string>
-     */
-    public static function getAllTypes(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    /**
-     * Verifica se o tipo é válido
-     */
-    public static function isValid(string $type): bool
-    {
-        return in_array($type, self::getAllTypes());
     }
 
     /**
