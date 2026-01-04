@@ -85,14 +85,7 @@ Route::group([], function () {
         Route::post('/shared/{token}/reject', [BudgetShareController::class, 'rejectShare'])->name('shared.reject');
     });
 
-    /**
-     * Customer Dashboard (Área autenticada / provider)
-     * Mantém compatibilidade com arquitetura atual e segue padrão de rotas provider.*
-     */
-    Route::middleware(['auth'])->group(function () {
-        Route::get('/provider/customers/dashboard', [CustomerController::class, 'dashboard'])
-            ->name('provider.customers.dashboard');
-    });
+
 
     Route::prefix('services')->name('services.public.')->group(function () {
         Route::get('/view-service-status/code/{code}/token/{token}', [ServiceController::class, 'viewServiceStatus'])->name('view-status');
@@ -344,7 +337,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // QR Code routes - MOVIDO PARA DENTRO DO GRUPO PROVIDER
-    Route::prefix('qrcode')->name('qrcode.')->group(function () {
+    Route::prefix('qrcodes')->name('qrcode.')->group(function () {
         Route::get('/', [QrCodeController::class, 'index'])->name('index');
         Route::post('/generate', [QrCodeController::class, 'generate'])->name('generate');
         Route::post('/handle', [QrCodeController::class, 'handle'])->name('handle');

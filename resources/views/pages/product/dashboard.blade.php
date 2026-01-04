@@ -3,30 +3,16 @@
 @section('title', 'Dashboard de Produtos')
 
 @section('content')
-<div class="container-fluid py-1">
-    <!-- Cabeçalho -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div class="flex-grow-1">
-                <h1 class="h4 h3-md mb-1">
-                    <i class="bi bi-box-seam me-2"></i>
-                    <span class="d-none d-sm-inline">Dashboard de Produtos</span>
-                    <span class="d-sm-none">Produtos</span>
-                </h1>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard de Produtos
-                    </li>
-                </ol>
-            </nav>
-        </div>
+<div class="container-fluid py-4">
+    <x-page-header
+        title="Dashboard de Produtos"
+        icon="box-seam"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Produtos' => '#'
+        ]">
         <p class="text-muted mb-0 small">Visão geral do seu catálogo de produtos com atalhos de gestão.</p>
-    </div>
+    </x-page-header>
 
     @php
     $total = $stats['total_products'] ?? 0;

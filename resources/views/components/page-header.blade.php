@@ -10,7 +10,6 @@
     @if(!empty($breadcrumbItems))
     <nav aria-label="breadcrumb" class="d-none d-md-block">
         <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
             @foreach($breadcrumbItems as $label => $route)
                 @if($loop->last)
                     <li class="breadcrumb-item active" aria-current="page">{{ $label }}</li>

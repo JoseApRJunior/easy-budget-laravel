@@ -9,8 +9,7 @@
             icon="tools"
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
-                'Serviços' => route('provider.services.index'),
-                'Métricas' => '#'
+                'Serviços' => '#'
             ]"
         >
             <p class="text-muted mb-0">Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance.</p>

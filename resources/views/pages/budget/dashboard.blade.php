@@ -3,14 +3,14 @@
 @section('title', 'Dashboard de Orçamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <x-page-header
-            title="Dashboard de Orçamentos"
-            icon="file-earmark-text"
-            :breadcrumb-items="[
-                'Dashboard' => route('provider.dashboard'),
-                'Dashboard de Orçamentos' => '#'
-            ]">
+    <div class="container-fluid py-4">
+    <x-page-header
+        title="Dashboard de Orçamentos"
+        icon="file-earmark-text"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => '#'
+        ]">
             <p class="text-muted mb-0 small">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
         </x-page-header>
 

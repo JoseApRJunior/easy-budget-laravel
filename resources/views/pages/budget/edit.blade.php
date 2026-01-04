@@ -3,12 +3,13 @@
 @section('title', 'Editar Orçamento')
 
 @section('content')
+<div class="container-fluid py-4">
     <x-page-header
         title="Editar Orçamento"
         icon="pencil-square"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
-            'Orçamentos' => route('provider.budgets.dashboard'),
+            'Orçamentos' => route('provider.budgets.index'),
             $budget->code => route('provider.budgets.show', $budget->code),
             'Editar' => '#'
         ]">
@@ -143,6 +144,7 @@
             <x-button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
         </div>
     </form>
+</div>
 @endsection
 
 @push('scripts')

@@ -17,14 +17,14 @@
 @endpush
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Lista de Orçamentos"
         icon="file-earmark-text"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
             'Orçamentos' => route('provider.budgets.dashboard'),
-            'Listar' => '#'
+            'Lista' => '#'
         ]">
         <p class="text-muted mb-0 small">Consulte e gerencie todos os orçamentos registrados no sistema.</p>
     </x-page-header>

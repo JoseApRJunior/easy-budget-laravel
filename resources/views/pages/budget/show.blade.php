@@ -3,11 +3,12 @@
 @section('title', 'Detalhes do Orçamento')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Detalhes do Orçamento"
         icon="file-earmark-text"
         :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
             'Orçamentos' => route('provider.budgets.index'),
             $budget->code => '#'
         ]">

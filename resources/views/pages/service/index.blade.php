@@ -24,7 +24,7 @@
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
                 'Serviços' => route('provider.services.dashboard'),
-                'Listar' => '#'
+                'Lista' => '#'
             ]"
         >
             <p class="text-muted mb-0">Lista de todos os serviços registrados no sistema</p>

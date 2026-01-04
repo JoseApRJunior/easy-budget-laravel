@@ -3,12 +3,13 @@
 @section('title', 'Dashboard de Inventário')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <!-- Cabeçalho -->
     <x-page-header
         title="Dashboard de Inventário"
         icon="archive"
         :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
             'Inventário' => '#'
         ]">
         <p class="text-muted mb-0">Visão geral do seu estoque e movimentações com atalhos de gestão.</p>

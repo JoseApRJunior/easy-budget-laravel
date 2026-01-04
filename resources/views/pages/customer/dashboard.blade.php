@@ -3,30 +3,17 @@
 @section('title', 'Dashboard de Clientes')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <!-- Cabeçalho -->
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div class="flex-grow-1">
-                <h1 class="h4 h3-md mb-1">
-                    <i class="bi bi-people me-2"></i>
-                    <span class="d-none d-sm-inline">Dashboard de Clientes</span>
-                    <span class="d-sm-none">Clientes</span>
-                </h1>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Clientes
-                    </li>
-                </ol>
-            </nav>
-        </div>
+    <x-page-header
+        title="Dashboard de Clientes"
+        icon="people"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Clientes' => '#'
+        ]">
         <p class="text-muted mb-0 small">Visão geral dos clientes do seu negócio</p>
-    </div>
+    </x-page-header>
 
     @php
     $total = $stats['total_customers'] ?? 0;
