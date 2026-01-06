@@ -3,7 +3,7 @@
 @section('title', 'Fatura #' . $invoice->code)
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
                 <i class="bi bi-receipt-cutoff me-2"></i>Detalhes da Fatura

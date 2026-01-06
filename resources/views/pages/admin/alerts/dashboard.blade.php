@@ -3,18 +3,19 @@
 @section('title', $pageTitle . ' - Easy Budget')
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                Sistema de Alertas
-            </h1>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Sistema de Alertas"
+            icon="exclamation-triangle"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Alertas' => '#'
+            ]">
             <div class="d-flex gap-2">
                 <x-button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" />
                 <x-button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">

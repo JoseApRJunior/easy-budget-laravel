@@ -2,19 +2,15 @@
 
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-clipboard-data me-2"></i>Serviços e Orçamentos
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Serviços e Orçamentos</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Serviços e Orçamentos"
+            icon="clipboard-data"
+            :breadcrumb-items="[
+                'Dashboard' => route( 'provider.dashboard' ),
+                'Serviços e Orçamentos' => '#'
+            ]"
+        />
 
         <!-- Serviços -->
         <div class="card border-0 shadow-sm mb-4">

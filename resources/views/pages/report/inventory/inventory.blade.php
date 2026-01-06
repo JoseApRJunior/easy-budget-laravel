@@ -3,24 +3,17 @@
 @section('title', 'Relatório de Estoque')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-boxes me-2"></i>
-                    Relatório de Estoque
-                </h1>
-                <p class="text-muted">Controle e análise de inventário de produtos</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Estoque</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Relatório de Estoque"
+            icon="boxes"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('provider.reports.index'),
+                'Estoque' => '#'
+            ]">
+            <x-button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">

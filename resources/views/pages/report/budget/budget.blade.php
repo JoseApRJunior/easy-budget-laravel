@@ -3,24 +3,17 @@
 @section('title', 'Relatório de Orçamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-file-earmark-bar-graph me-2"></i>
-                    Relatório de Orçamentos
-                </h1>
-                <p class="text-muted">Visualize e analise todos os orçamentos gerados no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Orçamentos</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Relatório de Orçamentos"
+            icon="file-earmark-bar-graph"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('provider.reports.index'),
+                'Orçamentos' => '#'
+            ]">
+            <x-button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">

@@ -1,10 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-graph-up-arrow me-2"></i>Dashboard Executivo</h2>
-            <div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dashboard Executivo"
+            icon="graph-up-arrow"
+            :breadcrumb-items="[
+                'Admin' => '#',
+                'Executivo' => '#'
+            ]">
+            <div class="d-flex gap-2">
                 <x-button 
                     variant="outline-primary" 
                     onclick="refreshCharts()"
@@ -18,7 +23,7 @@
                     Exportar PDF
                 </x-button>
             </div>
-        </div>
+        </x-page-header>
 
         <!-- KPIs Cards -->
         <div class="row mb-4">

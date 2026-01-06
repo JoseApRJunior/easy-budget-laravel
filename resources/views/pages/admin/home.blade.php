@@ -3,13 +3,14 @@
 @section('title', 'Dashboard Administrativo')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-shield-lock me-2"></i>Dashboard Administrativo
-            </h1>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dashboard Administrativo"
+            icon="shield-lock"
+            :breadcrumb-items="[
+                'Admin' => '#'
+            ]">
+        </x-page-header>
 
         <!-- Cards de Ação -->
         <div class="row g-4">

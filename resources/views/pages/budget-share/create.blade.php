@@ -3,22 +3,18 @@
 @section('title', 'Criar Compartilhamento')
 
 @section('content')
-<div class="container-fluid py-1">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            <i class="bi bi-share me-2"></i>
-            Criar Novo Compartilhamento
-        </h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.index') }}">Orçamentos</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.shares.index') }}">Compartilhamentos</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Criar</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container-fluid py-4">
+    <x-page-header
+        title="Criar Novo Compartilhamento"
+        icon="share"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => route('provider.budgets.index'),
+            'Compartilhamentos' => route('provider.budgets.shares.index'),
+            'Criar' => '#'
+        ]">
+        <x-button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+    </x-page-header>
 
     <div class="row">
         <div class="col-12">

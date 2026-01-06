@@ -1,10 +1,15 @@
 @extends('layouts.admin')
 
-@section('breadcrumb')
-    <li class="breadcrumb-item active">Dashboard IA </li>
-@endsection
-
 @section('admin_content')
+    <x-page-header
+        title="Dashboard de Inteligência Artificial"
+        icon="robot"
+        :breadcrumb-items="[
+            'Admin' => url('/admin'),
+            'IA' => '#'
+        ]">
+    </x-page-header>
+
     <style>
         .metric-card {
             text-align: center;
@@ -40,31 +45,27 @@
     </style>
 
     <div class="container-fluid">
-        <!-- Header -->
+        <!-- Métricas Principais -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card bg-primary text-white">
+                <div class="card">
                     <div class="card-body">
-                        <h1 class="mb-4">
-                            <i class="bi bi-robot me-3"></i>
-                            Dashboard de Inteligência Artificial
-                        </h1>
                         <div class="row" id="header-metrics">
-                            <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="downtime-reduction">-</div>
-                                <small>Redução de Downtime</small>
+                            <div class="col-md-3 text-center border-end">
+                                <div class="h5 mb-0 font-weight-bold" id="downtime-reduction">-</div>
+                                <small class="text-muted">Redução de Downtime</small>
+                            </div>
+                            <div class="col-md-3 text-center border-end">
+                                <div class="h5 mb-0 font-weight-bold" id="revenue-increase">-</div>
+                                <small class="text-muted">Aumento de Receita</small>
+                            </div>
+                            <div class="col-md-3 text-center border-end">
+                                <div class="h5 mb-0 font-weight-bold" id="alerts-count">-</div>
+                                <small class="text-muted">Alertas Ativos</small>
                             </div>
                             <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="revenue-increase">-</div>
-                                <small>Aumento de Receita</small>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="alerts-count">-</div>
-                                <small>Alertas Ativos</small>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="efficiency-gains">-</div>
-                                <small>Ganhos de Eficiência</small>
+                                <div class="h5 mb-0 font-weight-bold" id="efficiency-gains">-</div>
+                                <small class="text-muted">Ganhos de Eficiência</small>
                             </div>
                         </div>
                     </div>

@@ -3,22 +3,20 @@
 @section('title', 'Detalhes do Agendamento')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h3 class="mb-2">
-                <i class="bi bi-calendar-check me-2"></i>
-                Detalhes do Agendamento #{{ $schedule->id }}
-            </h3>
-            <p class="text-muted mb-3">Informações completas do agendamento</p>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
-                    <li class="breadcrumb-item active">Detalhes</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Detalhes do Agendamento #{{ $schedule->id }}"
+            icon="calendar-check"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Agendamentos' => route('provider.schedules.index'),
+                'Detalhes' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-button type="link" :href="route('provider.schedules.edit', $schedule)" variant="primary" icon="pencil" label="Editar" />
+            </div>
+        </x-page-header>
 
         <div class="row">
             <div class="col-12">

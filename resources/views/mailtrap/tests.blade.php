@@ -1,35 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">
-                            <i class="bi bi-play-circle me-2"></i>
-                            {{ $title ?? 'Testes de E-mail' }}
-                        </h1>
-                        <p class="text-muted mt-1">Execute e monitore testes de funcionalidades de e-mail</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="refreshTests()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Atualizar
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="showTestModal()">
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Novo Teste
-                        </button>
-                        <a href="{{ route('mailtrap.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
-                            Voltar ao Dashboard
-                        </a>
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            :title="$title ?? 'Testes de E-mail'"
+            icon="play-circle"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Mailtrap' => route('mailtrap.index'),
+                'Testes' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshTests()" />
+                <x-button type="button" variant="primary" icon="plus-circle" label="Novo Teste" onclick="showTestModal()" />
+                <x-button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">

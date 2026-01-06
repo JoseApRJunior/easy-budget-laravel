@@ -1,15 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-box-seam me-2"></i>Detalhes do Plano: {{ $plan->name }}</h1>
+<div class="container-fluid py-4">
+    <x-page-header
+        :title="'Detalhes do Plano: ' . $plan->name"
+        icon="box-seam"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            $plan->name => '#'
+        ]">
         <div class="d-flex gap-2">
             <x-back-button index-route="admin.plans.index" />
             <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
             <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
         </div>
-    </div>
+    </x-page-header>
 
     <div class="row">
         <!-- Plan Information -->

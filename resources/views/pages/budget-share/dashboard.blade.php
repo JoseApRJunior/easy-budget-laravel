@@ -3,34 +3,18 @@
 @section('title', 'Dashboard de Compartilhamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-share-fill me-2"></i>Dashboard de Compartilhamentos
-                </h1>
-                <p class="text-muted mb-0">
-                    Visão geral dos compartilhamentos de orçamentos com métricas de acesso e performance.
-                </p>
-            </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.budgets.index') }}">Orçamentos</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.budgets.shares.index') }}">Compartilhamentos</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard
-                    </li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dashboard de Compartilhamentos"
+            icon="share-fill"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('provider.budgets.index'),
+                'Compartilhamentos' => route('provider.budgets.shares.index'),
+                'Dashboard' => '#'
+            ]">
+            <x-button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         @php
             $totalShares = $stats['total_shares'] ?? 0;

@@ -3,20 +3,17 @@
 @section('title', 'Dados Empresariais')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-building me-2"></i>Dados Empresariais
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('settings.index') }}">Configurações</a></li>
-                    <li class="breadcrumb-item active">Dados Empresariais</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dados Empresariais"
+            icon="building"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Configurações' => route('settings.index'),
+                'Dados Empresariais' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Gerencie as informações da sua empresa</p>
+        </x-page-header>
 
         <form action="{{ route('provider.business.update') }}" method="POST" enctype="multipart/form-data"
             id="businessForm">

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
 
         @php
             $user = auth()->user();

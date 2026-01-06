@@ -38,12 +38,10 @@
       "alwaysAllow": []
     },
     "everything-search": {
-      "command": "npx",
+      "command": "node",
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-everything"
+        "C:\\laragon\\www\\easy-budget-laravel\\everything-mcp.cjs"
       ],
-      "env": {},
       "disabled": false
     }
   }

@@ -3,24 +3,17 @@
 @section('title', 'Relatório Financeiro')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-graph-up me-2"></i>
-                    Relatório Financeiro
-                </h1>
-                <p class="text-muted">Análise completa da situação financeira da empresa</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Financeiro</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Relatório Financeiro"
+            icon="graph-up"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('provider.reports.index'),
+                'Financeiro' => '#'
+            ]">
+            <x-button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">

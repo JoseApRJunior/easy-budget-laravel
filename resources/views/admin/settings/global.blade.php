@@ -3,22 +3,19 @@
 @section('title', 'Configurações Globais - EasyBudget Admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">Configurações Globais</h1>
-                        <p class="text-muted mb-0">Gerencie as configurações do sistema EasyBudget</p>
-                    </div>
-                    <div>
-                        <x-button variant="info" size="sm" icon="download" label="Exportar" onclick="exportSettings()" />
-                        <x-button variant="danger" size="sm" icon="trash" label="Limpar Cache" onclick="clearCache()" class="ms-2" />
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Configurações Globais"
+            icon="gear"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Configurações' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button variant="info" icon="download" label="Exportar" onclick="exportSettings()" />
+                <x-button variant="danger" icon="trash" label="Limpar Cache" onclick="clearCache()" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Settings Navigation -->
         <div class="row mb-4">

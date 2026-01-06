@@ -1,30 +1,19 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Gestão de Empresas</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">
-                    <i class="bi bi-building text-primary me-2"></i>Gestão de Empresas
-                </h1>
-                <p class="text-muted">Monitoramento e controle das empresas cadastradas no sistema</p>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Gestão de Empresas"
+            icon="building"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Gestão de Empresas' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
+                <x-button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
             </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary" onclick="exportData()">
-                    <i class="bi bi-download me-1"></i>Exportar
-                </button>
-                <a href="{{ route('admin.enterprises.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Nova Empresa
-                </a>
-            </div>
-        </div>
+        </x-page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">

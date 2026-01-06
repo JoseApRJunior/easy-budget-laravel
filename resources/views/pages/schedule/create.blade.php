@@ -3,22 +3,17 @@
 @section('title', 'Criar Agendamento')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h3 class="mb-2">
-                <i class="bi bi-calendar-plus me-2"></i>
-                Criar Agendamento
-            </h3>
-            <p class="text-muted mb-3">Agendar novo horário para o serviço: {{ $service->title }}</p>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
-                    <li class="breadcrumb-item active">Criar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Criar Agendamento"
+            icon="calendar-plus"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Agendamentos' => route('provider.schedules.index'),
+                'Criar' => '#'
+            ]">
+            <x-button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         <div class="row">
             <div class="col-12">

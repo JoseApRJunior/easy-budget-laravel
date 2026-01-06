@@ -1,14 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-box-seam me-2"></i>Gerenciamento de Planos</h1>
-        <div>
-            <x-button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" class="me-2" />
+<div class="container-fluid py-4">
+    <x-page-header
+        title="Gerenciamento de Planos"
+        icon="box-seam"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => '#'
+        ]">
+        <div class="d-flex gap-2">
+            <x-button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
             <x-button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
         </div>
-    </div>
+    </x-page-header>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">

@@ -1,31 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">
-                            <i class="bi bi-envelope-paper me-2"></i>
-                            {{ $title ?? 'Mailtrap - Ferramentas de E-mail' }}
-                        </h1>
-                        <p class="text-muted mt-1">Dashboard de gerenciamento e testes de e-mail</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="refreshDashboard()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Atualizar
-                        </button>
-                        <a href="{{ route('mailtrap.providers') }}" class="btn btn-primary">
-                            <i class="bi bi-gear me-1"></i>
-                            Configurar Provedores
-                        </a>
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            :title="$title ?? 'Mailtrap - Ferramentas de E-mail'"
+            icon="envelope-paper"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Mailtrap' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshDashboard()" />
+                <x-button :href="route('mailtrap.providers')" variant="primary" icon="gear" label="Configurar Provedores" />
+                <x-button :href="route('provider.dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Status do Provedor Atual -->
         <div class="row mb-4">

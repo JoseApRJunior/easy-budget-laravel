@@ -1,36 +1,22 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">
-                            <i class="bi bi-journal-text me-2"></i>
-                            {{ $title ?? 'Logs de E-mail' }}
-                        </h1>
-                        <p class="text-muted mt-1">Visualize e monitore os logs de atividades de e-mail</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <x-button type="button" variant="primary" icon="arrow-clockwise" label="Atualizar" onclick="refreshLogs()" />
-                        <x-button 
-                            type="button" 
-                            variant="success" 
-                            onclick="exportLogs()"
-                            icon="download"
-                            label="Exportar CSV" />
-                        <x-button type="button" variant="danger" icon="trash" label="Limpar Logs" onclick="clearLogs()" />
-                        <x-button 
-                            href="{{ route('mailtrap.index') }}" 
-                            variant="secondary"
-                            icon="arrow-left"
-                            label="Voltar ao Dashboard" />
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            :title="$title ?? 'Logs de E-mail'"
+            icon="journal-text"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Mailtrap' => route('mailtrap.index'),
+                'Logs' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshLogs()" />
+                <x-button type="button" variant="success" icon="download" label="Exportar CSV" onclick="exportLogs()" />
+                <x-button type="button" variant="danger" icon="trash" label="Limpar Logs" onclick="clearLogs()" />
+                <x-button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Filtros e Controles -->
         <div class="row mb-4">

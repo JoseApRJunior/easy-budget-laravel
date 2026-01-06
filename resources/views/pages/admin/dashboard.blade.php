@@ -1,20 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4">
-                    <i class="bi bi-speedometer2 me-2"></i>{{ $page_title }}
-                    <span
-                        class="badge bg-{{ $system_status['health'] == 'healthy' ? 'success' : ($system_status['health'] == 'warning' ? 'warning' : 'danger') }} ms-2">
-                        {{ $system_status['health'] == 'healthy'
-                            ? 'Saudável'
-                            : ($system_status['health'] == 'warning'
-                                ? 'Atenção'
-                                : 'Crítico') }}
-                    </span>
-                </h2>
+    <div class="container-fluid py-4">
+        <x-page-header
+            :title="$page_title"
+            icon="speedometer2"
+            :breadcrumb-items="[
+                'Admin' => '#',
+                'Dashboard' => '#'
+            ]">
+            <span class="badge bg-{{ $system_status['health'] == 'healthy' ? 'success' : ($system_status['health'] == 'warning' ? 'warning' : 'danger') }} ms-2">
+                {{ $system_status['health'] == 'healthy' ? 'Saudável' : ($system_status['health'] == 'warning' ? 'Atenção' : 'Crítico') }}
+            </span>
+        </x-page-header>
 
                 <!-- Alertas Críticos -->
                 @if (count($alerts) > 0)
@@ -172,9 +170,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')

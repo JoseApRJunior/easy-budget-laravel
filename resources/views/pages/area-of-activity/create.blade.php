@@ -1,21 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-plus-circle me-2"></i>Nova Área de Atividade
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url('/admin') }}">Dashboard Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url('/admin/area-of-activities') }}">Áreas de Atividade</a>
-                    </li>
-                    <li class="breadcrumb-item active">Nova</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Nova Área de Atividade"
+            icon="plus-circle"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Áreas de Atividade' => url('/admin/area-of-activities'),
+                'Nova' => '#'
+            ]">
+            <x-button :href="url('/admin/area-of-activities')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         <!-- Formulário -->
         <div class="card border-0 shadow-sm">

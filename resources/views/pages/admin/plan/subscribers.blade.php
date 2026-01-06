@@ -1,14 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-people me-2"></i>Assinantes do Plano: {{ $plan->name }}</h1>
+<div class="container-fluid py-4">
+    <x-page-header
+        :title="'Assinantes do Plano: ' . $plan->name"
+        icon="people"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            $plan->name => route('admin.plans.show', $plan),
+            'Assinantes' => '#'
+        ]">
         <div class="d-flex gap-2">
             <x-button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
             <x-button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="primary" icon="download" label="Exportar" />
         </div>
-    </div>
+    </x-page-header>
 
     <!-- Plan Statistics -->
     <div class="row mb-4">

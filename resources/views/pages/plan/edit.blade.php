@@ -1,12 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="main-container py-1">
-        <!-- Cabeçalho -->
-        <div class="text-center mb-5">
-            <h1 class="h2 fw-bold text-primary mb-3">Editar Plano</h1>
-            <p class="text-muted lead">Atualize as informações do plano "{{ $plan->name }}"</p>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Editar Plano"
+            icon="gem"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => route('provider.plans.index'),
+                $plan->name => route('provider.plans.show', $plan->slug),
+                'Editar' => '#'
+            ]">
+            <p class="text-muted mb-0">Atualize as informações do plano "{{ $plan->name }}"</p>
+        </x-page-header>
 
         <!-- Formulário -->
         <div class="row justify-content-center">

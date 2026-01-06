@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4"><i class="bi bi-graph-up me-2"></i>Monitoramento do Sistema</h2>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Monitoramento do Sistema"
+            icon="graph-up"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Monitoramento' => url('/admin/monitoring/dashboard'),
+                'Métricas' => '#'
+            ]">
+            <x-button type="link" :href="url('/admin/monitoring/dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
                 <!-- Navegação por Abas -->
                 <ul class="nav nav-tabs mb-4" id="monitoringTabs" role="tablist">

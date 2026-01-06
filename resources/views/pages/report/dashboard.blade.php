@@ -3,32 +3,16 @@
 @section('title', 'Dashboard de Relatórios')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-bar-chart-line me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Relatórios</span>
-                        <span class="d-sm-none">Relatórios</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Dashboard de Relatórios
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-            <p class="text-muted mb-0 small">
-                Visão geral dos relatórios gerados e métricas de uso do sistema.
-            </p>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dashboard de Relatórios"
+            icon="bar-chart-line"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Visão geral dos relatórios gerados e métricas de uso do sistema.</p>
+        </x-page-header>
 
         @php
             $totalReports = $stats['total_reports'] ?? 0;

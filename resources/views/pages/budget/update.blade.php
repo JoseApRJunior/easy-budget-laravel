@@ -1,23 +1,18 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-file-earmark-text me-2"></i>Editar Orçamento
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'budget.index' ) }}">Orçamentos</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route( 'budget.show', $budget->code ) }}">{{ $budget->code }}</a>
-                    </li>
-                    <li class="breadcrumb-item active">Editar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Editar Orçamento #{{ $budget->code }}"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('budget.index'),
+                $budget->code => route('budget.show', $budget->code),
+                'Editar' => '#'
+            ]">
+            <x-button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-page-header>
 
         <!-- Budget Edit Form -->
         <div class="card border-0 shadow-sm">

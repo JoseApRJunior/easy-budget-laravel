@@ -70,19 +70,17 @@ class ViewPattern
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">@yield(\'title\', \'Título da Página\')</h1>
-            <p class="text-muted mb-0">@yield(\'subtitle\', \'Subtítulo da página\')</p>
-        </div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                @yield(\'breadcrumbs\')
-            </ol>
-        </nav>
-    </div>
+<div class="container py-4">
+    <x-page-header
+        title="@yield(\'title\', \'Título da Página\')"
+        icon="plus-circle"
+        :breadcrumb-items="[
+            \'Dashboard\' => route(\'provider.dashboard\'),
+            \'Módulo\' => \'#\',
+            \'Ação\' => \'#\'
+        ]">
+        <x-button :href="@yield(\'back-url\', \'javascript:history.back()\')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+    </x-page-header>
 
     <!-- Formulário -->
     <div class="row justify-content-center">
@@ -138,19 +136,17 @@ class ViewPattern
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container-fluid py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-table me-2"></i>@yield(\'title\', \'Listagem\')
-            </h1>
-            <p class="text-muted mb-0">@yield(\'subtitle\', \'Gerencie os registros\')</p>
-        </div>
-        <div class="d-flex gap-2">
-            @yield(\'header-actions\')
-        </div>
-    </div>
+<div class="container-fluid py-4">
+    <x-page-header
+        title="@yield(\'title\', \'Listagem\')"
+        icon="table"
+        :breadcrumb-items="[
+            \'Dashboard\' => route(\'provider.dashboard\'),
+            \'Módulo\' => \'#\',
+            \'Listagem\' => \'#\'
+        ]">
+        @yield(\'header-actions\')
+    </x-page-header>
 
     <!-- Filtros e Busca -->
     <div class="card border-0 shadow-sm mb-4">
@@ -466,23 +462,17 @@ class ViewPattern
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-person-plus me-2"></i>Novo Cliente
-            </h1>
-            <p class="text-muted mb-0">Cadastre um novo cliente no sistema</p>
-        </div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route(\'provider.dashboard\') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route(\'provider.customers.index\') }}">Clientes</a></li>
-                <li class="breadcrumb-item active">Novo</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container py-4">
+    <x-page-header
+        title="Novo Cliente"
+        icon="person-plus"
+        :breadcrumb-items="[
+            \'Dashboard\' => route(\'provider.dashboard\'),
+            \'Clientes\' => route(\'provider.customers.index\'),
+            \'Novo\' => \'#\'
+        ]">
+        <x-button :href="route(\'provider.customers.index\')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+    </x-page-header>
 
     <!-- Formulário -->
     <div class="row justify-content-center">
@@ -632,24 +622,19 @@ class ViewPattern
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container-fluid py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-people me-2"></i>Clientes
-            </h1>
-            <p class="text-muted mb-0">Gerencie todos os clientes cadastrados</p>
-        </div>
+<div class="container-fluid py-4">
+    <x-page-header
+        title="Clientes"
+        icon="people"
+        :breadcrumb-items="[
+            \'Dashboard\' => route(\'provider.dashboard\'),
+            \'Clientes\' => \'#\'
+        ]">
         <div class="d-flex gap-2">
-            <a href="{{ route(\'customers.create\') }}" class="btn btn-success">
-                <i class="bi bi-person-plus me-2"></i>Novo Cliente
-            </a>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
-                <i class="bi bi-download me-2"></i>Exportar
-            </button>
+            <x-button :href="route(\'provider.customers.create\')" variant="success" icon="person-plus" label="Novo Cliente" />
+            <x-button variant="primary" icon="download" label="Exportar" data-bs-toggle="modal" data-bs-target="#exportModal" />
         </div>
-    </div>
+    </x-page-header>
 
     <!-- Cards de Estatísticas -->
     <div class="row g-4 mb-4">

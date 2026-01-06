@@ -3,24 +3,17 @@
 @section('title', 'Relatórios')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-bar-chart-line me-2"></i>
-                    Relatórios
-                </h1>
-                <p class="text-muted">Central de relatórios e analytics do sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('reports.dashboard') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Relatórios"
+            icon="bar-chart-line"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('reports.dashboard'),
+                'Lista' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Central de relatórios e analytics do sistema</p>
+        </x-page-header>
 
         <div class="row">
             <div class="col-12">

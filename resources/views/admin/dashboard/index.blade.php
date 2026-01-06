@@ -3,34 +3,27 @@
 @section('title', 'Admin Dashboard - EasyBudget')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
-                        <p class="text-muted mb-0">Visão geral do sistema EasyBudget MultiTenancy</p>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <select class="form-select form-select-sm" id="period-selector" style="width: auto;">
-                            <option value="week" {{ $currentPeriod === 'week' ? 'selected' : '' }}>Última Semana</option>
-                            <option value="month" {{ $currentPeriod === 'month' ? 'selected' : '' }}>Último Mês</option>
-                            <option value="quarter" {{ $currentPeriod === 'quarter' ? 'selected' : '' }}>Último Trimestre
-                            </option>
-                            <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
-                        </select>
-                        <x-button 
-                            variant="primary" 
-                            size="sm" 
-                            onclick="refreshDashboard()"
-                            icon="arrow-clockwise">
-                            Atualizar
-                        </x-button>
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Admin Dashboard"
+            icon="speedometer2"
+            :breadcrumb-items="[
+                'Admin' => '#'
+            ]">
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select" id="period-selector" style="width: auto;">
+                    <option value="week" {{ $currentPeriod === 'week' ? 'selected' : '' }}>Última Semana</option>
+                    <option value="month" {{ $currentPeriod === 'month' ? 'selected' : '' }}>Último Mês</option>
+                    <option value="quarter" {{ $currentPeriod === 'quarter' ? 'selected' : '' }}>Último Trimestre</option>
+                    <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
+                </select>
+                <x-button 
+                    variant="primary" 
+                    onclick="refreshDashboard()"
+                    icon="arrow-clockwise"
+                    label="Atualizar" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- System Alerts -->
         @if (count($alerts) > 0)

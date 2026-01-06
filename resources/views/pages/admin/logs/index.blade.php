@@ -1,19 +1,15 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-file-earmark-text me-2"></i>Logs do Sistema
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url('/admin') }}">Dashboard Admin</a></li>
-                    <li class="breadcrumb-item active">Logs</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Logs do Sistema"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Logs' => '#'
+            ]">
+        </x-page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">

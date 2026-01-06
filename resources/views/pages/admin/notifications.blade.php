@@ -1,10 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Configurações de Notificação"
+            icon="bell"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Notificações' => '#'
+            ]">
+            <x-button :href="route('admin.dashboard')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-page-header>
+
         <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4"><i class="bi bi-bell me-2"></i>Configurações de Notificação</h2>
 
                 <div class="row">
                     <div class="col-md-8">

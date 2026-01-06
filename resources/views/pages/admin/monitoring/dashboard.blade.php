@@ -3,17 +3,19 @@
 @section('title', 'Dashboard de Monitoramento')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-graph-up me-2"></i>Dashboard de Monitoramento
-            </h1>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Dashboard de Monitoramento"
+            icon="graph-up"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Monitoramento' => '#'
+            ]">
             <div class="d-flex gap-2">
                 <x-button variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
                 <x-button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" size="sm" icon="graph-up" label="Métricas Detalhadas" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Cards de Resumo -->
         <div class="row g-4 mb-4">

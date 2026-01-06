@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-graph-up me-2"></i>Análises do Plano: {{ $plan->name }}</h1>
-        <div>
+<div class="container-fluid py-4">
+    <x-page-header
+        :title="'Análises do Plano: ' . $plan->name"
+        icon="graph-up"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            $plan->name => route('admin.plans.show', $plan),
+            'Análises' => '#'
+        ]">
+        <div class="d-flex gap-2">
             <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Voltar ao Plano
             </a>
@@ -12,7 +19,7 @@
                 <i class="bi bi-download me-1"></i>Exportar Dados
             </a>
         </div>
-    </div>
+    </x-page-header>
 
     <!-- Key Metrics -->
     <div class="row mb-4">

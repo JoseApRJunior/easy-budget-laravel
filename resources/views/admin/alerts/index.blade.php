@@ -1,24 +1,17 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Gerenciamento de Alertas</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Gerenciamento de Alertas
-                </h1>
-                <p class="text-muted">Monitoramento e controle de alertas do sistema</p>
-            </div>
-            <div class="btn-group" role="group">
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Gerenciamento de Alertas"
+            icon="exclamation-triangle"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Alertas' => '#'
+            ]">
+            <div class="d-flex gap-2">
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-download me-1"></i> Exportar
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
@@ -30,9 +23,9 @@
                             </a></li>
                     </ul>
                 </div>
-                <x-button type="link" :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
+                <x-button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">

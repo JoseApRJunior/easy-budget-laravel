@@ -1,25 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">
-                            <i class="bi bi-gear me-2"></i>
-                            {{ $title ?? 'Configuração de Provedores de E-mail' }}
-                        </h1>
-                        <p class="text-muted mt-1">Gerencie os provedores de e-mail disponíveis no sistema</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <x-button type="button" variant="primary" icon="arrow-clockwise" label="Atualizar" onclick="refreshProviders()" />
-                        <x-button type="link" :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar ao Dashboard" />
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            :title="$title ?? 'Configuração de Provedores de E-mail'"
+            icon="gear"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Mailtrap' => route('mailtrap.index'),
+                'Provedores' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshProviders()" />
+                <x-button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </div>
+        </x-page-header>
 
         <!-- Status do Provedor Atual -->
         <div class="row mb-4">

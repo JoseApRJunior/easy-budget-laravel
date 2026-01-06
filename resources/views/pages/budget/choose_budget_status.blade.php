@@ -1,19 +1,15 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-file-earmark-text me-2"></i>Detalhes do Orçamento
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Início</a></li>
-                    <li class="breadcrumb-item active">{{ $budget->code }}</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Detalhes do Orçamento #{{ $budget->code }}"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Início' => url('/'),
+                $budget->code => '#'
+            ]">
+        </x-page-header>
 
         <div class="row g-4 mb-4">
             <!-- Main Details -->

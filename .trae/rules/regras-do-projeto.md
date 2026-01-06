@@ -1,2 +1,20 @@
-Sempre usar TODO.md para ver os padrões de código, quando necessário atualisar o arquivos com as melhorias.
-Faça somente oque for pedido por vez, nao altere arquivos que nao foi solicitado, na duvida pergunte.
+# Regras do Projeto
+
+**Laravel 12 + PHP 8.3+ | PT-BR | Service Layer + Actions**
+
+## 🛠️ MCPs
+- `everything-search`(busca arquivos rapidamente) | `laravel-boost` | `context7` | `Puppeteer` | `Memory`
+
+## 🏛️ Código
+- `declare(strict_types=1);` em todos os arquivos
+- Type Hinting: properties, params e retornos tipados
+- Service Layer + Actions: separe lógica dos Controllers
+- Erros: nunca `try-catch` vazio. Use exceções customizadas
+
+## 📋 Convenções
+- Docs PT-BR | Commits semânticos | Escopo restrito
+
+## 📁 Docs
+- [TODO.md](file:///c:/laragon/www/easy-budget-laravel/TODO.md)
+- [TODO-BACK.MD](file:///c:/laragon/www/easy-budget-laravel/TODO-BACK.MD)
+- [TODO-FRONT.MD](file:///c:/laragon/www/easy-budget-laravel/TODO-FRONT.MD)

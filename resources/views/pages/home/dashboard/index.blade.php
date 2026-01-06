@@ -1,7 +1,7 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-  <div class="container-fluid py-1">
+  <div class="container-fluid py-4">
 
     @php
       $user        = auth()->user();
@@ -15,13 +15,13 @@
       @includeWhen( $user?->isTrial() || ( $pendingPlan && $pendingPlan->status === 'pending' ), 'partials.components.provider.plan-modal' )
     @endunless
 
-    <h1 class="mb-4">
-      @if( $isAdmin )
-        Painel Administrativo
-      @else
-        Painel do Prestador
-      @endif
-    </h1>
+    <x-page-header
+      :title="$isAdmin ? 'Painel Administrativo' : 'Painel do Prestador'"
+      :icon="$isAdmin ? 'shield-lock' : 'speedometer2'"
+      :breadcrumb-items="[
+        'Dashboard' => '#'
+      ]"
+    />
 
     {{-- Verificar se os dados do dashboard estão disponíveis --}}
     @if( isset( $metrics ) && isset( $charts ) && isset( $recentTransactions ) && isset( $quickActions ) )

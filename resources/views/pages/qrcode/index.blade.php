@@ -3,23 +3,16 @@
 @section('title', 'Gerador de QR Code')
 
 @section('content')
-    <!-- Cabeçalho com breadcrumb -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-qr-code me-2"></i>
-                <span class="d-none d-sm-inline">Gerador de QR Code</span>
-                <span class="d-sm-none">QR Code</span>
-            </h1>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Gerador de QR Code"
+            icon="qr-code"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'QR Code' => '#'
+            ]">
             <p class="text-muted mb-0">Gere QR Codes para compartilhamento e verificação de documentos</p>
-        </div>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Gerador de QR Code</li>
-            </ol>
-        </nav>
-    </div>
+        </x-page-header>
 
     <!-- Card principal do gerador -->
     <div class="card border-0 shadow-sm mb-4">
@@ -511,4 +504,5 @@
             });
         });
     </script>
+    </div>
 @stop

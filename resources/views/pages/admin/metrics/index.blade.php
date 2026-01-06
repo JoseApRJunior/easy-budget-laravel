@@ -2,16 +2,15 @@
 
 @section( 'title', 'Métricas de Middlewares' )
 
-@section( 'breadcrumb' )
-    <li class="breadcrumb-item active">Métricas</li>
-@endsection
-
 @section( 'admin_content' )
-    <div class="row">
-        <div class="col-12">
-            <h4 class="page-title mb-4">Métricas de Middlewares</h4>
-        </div>
-    </div>
+    <x-page-header
+        title="Métricas de Middlewares"
+        icon="graph-up"
+        :breadcrumb-items="[
+            'Admin' => url('/admin'),
+            'Métricas' => '#'
+        ]">
+    </x-page-header>
 
     <!-- Estatísticas Gerais -->
     <div class="row">

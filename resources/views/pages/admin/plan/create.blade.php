@@ -1,13 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-plus-circle me-2"></i>Criar Novo Plano</h1>
+<div class="container-fluid py-4">
+    <x-page-header
+        title="Criar Novo Plano"
+        icon="plus-circle"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            'Novo' => '#'
+        ]">
         <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Voltar
         </a>
-    </div>
+    </x-page-header>
 
     <div class="row">
         <div class="col-md-8">

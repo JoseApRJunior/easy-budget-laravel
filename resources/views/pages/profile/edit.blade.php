@@ -3,20 +3,17 @@
 @section( 'title', 'Perfil Pessoal' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-person me-2"></i>Perfil Pessoal
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'settings.index' ) }}">Configurações</a></li>
-                    <li class="breadcrumb-item active">Perfil Pessoal</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Perfil Pessoal"
+            icon="person"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Configurações' => route('settings.index'),
+                'Perfil Pessoal' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Gerencie suas informações pessoais e de acesso</p>
+        </x-page-header>
 
         <form action="{{ route( 'settings.profile.update' ) }}" method="POST" enctype="multipart/form-data">
             @csrf

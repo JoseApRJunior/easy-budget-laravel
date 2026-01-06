@@ -3,25 +3,20 @@
 @section('title', 'Controle Financeiro - Admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Controle Financeiro</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">Controle Financeiro</h1>
-                <p class="text-muted">Monitoramento detalhado dos custos e receitas dos provedores</p>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Controle Financeiro"
+            icon="cash-stack"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Controle Financeiro' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportReports()" />
+                <x-button type="button" variant="secondary" outline icon="bell" label="Alertas" onclick="refreshBudgetAlerts()" />
+                <x-button :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
             </div>
-            <div class="btn-group" role="group">
-                <x-button type="button" variant="secondary" icon="download" label="Exportar Relatórios" onclick="exportReports()" />
-                <x-button type="button" variant="secondary" icon="bell" label="Atualizar Alertas" onclick="refreshBudgetAlerts()" />
-                <x-button type="link" :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
-            </div>
-        </div>
+        </x-page-header>
 
         <!-- Alertas de Orçamento -->
         @if (isset($budgetAlerts) && count($budgetAlerts) > 0)
