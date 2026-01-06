@@ -17,14 +17,15 @@
 @endpush
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Produtos"
         icon="box-seam"
         :breadcrumb-items="[
-                'Produtos' => route('provider.products.dashboard'),
-                'Listar' => '#'
-            ]">
+            'Dashboard' => route('provider.dashboard'),
+            'Produtos' => route('provider.products.dashboard'),
+            'Lista' => '#'
+        ]">
         <p class="text-muted mb-0">Lista de todos os produtos registrados no sistema</p>
     </x-page-header>
 

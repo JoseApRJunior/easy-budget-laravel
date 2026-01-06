@@ -3,11 +3,12 @@
 @section('title', 'Movimentações de Estoque')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Movimentações de Estoque"
         icon="arrow-left-right"
         :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
             'Inventário' => route('provider.inventory.dashboard'),
             'Movimentações' => '#'
         ]">

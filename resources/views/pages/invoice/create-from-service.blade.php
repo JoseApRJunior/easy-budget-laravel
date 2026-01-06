@@ -1,21 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-receipt me-2"></i>Gerar Fatura para o Serviço #{{ $serviceCode }}
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                    <li class="breadcrumb-item"><a href="#">#{{ $serviceCode }}</a></li>
-                    <li class="breadcrumb-item active">Gerar Fatura</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Gerar Fatura para o Serviço #{{ $serviceCode }}"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                'Serviço #' . $serviceCode => route('provider.services.show', $serviceCode),
+                'Gerar Fatura' => '#'
+            ]">
+            <p class="text-muted mb-0">Confirme os dados para gerar a fatura do serviço</p>
+        </x-page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">

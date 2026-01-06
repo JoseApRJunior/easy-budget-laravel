@@ -9,11 +9,12 @@
     $hasResults = isset($products) && $products->total() > 0;
     $isFirstAccess = empty(request()->query());
 @endphp
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Produtos Mais Utilizados"
         icon="star"
         :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
             'Inventário' => route('provider.inventory.dashboard'),
             'Produtos Mais Utilizados' => '#'
         ]">

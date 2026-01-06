@@ -28,12 +28,13 @@
     $toggleVariant = $isCurrentlyActive ? 'warning' : 'success';
 @endphp
 
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Detalhes da Categoria"
         icon="tag"
         :breadcrumb-items="[
-            'Categorias' => route('provider.categories.index'),
+            'Dashboard' => route('provider.dashboard'),
+            'Categorias' => route('provider.categories.dashboard'),
             $category->name => '#'
         ]">
         <p class="text-muted mb-0">Visualize as informações completas da categoria</p>

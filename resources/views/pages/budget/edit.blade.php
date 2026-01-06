@@ -9,7 +9,7 @@
         icon="pencil-square"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
-            'Orçamentos' => route('provider.budgets.index'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
             $budget->code => route('provider.budgets.show', $budget->code),
             'Editar' => '#'
         ]">

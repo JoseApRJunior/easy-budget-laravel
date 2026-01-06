@@ -8,10 +8,10 @@
         title="Novo Serviço"
         icon="tools"
         :breadcrumb-items="[
-                'Dashboard' => route('provider.dashboard'),
-                'Serviços' => route('provider.services.index'),
-                'Novo' => '#'
-            ]">
+            'Dashboard' => route('provider.dashboard'),
+            'Serviços' => route('provider.services.dashboard'),
+            'Novo' => '#'
+        ]">
         <p class="text-muted mb-0">Preencha os dados para criar um novo serviço</p>
     </x-page-header>
 

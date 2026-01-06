@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Faturas')
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <x-page-header
             title="Dashboard de Faturas"
             icon="receipt"

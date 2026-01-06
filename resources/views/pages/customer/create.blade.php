@@ -3,23 +3,17 @@
 @section('title', 'Novo Cliente')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0 fw-bold ">
-                    <i class="bi bi-person-plus me-2 "></i>Novo Cliente
-                </h1>
-                <p class="text-muted mb-0 small">Cadastre um novo cliente no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}" class="text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}" class="text-decoration-none">Clientes</a></li>
-                    <li class="breadcrumb-item active">Novo</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Novo Cliente"
+            icon="person-plus"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Clientes' => route('provider.customers.dashboard'),
+                'Novo' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Cadastre um novo cliente no sistema</p>
+        </x-page-header>
 
         <form action="{{ route('provider.customers.store') }}" method="POST" id="customerForm">
             @csrf

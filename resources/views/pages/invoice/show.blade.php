@@ -2,14 +2,15 @@
 
 @section('title', 'Detalhes da Fatura')
 @section('content')
-    <x-page-header
-        title="Detalhes da Fatura"
-        icon="receipt"
-        :breadcrumb-items="[
-            'Dashboard' => route('provider.dashboard'),
-            'Faturas' => route('provider.invoices.index'),
-            $invoice->code => '#'
-        ]">
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Detalhes da Fatura"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                $invoice->code => '#'
+            ]">
         <div class="d-flex gap-2">
             <x-button type="link" :href="route('provider.invoices.print', $invoice)" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
         </div>

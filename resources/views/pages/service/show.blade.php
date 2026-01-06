@@ -7,7 +7,7 @@
         icon="tools"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
-            'Serviços' => route('provider.services.index'),
+            'Serviços' => route('provider.services.dashboard'),
             $service->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>

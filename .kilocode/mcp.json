@@ -1,1 +1,50 @@
-{"mcpServers":{}}
+{
+  "mcpServers": {
+    "laravel-boost": {
+      "command": "c:\\laragon\\www\\easy-budget-laravel\\boost-mcp.bat",
+      "args": []
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ],
+      "env": {
+        "DEFAULT_MINIMUM_TOKENS": "10000"
+      },
+      "disabled": false
+    },
+    "Puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ],
+      "env": {},
+      "fromGalleryId": "modelcontextprotocol.servers_puppeteer"
+    },
+    "Memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": "memory.json"
+      },
+      "fromGalleryId": "modelcontextprotocol.servers_memory",
+      "disabled": false,
+      "alwaysAllow": []
+    },
+    "everything-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything"
+      ],
+      "env": {},
+      "disabled": false
+    }
+  }
+}

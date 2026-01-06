@@ -3,12 +3,13 @@
 @section('title', 'Novo Produto')
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <x-page-header
             title="Novo Produto"
             icon="bag-plus"
             :breadcrumb-items="[
-                'Produtos' => route('provider.products.index'),
+                'Dashboard' => route('provider.dashboard'),
+                'Produtos' => route('provider.products.dashboard'),
                 'Novo' => '#'
             ]"
         >

@@ -3,13 +3,14 @@
 @section('title', 'Detalhes do Produto: ' . $product->name)
 
 @section('content')
-<div class="container-fluid py-1 d-flex flex-column" style="min-height: calc(100vh - 200px);">
+<div class="container-fluid py-4 d-flex flex-column" style="min-height: calc(100vh - 200px);">
     <div class="flex-grow-1">
         <x-page-header
             title="Detalhes do Produto"
             icon="box-seam"
             :breadcrumb-items="[
-                'Produtos' => route('provider.products.index'),
+                'Dashboard' => route('provider.dashboard'),
+                'Produtos' => route('provider.products.dashboard'),
                 $product->name => '#'
             ]">
             <p class="text-muted mb-0">Visualize as informações completas do produto</p>

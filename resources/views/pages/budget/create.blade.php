@@ -9,7 +9,7 @@
         icon="file-earmark-plus"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
-            'Orçamentos' => route('provider.budgets.index'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
             'Novo' => '#'
         ]">
         <p class="text-muted mb-0">Preencha os dados para criar um novo orçamento</p>

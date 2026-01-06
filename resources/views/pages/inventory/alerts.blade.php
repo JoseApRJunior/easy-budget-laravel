@@ -3,13 +3,14 @@
 @section('title', 'Alertas de Estoque')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <!-- Page Header -->
     <x-page-header
         title="Alertas de Estoque"
         icon="bell"
         icon-color="danger"
         :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
             'Inventário' => route('provider.inventory.dashboard'),
             'Alertas' => '#'
         ]">

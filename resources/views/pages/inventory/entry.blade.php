@@ -3,13 +3,14 @@
 @section('title', 'Entrada de Estoque')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Entrada de Estoque"
         icon="arrow-down"
         :breadcrumb-items="[
-            'Inventário' => route('provider.inventory.index'),
-            $product->name => route('provider.products.edit', $product->id),
+            'Dashboard' => route('provider.dashboard'),
+            'Inventário' => route('provider.inventory.dashboard'),
+            $product->name => route('provider.products.show', $product->sku),
             'Entrada' => '#'
         ]">
         <p class="text-muted mb-0">Registrar entrada de estoque físico</p>

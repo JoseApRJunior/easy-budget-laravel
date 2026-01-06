@@ -9,13 +9,14 @@
     $hasResults = !empty($filters) && collect($filters)->except(['per_page', 'page'])->filter()->isNotEmpty();
 @endphp
 
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Inventário"
         icon="archive"
         :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
             'Inventário' => route('provider.inventory.dashboard'),
-            'Listar' => '#'
+            'Lista' => '#'
         ]">
         <p class="text-muted mb-0">Gerencie o estoque e movimentações de seus produtos</p>
     </x-page-header>

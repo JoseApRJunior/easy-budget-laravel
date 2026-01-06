@@ -6,13 +6,14 @@
     @php
         $inventory = $inventory ?? $product->inventory;
     @endphp
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <x-page-header
             title="Detalhes do Inventário"
             icon="box-seam"
             :breadcrumb-items="[
-                'Inventário' => route('provider.inventory.index'),
-                $product->name => route('provider.products.edit', $product->id),
+                'Dashboard' => route('provider.dashboard'),
+                'Inventário' => route('provider.inventory.dashboard'),
+                $product->name => route('provider.products.show', $product->sku),
                 'Detalhes' => '#'
             ]">
             <p class="text-muted mb-0">Visualize o saldo e histórico de movimentações do produto</p>

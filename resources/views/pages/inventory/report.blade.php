@@ -8,13 +8,14 @@
         $hasResults = !empty($filters) && collect($filters)->except(['per_page', 'page', 'type'])->filter()->isNotEmpty();
     @endphp
 
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <!-- Cabeçalho -->
         <x-page-header
             title="Relatório de Inventário"
             icon="clipboard-data"
             :breadcrumb-items="[
-                'Estoque' => route('provider.inventory.index'),
+                'Dashboard' => route('provider.dashboard'),
+                'Inventário' => route('provider.inventory.dashboard'),
                 'Relatório' => '#'
             ]">
             <p class="text-muted mb-0">Resumo e detalhes conforme filtros aplicados</p>

@@ -2,17 +2,18 @@
 
 @section('title', 'Editar Fatura')
 @section('content')
-    <x-page-header
-        title="Editar Fatura"
-        icon="pencil-square"
-        :breadcrumb-items="[
-            'Dashboard' => route('provider.dashboard'),
-            'Faturas' => route('provider.invoices.index'),
-            $invoice->code => route('provider.invoices.show', $invoice->code),
-            'Editar' => '#'
-        ]">
-        <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
-    </x-page-header>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Editar Fatura"
+            icon="pencil-square"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                $invoice->code => route('provider.invoices.show', $invoice->code),
+                'Editar' => '#'
+            ]">
+            <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
+        </x-page-header>
 
     <form action="{{ route('provider.invoices.update', $invoice->code) }}" method="POST" id="invoiceEditForm">
         @csrf

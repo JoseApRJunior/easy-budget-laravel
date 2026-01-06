@@ -3,13 +3,14 @@
 @section('title', 'Saída de Estoque')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Saída de Estoque"
         icon="arrow-up"
         :breadcrumb-items="[
-            'Inventário' => route('provider.inventory.index'),
-            $product->name => route('provider.products.edit', $product->id),
+            'Dashboard' => route('provider.dashboard'),
+            'Inventário' => route('provider.inventory.dashboard'),
+            $product->name => route('provider.products.show', $product->sku),
             'Saída' => '#'
         ]">
         <p class="text-muted mb-0">Registrar saída de estoque físico</p>

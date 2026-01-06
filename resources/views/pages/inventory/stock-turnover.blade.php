@@ -9,13 +9,14 @@
 @endphp
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Giro de Estoque"
         icon="graph-up"
         icon-color="warning"
         :breadcrumb-items="[
-            'Inventário' => route('provider.inventory.index'),
+            'Dashboard' => route('provider.dashboard'),
+            'Inventário' => route('provider.inventory.dashboard'),
             'Giro de Estoque' => '#'
         ]">
         <p class="text-muted small mb-0">Análise de movimentação e giro de produtos</p>

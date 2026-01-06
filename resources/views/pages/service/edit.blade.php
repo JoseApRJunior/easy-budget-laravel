@@ -9,7 +9,7 @@
         icon="tools"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
-            'Serviços' => route('provider.services.index'),
+            'Serviços' => route('provider.services.dashboard'),
             $service->code => route('provider.services.show', $service->code),
             'Editar' => '#'
         ]">

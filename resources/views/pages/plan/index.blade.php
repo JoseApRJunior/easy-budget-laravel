@@ -3,13 +3,17 @@
 use App\Helpers\BladeHelper;
 @endphp
 
-@section( 'content' )
-        <div class="main-container py-1">
-            <!-- Cabeçalho -->
-            <div class="text-center mb-5">
-                <h1 class="h2 fw-bold text-primary mb-3">Escolha seu Plano</h1>
-                <p class="text-muted lead">Selecione o plano ideal para o seu negócio</p>
-            </div>
+@section('content')
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Escolha seu Plano"
+            icon="gem"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => '#'
+            ]">
+            <p class="text-muted mb-0">Selecione o plano ideal para o seu negócio</p>
+        </x-page-header>
 
             <!-- Cards de Planos -->
             <div class="row g-4 justify-content-center">

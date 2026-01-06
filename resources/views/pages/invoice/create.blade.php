@@ -2,16 +2,17 @@
 
 @section('title', 'Nova Fatura')
 @section('content')
-    <x-page-header
-        title="Nova Fatura"
-        icon="plus-circle"
-        :breadcrumb-items="[
-            'Dashboard' => route('provider.dashboard'),
-            'Faturas' => route('provider.invoices.index'),
-            'Nova' => '#'
-        ]">
-        <p class="text-muted mb-0">Preencha os dados para criar uma nova fatura</p>
-    </x-page-header>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Nova Fatura"
+            icon="plus-circle"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                'Nova' => '#'
+            ]">
+            <p class="text-muted mb-0">Preencha os dados para criar uma nova fatura</p>
+        </x-page-header>
 
     <form action="{{ route('provider.invoices.store') }}" method="POST" id="invoiceForm">
         @csrf

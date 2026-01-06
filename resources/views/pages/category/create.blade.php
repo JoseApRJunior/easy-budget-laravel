@@ -3,14 +3,15 @@
 @section('title', 'Nova Categoria')
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Nova Categoria"
         icon="plus-circle"
         :breadcrumb-items="[
-                'Categorias' => route('provider.categories.index'),
-                'Nova' => '#'
-            ]">
+            'Dashboard' => route('provider.dashboard'),
+            'Categorias' => route('provider.categories.dashboard'),
+            'Nova' => '#'
+        ]">
         <p class="text-muted mb-0">Preencha os dados para criar uma nova categoria</p>
     </x-page-header>
 

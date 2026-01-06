@@ -9,7 +9,7 @@
         icon="file-earmark-text"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
-            'Orçamentos' => route('provider.budgets.index'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
             $budget->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize as informações completas do orçamento</p>

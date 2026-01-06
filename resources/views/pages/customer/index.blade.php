@@ -3,23 +3,17 @@
 @section('title', 'Clientes')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-people me-2"></i>Clientes
-                </h1>
-                <p class="text-muted small">Lista de todos os clientes registrados no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.dashboard') }}">Clientes</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Lista de Clientes"
+            icon="people"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Clientes' => route('provider.customers.dashboard'),
+                'Lista' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Lista de todos os clientes registrados no sistema</p>
+        </x-page-header>
 
         <div class="row">
             <div class="col-12">

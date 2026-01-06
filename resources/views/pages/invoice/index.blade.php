@@ -6,14 +6,14 @@
 @endphp
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <x-page-header
             title="Faturas"
             icon="receipt"
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
                 'Faturas' => route('provider.invoices.dashboard'),
-                'Listar' => '#'
+                'Lista' => '#'
             ]">
             <p class="text-muted mb-0">Lista de todas as faturas registradas no sistema</p>
         </x-page-header>

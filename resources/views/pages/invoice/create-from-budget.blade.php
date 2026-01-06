@@ -1,8 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container py-1">
-        <h1 class="h4 mb-3">Criar Fatura a partir do Orçamento</h1>
+    <div class="container-fluid py-4">
+        <x-page-header
+            title="Criar Fatura a partir do Orçamento"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                'Orçamento #' . $budget->code => route('provider.budgets.show', $budget->code),
+                'Gerar Fatura' => '#'
+            ]">
+            <p class="text-muted mb-0">Selecione os itens do orçamento para gerar a fatura</p>
+        </x-page-header>
 
         <div class="card mb-4">
             <div class="card-body">

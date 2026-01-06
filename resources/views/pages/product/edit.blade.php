@@ -3,12 +3,13 @@
 @section('title', 'Editar Produto: ' . $product->name)
 
 @section('content')
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         <x-page-header 
             title="Editar Produto" 
             icon="pencil-square" 
             :breadcrumb-items="[
-                'Produtos' => route('provider.products.index'),
+                'Dashboard' => route('provider.dashboard'),
+                'Produtos' => route('provider.products.dashboard'),
                 $product->name => route('provider.products.show', $product->sku),
                 'Editar' => '#'
             ]"

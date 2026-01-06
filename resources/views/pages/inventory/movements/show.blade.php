@@ -3,12 +3,13 @@
 @section('title', 'Detalhes da Movimentação #' . $movement->id)
 
 @section('content')
-<div class="container-fluid py-1">
+<div class="container-fluid py-4">
     <x-page-header
         title="Detalhes da Movimentação"
         icon="arrow-left-right"
         :breadcrumb-items="[
-            'Inventário' => route('provider.inventory.index'),
+            'Dashboard' => route('provider.dashboard'),
+            'Inventário' => route('provider.inventory.dashboard'),
             'Movimentações' => route('provider.inventory.movements'),
             'Detalhes #' . $movement->id => '#'
         ]"

@@ -3,13 +3,14 @@
 @section('title', 'Detalhes do Cliente')
 
 @section('content')
-    <div class="container-fluid py-1 d-flex flex-column" style="min-height: calc(100vh - 200px);">
+    <div class="container-fluid py-4 d-flex flex-column" style="min-height: calc(100vh - 200px);">
         <div class="flex-grow-1">
             <x-page-header
                 title="Detalhes do Cliente"
                 icon="person"
                 :breadcrumb-items="[
-                    'Clientes' => route('provider.customers.index'),
+                    'Dashboard' => route('provider.dashboard'),
+                    'Clientes' => route('provider.customers.dashboard'),
                     ($customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente #' . $customer->id) => '#'
                 ]">
                 <p class="text-muted mb-0">Visualize as informações completas do cliente</p>
