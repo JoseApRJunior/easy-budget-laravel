@@ -14,7 +14,7 @@ class BudgetPdfService
     public function generatePdf(Budget $budget, array $extras = []): string
     {
         $viewData = array_merge(compact('budget'), $extras);
-        $html = View::make('budgets.pdf', $viewData)->render();
+        $html = View::make('pages.budget.pdf_budget', $viewData)->render();
 
         $mpdf = new Mpdf([
             'mode' => 'utf-8',

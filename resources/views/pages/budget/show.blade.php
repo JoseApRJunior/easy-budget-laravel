@@ -312,6 +312,10 @@
             Última atualização: {{ $budget->updated_at?->format('d/m/Y H:i') }}
         </small>
         <div class="d-flex gap-2">
+            <x-button type="button" class="d-flex align-items-center"
+                variant="info" icon="send-fill" label="Enviar para Cliente"
+                data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
+
             <x-button type="link" :href="route('provider.budgets.edit', $budget->code)"
                 variant="primary" icon="pencil-fill" label="Editar" />
 
@@ -346,4 +350,65 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Enviar para Cliente -->
+<div class="modal fade" id="sendToCustomerModal" tabindex="-1" aria-labelledby="sendToCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('provider.budgets.send-to-customer', $budget->code) }}" method="POST">
+            @csrf
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white border-0">
+                    <h5 class="modal-title" id="sendToCustomerModalLabel">
+                        <i class="bi bi-send-fill me-2"></i>Enviar Orçamento
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted">O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong></p>
+
+                    @if(!($budget->customer->contact->email_personal))
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            O cliente não possui e-mail pessoal cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
+                        </div>
+                    @endif
+
+                    <div class="mb-3">
+                        <label for="message" class="form-label fw-bold">Mensagem Personalizada (Opcional)</label>
+                        <textarea class="form-control" id="message" name="message" rows="4" placeholder="Olá, segue o orçamento solicitado..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-2"></i>
+                        O PDF do orçamento será gerado, o link de visualização pública será criado e <strong>os produtos serão reservados no estoque automaticamente</strong>.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info px-4 text-white" {{ !($budget->customer->contact->email_personal) ? 'disabled' : '' }}>
+                        <i class="bi bi-send me-2"></i>Enviar E-mail
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    // Inicialização manual caso o data-bs-toggle falhe por causa do defer
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalBtn = document.querySelector('[data-bs-target="#sendToCustomerModal"]');
+        if (modalBtn) {
+            modalBtn.addEventListener('click', function() {
+                const modalEl = document.getElementById('sendToCustomerModal');
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.show();
+                }
+            });
+        }
+    });
+</script>
+@endpush

@@ -33,6 +33,7 @@
 
     @stack('scripts')
     @yield('scripts')
+    @stack('modals')
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -61,11 +61,6 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
     public ?string $customMessage;
 
     /**
-     * Locale para internacionalização (pt-BR, en, etc).
-     */
-    public string $locale;
-
-    /**
      * Cria uma nova instância da mailable.
      *
      * @param  Budget  $budget  Orçamento relacionado
@@ -94,10 +89,13 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $this->company = $company ?? [];
         $this->publicUrl = $publicUrl;
         $this->customMessage = $customMessage;
-        $this->locale = $locale;
+        
+        if ($locale) {
+            $this->locale($locale);
+        }
 
         // Configurar locale para internacionalização
-        app()->setLocale($this->locale);
+        app()->setLocale($this->locale ?? 'pt-BR');
     }
 
     /**
@@ -139,8 +137,8 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                 'customMessage' => $this->customMessage,
                 'budgetData' => [
                     'code' => $this->budget->code,
-                    'total' => number_format($this->budget->total, 2, ',', '.'),
-                    'discount' => number_format($this->budget->discount, 2, ',', '.'),
+                    'total' => number_format((float) $this->budget->total, 2, ',', '.'),
+                    'discount' => number_format((float) $this->budget->discount, 2, ',', '.'),
                     'due_date' => $this->budget->due_date?->format('d/m/Y'),
                     'description' => $this->budget->description ?? 'Orçamento sem descrição',
                     'status' => $this->budget->budgetStatus->name ?? 'Status não definido',

@@ -20,8 +20,26 @@ class BudgetService extends AbstractBaseService
         BudgetRepository $budgetRepository,
         private readonly ServiceService $serviceService,
         private readonly BudgetCodeGeneratorService $codeGeneratorService,
+        private readonly \App\Actions\Budget\SendBudgetToCustomerAction $sendAction,
+        private readonly \App\Actions\Budget\ReserveBudgetProductsAction $reserveAction,
     ) {
         parent::__construct($budgetRepository);
+    }
+
+    /**
+     * Envia o orçamento para o cliente.
+     */
+    public function sendToCustomer(string $code, ?string $message = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($code, $message) {
+            $budget = $this->repository->findByCode($code);
+
+            if (! $budget) {
+                return ServiceResult::error('Orçamento não encontrado.');
+            }
+
+            return $this->sendAction->execute($budget, $message);
+        });
     }
 
     /**

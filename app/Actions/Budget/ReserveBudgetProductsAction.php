@@ -1,0 +1,61 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Actions\Budget;
+
+use App\Actions\Inventory\ReserveProductStockAction;
+use App\Models\Budget;
+use App\Support\ServiceResult;
+use Illuminate\Support\Facades\DB;
+use Exception;
+
+class ReserveBudgetProductsAction
+{
+    public function __construct(
+        private ReserveProductStockAction $reserveAction
+    ) {}
+
+    /**
+     * Reserva todos os produtos contidos nos itens dos serviços do orçamento.
+     */
+    public function execute(Budget $budget): ServiceResult
+    {
+        try {
+            // Carregar relações necessárias para evitar N+1
+            $budget->loadMissing(['services.items.product']);
+
+            return DB::transaction(function () use ($budget) {
+                $reservedCount = 0;
+
+                foreach ($budget->services as $service) {
+                    foreach ($service->items as $item) {
+                        if ($item->product_id && $item->product) {
+                            $this->reserveAction->reserve($item->product, (int) $item->quantity);
+                            $reservedCount++;
+                        }
+                    }
+                }
+
+                if ($reservedCount === 0) {
+                    return ServiceResult::error('Nenhum produto encontrado para reserva neste orçamento.');
+                }
+
+                // Registrar histórico
+                if (method_exists($budget, 'actionHistory')) {
+                    $budget->actionHistory()->create([
+                        'tenant_id' => $budget->tenant_id,
+                        'action' => 'products_reserved',
+                        'description' => "Reserva de estoque realizada para {$reservedCount} itens do orçamento.",
+                        'user_id' => auth()->id(),
+                    ]);
+                }
+
+                return ServiceResult::success(null, "Reserva de estoque concluída para {$reservedCount} itens.");
+            });
+
+        } catch (Exception $e) {
+            return ServiceResult::error('Erro ao reservar produtos: ' . $e->getMessage());
+        }
+    }
+}

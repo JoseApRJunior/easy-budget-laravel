@@ -311,6 +311,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/{code}/print', [BudgetController::class, 'print'])->name('print');
         Route::get('/{code}/export-xlsx', [BudgetController::class, 'exportXlsx'])->name('export-xlsx');
         Route::get('/{code}/services/create', [ServiceController::class, 'create'])->name('services.create');
+        Route::post('/{code}/send-to-customer', [BudgetController::class, 'sendToCustomer'])->name('send-to-customer');
     });
 
     // Invoices

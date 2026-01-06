@@ -315,4 +315,19 @@ class BudgetController extends Controller
         // Para este exemplo, vamos apenas retornar uma mensagem ou implementar básico
         return redirect()->back()->with('info', 'Funcionalidade de exportação XLSX para orçamento individual em desenvolvimento.');
     }
+
+    /**
+     * Envia o orçamento para o cliente por e-mail.
+     */
+    public function sendToCustomer(Request $request, string $code): RedirectResponse
+    {
+        $message = $request->input('message');
+        $result = $this->budgetService->sendToCustomer($code, $message);
+
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        return redirect()->back()->with('success', $result->getMessage());
+    }
 }
