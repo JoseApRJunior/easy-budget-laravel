@@ -128,6 +128,12 @@ class BudgetCodeGeneratorService
     {
         $parts = explode('-', $code);
 
+        // Formato legado com Tenant ID (removendo suporte): [0]ORC, [1]T1, [2]2025, [3]11, [4]000001
+        if (count($parts) >= 5) {
+            return (int) $parts[4];
+        }
+
+        // Padrão correto: [0]ORC, [1]2025, [2]11, [3]000001
         if (count($parts) >= 4) {
             return (int) $parts[3];
         }
@@ -191,7 +197,7 @@ class BudgetCodeGeneratorService
      */
     public function validateCodeFormat(string $code): bool
     {
-        // Padrão: ORC-YYYY-MM-XXXXXX ou código customizado com letras e números
+        // Padrão: ORC-YYYY-MM-XXXXXX
         $pattern = '/^[A-Z]{3}-[0-9]{4}-[0-9]{2}-[0-9]{6}$/';
 
         // Também aceita códigos customizados

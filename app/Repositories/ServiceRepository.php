@@ -63,18 +63,24 @@ class ServiceRepository extends AbstractTenantRepository
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
             ->where('code', 'LIKE', 'SERV-%')
-            ->orderBy('code', 'desc')
+            ->orderBy('id', 'desc')
             ->first();
     }
 
     /**
      * Extrai o número sequencial de um código.
-     * Padrão esperado: SERV-YYYY-MM-XXXX
+     * Padrão esperado: SERV-YYYY-MM-XXXXXX
      */
     private function extractSequentialNumber(string $code): int
     {
         $parts = explode('-', $code);
 
+        // Formato legado com Tenant ID: [0]SERV, [1]T1, [2]2025, [3]11, [4]000001
+        if (count($parts) >= 5) {
+            return (int) $parts[4];
+        }
+
+        // Padrão correto: [0]SERV, [1]2025, [2]11, [3]000001
         if (count($parts) >= 4) {
             return (int) $parts[3];
         }
