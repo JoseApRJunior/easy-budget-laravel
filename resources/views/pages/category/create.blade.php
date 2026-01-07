@@ -17,57 +17,61 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            @if ($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
             <form action="{{ route('provider.categories.store') }}" method="POST">
                 @csrf
                 <div class="row g-4">
-                    <div class="col-md-12">
+                    <div class="col-md-7">
                         <div class="form-floating mb-3">
                             <input type="text" class="form-control @error('name') is-invalid @enderror"
                                 id="name" name="name" placeholder="Nome da Categoria"
-                                value="{{ old('name') }}" required>
+                                value="{{ old('name') }}" required autofocus>
                             <label for="name">Nome da Categoria *</label>
                             @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
                         <div class="form-group mb-3">
-                            <label for="parent_id" class="form-label">Categoria Pai (opcional)</label>
+                            <label for="parent_id" class="form-label small fw-bold text-muted">Categoria Pai (opcional)</label>
                             <select class="form-select tom-select" id="parent_id" name="parent_id">
-                                <option value="">Sem categoria pai</option>
+                                <option value="">Sem categoria pai (Esta será uma Categoria Principal)</option>
                                 @foreach ($parents ?? collect() as $p)
-                                <option value="{{ $p->id }}"
-                                    {{ (string) old('parent_id') === (string) $p->id ? 'selected' : '' }}>
-                                    {{ $p->name }}
-                                </option>
+                                    <option value="{{ $p->id }}"
+                                        {{ (string) old('parent_id') === (string) $p->id ? 'selected' : '' }}>
+                                        {{ $p->name }}
+                                    </option>
                                 @endforeach
                             </select>
+                            <div class="form-text small">
+                                Subcategorias herdam o comportamento e status da categoria pai.
+                            </div>
                         </div>
-                        <input type="hidden" name="is_active" value="0">
-                        <div class="form-check form-switch mt-3">
-                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                value="1" {{ old('is_active', $defaults['is_active'] ?? true) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_active">Ativo</label>
-                            @error('is_active')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="bg-light p-3 rounded-3 border h-100">
+                            <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                <i class="bi bi-gear-fill me-2 text-primary"></i>Configurações
+                            </h6>
+
+                            <div class="form-check form-switch custom-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                    value="1" {{ old('is_active', true) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold" for="is_active">Categoria Ativa</label>
+                                <p class="text-muted small mb-0">Categorias inativas não podem ser selecionadas em novos registros.</p>
+                                @error('is_active')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between mt-4">
-                    <div>
-                        <x-back-button index-route="provider.categories.index" label="Cancelar" />
-                    </div>
-                    <x-button type="submit" icon="check-circle" label="Criar" />
+                <hr class="my-4 opacity-25">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <x-back-button index-route="provider.categories.index" label="Voltar para Lista" />
+                    <x-button type="submit" icon="check-circle" label="Criar Categoria" variant="primary" />
                 </div>
             </form>
         </div>

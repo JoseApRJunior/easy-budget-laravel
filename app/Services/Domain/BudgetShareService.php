@@ -55,6 +55,40 @@ class BudgetShareService extends AbstractBaseService
     }
 
     /**
+     * Aprova o orçamento vinculado ao compartilhamento
+     */
+    public function approveBudget(string $token): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token) {
+            $share = $this->budgetShareRepository->findByToken($token);
+
+            if (! $share || ! $share->is_active) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+            }
+
+            $budget = $this->budgetRepository->find($share->budget_id);
+
+            if (! $budget) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
+            }
+
+            // Atualiza o status do orçamento para aprovado
+            $this->budgetRepository->update($budget->id, [
+                'status' => \App\Enums\BudgetStatus::APPROVED,
+                'approved_at' => now(),
+            ]);
+
+            // Marca o compartilhamento como concluído/aprovado
+            $this->budgetShareRepository->update($share->id, [
+                'status' => 'approved',
+                'is_active' => false, // Opcional: desativar após aprovação
+            ]);
+
+            return $this->success($budget, 'Orçamento aprovado com sucesso.');
+        }, 'Erro ao aprovar orçamento.');
+    }
+
+    /**
      * Cria um novo compartilhamento de orçamento
      */
     public function createShare(array $data): ServiceResult
@@ -199,6 +233,44 @@ class BudgetShareService extends AbstractBaseService
 
             return $this->success($this->budgetShareRepository->find($shareId), 'Token renovado com sucesso.');
         }, 'Erro ao renovar token.');
+    }
+
+    /**
+     * Adiciona um comentário a um orçamento via compartilhamento
+     */
+    public function addComment(string $token, array $data): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token, $data) {
+            $share = $this->budgetShareRepository->findByToken($token);
+
+            if (! $share || ! $share->is_active) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+            }
+
+            $budget = $this->budgetRepository->find($share->budget_id);
+
+            if (! $budget) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
+            }
+
+            // Registra no histórico de ações do orçamento
+            \App\Models\BudgetActionHistory::create([
+                'tenant_id' => $budget->tenant_id,
+                'budget_id' => $budget->id,
+                'action' => 'comment',
+                'description' => $data['comment'] ?? '',
+                'metadata' => [
+                    'author_name' => $data['name'] ?? 'Cliente',
+                    'author_email' => $data['email'] ?? '',
+                    'via' => 'public_share',
+                    'share_token' => $token,
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return $this->success(null, 'Comentário enviado com sucesso.');
+        }, 'Erro ao enviar comentário.');
     }
 
     /**

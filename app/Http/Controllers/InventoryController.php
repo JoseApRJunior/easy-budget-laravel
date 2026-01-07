@@ -306,6 +306,48 @@ class InventoryController extends Controller
     }
 
     /**
+     * Atualizar limites de estoque (mínimo e máximo)
+     */
+    public function updateLimits(Request $request, $sku): RedirectResponse
+    {
+        $result = $this->inventoryManagementService->getProductBySku($sku);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $product = $result->getData();
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
+            'min_quantity' => 'required|integer|min:0',
+            'max_quantity' => 'nullable|integer|min:0',
+        ]);
+
+        $min = (int) $request->input('min_quantity');
+        $max = $request->input('max_quantity') !== null ? (int) $request->input('max_quantity') : null;
+
+        if ($max !== null && $max <= $min) {
+            return redirect()->back()->with('error', 'A quantidade máxima deve ser maior que a mínima.')->withInput();
+        }
+
+        $updateResult = $this->inventoryManagementService->updateStockLimits(
+            (int) $product->id,
+            $min,
+            $max
+        );
+
+        if ($updateResult->isSuccess()) {
+            return redirect()
+                ->back()
+                ->with('success', 'Limites de estoque atualizados com sucesso!');
+        }
+
+        return redirect()
+            ->back()
+            ->with('error', $updateResult->getMessage());
+    }
+
+    /**
      * Formulário de entrada de estoque
      */
     public function entryForm($sku): View|RedirectResponse

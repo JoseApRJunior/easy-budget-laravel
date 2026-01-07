@@ -59,10 +59,13 @@ class SendBudgetToCustomerAction
                 $provider = $budget->tenant->provider()->with(['commonData', 'address', 'contact'])->first();
                 $pdfPath = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
 
-                // Atualizar o anexo no orçamento
-                $budget->update(['attachment' => $pdfPath]);
+                // 4. Atualizar orçamento: status para pendente e anexo
+                $budget->update([
+                    'status' => \App\Enums\BudgetStatus::PENDING,
+                    'attachment' => $pdfPath,
+                ]);
 
-                // 4. Preparar dados da empresa
+                // 5. Preparar dados da empresa
                 $company = [
                     'company_name' => $budget->tenant->name ?? config('app.name'),
                     'email' => $budget->tenant->email ?? config('mail.from.address'),

@@ -68,13 +68,20 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3"><i
-                                    class="bi bi-clipboard-data text-white"></i></div>
-                            <div>
-                                <h6 class="text-muted mb-1">Estoque</h6>
-                                <h5 class="mb-0">Total: {{ \App\Helpers\CurrencyHelper::format($inventory?->quantity ?? 0, 0, false) }}</h5>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle bg-success bg-gradient me-3"><i
+                                        class="bi bi-clipboard-data text-white"></i></div>
+                                <div>
+                                    <h6 class="text-muted mb-1">Estoque</h6>
+                                    <h5 class="mb-0">Total: {{ \App\Helpers\CurrencyHelper::format($inventory?->quantity ?? 0, 0, false) }}</h5>
+                                </div>
                             </div>
+                            @can('adjustInventory', $product)
+                                <button type="button" class="btn btn-sm btn-outline-primary border-0" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            @endcan
                         </div>
                         <div class="row text-center g-2">
                             <div class="col-6">
@@ -346,6 +353,54 @@
             </div>
         </div>
     </div>
+
+    @can('adjustInventory', $product)
+    <!-- Modal Atualizar Limites -->
+    <div class="modal fade" id="updateLimitsModal" tabindex="-1" aria-labelledby="updateLimitsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title fw-bold" id="updateLimitsModalLabel">
+                        <i class="bi bi-sliders me-2"></i>Editar Limites de Estoque
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('provider.inventory.limits.update', $product->sku) }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-4">
+                            Defina os níveis mínimo e máximo para receber alertas automáticos de reposição e excesso de estoque.
+                        </p>
+                        
+                        <div class="mb-3">
+                            <label for="min_quantity" class="form-label fw-bold">Estoque Mínimo (Alerta de Baixa)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-arrow-down-circle text-danger"></i></span>
+                                <input type="number" class="form-control" id="min_quantity" name="min_quantity" 
+                                    value="{{ old('min_quantity', $inventory?->min_quantity ?? 0) }}" min="0" required>
+                            </div>
+                            <div class="form-text">Você será notificado quando o estoque estiver igual ou abaixo deste valor.</div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="max_quantity" class="form-label fw-bold">Estoque Máximo (Opcional)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-arrow-up-circle text-success"></i></span>
+                                <input type="number" class="form-control" id="max_quantity" name="max_quantity" 
+                                    value="{{ old('max_quantity', $inventory?->max_quantity) }}" min="0">
+                            </div>
+                            <div class="form-text">Define o limite ideal de armazenamento para este produto. Deixe vazio para não limitar.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0 p-3">
+                        <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                        <x-button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endcan
 @endsection
 
 @push('scripts')

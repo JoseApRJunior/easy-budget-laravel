@@ -76,102 +76,92 @@
     <div class="row g-4">
         <!-- Categorias Recentes -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="mb-0">
-                        <i class="bi bi-clock-history me-2"></i>
-                        <span class="d-none d-sm-inline">Categorias Recentes</span>
-                        <span class="d-sm-none">Recentes</span>
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                    <!-- Desktop View -->
-                    <div class="desktop-view">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Categoria</th>
-                                        <th>Tipo</th>
-                                        <th>Status</th>
-                                        <th>Criada em</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($recent as $category)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if ($category->parent)
-                                                <i
-                                                    class="bi bi-arrow-return-right text-muted me-2 subcategory-icon"></i>
-                                                @endif
-                                                <i class="bi bi-tag me-2 text-muted"></i>
-                                                <span>{{ $category->name }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if ($category->parent)
-                                            <small class="text-muted">Subcategoria</small>
-                                            @else
-                                            <small class="text-muted">Categoria</small>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <x-status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
-                                        </td>
-                                        <td>
-                                            {{ optional($category->created_at)->format('d/m/Y') }}
-                                        </td>
-                                        <td class="text-center">
-                                            <x-button type="link" :href="route('provider.categories.show', $category->slug)"
-                                                    variant="info" size="sm" icon="eye" />
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+            <x-resource-list-card
+                title="Categorias Recentes"
+                mobileTitle="Recentes"
+                icon="clock-history"
+                class="h-100"
+            >
+                <x-slot:headerActions>
+                    <x-button type="link" :href="route('provider.categories.index')" variant="link" label="Ver Todas" size="sm" />
+                </x-slot:headerActions>
 
-                    <!-- Mobile View -->
-                    <div class="mobile-view">
-                        <div class="list-group">
-                            @foreach ($recent as $category)
-                            <div class="list-group-item py-3">
-                                <div class="d-flex align-items-start">
-                                    @if ($category->parent)
-                                    <i
-                                        class="bi bi-arrow-return-right text-muted me-2 mt-1 subcategory-icon-mobile"></i>
-                                    @endif
-                                    <i class="bi bi-tag text-muted me-2 mt-1"></i>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-2">{{ $category->name }}</div>
-                                        <div class="d-flex gap-2 flex-wrap">
+                @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
+                    <x-slot:desktop>
+                        <x-resource-table>
+                            <x-slot:thead>
+                                <tr>
+                                    <th>Categoria</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Criada em</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </x-slot:thead>
+                            <x-slot:tbody>
+                                @foreach ($recent as $category)
+                                    <tr>
+                                        <td>
+                                            <x-resource-info
+                                                :title="$category->name"
+                                                icon="tag"
+                                                :subtitle="$category->parent ? 'Subcategoria de ' . $category->parent->name : null"
+                                            />
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ $category->parent_id ? 'Subcategoria' : 'Categoria' }}</small>
+                                        </td>
+                                        <td>
                                             <x-status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
-                                        </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ $category->created_at?->format('d/m/Y') }}</small>
+                                        </td>
+                                        <x-table-actions>
+                                            <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" size="sm" title="Visualizar" />
+                                            <x-button type="link" :href="route('provider.categories.edit', $category->slug)" variant="primary" icon="pencil-square" size="sm" title="Editar" />
+                                        </x-table-actions>
+                                    </tr>
+                                @endforeach
+                            </x-slot:tbody>
+                        </x-resource-table>
+                    </x-slot:desktop>
+
+                    <x-slot:mobile>
+                        @foreach ($recent as $category)
+                            <x-resource-mobile-item>
+                                <x-resource-info
+                                    :title="$category->name"
+                                    icon="tag"
+                                />
+                                <x-slot:description>
+                                    @if($category->parent)
+                                        <x-resource-info
+                                            :title="'Pai: ' . $category->parent->name"
+                                            icon="arrow-return-right"
+                                            class="mt-1"
+                                        />
+                                    @endif
+                                    <div class="mt-2">
+                                        <x-status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
                                     </div>
-                                    <div class="ms-2">
-                                        <x-button type="link" :href="route('provider.categories.show', $category->slug)"
-                                            variant="info" size="sm" icon="eye" />
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @else
-                    <div class="p-4">
-                        <p class="text-muted mb-0">
-                            Nenhuma categoria recente encontrada. Cadastre novas categorias para visualizar
-                            aqui.
-                        </p>
-                    </div>
-                    @endif
-                </div>
-            </div>
+                                </x-slot:description>
+                                <x-slot:footer>
+                                    <small class="text-muted">{{ $category->created_at?->format('d/m/Y') }}</small>
+                                </x-slot:footer>
+                                <x-slot:actions>
+                                    <x-table-actions mobile>
+                                        <x-button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" size="sm" />
+                                        <x-button type="link" :href="route('provider.categories.edit', $category->slug)" variant="primary" icon="pencil-square" size="sm" />
+                                    </x-table-actions>
+                                </x-slot:actions>
+                            </x-resource-mobile-item>
+                        @endforeach
+                    </x-slot:mobile>
+                @else
+                    <x-empty-state resource="categorias recentes" />
+                @endif
+            </x-resource-list-card>
         </div>
 
         <!-- Insights e Atalhos -->

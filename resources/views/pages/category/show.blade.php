@@ -40,38 +40,48 @@
         <p class="text-muted mb-0">Visualize as informações completas da categoria</p>
     </x-page-header>
 
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
             <div class="row g-4">
                 {{-- Primeira Linha: Informações Principais --}}
                 <div class="col-md-5">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1">Nome</label>
-                        <h5 class="mb-0 fw-bold">
-                            {{ $category->name }}
-                        </h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="item-icon">
+                            <i class="bi bi-tag"></i>
+                        </div>
+                        <div>
+                            <label class="text-muted small d-block mb-1">Nome da Categoria</label>
+                            <h5 class="mb-0 fw-bold">{{ $category->name }}</h5>
+                        </div>
                     </div>
                 </div>
 
                 @if ($category->parent)
                 <div class="col-md-4">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1">Categoria Pai</label>
-                        <h5 class="mb-0">
-                            <a href="{{ route('provider.categories.show', $category->parent->slug) }}"
-                                class="text-decoration-none d-inline-flex align-items-center">
-                                <i class="bi bi-folder2-open me-2 text-primary"></i>
-                                {{ $category->parent->name }}
-                            </a>
-                        </h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="item-icon">
+                            <i class="bi bi-folder2-open"></i>
+                        </div>
+                        <div>
+                            <label class="text-muted small d-block mb-1">Categoria Pai</label>
+                            <h5 class="mb-0">
+                                <a href="{{ route('provider.categories.show', $category->parent->slug) }}"
+                                    class="text-decoration-none text-primary fw-semibold">
+                                    {{ $category->parent->name }}
+                                </a>
+                            </h5>
+                        </div>
                     </div>
                 </div>
                 @endif
 
                 <div class="col-md-3">
-                    <div class="d-flex flex-column {{ !$category->parent ? 'offset-md-4' : '' }}">
-                        <label class="text-muted small mb-1">Status</label>
+                    <div class="d-flex align-items-center gap-3 {{ !$category->parent ? 'offset-md-4' : '' }}">
+                        <div class="item-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
                         <div>
+                            <label class="text-muted small d-block mb-1">Status Atual</label>
                             <x-status-badge :item="$category" />
                         </div>
                     </div>
@@ -83,93 +93,114 @@
                 </div>
 
                 <div class="col-md-4 mt-2">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1"><i class="bi bi-calendar-plus me-1"></i>Criado em</label>
-                        <h6 class="mb-0 text-dark">{{ $category->created_at?->format('d/m/Y H:i') }}</h6>
-                    </div>
+                    <x-resource-info
+                        title="Criado em"
+                        :subtitle="$category->created_at?->format('d/m/Y H:i')"
+                        icon="calendar-plus"
+                        class="small"
+                    />
                 </div>
 
                 <div class="col-md-4 mt-2">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1"><i class="bi bi-calendar-check me-1"></i>Atualizado em</label>
-                        <h6 class="mb-0 text-dark">{{ $category->updated_at?->format('d/m/Y H:i') }}</h6>
-                    </div>
+                    <x-resource-info
+                        title="Atualizado em"
+                        :subtitle="$category->updated_at?->format('d/m/Y H:i')"
+                        icon="calendar-check"
+                        class="small"
+                    />
                 </div>
 
                 @if($category->deleted_at)
                 <div class="col-md-4 mt-2">
-                    <div class="d-flex flex-column">
-                        <label class="text-muted small mb-1 text-danger"><i class="bi bi-calendar-x me-1"></i>Deletado em</label>
-                        <h6 class="mb-0 text-danger">{{ $category->deleted_at->format('d/m/Y H:i') }}</h6>
-                    </div>
+                    <x-resource-info
+                        title="Deletado em"
+                        :subtitle="$category->deleted_at->format('d/m/Y H:i')"
+                        icon="calendar-x"
+                        class="small"
+                        iconClass="text-danger"
+                        titleClass="text-danger"
+                    />
                 </div>
                 @endif
             </div>
 
             @if (!$category->parent_id)
-            @php
-                $children = $category->children;
-            @endphp
-            @if ($children->isNotEmpty())
-            <div class="mt-4">
-                <h5 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Subcategorias ({{ $children->count() }})
-                </h5>
-                <!-- Desktop View -->
-                <div class="desktop-view">
-                    <div class="table-responsive">
-                        <table class="modern-table table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th class="text-center">Tipo</th>
-                                    <th class="text-center">Status</th>
-                                    <th>Criado em</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($children as $child)
-                                <tr>
-                                    <td>{{ $child->name }}</td>
-                                    <td class="text-center">
-                                        <span class="badge bg-primary">Subcategoria</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <x-status-badge :item="$child" />
-                                    </td>
-                                    <td>{{ $child->created_at?->format('d/m/Y H:i') }}</td>
-                                    <td class="text-center">
-                                        <x-button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                @php
+                    $children = $category->children;
+                @endphp
+                @if ($children->isNotEmpty())
+                    <div class="mt-5">
+                        <x-resource-list-card
+                            title="Subcategorias"
+                            mobileTitle="Subcategorias"
+                            icon="diagram-3"
+                            :count="$children->count()"
+                            class="border shadow-none"
+                        >
+                            <x-slot:desktop>
+                                <x-resource-table>
+                                    <x-slot:thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th width="150" class="text-center">Tipo</th>
+                                            <th width="120" class="text-center">Status</th>
+                                            <th width="180">Criado em</th>
+                                            <th width="100" class="text-center">Ações</th>
+                                        </tr>
+                                    </x-slot:thead>
+                                    <x-slot:tbody>
+                                        @foreach ($children as $child)
+                                            <tr>
+                                                <td>
+                                                    <x-resource-info
+                                                        :title="$child->name"
+                                                        icon="tag"
+                                                    />
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-primary border border-primary-subtle px-2 py-1">Subcategoria</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <x-status-badge :item="$child" />
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ $child->created_at?->format('d/m/Y H:i') }}</small>
+                                                </td>
+                                                <td class="text-center">
+                                                    <x-button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </x-slot:tbody>
+                                </x-resource-table>
+                            </x-slot:desktop>
 
-                <!-- Mobile View -->
-                <div class="mobile-view">
-                    <div class="list-group">
-                        @foreach ($children as $child)
-                        <a href="{{ route('provider.categories.show', $child->slug) }}"
-                            class="list-group-item list-group-item-action py-3">
-                            <div class="d-flex align-items-start">
-                                <i class="bi bi-tag text-muted me-2 mt-1"></i>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold mb-2">{{ $child->name }}</div>
-                                    <div class="d-flex gap-2 flex-wrap">
-                                        <x-status-badge :item="$child" />
-                                    </div>
-                                </div>
-                                <i class="bi bi-chevron-right text-muted ms-2"></i>
-                            </div>
-                        </a>
-                        @endforeach
+                            <x-slot:mobile>
+                                @foreach ($children as $child)
+                                    <x-resource-mobile-item>
+                                        <x-resource-info
+                                            :title="$child->name"
+                                            icon="tag"
+                                        />
+                                        <x-slot:description>
+                                            <div class="mt-2">
+                                                <x-status-badge :item="$child" />
+                                            </div>
+                                        </x-slot:description>
+                                        <x-slot:footer>
+                                            <small class="text-muted">{{ $child->created_at?->format('d/m/Y') }}</small>
+                                        </x-slot:footer>
+                                        <x-slot:actions>
+                                            <x-table-actions mobile>
+                                                <x-button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" icon="eye" size="sm" />
+                                            </x-table-actions>
+                                        </x-slot:actions>
+                                    </x-resource-mobile-item>
+                                @endforeach
+                            </x-slot:mobile>
+                        </x-resource-list-card>
                     </div>
-                </div>
-            </div>
-            @endif
+                @endif
             @endif
 
             @if ($parentIsInactive && !$isCurrentlyActive)

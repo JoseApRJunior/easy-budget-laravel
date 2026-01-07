@@ -1,6 +1,6 @@
-@extends('layouts.public')
+@extends('layouts.app')
 
-@section('title', 'Orçamento Compartilhado')
+@section('title', 'Orçamento: ' . $budget->code)
 
 @section('content')
 <div class="container mt-5">
@@ -22,7 +22,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card-body">
                     <!-- Informações do Cliente -->
                     <div class="row mb-4">
@@ -51,7 +51,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <h5 class="text-primary mb-3">Detalhes do Orçamento</h5>
                             <div class="card border">
@@ -76,7 +76,7 @@
                                     </div>
                                     <div class="mb-2">
                                         <strong>Compartilhado por:</strong>
-                                        <span class="text-muted">{{ $share->created_at->diffForHumans() }}</span>
+                                        <span class="text-muted">{{ $budgetShare->created_at->diffForHumans() }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -193,16 +193,16 @@
                                     <x-button type="button" variant="secondary" icon="download" label="Download PDF" onclick="downloadPDF()" />
                                     @endif
                                 </div>
-                                
+
                                 <div class="d-flex gap-2">
                                     @if($permissions['can_approve'] ?? false && $budget->status === 'pending')
                                     <x-button type="button" variant="success" icon="check-circle" label="Aprovar Orçamento" onclick="approveBudget()" />
                                     @endif
-                                    
+
                                     @if($permissions['can_comment'] ?? false)
-                                    <x-button 
-                                        type="button" 
-                                        variant="info" 
+                                    <x-button
+                                        type="button"
+                                        variant="info"
                                         onclick="showCommentModal()"
                                         icon="chat-left-text"
                                         label="Adicionar Comentário" />
@@ -212,11 +212,11 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card-footer text-muted text-center">
                     <small>
                         <i class="bi bi-shield-check me-2"></i>
-                        Acesso seguro via link compartilhado • 
+                        Acesso seguro via link compartilhado •
                         <span id="accessTime"></span>
                     </small>
                 </div>
@@ -287,26 +287,26 @@ function showItemDetails(item) {
             <div class="col-md-6">
                 <h6><strong>Serviço:</strong></h6>
                 <p>${item.service_name}</p>
-                
+
                 <h6><strong>Descrição:</strong></h6>
                 <p>${item.description || 'Sem descrição'}</p>
-                
+
                 <h6><strong>Quantidade:</strong></h6>
                 <p>${item.quantity}</p>
             </div>
             <div class="col-md-6">
                 <h6><strong>Valor Unitário:</strong></h6>
                 <p>R$ ${parseFloat(item.unit_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                
+
                 <h6><strong>Subtotal:</strong></h6>
                 <p class="text-primary fw-bold">R$ ${parseFloat(item.subtotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                
+
                 <h6><strong>Observações:</strong></h6>
                 <p>${item.notes || 'Sem observações'}</p>
             </div>
         </div>
     `;
-    
+
     document.getElementById('itemDetailsContent').innerHTML = content;
     const modal = new bootstrap.Modal(document.getElementById('itemDetailsModal'));
     modal.show();
@@ -317,14 +317,14 @@ function printBudget() {
 }
 
 function downloadPDF() {
-    const token = '{{ $share->token }}';
-    window.location.href = `/budget-share/${token}/download`;
+    const token = '{{ $budgetShare->share_token }}';
+    window.location.href = `/budgets/shared/${token}/download`;
 }
 
 function approveBudget() {
     if (confirm('Tem certeza que deseja aprovar este orçamento? Esta ação não pode ser desfeita.')) {
-        const token = '{{ $share->token }}';
-        fetch(`/budget-share/${token}/approve`, {
+        const token = '{{ $budgetShare->share_token }}';
+        fetch(`/budgets/shared/${token}/accept`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -366,11 +366,11 @@ function showCommentModal() {
 
 document.getElementById('commentForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const formData = new FormData(this);
-    const token = '{{ $share->token }}';
-    
-    fetch(`/budget-share/${token}/comment`, {
+    const token = '{{ $budgetShare->share_token }}';
+
+    fetch(`/budgets/shared/${token}/comment`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -428,77 +428,4 @@ const styleSheet = document.createElement('style');
 styleSheet.textContent = printStyles;
 document.head.appendChild(styleSheet);
 </script>
-@endsection
-
-@section('styles')
-<style>
-.public-layout {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    padding: 2rem 0;
-}
-
-.card {
-    border: none;
-    border-radius: 15px;
-    overflow: hidden;
-}
-
-.card-header {
-    border-radius: 15px 15px 0 0 !important;
-    padding: 1.5rem;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(0,0,0,.05);
-}
-
-.text-success {
-    color: #28a745 !important;
-}
-
-.text-primary {
-    color: #007bff !important;
-}
-
-.btn {
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-}
-
-.btn-outline-primary {
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.btn-outline-primary:hover {
-    background-color: #007bff;
-    color: white;
-}
-
-.badge {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .table-responsive {
-        font-size: 0.9rem;
-    }
-    
-    .btn {
-        font-size: 0.9rem;
-        padding: 0.4rem 0.8rem;
-    }
-}
-</style>
 @endsection

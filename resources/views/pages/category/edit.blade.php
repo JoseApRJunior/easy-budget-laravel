@@ -35,97 +35,112 @@
             $isDisabled = ($isCurrentlyActive && !$canDeactivate) || (!$isCurrentlyActive && !$canActivate);
         @endphp
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                @if ($errors->any())
-                    <div class="alert alert-danger" role="alert">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-                <form action="{{ route('provider.categories.update', $category->slug) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="row g-4">
-                        <div class="col-md-12">
-                            <div class="form-floating mb-3">
-                                <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                    id="name" name="name" placeholder="Nome da Categoria"
-                                    value="{{ old('name', $category->name) }}" required>
-                                <label for="name">Nome da Categoria *</label>
-                                @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="parent_id" class="form-label">Categoria Pai (opcional)</label>
-                                @if (!$canChangeParent)
-                                    <input type="hidden" name="parent_id" value="{{ $category->parent_id }}">
-                                    <select class="form-select tom-select" id="parent_id" disabled>
-                                        <option value="">Sem categoria pai</option>
-                                        @foreach ($parents ?? collect() as $p)
-                                            <option value="{{ $p->id }}"
-                                                {{ (string) $category->parent_id === (string) $p->id ? 'selected' : '' }}>
-                                                {{ $p->name }} {{ !$p->is_active ? '(Inativo)' : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <div class="alert alert-warning mt-2 mb-0" role="alert">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                        Esta categoria não pode ter a categoria pai alterada porque possui subcategorias, serviços ou produtos vinculados.
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <form action="{{ route('provider.categories.update', $category->slug) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                id="name" name="name" placeholder="Nome da Categoria"
+                                value="{{ old('name', $category->name) }}" required autofocus>
+                            <label for="name">Nome da Categoria *</label>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="parent_id" class="form-label small fw-bold text-muted">Categoria Pai (opcional)</label>
+                            @if (!$canChangeParent)
+                                <input type="hidden" name="parent_id" value="{{ $category->parent_id }}">
+                                <select class="form-select tom-select" id="parent_id" disabled>
+                                    <option value="">Sem categoria pai</option>
+                                    @foreach ($parents ?? collect() as $p)
+                                        <option value="{{ $p->id }}"
+                                            {{ (string) $category->parent_id === (string) $p->id ? 'selected' : '' }}>
+                                            {{ $p->name }} {{ !$p->is_active ? '(Inativo)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="alert alert-warning mt-2 mb-0 border-0 bg-warning bg-opacity-10 py-2" role="alert">
+                                    <div class="d-flex align-items-center small text-dark">
+                                        <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+                                        <span>Bloqueado: Esta categoria possui subcategorias, serviços ou produtos vinculados.</span>
                                     </div>
-                                @else
-                                    <select class="form-select tom-select" id="parent_id" name="parent_id">
-                                        <option value="">Sem categoria pai</option>
-                                        @foreach ($parents ?? collect() as $p)
-                                            <option value="{{ $p->id }}"
-                                                {{ (string) old('parent_id', $category->parent_id) === (string) $p->id ? 'selected' : '' }}>
-                                                {{ $p->name }} {{ !$p->is_active ? '(Inativo)' : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @endif
-                            </div>
-                            @if ($isDisabled)
-                                <input type="hidden" name="is_active" value="{{ $isCurrentlyActive ? '1' : '0' }}">
-                            @else
-                                <input type="hidden" name="is_active" value="0">
-                            @endif
-                            <div class="form-check form-switch mt-3">
-                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                    value="1" {{ $isCurrentlyActive ? 'checked' : '' }}
-                                    {{ $isDisabled ? 'disabled' : '' }}>
-                                <label class="form-check-label" for="is_active">Ativo</label>
-                                @error('is_active')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            @if ($parentIsInactive)
-                                <div class="alert alert-info mt-2 mb-0" role="alert">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    Esta subcategoria não pode ser ativada porque a categoria pai <strong>{{ $category->parent->name }}</strong> está inativa.
                                 </div>
-                            @endif
-                            @if (!$canDeactivate)
-                                <div class="alert alert-warning mt-2 mb-0" role="alert">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    Não é possível desativar esta categoria: ela possui serviços ou produtos vinculados.
+                            @else
+                                <select class="form-select tom-select" id="parent_id" name="parent_id">
+                                    <option value="">Sem categoria pai (Esta será uma Categoria Principal)</option>
+                                    @foreach ($parents ?? collect() as $p)
+                                        <option value="{{ $p->id }}"
+                                            {{ (string) old('parent_id', $category->parent_id) === (string) $p->id ? 'selected' : '' }}>
+                                            {{ $p->name }} {{ !$p->is_active ? '(Inativo)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="form-text small">
+                                    Subcategorias herdam o comportamento e status da categoria pai.
                                 </div>
                             @endif
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <div>
-                            <x-back-button index-route="provider.categories.index" label="Cancelar" />
+                    <div class="col-md-5">
+                        <div class="bg-light p-3 rounded-3 border h-100">
+                            <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                <i class="bi bi-gear-fill me-2 text-primary"></i>Configurações
+                            </h6>
+
+                            @if ($isDisabled)
+                                <input type="hidden" name="is_active" value="{{ $isCurrentlyActive ? '1' : '0' }}">
+                            @else
+                                <input type="hidden" name="is_active" value="0">
+                            @endif
+
+                            <div class="form-check form-switch custom-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                    value="1" {{ $isCurrentlyActive ? 'checked' : '' }}
+                                    {{ $isDisabled ? 'disabled' : '' }}>
+                                <label class="form-check-label fw-semibold" for="is_active">Categoria Ativa</label>
+                                <p class="text-muted small mb-0">Status atual: <strong>{{ $isCurrentlyActive ? 'Ativo' : 'Inativo' }}</strong></p>
+                                
+                                @if ($parentIsInactive)
+                                    <div class="alert alert-info mt-2 mb-0 border-0 bg-info bg-opacity-10 py-2" role="alert">
+                                        <div class="d-flex align-items-center small text-dark">
+                                            <i class="bi bi-info-circle-fill me-2 text-info"></i>
+                                            <span>O pai está inativo. Ative o pai primeiro.</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if (!$canDeactivate && $isCurrentlyActive)
+                                    <div class="alert alert-warning mt-2 mb-0 border-0 bg-warning bg-opacity-10 py-2" role="alert">
+                                        <div class="d-flex align-items-center small text-dark">
+                                            <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+                                            <span>Possui itens vinculados.</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @error('is_active')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                        <x-button type="submit" icon="check-circle" label="Salvar" />
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <hr class="my-4 opacity-25">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <x-back-button index-route="provider.categories.index" label="Cancelar" />
+                    <x-button type="submit" icon="check-circle" label="Salvar Alterações" variant="primary" />
+                </div>
+            </form>
         </div>
+    </div>
     </x-page-container>
 @endsection

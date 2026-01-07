@@ -61,9 +61,13 @@ class BudgetShareController extends Controller
     /**
      * Rejeita um compartilhamento (recusa o acesso)
      */
-    public function rejectShare(string $token): RedirectResponse
+    public function rejectShare(string $token, Request $request): JsonResponse|RedirectResponse
     {
         $result = $this->budgetShareService->rejectShare($token);
+
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
+        }
 
         if (! $result->isSuccess()) {
             return redirect()->back()
@@ -271,16 +275,36 @@ class BudgetShareController extends Controller
     /**
      * Aprova um orçamento via compartilhamento
      */
-    public function approve(string $token): RedirectResponse
+    public function approve(string $token, Request $request): JsonResponse|RedirectResponse
     {
         $result = $this->budgetShareService->approveBudget($token);
 
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
+        }
+
         if ($result->isSuccess()) {
-            return redirect()->route('budget-share.access', $token)
+            return redirect()->route('budgets.public.shared.view', $token)
                 ->with('success', 'Orçamento aprovado com sucesso!');
         }
 
-        return redirect()->route('budget-share.access', $token)
+        return redirect()->route('budgets.public.shared.view', $token)
             ->with('error', $this->getServiceErrorMessage($result, 'Erro ao aprovar orçamento'));
+    }
+
+    /**
+     * Adiciona um comentário ao orçamento
+     */
+    public function addComment(string $token, Request $request): JsonResponse
+    {
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+
+        $result = $this->budgetShareService->addComment($token, $request->only(['comment', 'name', 'email']));
+
+        return $this->jsonResponse($result);
     }
 }

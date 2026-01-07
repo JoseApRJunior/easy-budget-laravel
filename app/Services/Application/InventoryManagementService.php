@@ -891,4 +891,36 @@ class InventoryManagementService extends AbstractBaseService
             ];
         });
     }
+
+    /**
+     * Atualiza os limites de estoque (mínimo e máximo).
+     */
+    public function updateStockLimits(int $productId, int $minQuantity, ?int $maxQuantity): ServiceResult
+    {
+        return $this->safeExecute(function () use ($productId, $minQuantity, $maxQuantity) {
+            $inventory = $this->inventoryRepository->findByProduct($productId);
+
+            if (! $inventory) {
+                $product = $this->productRepository->find($productId);
+                if (! $product) {
+                    throw new Exception('Produto não encontrado.');
+                }
+
+                $inventory = $this->inventoryRepository->create([
+                    'tenant_id' => $product->tenant_id,
+                    'product_id' => $productId,
+                    'quantity' => 0,
+                    'min_quantity' => $minQuantity,
+                    'max_quantity' => $maxQuantity,
+                ]);
+            } else {
+                $this->inventoryRepository->update($inventory->id, [
+                    'min_quantity' => $minQuantity,
+                    'max_quantity' => $maxQuantity,
+                ]);
+            }
+
+            return $inventory->fresh();
+        });
+    }
 }

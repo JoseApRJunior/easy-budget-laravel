@@ -83,6 +83,7 @@ Route::group([], function () {
         Route::get('/shared/{token}', [BudgetShareController::class, 'access'])->name('shared.view');
         Route::post('/shared/{token}/accept', [BudgetShareController::class, 'approve'])->name('shared.accept');
         Route::post('/shared/{token}/reject', [BudgetShareController::class, 'rejectShare'])->name('shared.reject');
+        Route::post('/shared/{token}/comment', [BudgetShareController::class, 'addComment'])->name('shared.comment');
     });
 
 
@@ -393,6 +394,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/export-stock-turnover', [InventoryController::class, 'exportStockTurnover'])->name('export-stock-turnover');
         Route::get('/export-most-used', [InventoryController::class, 'exportMostUsed'])->name('export-most-used');
         Route::get('/{sku}', [InventoryController::class, 'show'])->name('show');
+        Route::post('/{sku}/limits', [InventoryController::class, 'updateLimits'])->name('limits.update');
 
         // Entrada e saída de estoque
         Route::get('/{sku}/entry', [InventoryController::class, 'entryForm'])->name('entry');

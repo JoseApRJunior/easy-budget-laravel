@@ -125,10 +125,10 @@
                                         @if ($category->parent_id && $category->parent)
                                             <x-resource-info
                                                 :title="$category->parent->name"
-                                                icon="tag"
+                                                icon="folder2-open"
                                             />
                                         @else
-                                            <span class=" small">—</span>
+                                            <span class="small text-muted opacity-50">—</span>
                                         @endif
                                     </td>
                                     <td>
