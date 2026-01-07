@@ -17,14 +17,15 @@
 3. [Create Pattern](#-3-create-pattern) - Formulário de criação
 4. [Edit Pattern](#-4-edit-pattern) - Formulário de edição
 5. [Show Pattern](#-5-show-detalhes-pattern) - Visualização de detalhes
-6. [Componentes](#-padrões-de-componentes) - Badges, botões, modais
-7. [Ícones](#-ícones-bootstrap-icons-por-contexto) - Referência de ícones
-8. [Responsividade](#-responsividade) - Classes responsivas
-9. [Checklist](#-checklist-de-implementação) - Verificação antes do commit
-10. [Referência Rápida](#-referência-rápida---copy--paste) - Templates prontos
-11. [Integração com Backend](#-integração-com-backend) - Controllers, Services e Repositories
-12. [REPORT Pattern](#-11-report-pattern) - Filtros de Data e Relatórios
-13. [MODAL Pattern](#-12-modal-pattern) - Padrões de Modal (Ex: Exclusão)
+6. [Componentes de Listagem](#-componentes-de-listagem-padronizados) - List-Card, Table, Mobile-Item
+7. [Componentes](#-padrões-de-componentes) - Badges, botões, modais
+8. [Ícones](#-ícones-bootstrap-icons-por-contexto) - Referência de ícones
+9. [Responsividade](#-responsividade) - Classes responsivas
+10. [Checklist](#-checklist-de-implementação) - Verificação antes do commit
+11. [Referência Rápida](#-referência-rápida---copy--paste) - Templates prontos
+12. [Integração com Backend](#-integração-com-backend) - Controllers, Services e Repositories
+13. [REPORT Pattern](#-11-report-pattern) - Filtros de Data e Relatórios
+14. [MODAL Pattern](#-12-modal-pattern) - Padrões de Modal (Ex: Exclusão)
 
 ---
 
@@ -39,10 +40,10 @@ O padrão de relatórios deve seguir a estrutura de filtros com estado inicial v
 #### Padrão de Campos de Formulário (Create/Edit)
 Para campos de entrada em formulários, seguir a estrutura utilizada no Budget Create:
 - **Label:** `form-label small fw-bold text-muted text-uppercase`.
-- **Input de Data:** Priorizar `type="text"` com máscara `DD/MM/AAAA` e `placeholder="DD/MM/AAAA"`. 
+- **Input de Data:** Priorizar `type="text"` com máscara `DD/MM/AAAA` e `placeholder="DD/MM/AAAA"`.
   - **Motivo:** Evita conflitos com `TomSelect` e garante consistência visual em todos os navegadores.
   - **Implementação:** Utilizar a biblioteca `VanillaMask` para formatação automática e inicializar no `DOMContentLoaded`.
-- **Selects:** Utilizar a classe `tom-select` para busca dinâmica. 
+- **Selects:** Utilizar a classe `tom-select` para busca dinâmica.
   - **Importante:** Sempre inicializar o `TomSelect` em novos elementos dinâmicos (como linhas de itens) para garantir o funcionamento da busca.
   - **Exemplo de Inicialização Dinâmica:**
     ```javascript
@@ -54,7 +55,7 @@ Para campos de entrada em formulários, seguir a estrutura utilizada no Budget C
             });
         }
     };
-    
+
     // Ao adicionar nova linha:
     const newSelect = row.querySelector('.tom-select');
     initTomSelect(newSelect);
@@ -438,135 +439,95 @@ if (deleteModal) {
 
 ---
 
+### 📦 Componentes de Listagem Padronizados
+
+Para garantir a consistência e o DRY (Don't Repeat Yourself), utilize os componentes Blade criados especificamente para telas de listagem.
+
+#### 1. `<x-resource-list-card>`
+O container principal que gerencia o layout Desktop vs Mobile automaticamente.
+- **Props:** `title`, `mobileTitle`, `icon`, `total`.
+- **Slots:** `headerActions`, `desktop`, `mobile`, `footer`.
+- **Dica:** O conteúdo do slot `mobile` é automaticamente envolvido pelas classes `list-group list-group-flush`.
+
+#### 2. `<x-resource-table>`
+Padroniza a estrutura de tabelas desktop, incluindo o wrapper responsivo e classes modernas.
+- **Slots:** `thead`, `tbody`, `tfoot`.
+- **Dica:** O conteúdo do slot `tbody` é automaticamente envolvido pela tag `<tbody>`.
+
+#### 3. `<x-resource-mobile-item>`
+Padroniza o item de lista para visualização mobile.
+- **Props:** `icon` (padrão: `tag-fill`).
+- **Slots:** `default` (título), `description`, `footer`, `actions`.
+
+#### 4. `<x-table-actions>`
+Gerencia o alinhamento dos botões de ação em tabelas (desktop) e listas (mobile).
+- **Props:** `mobile` (boolean).
+- **Uso:** Envolva seus botões (ou o componente `x-action-buttons`) com este componente.
+
+---
+
 ## 📋 2. INDEX (Listagem) Pattern
 
-### Cabeçalho
+A tela de listagem deve ser limpa e seguir o uso dos componentes padronizados.
 
+#### Estrutura Recomendada:
 ```blade
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-0">
-            <i class="bi bi-[icone] me-2"></i>[Módulo Plural]
-        </h1>
-        <p class="text-muted">Lista de todos os [itens] registrados no sistema</p>
-    </div>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('[modulo].dashboard') }}">[Módulo]</a></li>
-            <li class="breadcrumb-item active">Listar</li>
-        </ol>
-    </nav>
-</div>
-```
+<x-page-container>
+    <x-page-header title="[Recurso]" icon="[icone]" ... />
 
-### Card de Filtros
+    <x-filter-form ...>
+        <!-- Seus campos de filtro aqui -->
+    </x-filter-form>
 
-```blade
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-    </div>
-    <div class="card-body">
-        <form method="GET" action="{{ route('[modulo].index') }}">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="search">Buscar</label>
-                        <input type="text" class="form-control" id="search" name="search"
-                            value="{{ $filters['search'] ?? '' }}" placeholder="...">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="active">Status</label>
-                        <select class="form-control" id="active" name="active">
-                            <option value="">Todos</option>
-                            <option value="1">Ativo</option>
-                            <option value="0">Inativo</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="d-flex gap-2 flex-nowrap">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i>Filtrar
-                        </button>
-                        <a href="{{ route('[modulo].index') }}" class="btn btn-secondary">
-                            <i class="bi bi-x me-1"></i>Limpar
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-```
+    <x-resource-list-card
+        title="Lista de [Recurso]"
+        mobileTitle="[Recurso]"
+        icon="[icone]"
+        :total="$items->total()"
+    >
+        <x-slot:headerActions>
+            <x-table-header-actions resource="[recurso]" :filters="$filters" />
+        </x-slot:headerActions>
 
-### Card de Tabela
-
-```blade
-<div class="card">
-    <div class="card-header">
-        <div class="row align-items-center">
-            <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                <h5 class="mb-0 d-flex align-items-center flex-wrap">
-                    <span class="me-2">
-                        <i class="bi bi-list-ul me-1"></i>
-                        <span class="d-none d-sm-inline">Lista de [Itens]</span>
-                        <span class="d-sm-none">[Itens]</span>
-                    </span>
-                    <span class="text-muted" style="font-size: 0.875rem;">
-                        ({{ $items->total() }})
-                    </span>
-                </h5>
-            </div>
-            <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                <div class="d-flex justify-content-start justify-content-lg-end">
-                    <a href="{{ route('[modulo].create') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus"></i>
-                        <span class="ms-1">Novo</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <div class="desktop-view">
-            <div class="table-responsive">
-                <table class="modern-table table mb-0">
-                    <thead>
+        <x-slot:desktop>
+            <x-resource-table>
+                <x-slot:thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th class="text-center">Ações</th>
+                    </tr>
+                </x-slot:thead>
+                <x-slot:tbody>
+                    @foreach($items as $item)
                         <tr>
-                            <th>Coluna 1</th>
-                            <th class="text-center">Ações</th>
+                            <td>{{ $item->name }}</td>
+                            <x-table-actions>
+                                <x-action-buttons :item="$item" resource="[recurso]" />
+                            </x-table-actions>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($items as $item)
-                            <tr>
-                                <td>{{ $item->name }}</td>
-                                <td class="text-center">
-                                    <!-- Botões de ação -->
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="X" class="text-center text-muted">
-                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                    <br>
-                                    Nenhum [item] encontrado.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    @if ($items instanceof \Illuminate\Pagination\LengthAwarePaginator && $items->hasPages())
-        @include('partials.components.paginator', ['p' => $items->appends(request()->query()), 'show_info' => true])
-    @endif
-</div>
+                    @endforeach
+                </x-slot:tbody>
+            </x-resource-table>
+        </x-slot:desktop>
+
+        <x-slot:mobile>
+            @foreach($items as $item)
+                <x-resource-mobile-item icon="[icone]">
+                    {{ $item->name }}
+                    <x-slot:actions>
+                        <x-table-actions mobile>
+                            <x-action-buttons :item="$item" resource="[recurso]" size="sm" />
+                        </x-table-actions>
+                    </x-slot:actions>
+                </x-resource-mobile-item>
+            @endforeach
+        </x-slot:mobile>
+
+        <x-slot:footer>
+            {{ $items->links() }}
+        </x-slot:footer>
+    </x-resource-list-card>
+</x-page-container>
 ```
 
 ---

@@ -3,6 +3,7 @@
     'exportFormats' => ['xlsx', 'pdf'], // Formatos de exportação disponíveis
     'filters' => [],             // Filtros atuais para passar na exportação
     'createRoute' => null,       // Rota customizada para criar (opcional)
+    'exportRoute' => null,       // Rota customizada para exportar (opcional)
     'createLabel' => 'Novo',     // Label do botão criar
     'size' => 'sm',              // Tamanho dos botões
     'showExport' => true,        // Mostrar botão de exportação
@@ -10,8 +11,6 @@
 ])
 
 @php
-    $createRoute = $createRoute ?? route('provider.' . $resource . '.create');
-
     // Mapear ícones e estilos por formato
     $formatConfig = [
         'xlsx' => [
@@ -49,12 +48,14 @@
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown{{ ucfirst($resource) }}">
                     @foreach($exportFormats as $format)
                         @if(isset($formatConfig[$format]))
+                            @php
+                                $routeName = $exportRoute ?? 'provider.' . $resource . '.export';
+                                $resolvedExportUrl = Route::has($routeName)
+                                    ? route($routeName, array_merge(collect($filters)->map(fn($v) => is_null($v) ? '' : $v)->toArray(), ['format' => $format]))
+                                    : '#';
+                            @endphp
                             <li>
-                                <a class="dropdown-item"
-                                   href="{{ route('provider.' . $resource . '.export', array_merge(
-                                       collect($filters)->map(fn($v) => is_null($v) ? '' : $v)->toArray(),
-                                       ['format' => $format]
-                                   )) }}">
+                                <a class="dropdown-item" href="{{ $resolvedExportUrl }}">
                                     <i class="bi {{ $formatConfig[$format]['icon'] }} me-2 {{ $formatConfig[$format]['color'] }}"></i>
                                     {{ $formatConfig[$format]['label'] }}
                                 </a>
@@ -66,9 +67,12 @@
         @endif
 
         @if ($showCreate)
+            @php
+                $resolvedCreateRoute = $createRoute ?? (Route::has('provider.' . $resource . '.create') ? route('provider.' . $resource . '.create') : '#');
+            @endphp
             <x-button
                 type="link"
-                :href="$createRoute"
+                :href="$resolvedCreateRoute"
                 :size="$size"
                 icon="plus"
                 :label="$createLabel"

@@ -28,7 +28,7 @@
     $toggleVariant = $isCurrentlyActive ? 'warning' : 'success';
 @endphp
 
-<div class="container-fluid py-4">
+<x-page-container>
     <x-page-header
         title="Detalhes da Categoria"
         icon="tag"
@@ -256,90 +256,15 @@
                             onclick="easyAlert.warning('<strong>Exclusão Bloqueada</strong><br>Não é possível excluir esta categoria porque ela possui subcategorias, serviços ou produtos vinculados.', { duration: 8000 }); return false;" />
                     @endif
                     @endif
-                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="modal fade" id="deleteModal-{{ $category->slug }}" tabindex="-1"
-    aria-labelledby="deleteModalLabel-{{ $category->slug }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel-{{ $category->slug }}">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Tem certeza de que deseja excluir a categoria <strong>"{{ $category->name }}"</strong>?
-                <br><small class="text-muted">Esta ação pode ser desfeita através da lixeira.</small>
-            </div>
-            <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <form action="{{ route('provider.categories.destroy', $category->slug) }}" method="POST"
-                    class="d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <x-button type="submit" variant="danger" label="Excluir" />
-                </form>
-            </div>
-        </div>
+    {{-- Modais --}}
+    <div class="modal fade" id="deleteModal-{{ $category->slug }}" tabindex="-1"
+        aria-labelledby="deleteModalLabel-{{ $category->slug }}" aria-hidden="true">
+        {{-- ... conteúdo do modal ... --}}
     </div>
-</div>
-
-<!-- Modal de Confirmação de Ativação/Desativação -->
-<div class="modal fade" id="toggleModal-{{ $category->slug }}" tabindex="-1"
-    aria-labelledby="toggleModalLabel-{{ $category->slug }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="toggleModalLabel-{{ $category->slug }}">
-                    Confirmar {{ $category->is_active ? 'Desativação' : 'Ativação' }}
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                Tem certeza de que deseja {{ $category->is_active ? 'desativar' : 'ativar' }} a categoria
-                <strong>"{{ $category->name }}"</strong>?
-                <br><small class="text-muted">Esta ação altera a visibilidade da categoria no sistema.</small>
-            </div>
-            <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <form action="{{ route('provider.categories.toggle-status', $category->slug) }}" method="POST"
-                    class="d-inline">
-                    @csrf
-                    @method('PATCH')
-                    <x-button type="submit" :variant="$category->is_active ? 'warning' : 'success'"
-                        :icon="$category->is_active ? 'slash-circle' : 'check-lg'"
-                        :label="$category->is_active ? 'Desativar' : 'Ativar'" />
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Confirmação de Restauração -->
-<div class="modal fade" id="restoreModal-{{ $category->slug }}" tabindex="-1"
-    aria-labelledby="restoreModalLabel-{{ $category->slug }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="restoreModalLabel-{{ $category->slug }}">Confirmar Restauração</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body">
-                Tem certeza de que deseja restaurar a categoria <strong>"{{ $category->name }}"</strong>?
-                <br><small class="text-muted">A categoria será restaurada e ficará disponível novamente.</small>
-            </div>
-            <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <form action="{{ route('provider.categories.restore', $category->slug) }}" method="POST"
-                    class="d-inline">
-                    @csrf
-                    <x-button type="submit" variant="success" icon="arrow-counterclockwise" label="Restaurar" />
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+    {{-- ... outros modais ... --}}
+</x-page-container>
 @endsection

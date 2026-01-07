@@ -1,6 +1,6 @@
 @props([
     'id',                        // ID do formulário
-    'route',                     // Rota do formulário
+    'route' => null,             // Rota do formulário (opcional, padrão: URL atual)
     'method' => 'GET',           // Método HTTP
     'title' => 'Filtros de Busca', // Título do card
     'icon' => 'filter',          // Ícone do título
@@ -14,50 +14,89 @@
 ])
 
 @php
+    $route = $route ?? request()->url();
     $resetRoute = $resetRoute ?? $route;
 @endphp
 
 <div {{ $attributes->merge(['class' => 'card mb-4']) }}>
-    <div class="card-header">
-        <h5 class="mb-0">
-            <i class="bi bi-{{ $icon }} me-1"></i> {{ $title }}
-        </h5>
+    <div class="card-header p-0 border-bottom-0">
+        <button
+            class="btn btn-link w-100 text-start text-decoration-none p-3 d-flex align-items-center justify-content-between"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#collapse{{ $id }}"
+            aria-expanded="false"
+            aria-controls="collapse{{ $id }}"
+        >
+            <h5 class="mb-0 d-flex align-items-center text-dark">
+                <span class="me-2">
+                    <i class="bi bi-{{ $icon }} me-1"></i>
+                    {{ $title }}
+                </span>
+            </h5>
+            <i class="bi bi-chevron-down collapse-icon"></i>
+        </button>
     </div>
-    <div class="card-body">
-        <form id="{{ $id }}" method="{{ $method }}" action="{{ $route }}">
-            @if(strtoupper($method) !== 'GET')
-                @csrf
-                @method($method)
-            @endif
 
-            <div class="row g-3">
-                {{-- Slot para os campos do formulário --}}
-                {{ $slot }}
+    <form id="{{ $id }}" method="{{ $method }}" action="{{ $route }}">
+        @if(strtoupper($method) !== 'GET')
+            @csrf
+            @method($method)
+        @endif
 
-                {{-- Botões de ação --}}
-                <div class="col-12">
-                    <div class="d-flex gap-2">
-                        <x-button
-                            type="submit"
-                            variant="primary"
-                            :icon="$submitIcon"
-                            :label="$submitLabel"
-                            class="flex-grow-1"
-                            id="btn{{ ucfirst($id) }}"
-                        />
-
-                        @if($showResetButton)
-                            <x-button
-                                type="link"
-                                :href="$resetRoute"
-                                variant="outline-secondary"
-                                :icon="$resetIcon"
-                                :label="$resetLabel"
-                            />
-                        @endif
-                    </div>
+        {{-- Área Colapsável (Campos extras) --}}
+        <div id="collapse{{ $id }}" class="collapse d-md-block">
+            <div class="card-body pt-0">
+                <div class="row g-3">
+                    {{ $slot }}
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+
+        {{-- Área Sempre Visível (Botões) --}}
+        <div class="card-footer bg-transparent pt-3 pb-3">
+            <div class="d-flex gap-2">
+                <x-button
+                    type="submit"
+                    variant="primary"
+                    :icon="$submitIcon"
+                    :label="$submitLabel"
+                    class="flex-grow-1"
+                    id="btn{{ ucfirst($id) }}"
+                />
+
+                @if($showResetButton)
+                    <x-button
+                        type="link"
+                        :href="$resetRoute"
+                        variant="outline-secondary"
+                        :icon="$resetIcon"
+                        :label="$resetLabel"
+                    />
+                @endif
+            </div>
+        </div>
+    </form>
 </div>
+
+<style>
+    [data-bs-toggle="collapse"] .collapse-icon {
+        transition: transform 0.3s ease;
+    }
+    [data-bs-toggle="collapse"]:not(.collapsed) .collapse-icon {
+        transform: rotate(180deg);
+    }
+    @media (min-width: 768px) {
+        [data-bs-toggle="collapse"] {
+            pointer-events: none;
+            cursor: default;
+        }
+        [data-bs-toggle="collapse"] .collapse-icon {
+            display: none;
+        }
+        /* No desktop, removemos o padding extra do topo do body se o header existir */
+        .card-body.pt-0 {
+            padding-top: 1rem !important;
+        }
+    }
+</style>

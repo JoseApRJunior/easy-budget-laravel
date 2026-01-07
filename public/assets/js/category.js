@@ -5,16 +5,26 @@ document.addEventListener("DOMContentLoaded", function () {
    const statusSelect = document.getElementById("active");
    const perPageSelect = document.getElementById("per_page");
    const deletedSelect = document.getElementById("deleted");
+   const startDateInput = document.getElementById("start_date");
+   const endDateInput = document.getElementById("end_date");
    const deleteModal = document.getElementById("deleteModal");
+   const confirmAllModal = document.getElementById("confirmAllCategoriesModal");
 
    // Flag para detectar carregamento inicial
    let isInitialLoad = true;
 
-   // Configurar modal de confirmação
+   // Mover modais para o final do body para evitar problemas de posicionamento
+   function moveModalsToBody() {
+      [deleteModal, confirmAllModal].forEach(modal => {
+         if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+         }
+      });
+   }
+
+   // Configurar modal de confirmação de exclusão
    function setupDeleteModal() {
-      if (deleteModal && deleteModal.parentElement !== document.body) {
-         document.body.appendChild(deleteModal);
-      }
+      if (!deleteModal) return;
 
       deleteModal.addEventListener("show.bs.modal", function (event) {
          var button = event.relatedTarget;
@@ -34,20 +44,77 @@ document.addEventListener("DOMContentLoaded", function () {
       });
    }
 
+   // Auxiliar para parsing de datas (formato DD/MM/AAAA)
+   function parseDate(str) {
+      if (!str) return null;
+      const parts = str.split('/');
+      if (parts.length === 3) {
+         const d = new Date(parts[2], parts[1] - 1, parts[0]);
+         return isNaN(d.getTime()) ? null : d;
+      }
+      return null;
+   }
+
+   // Validar intervalo de datas
+   function validateDates() {
+      if (!startDateInput?.value || !endDateInput?.value) return true;
+
+      const start = parseDate(startDateInput.value);
+      const end = parseDate(endDateInput.value);
+
+      if (start && end && start > end) {
+         const message = 'A data inicial não pode ser maior que a data final.';
+         if (window.easyAlert) {
+            window.easyAlert.warning(message);
+         } else {
+            alert(message);
+         }
+         return false;
+      }
+      return true;
+   }
+
    // Configurar formulário de filtros
    function setupFilters() {
       if (filtersForm) {
          filtersForm.addEventListener("submit", function (e) {
-            // Se o campo oculto 'all' existir (vindo do modal), ignora a validação
+            // 1. Validação de intervalo de datas
+            if (!validateDates()) {
+               e.preventDefault();
+               return;
+            }
+
+            // 2. Validação de preenchimento de ambas as datas para busca por período
+            const startVal = (startDateInput?.value || "").trim();
+            const endVal = (endDateInput?.value || "").trim();
+
+            if ((startVal && !endVal) || (!startVal && endVal)) {
+               e.preventDefault();
+               const message = 'Para filtrar por período, informe as datas inicial e final.';
+               if (window.easyAlert) {
+                  window.easyAlert.error(message);
+               } else {
+                  alert(message);
+               }
+               if (!startVal) startDateInput.focus();
+               else endDateInput.focus();
+               return;
+            }
+
+            // 3. Lógica do Modal "Listar Todos"
             if (filtersForm.querySelector('input[name="all"]')) return;
 
             var search = (searchInput?.value || "").trim();
             var status = (statusSelect?.value || "").trim();
             var deleted = (deletedSelect?.value || "").trim();
             
-            // Consideramos filtros ativos se search não estiver vazio,
-            // ou se status não for "Todos" (''), ou se deleted não for "Atuais" ('current')
-            var hasFilters = !!(search || (status !== "") || (deleted !== "current"));
+            var hasFilters = !!(
+               search || 
+               (status !== "all" && status !== "") || 
+               (deleted !== "all") || 
+               startVal || 
+               endVal
+            );
 
             if (!hasFilters) {
                e.preventDefault();
@@ -65,33 +132,34 @@ document.addEventListener("DOMContentLoaded", function () {
          return;
       }
 
+      var modal = new bootstrap.Modal(modalEl);
       var confirmBtn = modalEl.querySelector(".btn-confirm-all-categories");
       
-      // Limpa listeners antigos para evitar múltiplas submissões
-      const newConfirmBtn = confirmBtn.cloneNode(true);
-      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+      if (confirmBtn) {
+         const handleClick = function () {
+            var hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.name = "all";
+            hidden.value = "1";
+            filtersForm.appendChild(hidden);
 
-      var modal = new bootstrap.Modal(modalEl);
+            modal.hide();
+            filtersForm.submit();
+            
+            confirmBtn.removeEventListener("click", handleClick);
+         };
 
-      newConfirmBtn.addEventListener("click", function () {
-         var hidden = document.createElement("input");
-         hidden.type = "hidden";
-         hidden.name = "all";
-         hidden.value = "1";
-         filtersForm.appendChild(hidden);
-
-         modal.hide();
-         filtersForm.submit();
-      });
+         confirmBtn.addEventListener("click", handleClick);
+      }
 
       modal.show();
    }
 
    // Inicialização
+   moveModalsToBody();
    setupDeleteModal();
    setupFilters();
 
-   // Marcar que o carregamento inicial foi completado
    setTimeout(() => {
       isInitialLoad = false;
    }, 100);

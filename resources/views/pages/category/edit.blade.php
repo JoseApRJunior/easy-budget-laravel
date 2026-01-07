@@ -3,7 +3,7 @@
 @section('title', 'Editar Categoria')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-page-container>
         <x-page-header
             title="Editar Categoria"
             icon="pencil-square"
@@ -127,5 +127,5 @@
                 </form>
             </div>
         </div>
-    </div>
+    </x-page-container>
 @endsection

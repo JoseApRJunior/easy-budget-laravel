@@ -17,7 +17,7 @@
 @endpush
 
 @section('content')
-<div class="container-fluid py-4">
+<x-page-container>
     <x-page-header
         title="Produtos"
         icon="box-seam"
@@ -29,10 +29,7 @@
         <p class="text-muted mb-0">Lista de todos os produtos registrados no sistema</p>
     </x-page-header>
 
-    <div class="row">
-        <div class="col-12">
-            <!-- Filtros de Busca -->
-            <x-filter-form :route="route('provider.products.index')" id="filtersFormProducts" :filters="$filters">
+    <x-filter-form :route="route('provider.products.index')" id="filtersFormProducts" :filters="$filters">
                 <x-filter-field
                             col="col-md-4"
                             name="search"
@@ -152,202 +149,163 @@
                         />
                     </x-filter-form>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                            <h5 class="mb-0 d-flex align-items-center flex-wrap">
-                                <span class="me-2">
-                                    <i class="bi bi-list-ul me-1"></i>
-                                    <span class="d-none d-sm-inline">Lista de Produtos</span>
-                                    <span class="d-sm-none">Produtos</span>
-                                </span>
-                                <span class="text-muted" style="font-size: 0.875rem;">
-                                    @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                                    ({{ $products->total() }})
-                                    @else
-                                    ({{ count($products) }})
-                                    @endif
-                                </span>
-                            </h5>
-                        </div>
-                        <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                            <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                                <div class="dropdown">
-                                    <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                                        <li>
-                                            <a class="dropdown-item"
-                                                href="{{ route('provider.products.export',array_merge(collect($filters ?? [])->map(fn($v) => is_null($v) ? '' : $v)->toArray(),['format' => 'xlsx'])) }}">
-                                                <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel
-                                                (.xlsx)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item"
-                                                href="{{ route('provider.products.export',array_merge(collect($filters ?? [])->map(fn($v) => is_null($v) ? '' : $v)->toArray(),['format' => 'pdf'])) }}">
-                                                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+            <x-resource-list-card
+                title="Lista de Produtos"
+                mobileTitle="Produtos"
+                icon="list-ul"
+                :total="$products instanceof \Illuminate\Pagination\LengthAwarePaginator ? $products->total() : count($products)"
+            >
+                <x-slot:headerActions>
+                    <x-table-header-actions
+                        resource="products"
+                        :filters="$filters"
+                        createLabel="Nova"
+                    />
+                </x-slot:headerActions>
 
-                                <x-button type="link" :href="route('provider.products.create')" size="sm" icon="plus" label="Nova" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <!-- Desktop View -->
-                    <div class="desktop-view">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Imagem</th>
-                                        <th>Nome</th>
-                                        <th>SKU</th>
-                                        <th class="text-nowrap">Categoria</th>
-                                        <th class="text-nowrap">Preço de Venda</th>
-                                        <th class="text-nowrap">Margem</th>
-                                        <th class="text-nowrap">Status</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($products as $product)
-                                    <tr>
-                                        <td class="text-center">
-                                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                                                class="img-thumbnail"
-                                                style="width: 50px; height: 50px; object-fit: cover;">
-                                        </td>
-                                        <td>{{ $product->name }}</td>
-                                        <td><span class="text-code">{{ $product->sku }}</span></td>
-                                        <td>{{ $product->category->name ?? 'N/A' }}</td>
-                                        <td class="text-nowrap">{{ $product->formatted_price }}</td>
-                                        <td>
-                                            @if($product->cost_price > 0)
-                                                <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
-                                                    {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
-                                                </span>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-nowrap">
-                                            <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="action-btn-group">
-                                                @if ($product->deleted_at)
-                                                {{-- Produto deletado: visualizar e restaurar --}}
-                                                <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
-                                                <x-button variant="success" icon="arrow-counterclockwise"
-                                                    data-bs-toggle="modal" data-bs-target="#restoreModal"
-                                                    data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                                                    data-product-name="{{ $product->name }}" title="Restaurar" />
-                                                @else
-                                                {{-- Produto ativo: show, edit, delete --}}
-                                                <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
-                                                <x-button type="link" :href="route('provider.products.edit', $product->sku)" icon="pencil-square" title="Editar" />
-                                                <x-button variant="danger" icon="trash"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                    data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                                                    data-product-name="{{ $product->name }}" title="Excluir" />
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center text-muted">
-                                            <i class="bi bi-inbox mb-2" aria-hidden="true"
-                                                style="font-size: 2rem;"></i>
-                                            <br>
-                                            @if (($filters['deleted'] ?? '') === 'only')
+                <x-slot:desktop>
+                    <x-resource-table>
+                        <x-slot:thead>
+                            <tr>
+                                <th>Imagem</th>
+                                <th>Nome</th>
+                                <th>SKU</th>
+                                <th class="text-nowrap">Categoria</th>
+                                <th class="text-nowrap">Preço de Venda</th>
+                                <th class="text-nowrap">Margem</th>
+                                <th class="text-nowrap">Status</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </x-slot:thead>
+
+                        <x-slot:tbody>
+                            @forelse($products as $product)
+                                <tr>
+                                    <td class="text-center">
+                                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                                            class="img-thumbnail"
+                                            style="width: 50px; height: 50px; object-fit: cover;">
+                                    </td>
+                                    <td>{{ $product->name }}</td>
+                                    <td><span class="text-code">{{ $product->sku }}</span></td>
+                                    <td>{{ $product->category->name ?? 'N/A' }}</td>
+                                    <td class="text-nowrap">{{ $product->formatted_price }}</td>
+                                    <td>
+                                        @if($product->cost_price > 0)
+                                            <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                                {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                            </span>
+                                        @else
+                                            <span class="text-muted">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-nowrap">
+                                        <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
+                                    </td>
+                                    <x-table-actions>
+                                        @if ($product->deleted_at)
+                                        {{-- Produto deletado: visualizar e restaurar --}}
+                                        <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
+                                        <x-button variant="success" icon="arrow-counterclockwise"
+                                            data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                            data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
+                                            data-product-name="{{ $product->name }}" title="Restaurar" />
+                                        @else
+                                        {{-- Produto ativo: show, edit, delete --}}
+                                        <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
+                                        <x-button type="link" :href="route('provider.products.edit', $product->sku)" icon="pencil-square" title="Editar" />
+                                        <x-button variant="danger" icon="trash"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                            data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                                            data-product-name="{{ $product->name }}" title="Excluir" />
+                                        @endif
+                                    </x-table-actions>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-5">
+                                        <i class="bi bi-inbox mb-2" aria-hidden="true" style="font-size: 2rem;"></i>
+                                        <br>
+                                        @if (($filters['deleted'] ?? '') === 'only')
                                             Nenhum produto deletado encontrado.
                                             <br>
                                             <small>Você ainda não deletou nenhum produto.</small>
-                                            @else
+                                        @else
                                             Nenhum produto encontrado.
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                            <br>
+                                            <small>Tente ajustar seus filtros ou cadastrar um novo produto.</small>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </x-slot:tbody>
+                    </x-resource-table>
+                </x-slot:desktop>
 
-                    <!-- Mobile View -->
-                    <div class="mobile-view">
-                        <div class="list-group list-group-flush">
-                            @forelse($products as $product)
-                            <div class="list-group-item py-3">
-                                <div class="d-flex align-items-start">
+                <x-slot:mobile>
+                    @forelse($products as $product)
+                            <x-resource-mobile-item>
+                                <x-slot:avatar>
                                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                                        class="rounded me-2"
+                                        class="rounded"
                                         style="width: 40px; height: 40px; object-fit: cover;">
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-1">{{ $product->name }}</div>
-                                        <div class="d-flex gap-2 flex-wrap mb-2">
-                                            <span class="badge bg-secondary">{{ $product->sku }}</span>
-                                            <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <small class="text-muted d-block">Venda: {{ $product->formatted_price }}</small>
-                                                @if($product->cost_price > 0)
-                                                    <small class="text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
-                                                        Margem: {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
-                                                    </small>
-                                                @endif
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                @if ($product->deleted_at)
-                                                <x-button variant="success" size="sm" icon="arrow-counterclockwise"
-                                                    data-bs-toggle="modal" data-bs-target="#restoreModal"
-                                                    data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                                                    data-product-name="{{ $product->name }}" title="Restaurar" />
-                                                @else
-                                                <x-button type="link" :href="route('provider.products.edit', $product->sku)" size="sm" icon="pencil-square" title="Editar" />
-                                                <x-button variant="danger" size="sm" icon="trash"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                    data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                                                    data-product-name="{{ $product->name }}" title="Excluir" />
-                                                @endif
-                                            </div>
-                                        </div>
+                                </x-slot:avatar>
+
+                                <div class="fw-semibold">{{ $product->name }}</div>
+
+                                <x-slot:description>
+                                    <div class="d-flex gap-2 flex-wrap mb-1">
+                                        <span class="badge bg-secondary">{{ $product->sku }}</span>
+                                        <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
                                     </div>
-                                </div>
-                            </div>
-                            @empty
+                                    <small class="text-muted d-block">Venda: {{ $product->formatted_price }}</small>
+                                    @if($product->cost_price > 0)
+                                        <small class="text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
+                                            Margem: {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+                                        </small>
+                                    @endif
+                                </x-slot:description>
+
+                                <x-slot:actions>
+                                    <x-table-actions mobile>
+                                        <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                        @if ($product->deleted_at)
+                                            <x-button variant="success" size="sm" icon="arrow-counterclockwise"
+                                                data-bs-toggle="modal" data-bs-target="#restoreModal"
+                                                data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
+                                                data-product-name="{{ $product->name }}" title="Restaurar" />
+                                        @else
+                                            <x-button type="link" :href="route('provider.products.edit', $product->sku)" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-button variant="danger" size="sm" icon="trash"
+                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                                                data-product-name="{{ $product->name }}" title="Excluir" />
+                                        @endif
+                                    </x-table-actions>
+                                </x-slot:actions>
+                            </x-resource-mobile-item>
+                        @empty
                             <div class="p-4 text-center text-muted">
                                 <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
                                 <br>
                                 @if (($filters['deleted'] ?? '') === 'only')
-                                Nenhum produto deletado encontrado.
+                                    Nenhum produto deletado encontrado.
                                 @else
-                                Nenhum produto encontrado.
+                                    Nenhum produto encontrado.
                                 @endif
                             </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-                @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())
-                @include('partials.components.paginator', [
-                'p' => $products->appends(
-                collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()),
-                'show_info' => true,
-                ])
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
+                        @endforelse
+                    </x-slot:mobile>
+                <x-slot:footer>
+                    @if ($products instanceof \Illuminate\Pagination\LengthAwarePaginator && $products->hasPages())
+                        @include('partials.components.paginator', [
+                            'p' => $products->appends(collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()),
+                            'show_info' => true,
+                        ])
+                    @endif
+                </x-slot:footer>
+            </x-resource-list-card>
+</x-page-container>
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

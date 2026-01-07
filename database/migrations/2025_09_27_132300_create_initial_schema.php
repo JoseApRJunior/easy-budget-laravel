@@ -81,6 +81,8 @@ return new class extends Migration
             $table->json('features')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->unique(['tenant_id', 'code'], 'services_tenant_code_unique');
         });
 
         Schema::create('categories', function (Blueprint $table) {
@@ -391,26 +393,23 @@ return new class extends Migration
             $table->index(['tenant_id', 'slug']);
         });
 
-        Schema::create('budget_items', function (Blueprint $table) {
+        Schema::create('budget_action_history', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('budget_id')->constrained('budgets')->cascadeOnDelete();
-            $table->foreignId('budget_item_category_id')->nullable()->constrained('budget_item_categories')->nullOnDelete();
-            $table->string('title', 255);
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('action', 50);
+            $table->string('old_status', 20)->nullable();
+            $table->string('new_status', 20)->nullable();
             $table->text('description')->nullable();
-            $table->decimal('quantity', 10, 2)->default(1);
-            $table->string('unit', 20);
-            $table->decimal('unit_price', 10, 2);
-            $table->decimal('discount_percentage', 5, 2)->default(0);
-            $table->decimal('tax_percentage', 5, 2)->default(0);
-            $table->decimal('total_price', 10, 2);
-            $table->decimal('net_total', 10, 2);
-            $table->integer('order_index')->default(0);
+            $table->json('changes')->nullable();
             $table->json('metadata')->nullable();
+            $table->string('ip_address', 45)->nullable();
+            $table->string('user_agent', 255)->nullable();
             $table->timestamps();
 
             $table->index(['tenant_id', 'budget_id']);
-            $table->index('budget_item_category_id');
+            $table->index('action');
         });
 
         Schema::create('services', function (Blueprint $table) {
@@ -420,8 +419,9 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories')->restrictOnDelete();
             $table->string('status', 20); // Status enum value
             $table->foreignId('user_confirmation_token_id')->nullable()->constrained('user_confirmation_tokens')->nullOnDelete();
-            $table->string('code', 50)->unique();
+            $table->string('code', 50);
             $table->text('description')->nullable();
+            $table->text('reason')->nullable();
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('total', 10, 2)->default(0);
             $table->date('due_date')->nullable();
@@ -429,6 +429,8 @@ return new class extends Migration
             $table->string('public_token', 43)->nullable()->unique(); // base64url format: 32 bytes = 43 caracteres
             $table->timestamp('public_expires_at')->nullable();
             $table->timestamps();
+
+            $table->unique(['tenant_id', 'code'], 'services_tenant_code_unique');
         });
 
         Schema::table('schedules', function (Blueprint $table) {
@@ -451,10 +453,10 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
+            $table->string('code', 50);
             $table->foreignId('service_id')->constrained('services')->restrictOnDelete();
             $table->foreignId('customer_id')->constrained('customers')->restrictOnDelete();
             $table->string('status', 20); // Status enum value
-            $table->string('code', 50)->unique();
             $table->string('public_hash', 64)->nullable();
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount', 10, 2);
@@ -889,6 +891,7 @@ return new class extends Migration
         Schema::dropIfExists('service_items');
         Schema::dropIfExists('services');
         Schema::dropIfExists('budget_shares');
+        Schema::dropIfExists('budget_action_history');
         Schema::dropIfExists('budgets');
         Schema::dropIfExists('schedules');
         Schema::dropIfExists('user_confirmation_tokens');

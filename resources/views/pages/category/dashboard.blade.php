@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Categorias')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-page-container>
     <!-- Cabeçalho -->
     <x-page-header
         title="Dashboard de Categorias"
@@ -26,80 +26,50 @@
 
     <!-- Cards de Métricas -->
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100 bg-primary bg-gradient text-white">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-tags text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">TOTAL</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold">{{ $total }}</h3>
-                    <p class="text-white text-opacity-75 small-text mb-0">Ativas e inativas.</p>
-                </div>
-            </div>
-        </div>
+        <x-stat-card
+            title="Total"
+            :value="$total"
+            description="Ativas e inativas."
+            icon="tags"
+            variant="primary"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-check-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">ATIVAS</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-success">{{ $active }}</h3>
-                    <p class="text-muted small-text mb-0">Disponíveis para uso.</p>
-                </div>
-            </div>
-        </div>
+        <x-stat-card
+            title="Ativas"
+            :value="$active"
+            description="Disponíveis para uso."
+            icon="check-circle-fill"
+            variant="success"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-secondary bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-pause-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">INATIVAS</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-secondary">{{ $inactive }}</h3>
-                    <p class="text-muted small-text mb-0">Suspensas temporariamente.</p>
-                </div>
-            </div>
-        </div>
+        <x-stat-card
+            title="Inativas"
+            :value="$inactive"
+            description="Suspensas temporariamente."
+            icon="pause-circle-fill"
+            variant="secondary"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-trash3-fill text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">DELETADAS</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-danger">{{ $deleted }}</h3>
-                    <p class="text-muted small-text mb-0">Na lixeira.</p>
-                </div>
-            </div>
-        </div>
+        <x-stat-card
+            title="Deletadas"
+            :value="$deleted"
+            description="Na lixeira."
+            icon="trash3-fill"
+            variant="danger"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">TAXA USO</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-info">{{ $activityRate }}%</h3>
-                    <p class="text-muted small-text mb-0">Percentual de ativas.</p>
-                </div>
-            </div>
-        </div>
+        <x-stat-card
+            title="Taxa Uso"
+            :value="$activityRate . '%'"
+            description="Percentual de ativas."
+            icon="percent"
+            variant="info"
+            isCustom
+        />
     </div>
 
     <!-- Conteúdo Principal -->
@@ -244,5 +214,5 @@
             </div>
         </div>
     </div>
-</div>
+</x-page-container>
 @endsection

@@ -3,7 +3,7 @@
 @section('title', 'Movimentações de Estoque')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-page-container>
     <x-page-header
         title="Movimentações de Estoque"
         icon="arrow-left-right"
@@ -70,249 +70,125 @@
         />
     </x-filter-form>
 
-    <!-- Tabela de Movimentações -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header  py-3">
-            <div class="row align-items-center">
-                <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                    <h5 class="mb-0 fw-bold text-muted small text-uppercase">
-                        <i class="bi bi-arrow-left-right me-2"></i>Registros de Movimentação
-                        <span class="ms-1">({{ $movements->total() }})</span>
-                    </h5>
-                </div>
-                <div class="col-12 col-lg-4 text-start text-lg-end">
-                    <div class="dropdown d-inline-block">
-                        <x-button variant="success" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-movements', array_merge(request()->all(), ['format' => 'xlsx'])) }}">
-                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-movements', array_merge(request()->all(), ['format' => 'pdf'])) }}">
-                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card-body p-0">
-            @if($movements->count() > 0)
-            <!-- Desktop View -->
-            <div class="table-responsive d-none d-md-block">
-                <table class="table table-hover align-middle mb-0 modern-table">
-                    <thead class="">
+    <x-resource-list-card
+        title="Registros de Movimentação"
+        mobileTitle="Movimentações"
+        icon="arrow-left-right"
+        :total="$movements->total()"
+    >
+        <x-slot:headerActions>
+            <x-table-header-actions
+                resource="inventory.movements"
+                exportRoute="provider.inventory.export-movements"
+                :filters="request()->all()"
+                :showCreate="false"
+            />
+        </x-slot:headerActions>
+
+        @if($movements->count() > 0)
+            <x-slot:desktop>
+                <x-resource-table>
+                    <x-slot:thead>
                         <tr>
-                            <th class="px-3">Data/Hora</th>
-                            <th class="px-3">Produto / SKU</th>
-                            <th class="px-3 text-center">Tipo</th>
-                            <th class="px-3 text-center">Quantidade</th>
-                            <th class="px-3 text-center">Saldo Atual</th>
-                            <th class="px-3">Motivo</th>
-                            <th class="px-3 text-center">Ações</th>
+                            <th width="60"><i class="bi bi-clock" aria-hidden="true"></i></th>
+                            <th>Data/Hora</th>
+                            <th>Produto / SKU</th>
+                            <th class="text-center">Tipo</th>
+                            <th class="text-center">Quantidade</th>
+                            <th class="text-center">Saldo Atual</th>
+                            <th>Motivo</th>
+                            <th width="150" class="text-center">Ações</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                    </x-slot:thead>
+
+                    <x-slot:tbody>
                         @foreach($movements as $movement)
-                        <tr>
-                            <td class="px-3 small text-muted">
-                                <div class="fw-bold text-dark">{{ $movement->created_at->format('d/m/Y') }}</div>
-                                <div>{{ $movement->created_at->format('H:i') }}</div>
-                            </td>
-                            <td class="px-3">
-                                <div class="fw-bold text-dark">{{ $movement->product->name }}</div>
-                                <div class="small text-muted">{{ $movement->product->sku }}</div>
-                            </td>
-                            <td class="px-3 text-center">
-                                @php
-                                    $badgeClass = match($movement->type) {
-                                        'entry' => 'success',
-                                        'exit' => 'danger',
-                                        'adjustment' => 'warning',
-                                        'reservation' => 'info',
-                                        'cancellation' => 'dark',
-                                        default => 'secondary'
-                                    };
-                                    $typeLabel = match($movement->type) {
-                                        'entry' => 'Entrada',
-                                        'exit' => 'Saída',
-                                        'adjustment' => 'Ajuste',
-                                        'reservation' => 'Reserva',
-                                        'cancellation' => 'Cancel.',
-                                        default => ucfirst($movement->type)
-                                    };
-                                    $icon = match($movement->type) {
-                                        'entry' => 'plus-circle',
-                                        'exit' => 'dash-circle',
-                                        'adjustment' => 'sliders',
-                                        'reservation' => 'lock',
-                                        'cancellation' => 'arrow-counterclockwise',
-                                        default => 'dot'
-                                    };
-                                @endphp
-                                <span class="badge bg-{{ $badgeClass }} bg-opacity-10 text-{{ $badgeClass }} border border-{{ $badgeClass }} border-opacity-25 px-2 py-1">
-                                    <i class="bi bi-{{ $icon }} me-1"></i> {{ $typeLabel }}
-                                </span>
-                            </td>
-                            <td class="px-3 text-center fw-bold">
-                                @if($movement->type === 'entry')
-                                <span class="text-success">+{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}</span>
-                                @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
-                                <span class="text-danger">-{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}</span>
-                                @else
-                                <span class="text-dark">{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}</span>
-                                @endif
-                            </td>
-                            <td class="px-3 text-center fw-bold text-dark">
-                                @php
-                                $currentQuantity = $movement->previous_quantity;
-                                if ($movement->type === 'entry') {
-                                    $currentQuantity += $movement->quantity;
-                                } elseif ($movement->type === 'exit' || $movement->type === 'subtraction') {
-                                    $currentQuantity -= $movement->quantity;
-                                }
-                                @endphp
-                                {{ \App\Helpers\CurrencyHelper::format($currentQuantity, 0, false) }}
-                            </td>
-                            <td class="px-3">
-                                <small class="text-muted" title="{{ $movement->reason }}">
-                                    {{ Str::limit($movement->reason, 30) }}
-                                </small>
-                            </td>
-                            <td class="px-3 text-center">
-                                <div class="btn-group">
-                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="primary" size="sm" icon="chevron-right" title="Ver Detalhes" />
-                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="info" size="sm" icon="eye" title="Ver Inventário" />
-                                    <x-button type="link" :href="route('provider.inventory.adjust', $movement->product->sku)" variant="success" size="sm" icon="sliders" title="Ajustar" />
-                                </div>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>
+                                    <div class="item-icon">
+                                        <i class="bi bi-arrow-left-right"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <x-table-cell-datetime :datetime="$movement->created_at" />
+                                </td>
+                                <td>
+                                    <x-product-info :name="$movement->product->name" :sku="$movement->product->sku" />
+                                </td>
+                                <td class="text-center">
+                                    <x-movement-type-badge :type="$movement->type" />
+                                </td>
+                                <td class="text-center">
+                                    <x-movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
+                                </td>
+                                <td class="text-center fw-bold text-dark">
+                                    {{ \App\Helpers\CurrencyHelper::format($movement->new_quantity ?? 0, 0, false) }}
+                                </td>
+                                <td>
+                                    <small class="text-muted" title="{{ $movement->reason }}">
+                                        {{ Str::limit($movement->reason, 30) }}
+                                    </small>
+                                </td>
+                                <x-table-actions>
+                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" icon="eye" title="Ver Detalhes" />
+                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" icon="box" title="Ver Inventário" />
+                                </x-table-actions>
+                            </tr>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
+                    </x-slot:tbody>
+                </x-resource-table>
+            </x-slot:desktop>
 
-            <!-- Mobile View -->
-            <div class="d-md-none">
-                <div class="list-group list-group-flush">
+            <x-slot:mobile>
                     @foreach($movements as $movement)
-                    <div class="list-group-item px-3 py-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <div class="small text-muted">{{ $movement->created_at->format('d/m/Y H:i') }}</div>
-                                <div class="fw-bold text-dark">{{ $movement->product->name }}</div>
-                                <div class="small text-muted">{{ $movement->product->sku }}</div>
-                            </div>
-                            @php
-                                $badgeClass = match($movement->type) {
-                                    'entry' => 'success',
-                                    'exit' => 'danger',
-                                    'adjustment' => 'warning',
-                                    'reservation' => 'info',
-                                    'cancellation' => 'secondary',
-                                    default => 'secondary'
-                                };
-                                $typeLabel = match($movement->type) {
-                                    'entry' => 'Entrada',
-                                    'exit' => 'Saída',
-                                    'adjustment' => 'Ajuste',
-                                    'reservation' => 'Reserva',
-                                    'cancellation' => 'Cancel.',
-                                    default => ucfirst($movement->type)
-                                };
-                                $icon = match($movement->type) {
-                                    'entry' => 'plus-circle',
-                                    'exit' => 'dash-circle',
-                                    'adjustment' => 'sliders',
-                                    'reservation' => 'lock',
-                                    'cancellation' => 'arrow-counterclockwise',
-                                    default => 'dot'
-                                };
-                            @endphp
-                            <span class="badge bg-{{ $badgeClass }} bg-opacity-10 text-{{ $badgeClass }} border border-{{ $badgeClass }} border-opacity-25 px-2 py-1">
-                                {{ $typeLabel }}
-                            </span>
-                        </div>
+                        <x-resource-mobile-item icon="arrow-left-right">
+                            <x-resource-info
+                                :title="$movement->product->name"
+                                :subtitle="$movement->product->sku"
+                                icon="box"
+                                class="mb-2"
+                            />
 
-                        @if($movement->reason)
-                            <div class="small text-muted mb-2">
-                                <i class="bi bi-chat-left-text me-1"></i> {{ Str::limit($movement->reason, 50) }}
-                            </div>
-                        @endif
-
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="d-flex gap-3">
-                                <div>
-                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Qtd</div>
-                                    <div class="fw-bold {{ $movement->type === 'entry' ? 'text-success' : ($movement->type === 'exit' || $movement->type === 'subtraction' ? 'text-danger' : '') }}">
-                                        @if($movement->type === 'entry')
-                                            +{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
-                                        @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
-                                            -{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
-                                        @else
-                                            {{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
-                                        @endif
-                                    </div>
+                            <x-slot:description>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <x-movement-type-badge :type="$movement->type" />
+                                    <x-movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
                                 </div>
-                                <div>
-                                    <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Saldo</div>
-                                    <div class="fw-bold text-dark">
-                                        @php
-                                        $currentQuantity = $movement->previous_quantity;
-                                        if ($movement->type === 'entry') {
-                                            $currentQuantity += $movement->quantity;
-                                        } elseif ($movement->type === 'exit' || $movement->type === 'subtraction') {
-                                            $currentQuantity -= $movement->quantity;
-                                        }
-                                        @endphp
-                                        {{ \App\Helpers\CurrencyHelper::format($currentQuantity, 0, false) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            </x-slot:description>
 
-                        <div class="d-flex gap-2">
-                            <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="outline-primary" size="sm" icon="chevron-right" label="Detalhes" class="flex-grow-1" />
-                            <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
-                        </div>
-                    </div>
+                            <x-slot:footer>
+                                <x-table-cell-datetime :datetime="$movement->created_at" :stack="false" />
+                            </x-slot:footer>
+
+                            <x-slot:actions>
+                                <x-table-actions mobile>
+                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" size="sm" icon="eye" />
+                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" size="sm" icon="box" />
+                                </x-table-actions>
+                            </x-slot:actions>
+                        </x-resource-mobile-item>
                     @endforeach
-                </div>
-            </div>
-
-            @else
-            <div class="text-center py-5">
-                <div class="rounded-circle  d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <i class="bi bi-search text-muted fs-1"></i>
-                </div>
-                @if(empty(request()->query()))
-                    <p class="text-muted fw-bold">Utilize os filtros acima para pesquisar as movimentações.</p>
-                @else
-                    <p class="text-muted fw-bold">Nenhuma movimentação encontrada.</p>
-                    @if(request()->anyFilled(['search', 'type', 'start_date', 'end_date', 'product_id', 'sku']))
-                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-primary btn-sm mt-2">
-                            <i class="bi bi-x-circle me-1"></i>Limpar Filtros
-                        </a>
-                    @endif
-                @endif
-            </div>
+                </x-slot:mobile>
+        @else
+            <x-empty-state
+                resource="movimentações"
+                :isTrashView="false"
+                message="Nenhuma movimentação de estoque encontrada para os filtros aplicados."
+            />
             @endif
-        </div>
-        @if ($movements instanceof \Illuminate\Pagination\LengthAwarePaginator && $movements->hasPages())
+
+        <x-slot:footer>
+            @if ($movements instanceof \Illuminate\Pagination\LengthAwarePaginator && $movements->hasPages())
                 @include('partials.components.paginator', [
                     'p' => $movements->appends(
                         collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()
                     ),
                     'show_info' => true,
                 ])
-        @endif
-    </div>
-</div>
+            @endif
+        </x-slot:footer>
+    </x-resource-list-card>
+</x-page-container>
 @endsection
 
 @push('scripts')

@@ -2066,15 +2066,14 @@ input[type="number"] {
    }
 
    .item-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--primary-color);
-      color: var(--light-surface);
-      font-size: 1.2rem;
+      background: transparent;
+      color: var(--text-color);
+      font-size: 1.1rem;
    }
 
    .item-name-cell {
