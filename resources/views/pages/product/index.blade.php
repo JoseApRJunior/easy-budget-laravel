@@ -32,13 +32,8 @@
     <div class="row">
         <div class="col-12">
             <!-- Filtros de Busca -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-                </div>
-                <div class="card-body">
-                    <x-filter-form :action="route('provider.products.index')" id="filtersFormProducts">
-                        <x-filter-field
+            <x-filter-form :route="route('provider.products.index')" id="filtersFormProducts" :filters="$filters">
+                <x-filter-field
                             col="col-md-4"
                             name="search"
                             label="Buscar"
@@ -156,8 +151,6 @@
                             :filters="$filters"
                         />
                     </x-filter-form>
-                </div>
-            </div>
 
             <div class="card">
                 <div class="card-header">

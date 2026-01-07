@@ -36,7 +36,7 @@ class ReserveProductStockAction
             $available = $inventory->available_quantity;
 
             if ($available < $quantity) {
-                throw new Exception("Quantidade disponível insuficiente para reserva. Disponível: {$available}");
+                throw new Exception("Estoque insuficiente para o produto '{$product->name}'. Disponível: {$available}.");
             }
 
             $inventory->increment('reserved_quantity', $quantity);

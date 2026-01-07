@@ -16,69 +16,59 @@
     </x-page-header>
 
     <!-- Filtros de Busca -->
-    <div class="card mb-4">
-        <div class="card-header  py-3">
-            <h5 class="mb-0 fw-bold text-muted small text-uppercase">
-                <i class="bi bi-filter me-2"></i>Filtros
-            </h5>
-        </div>
-        <div class="card-body">
-            <form id="filtersFormMovements" method="GET" action="{{ route('provider.inventory.movements') }}">
-                @if(request('product_id'))
-                    <input type="hidden" name="product_id" value="{{ request('product_id') }}">
-                @endif
-                @if(request('sku'))
-                    <input type="hidden" name="sku" value="{{ request('sku') }}">
-                @endif
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="search" class="form-label small fw-bold text-muted text-uppercase">Buscar Produto</label>
-                            <input type="text" name="search" id="search" class="form-control"
-                                placeholder="Nome ou SKU" value="{{ request('search') ?? request('sku') }}">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label for="type" class="form-label small fw-bold text-muted text-uppercase">Tipo</label>
-                            <select name="type" id="type" class="form-select tom-select">
-                                <option value="">Todos os Tipos</option>
-                                <option value="entry" {{ request('type') == 'entry' ? 'selected' : '' }}>Entrada</option>
-                                <option value="exit" {{ request('type') == 'exit' ? 'selected' : '' }}>Saída</option>
-                                <option value="adjustment" {{ request('type') == 'adjustment' ? 'selected' : '' }}>Ajuste</option>
-                                <option value="reservation" {{ request('type') == 'reservation' ? 'selected' : '' }}>Reserva</option>
-                                <option value="cancellation" {{ request('type') == 'cancellation' ? 'selected' : '' }}>Cancelamento</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <x-filter-field
-                            type="date"
-                            name="start_date"
-                            id="start_date"
-                            label="Data Inicial"
-                            :value="$filters['start_date'] ?? request('start_date')"
-                        />
-                    </div>
-                    <div class="col-md-3">
-                        <x-filter-field
-                            type="date"
-                            name="end_date"
-                            id="end_date"
-                            label="Data Final"
-                            :value="$filters['end_date'] ?? request('end_date')"
-                        />
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex gap-2">
-                            <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                            <x-button type="link" :href="route('provider.inventory.movements')" variant="outline-secondary" icon="x" label="Limpar" />
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    <x-filter-form
+        id="filtersFormMovements"
+        :route="route('provider.inventory.movements')"
+        :filters="$filters ?? request()->all()"
+    >
+        @if(request('product_id'))
+            <input type="hidden" name="product_id" value="{{ request('product_id') }}">
+        @endif
+        @if(request('sku'))
+            <input type="hidden" name="sku" value="{{ request('sku') }}">
+        @endif
+
+        <x-filter-field
+            col="col-md-3"
+            name="search"
+            label="Buscar Produto"
+            placeholder="Nome ou SKU"
+            :filters="$filters ?? request()->all()"
+            :value="request('search') ?? request('sku')"
+        />
+
+        <x-filter-field
+            type="select"
+            col="col-md-3"
+            name="type"
+            label="Tipo"
+            :filters="$filters ?? request()->all()"
+            :options="[
+                '' => 'Todos os Tipos',
+                'entry' => 'Entrada',
+                'exit' => 'Saída',
+                'adjustment' => 'Ajuste',
+                'reservation' => 'Reserva',
+                'cancellation' => 'Cancelamento'
+            ]"
+        />
+
+        <x-filter-field
+            type="date"
+            col="col-md-3"
+            name="start_date"
+            label="Data Inicial"
+            :filters="$filters ?? request()->all()"
+        />
+
+        <x-filter-field
+            type="date"
+            col="col-md-3"
+            name="end_date"
+            label="Data Final"
+            :filters="$filters ?? request()->all()"
+        />
+    </x-filter-form>
 
     <!-- Tabela de Movimentações -->
     <div class="card border-0 shadow-sm mb-4">

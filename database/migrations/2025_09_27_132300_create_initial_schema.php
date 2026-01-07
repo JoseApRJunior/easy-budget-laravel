@@ -269,6 +269,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('sku')->nullable();
             $table->decimal('price', 10, 2)->default(0);
+            $table->decimal('cost_price', 10, 2)->nullable()->default(0);
             $table->string('unit', 20)->nullable()->comment('Ex: un, m², h');
             $table->boolean('active')->default(true);
             $table->string('image', 255)->nullable();
@@ -282,6 +283,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->integer('quantity')->default(0);
+            $table->integer('reserved_quantity')->default(0);
             $table->integer('min_quantity')->default(0);
             $table->integer('max_quantity')->nullable();
             $table->timestamps();
@@ -298,6 +300,7 @@ return new class extends Migration
             $table->string('reason', 255)->nullable();
             $table->integer('reference_id')->nullable();
             $table->string('reference_type', 50)->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             // Índices para performance
@@ -336,7 +339,7 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained('customers')->restrictOnDelete();
             $table->string('status', 20); // Status enum value (DRAFT, PENDING, APPROVED, etc.)
             $table->foreignId('user_confirmation_token_id')->nullable()->constrained('user_confirmation_tokens')->nullOnDelete();
-            $table->string('code', 50)->unique();
+            $table->string('code', 50);
             $table->date('due_date')->nullable();
             $table->decimal('discount', 10, 2);
             $table->decimal('total', 10, 2);
@@ -352,6 +355,8 @@ return new class extends Migration
             $table->index('public_token');
             $table->index(['public_token', 'public_expires_at']);
             $table->timestamps();
+
+            $table->unique(['tenant_id', 'code'], 'budgets_tenant_code_unique');
         });
 
         Schema::create('budget_shares', function (Blueprint $table) {

@@ -23,16 +23,24 @@ class ReserveBudgetProductsAction
     {
         try {
             // Carregar relações necessárias para evitar N+1
-            $budget->loadMissing(['services.items.product']);
+            $budget->loadMissing(['services.serviceItems.product']);
 
             return DB::transaction(function () use ($budget) {
                 $reservedCount = 0;
 
                 foreach ($budget->services as $service) {
-                    foreach ($service->items as $item) {
+                    // Identificador amigável do serviço para a mensagem de erro
+                    $serviceName = $service->category?->name ?? $service->description ?? "Serviço #{$service->id}";
+
+                    foreach ($service->serviceItems as $item) {
                         if ($item->product_id && $item->product) {
-                            $this->reserveAction->reserve($item->product, (int) $item->quantity);
-                            $reservedCount++;
+                            try {
+                                $this->reserveAction->reserve($item->product, (int) $item->quantity);
+                                $reservedCount++;
+                            } catch (Exception $e) {
+                                // Lança uma nova exceção com o contexto do serviço
+                                throw new Exception("No serviço '{$serviceName}': {$e->getMessage()}");
+                            }
                         }
                     }
                 }
@@ -55,7 +63,7 @@ class ReserveBudgetProductsAction
             });
 
         } catch (Exception $e) {
-            return ServiceResult::error('Erro ao reservar produtos: ' . $e->getMessage());
+            return ServiceResult::error($e->getMessage());
         }
     }
 }

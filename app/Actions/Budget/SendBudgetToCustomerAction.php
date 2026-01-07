@@ -42,9 +42,14 @@ class SendBudgetToCustomerAction
             $company = [];
 
             // Executar operações de banco dentro da transação
-            DB::transaction(function () use ($budget, &$publicUrl, &$pdfPath, &$reserveResult, &$company) {
+            DB::transaction(function () use ($budget, &$publicUrl, &$pdfPath, &$company) {
                 // 1. Reserva Automática de Produtos
                 $reserveResult = $this->reserveAction->execute($budget);
+
+                // Se a reserva falhar, interrompemos o processo de envio
+                if ($reserveResult->isError()) {
+                    throw new Exception($reserveResult->getMessage());
+                }
 
                 // 2. Gerar ou recuperar Token Público
                 $token = $this->tokenService->generateToken($budget);
@@ -86,14 +91,12 @@ class SendBudgetToCustomerAction
             ));
 
             $msg = 'Orçamento enviado e produtos reservados com sucesso!';
-            if ($reserveResult && $reserveResult->isError()) {
-                $msg = 'Orçamento enviado com sucesso! (Aviso: '.$reserveResult->getMessage().')';
-            }
 
             return ServiceResult::success(null, $msg);
 
         } catch (Exception $e) {
-            return ServiceResult::error('Erro ao processar envio e reserva: '.$e->getMessage());
+            // Retorna apenas a mensagem da exceção, que agora está mais limpa
+            return ServiceResult::error($e->getMessage());
         }
     }
 }
