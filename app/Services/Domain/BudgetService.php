@@ -21,7 +21,6 @@ class BudgetService extends AbstractBaseService
         private readonly ServiceService $serviceService,
         private readonly BudgetCodeGeneratorService $codeGeneratorService,
         private readonly \App\Actions\Budget\SendBudgetToCustomerAction $sendAction,
-        private readonly \App\Actions\Budget\ReserveBudgetProductsAction $reserveAction,
     ) {
         parent::__construct($budgetRepository);
     }

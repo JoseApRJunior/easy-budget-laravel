@@ -1,12 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Enums;
 
 use App\Contracts\Interfaces\StatusEnumInterface;
+use App\Traits\Enums\HasStatusEnumMethods;
 
+/**
+ * Enum para os status de agendamento
+ */
 enum ScheduleStatus: string implements StatusEnumInterface
 {
-    use \App\Traits\Enums\HasStatusEnumMethods;
+    use HasStatusEnumMethods;
 
     case PENDING = 'pending';
     case CONFIRMED = 'confirmed';
@@ -14,30 +20,9 @@ enum ScheduleStatus: string implements StatusEnumInterface
     case CANCELLED = 'cancelled';
     case NO_SHOW = 'no_show';
 
-    public static function values(): array
-    {    
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function options(): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label();
-        }
-        return $options;
-    }
-
-    public static function labels(): array
-    {
-        return array_map(fn (self $case) => $case->label(), self::cases());
-    }
-
-    public static function isValid(string $value): bool
-    {
-        return in_array($value, self::values(), true);
-    }
-
+    /**
+     * Retorna o label do status
+     */
     public function label(): string
     {
         return match ($this) {
@@ -49,6 +34,9 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
+    /**
+     * Retorna a descrição detalhada
+     */
     public function getDescription(): string
     {
         return match ($this) {
@@ -60,6 +48,9 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
+    /**
+     * Retorna a cor associada (Tailwind/Bootstrap context)
+     */
     public function color(): string
     {
         return match ($this) {
@@ -71,6 +62,9 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
+    /**
+     * Retorna a cor Hexadecimal
+     */
     public function getColor(): string
     {
         return match ($this) {
@@ -82,22 +76,23 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
+    /**
+     * Retorna o ícone associado (sem prefixo bi-)
+     */
     public function icon(): string
     {
         return match ($this) {
             self::PENDING => 'hourglass-split',
-            self::CONFIRMED => 'check-circle',
-            self::COMPLETED => 'check2-circle',
-            self::CANCELLED => 'x-circle',
+            self::CONFIRMED => 'check-circle-fill',
+            self::COMPLETED => 'check-circle-fill',
+            self::CANCELLED => 'x-circle-fill',
             self::NO_SHOW => 'slash-circle',
         };
     }
 
-    public function getIcon(): string
-    {
-        return 'bi-' . $this->icon();
-    }
-
+    /**
+     * Verifica se o status indica atividade
+     */
     public function isActive(): bool
     {
         return match ($this) {
@@ -106,123 +101,11 @@ enum ScheduleStatus: string implements StatusEnumInterface
         };
     }
 
+    /**
+     * Verifica se o status indica finalização
+     */
     public function isFinished(): bool
     {
-        return match ($this) {
-            self::COMPLETED, self::CANCELLED, self::NO_SHOW => true,
-            self::PENDING, self::CONFIRMED => false,
-        };
-    }
-
-    public function canEdit(): bool
-    {
-        return ! $this->isFinished();
-    }
-
-    public function canCancel(): bool
-    {
-        return $this->isActive();
-    }
-
-    public static function getOrdered(bool $includeFinished = true): array
-    {
-        $ordered = [
-            self::PENDING,
-            self::CONFIRMED,
-        ];
-
-        if ($includeFinished) {
-            $ordered[] = self::COMPLETED;
-            $ordered[] = self::CANCELLED;
-            $ordered[] = self::NO_SHOW;
-        }
-
-        return $ordered;
-    }
-
-    public function getMetadata(): array
-    {
-        return array_merge($this->defaultMetadata(), [
-            'can_edit' => $this->canEdit(),
-            'can_cancel' => $this->canCancel(),
-        ]);
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     */
-    public static function fromString(string $value): ?self
-    {
-        try {
-            return self::from($value);
-        } catch (\ValueError $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Retorna opções formatadas para uso em formulários/selects
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-        foreach (self::cases() as $case) {
-            if (! $includeFinished && $case->isFinished()) {
-                continue;
-            }
-            $options[$case->value] = $case->label();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Calcula métricas de status para dashboards
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $total = count($statuses);
-        if ($total === 0) {
-            return [
-                'total' => 0,
-                'active' => 0,
-                'finished' => 0,
-                'percentages' => [],
-            ];
-        }
-
-        $counts = [];
-        $activeCount = 0;
-        $finishedCount = 0;
-
-        foreach ($statuses as $status) {
-            $statusEnum = $status instanceof self ? $status : self::fromString((string) $status);
-            if (! $statusEnum) {
-                continue;
-            }
-
-            $counts[$statusEnum->value] = ($counts[$statusEnum->value] ?? 0) + 1;
-
-            if ($statusEnum->isActive()) {
-                $activeCount++;
-            }
-
-            if ($statusEnum->isFinished()) {
-                $finishedCount++;
-            }
-        }
-
-        $percentages = [];
-        foreach ($counts as $value => $count) {
-            $percentages[$value] = round(($count / $total) * 100, 1);
-        }
-
-        return [
-            'total' => $total,
-            'active' => $activeCount,
-            'finished' => $finishedCount,
-            'percentages' => $percentages,
-            'counts' => $counts,
-        ];
+        return !$this->isActive();
     }
 }

@@ -55,17 +55,12 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     public function icon(): string
     {
         return match ($this) {
-            self::PENDING => 'clock',
+            self::PENDING => 'hourglass-split',
             self::PROCESSING => 'arrow-repeat',
             self::COMPLETED => 'check-circle-fill',
             self::FAILED => 'x-circle-fill',
             self::REFUNDED => 'arrow-counterclockwise',
         };
-    }
-
-    public function getIcon(): string
-    {
-        return 'bi-'.$this->icon();
     }
 
     public function isActive(): bool

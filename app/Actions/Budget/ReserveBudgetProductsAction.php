@@ -22,6 +22,16 @@ class ReserveBudgetProductsAction
     public function execute(Budget $budget): ServiceResult
     {
         try {
+            // Verifica se já existe uma reserva registrada para este orçamento
+            // para evitar duplicidade em reenvios.
+            $alreadyReserved = $budget->actionHistory()
+                ->whereIn('action', ['products_reserved', 'sent_and_reserved'])
+                ->exists();
+
+            if ($alreadyReserved) {
+                return ServiceResult::success(null, "Produtos já estão reservados para este orçamento.");
+            }
+
             // Carregar relações necessárias para evitar N+1
             $budget->loadMissing(['services.serviceItems.product']);
 

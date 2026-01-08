@@ -116,8 +116,11 @@ class BudgetShareController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $selectedBudgetId = $request->query('budget_id');
+
         return view('pages.budget-share.create', [
             'budgets' => $budgets,
+            'selectedBudgetId' => $selectedBudgetId,
         ]);
     }
 
@@ -306,5 +309,76 @@ class BudgetShareController extends Controller
         $result = $this->budgetShareService->addComment($token, $request->only(['comment', 'name', 'email']));
 
         return $this->jsonResponse($result);
+    }
+
+    /**
+     * Download do PDF do orçamento via compartilhamento
+     */
+    public function downloadPdf(string $token, Request $request)
+    {
+        $result = $this->budgetShareService->validateAccess($token);
+
+        if (! $result->isSuccess()) {
+            abort(403, 'Acesso negado ou link expirado.');
+        }
+
+        $shareData = $result->getData();
+        $budget = $shareData['budget'];
+        $share = $shareData['share'];
+
+        // Carregar relações necessárias para o PDF
+        $budget->load([
+            'customer.commonData',
+            'customer.contact',
+            'customer.address',
+            'services.serviceItems',
+            'services.category',
+        ]);
+
+        // Obter dados do prestador (dono do orçamento)
+        $provider = $budget->tenant->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+
+        $html = view('pages.budget.pdf_budget', compact('budget', 'provider'))->render();
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 14,
+            'margin_bottom' => 14,
+            'margin_header' => 8,
+            'margin_footer' => 8,
+        ]);
+
+        $mpdf->SetHeader('Orçamento #'.$budget->code.'||Gerado em: '.now()->format('d/m/Y'));
+        $mpdf->SetFooter('Página {PAGENO} de {nb}|Acesso Público via Link Seguro|'.config('app.url'));
+
+        $mpdf->WriteHTML($html);
+
+        $filename = "orcamento_{$budget->code}.pdf";
+        $content = $mpdf->Output('', 'S');
+
+        return response($content, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+        ]);
+    }
+
+    /**
+     * Download do Excel do orçamento via compartilhamento
+     */
+    public function downloadXlsx(string $token)
+    {
+        $result = $this->budgetShareService->validateAccess($token);
+
+        if (! $result->isSuccess()) {
+            abort(403, 'Acesso negado ou link expirado.');
+        }
+
+        // Como o Excel ainda não está implementado no sistema base,
+        // vamos redirecionar para a visualização com a mensagem.
+        return redirect()->route('budgets.public.shared.view', $token)
+            ->with('info', 'A exportação para Excel estará disponível em breve.');
     }
 }

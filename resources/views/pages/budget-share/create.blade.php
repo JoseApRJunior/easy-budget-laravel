@@ -44,7 +44,7 @@
                                                     data-customer="{{ $budget->customer->name }}"
                                                     data-value="{{ $budget->total_value }}"
                                                     data-status="{{ $budget->status }}"
-                                                    {{ old('budget_id') == $budget->id ? 'selected' : '' }}>
+                                                    {{ (old('budget_id', $selectedBudgetId) == $budget->id) ? 'selected' : '' }}>
                                                 #{{ str_pad($budget->id, 6, '0', STR_PAD_LEFT) }} - 
                                                 {{ $budget->customer->name }} - 
                                                 R$ {{ number_format($budget->total_value, 2, ',', '.') }}

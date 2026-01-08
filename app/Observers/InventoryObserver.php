@@ -91,15 +91,16 @@ class InventoryObserver
             'tenant_id' => $service->tenant_id,
         ]);
 
-        // Se serviço foi cancelado, devolver produtos ao estoque
+        // Se serviço foi cancelado, devolver produtos ao estoque (ou liberar reserva se ainda não consumido)
         if ($newStatus->value === ServiceStatus::CANCELLED->value) {
             $this->returnServiceItemsToInventory($service);
         }
 
-        // Se serviço foi iniciado, consumir produtos do estoque
+        // Se serviço foi para preparação ou direto para execução, consumir produtos do estoque
+        // Isso transforma a reserva (se existir) em baixa física
         if (
-            $newStatus->value === ServiceStatus::IN_PROGRESS->value &&
-            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value])
+            in_array($newStatus->value, [ServiceStatus::PREPARING->value, ServiceStatus::IN_PROGRESS->value]) &&
+            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value])
         ) {
             $this->consumeServiceItemsFromInventory($service);
         }
@@ -242,25 +243,46 @@ class InventoryObserver
     }
 
     /**
-     * Devolve itens do serviço ao estoque
+     * Devolve itens do serviço ao estoque ou libera reserva
      */
     protected function returnServiceItemsToInventory(Service $service): void
     {
         try {
+            $service->loadMissing('serviceItems');
+            
             foreach ($service->serviceItems as $item) {
                 if ($item->product_id) {
-                    $this->inventoryService->returnProduct(
-                        $item->product_id,
-                        $item->quantity,
-                        'Cancelamento de serviço - Código: '.$service->code,
-                        Service::class,
-                        $service->id,
-                        $service->tenant_id,
-                    );
+                    // Se o status anterior era de quem já consumiu estoque físico
+                    $wasConsumed = in_array($service->getOriginal('status'), [
+                        ServiceStatus::PREPARING->value,
+                        ServiceStatus::IN_PROGRESS->value,
+                        ServiceStatus::COMPLETED->value
+                    ]);
+
+                    if ($wasConsumed) {
+                        $this->inventoryService->returnProduct(
+                            $item->product_id,
+                            $item->quantity,
+                            'Cancelamento de serviço (Devolução física) - Código: '.$service->code,
+                            Service::class,
+                            $service->id,
+                            $service->tenant_id,
+                        );
+                    } else {
+                        // Se ainda estava apenas reservado
+                        $this->inventoryService->releaseReservation(
+                            $item->product_id,
+                            $item->quantity,
+                            'Cancelamento de serviço (Liberação de reserva) - Código: '.$service->code,
+                            Service::class,
+                            $service->id,
+                            $service->tenant_id,
+                        );
+                    }
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Erro ao devolver itens do serviço ao estoque', [
+            Log::error('Erro ao processar retorno de itens do serviço ao estoque', [
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);

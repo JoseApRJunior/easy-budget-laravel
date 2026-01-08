@@ -54,14 +54,10 @@ enum CustomerStatus: string implements StatusEnumInterface
 
     public function icon(): string
     {        return match ($this) {
-            self::ACTIVE => 'check-circle',
+            self::ACTIVE => 'check-circle-fill',
             self::INACTIVE => 'pause-circle',
-            self::DELETED => 'x-circle',
+            self::DELETED => 'trash',
         };
-    }
-
-    public function getIcon(): string
-    {        return 'bi-' . $this->icon();
     }
 
     public function isActive(): bool

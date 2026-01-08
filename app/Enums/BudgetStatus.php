@@ -91,17 +91,9 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
             self::APPROVED => 'check-circle-fill',
             self::REJECTED => 'x-circle-fill',
             self::IN_PROGRESS => 'play-circle-fill',
-            self::CANCELLED => 'x-circle',
-            self::COMPLETED => 'check-circle',
+            self::CANCELLED => 'x-circle-fill',
+            self::COMPLETED => 'check-circle-fill',
         };
-    }
-
-    /**
-     * Retorna o ícone (Bootstrap Icons prefixado)
-     */
-    public function getIcon(): string
-    {
-        return 'bi-'.$this->icon();
     }
 
     /**

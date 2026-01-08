@@ -127,6 +127,18 @@ trait HasStatusEnumMethods
     }
 
     /**
+     * Retorna o ícone com prefixo bi bi- para Bootstrap Icons
+     */
+    public function getIcon(): string
+    {
+        if (!method_exists($this, 'icon')) {
+            return 'bi bi-info-circle';
+        }
+        
+        return 'bi bi-' . $this->icon();
+    }
+
+    /**
      * Retorna metadados completos do status
      */
     public function getMetadata(): array
@@ -137,8 +149,8 @@ trait HasStatusEnumMethods
             'description' => method_exists($this, 'getDescription') ? $this->getDescription() : '',
             'color' => method_exists($this, 'color') ? $this->color() : (method_exists($this, 'getColor') ? $this->getColor() : ''),
             'color_hex' => method_exists($this, 'getColor') ? $this->getColor() : '',
-            'icon' => method_exists($this, 'icon') ? $this->icon() : (method_exists($this, 'getIcon') ? $this->getIcon() : ''),
-            'icon_class' => method_exists($this, 'getIcon') ? $this->getIcon() : '',
+            'icon' => method_exists($this, 'icon') ? $this->icon() : '',
+            'icon_class' => $this->getIcon(),
             'is_active' => method_exists($this, 'isActive') ? $this->isActive() : true,
             'is_finished' => method_exists($this, 'isFinished') ? $this->isFinished() : false,
         ];

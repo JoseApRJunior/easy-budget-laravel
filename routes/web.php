@@ -84,6 +84,8 @@ Route::group([], function () {
         Route::post('/shared/{token}/accept', [BudgetShareController::class, 'approve'])->name('shared.accept');
         Route::post('/shared/{token}/reject', [BudgetShareController::class, 'rejectShare'])->name('shared.reject');
         Route::post('/shared/{token}/comment', [BudgetShareController::class, 'addComment'])->name('shared.comment');
+        Route::get('/shared/{token}/download-pdf', [BudgetShareController::class, 'downloadPdf'])->name('shared.download-pdf');
+        Route::get('/shared/{token}/download-xlsx', [BudgetShareController::class, 'downloadXlsx'])->name('shared.download-xlsx');
     });
 
 

@@ -11,7 +11,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     /** Serviço em elaboração, permite modificações */
     case DRAFT = 'draft';
 
-    /** Serviço pendente de agendamento */
+    /** Serviço pendente */
     case PENDING = 'pending';
 
     /** Serviço em processo de agendamento */
@@ -80,7 +80,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     {
         return match ($this) {
             self::DRAFT => 'Serviço em elaboração, permite modificações',
-            self::PENDING => 'Serviço pendente de agendamento',
+            self::PENDING => 'Serviço pendente',
             self::SCHEDULING => 'Serviço em processo de agendamento',
             self::PREPARING => 'Serviço em preparação',
             self::IN_PROGRESS => 'Serviço em andamento',
@@ -149,28 +149,20 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     {
         return match ($this) {
             self::DRAFT => 'pencil-square',
-            self::PENDING => 'clock',
+            self::PENDING => 'hourglass-split',
             self::SCHEDULING => 'calendar-check',
             self::PREPARING => 'tools',
-            self::IN_PROGRESS => 'gear',
+            self::IN_PROGRESS => 'play-circle-fill',
             self::ON_HOLD => 'pause-circle',
             self::SCHEDULED => 'calendar-plus',
-            self::COMPLETED => 'check-circle',
+            self::COMPLETED => 'check-circle-fill',
             self::PARTIAL => 'check-circle-fill',
-            self::CANCELLED => 'x-circle',
+            self::CANCELLED => 'x-circle-fill',
             self::NOT_PERFORMED => 'slash-circle',
             self::EXPIRED => 'calendar-x',
-            self::APPROVED => 'check-circle',
-            self::REJECTED => 'x-circle',
+            self::APPROVED => 'check-circle-fill',
+            self::REJECTED => 'x-circle-fill',
         };
-    }
-
-    /**
-     * Retorna o ícone (Bootstrap Icons prefixado)
-     */
-    public function getIcon(): string
-    {
-        return 'bi bi-' . $this->icon();
     }
 
     /**

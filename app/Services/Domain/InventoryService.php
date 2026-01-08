@@ -16,6 +16,8 @@ class InventoryService extends AbstractBaseService
     public function __construct(
         private InventoryRepository $inventoryRepository,
         private InventoryMovementRepository $movementRepository,
+        private \App\Actions\Inventory\ReserveProductStockAction $reserveAction,
+        private \App\Actions\Inventory\UpdateProductStockAction $updateAction,
     ) {
         parent::__construct($inventoryRepository);
     }
@@ -39,9 +41,10 @@ class InventoryService extends AbstractBaseService
             return $this->error('Produto não encontrado no estoque');
         }
 
-        if ($inventory->quantity < $quantity) {
+        // Usar a quantidade disponível (quantity - reserved_quantity)
+        if ($inventory->available_quantity < $quantity) {
             return $this->error(
-                "Estoque insuficiente. Disponível: {$inventory->quantity}, Solicitado: {$quantity}",
+                "Estoque disponível insuficiente. Disponível: {$inventory->available_quantity}, Solicitado: {$quantity}",
             );
         }
 
@@ -140,9 +143,9 @@ class InventoryService extends AbstractBaseService
                         'product_id' => $productId,
                         'current_quantity' => $newQuantity,
                         'min_quantity' => $inventory->min_quantity,
-                        'tenant_id' => $inventory->tenant_id ?? 'N/A'
+                        'tenant_id' => $inventory->tenant_id ?? 'N/A',
                     ]);
-                    
+
                     // TODO: Trigger actual notification (Email/Push) when system is ready
                 }
 
@@ -271,7 +274,45 @@ class InventoryService extends AbstractBaseService
         string $relatedType,
         int $relatedId,
     ): ServiceResult {
-        return $this->removeStock($productId, (int) $quantity, $reason);
+        return $this->safeExecute(function () use ($productId, $quantity, $reason, $relatedType, $relatedId) {
+            $inventory = $this->inventoryRepository->findByProduct($productId);
+            if (! $inventory) {
+                return $this->error('Produto não encontrado no estoque');
+            }
+
+            $product = $inventory->product;
+            if (! $product) {
+                return $this->error('Produto não vinculado ao registro de estoque');
+            }
+
+            try {
+                // Se o produto estiver reservado, confirmamos a reserva (baixa física + limpa reserva)
+                if ($inventory->reserved_quantity >= $quantity) {
+                    $this->reserveAction->confirm(
+                        $product,
+                        (int) $quantity,
+                        $this->updateAction,
+                        $reason,
+                        $relatedId,
+                        $relatedType
+                    );
+                } else {
+                    // Se não houver reserva suficiente, apenas faz a baixa física direta
+                    $this->updateAction->execute(
+                        $product,
+                        (int) $quantity,
+                        'out',
+                        $reason,
+                        $relatedId,
+                        $relatedType
+                    );
+                }
+
+                return $this->success(null, 'Estoque consumido com sucesso');
+            } catch (\Exception $e) {
+                return $this->error($e->getMessage());
+            }
+        });
     }
 
     public function reserveProduct(
@@ -281,13 +322,25 @@ class InventoryService extends AbstractBaseService
         string $relatedType,
         int $relatedId,
     ): ServiceResult {
-        Log::info('Product reserved', [
-            'product_id' => $productId,
-            'quantity' => $quantity,
-            'reason' => $reason,
-        ]);
+        return $this->safeExecute(function () use ($productId, $quantity) {
+            $inventory = $this->inventoryRepository->findByProduct($productId);
+            if (! $inventory) {
+                return $this->error('Produto não encontrado no estoque');
+            }
 
-        return $this->success(null, 'Produto reservado');
+            $product = $inventory->product;
+            if (! $product) {
+                return $this->error('Produto não vinculado ao registro de estoque');
+            }
+
+            try {
+                $this->reserveAction->reserve($product, (int) $quantity);
+
+                return $this->success(null, 'Produto reservado com sucesso');
+            } catch (\Exception $e) {
+                return $this->error($e->getMessage());
+            }
+        });
     }
 
     public function releaseReservation(
@@ -297,13 +350,25 @@ class InventoryService extends AbstractBaseService
         string $relatedType,
         int $relatedId,
     ): ServiceResult {
-        Log::info('Reservation released', [
-            'product_id' => $productId,
-            'quantity' => $quantity,
-            'reason' => $reason,
-        ]);
+        return $this->safeExecute(function () use ($productId, $quantity) {
+            $inventory = $this->inventoryRepository->findByProduct($productId);
+            if (! $inventory) {
+                return $this->error('Produto não encontrado no estoque');
+            }
 
-        return $this->success(null, 'Reserva liberada');
+            $product = $inventory->product;
+            if (! $product) {
+                return $this->error('Produto não vinculado ao registro de estoque');
+            }
+
+            try {
+                $this->reserveAction->release($product, (int) $quantity);
+
+                return $this->success(null, 'Reserva liberada com sucesso');
+            } catch (\Exception $e) {
+                return $this->error($e->getMessage());
+            }
+        });
     }
 
     public function returnProduct(

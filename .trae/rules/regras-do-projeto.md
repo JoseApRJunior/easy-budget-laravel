@@ -18,3 +18,7 @@
 - [TODO.md](file:///c:/laragon/www/easy-budget-laravel/TODO.md)
 - [TODO-BACK.MD](file:///c:/laragon/www/easy-budget-laravel/TODO-BACK.MD)
 - [TODO-FRONT.MD](file:///c:/laragon/www/easy-budget-laravel/TODO-FRONT.MD)
+
+## 🔍 Comparação de Lógica
+  Para comparaçao de logica de algum recurso pode ver na pasta do antigo sistema legado em
+- [old-system-legado](file:///c:/laragon/www/easy-budget-laravel/old-system-legado)

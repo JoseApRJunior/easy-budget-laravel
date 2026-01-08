@@ -190,7 +190,7 @@ class Service extends Model
     /**
      * Get the description of the service status for backward compatibility with views.
      */
-    public function getDescriptionAttribute(): ?string
+    public function getStatusDescriptionAttribute(): ?string
     {
         return $this->status?->getDescription();
     }

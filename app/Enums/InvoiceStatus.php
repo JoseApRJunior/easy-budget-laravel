@@ -86,14 +86,6 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     }
 
     /**
-     * Retorna o ícone (Bootstrap Icons prefixado)
-     */
-    public function getIcon(): string
-    {
-        return 'bi-' . $this->icon();
-    }
-
-    /**
      * Verifica se o status indica que a fatura está pendente
      */
     public function isPending(): bool

@@ -120,4 +120,12 @@ class Address extends Model
     {
         return $this->belongsTo(Provider::class);
     }
+
+    /**
+     * Get the formatted address string.
+     */
+    public function getFullAddressAttribute(): string
+    {
+        return \App\Helpers\AddressHelper::format($this);
+    }
 }
