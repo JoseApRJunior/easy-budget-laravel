@@ -5,6 +5,18 @@
   <meta charset="UTF-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>@yield( 'title', 'Documento' )</title>
+
+  @php
+      $pdfColors = config('pdf_theme.colors');
+  @endphp
+
+  <style>
+      body {
+          color: {{ $pdfColors['text'] }};
+          font-family: {{ config('pdf_theme.fonts.primary') }};
+      }
+  </style>
+
   {{-- CSS específico para cada tipo de documento --}}
   @yield( 'styles' )
 </head>

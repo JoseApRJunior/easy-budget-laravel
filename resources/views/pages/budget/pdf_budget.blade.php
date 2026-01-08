@@ -60,13 +60,17 @@
         @endif
 
         <x-slot:right>
-            <x-pdf.document-metadata
-                :dueDate="$budget->due_date"
-                :generatedAt="now()"
-            />
+            @if($budget->notes ?? null)
+                <p class="mb-0 small">{{ $budget->notes }}</p>
+            @endif
         </x-slot:right>
     </x-pdf.info-grid>
     <x-pdf.separator />
+
+    <x-pdf.document-metadata
+                :dueDate="$budget->due_date"
+                :generatedAt="now()"
+            />
 
     <!-- Signatures -->
     <x-pdf.signatures
@@ -88,33 +92,9 @@
         size: A4 portrait;
     }
 
-    body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        font-size: 11px;
-        line-height: 1.3;
-        color: #444;
-        background: #fff;
-    }
-
-    .text-primary { color: #0d6efd !important; }
-    .text-dark { color: #333 !important; }
-    .text-secondary { color: #444 !important; }
-    .fw-bold { font-weight: bold !important; }
-    .fw-semibold { font-weight: 400 !important; }
-    .small { font-size: 9px !important; }
-    .text-muted { color: #999 !important; }
-    .bg-light { background-color: #f9f9f9 !important; }
-    .bg-dark { background-color: #333 !important; }
-
-    .table-sm td, .table-sm th { padding: 4px; }
-
-    @media print {
-        .d-print-none { display: none !important; }
-        body { margin: 0; padding: 0; }
-        .container { width: 100% !important; max-width: none !important; padding: 0 !important; }
-        .bg-dark { background-color: #333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .bg-light { background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .text-white { color: #fff !important; }
+    /* Estilos específicos para este PDF que não estão no base */
+    .print-content {
+        width: 100%;
     }
 </style>
 @endpush

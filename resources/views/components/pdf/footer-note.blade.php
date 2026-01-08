@@ -2,6 +2,10 @@
     'note'
 ])
 
-<div class="mt-4" style="width: 100%; text-align: center;">
-    <p style="font-size: 8px; color: #444; margin-bottom: 0;">{{ $note }}</p>
+@php
+    $colors = config('pdf_theme.colors');
+@endphp
+
+<div style="margin-top: 30px; width: 100%; text-align: center;">
+    <p style="font-size: 8px; color: {{ $colors['secondary'] }}; margin-bottom: 0; font-style: italic;">{{ $note }}</p>
 </div>
