@@ -117,7 +117,7 @@
                                     <label for="cpf" class="form-label">CPF</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
                                         id="cpf" name="cpf"
-                                        value="{{ old('cpf', $provider->commonData?->cpf ?? '') }}">
+                                        value="{{ format_cpf(old('cpf', $provider->commonData?->cpf ?? '')) }}">
                                     @error('cpf')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -140,7 +140,7 @@
                                     <label for="cnpj" class="form-label">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
                                         id="cnpj" name="cnpj"
-                                        value="{{ old('cnpj', $provider->commonData?->cnpj ?? '') }}">
+                                        value="{{ format_cnpj(old('cnpj', $provider->commonData?->cnpj ?? '')) }}">
                                     @error('cnpj')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -499,9 +499,9 @@
                     // Inicializar máscara baseada no tipo de pessoa atual
                     const type = document.getElementById('person_type').value;
                     if (type === 'pf') {
-                        new VanillaMask('cpf', 'cpf');
+                        new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
                     } else if (type === 'pj') {
-                        new VanillaMask('cnpj', 'cnpj');
+                        new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
                     }
 
                     // Aplicar formatação aos valores existentes nos campos
@@ -526,9 +526,9 @@
                     if (typeof VanillaMask !== 'undefined') {
                         const type = this.value;
                         if (type === 'pf') {
-                            new VanillaMask('cpf', 'cpf');
+                            new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
                         } else if (type === 'pj') {
-                            new VanillaMask('cnpj', 'cnpj');
+                            new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
                         }
                     }
                 }, 200);

@@ -104,7 +104,7 @@
                                 <div class="mb-3">
                                     <label for="cpf" class="text-uppercase small fw-bold text-muted mb-2">CPF</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
-                                        id="cpf" name="cpf" value="{{ old('cpf') }}" data-mask="000.000.000-00">
+                                        id="cpf" name="cpf" value="{{ format_cpf(old('cpf')) }}" data-mask="000.000.000-00">
                                     @error('cpf')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -125,7 +125,7 @@
                                 <div class="mb-3">
                                     <label for="cnpj" class="text-uppercase small fw-bold text-muted mb-2">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
-                                        id="cnpj" name="cnpj" value="{{ old('cnpj') }}" data-mask="00.000.000/0000-00">
+                                        id="cnpj" name="cnpj" value="{{ format_cnpj(old('cnpj')) }}" data-mask="00.000.000/0000-00">
                                     @error('cnpj')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -423,25 +423,39 @@
                             let maskType = id;
                             if (id === 'phone_personal' || id === 'phone_business') maskType = 'phone';
                             if (id === 'birth_date' || id === 'founding_date') maskType = 'date';
-                            new VanillaMask(id, maskType);
-                        }
-                    });
-                }
-            }, 100);
-
-            document.getElementById('person_type')?.addEventListener('change', function() {
-                togglePersonFields();
-                setTimeout(() => {
-                    if (typeof VanillaMask !== 'undefined') {
-                        const type = this.value;
-                        if (type === 'pf') {
-                            new VanillaMask('cpf', 'cpf');
-                        } else if (type === 'pj') {
-                            new VanillaMask('cnpj', 'cnpj');
-                        }
+                        const options = (id === 'cpf' || id === 'cnpj') ? { clearIfNotMatch: false } : {};
+                        new VanillaMask(id, maskType, options);
                     }
-                }, 200);
-            });
+                });
+
+                // Aplicar formatação aos valores existentes nos campos (caso venha do old input)
+                const type = document.getElementById('person_type').value;
+                const cpfField = document.getElementById('cpf');
+                const cnpjField = document.getElementById('cnpj');
+
+                if (cpfField && cpfField.value && type === 'pf') {
+                    cpfField.value = window.formatCPF ? window.formatCPF(cpfField.value) : cpfField.value;
+                }
+
+                if (cnpjField && cnpjField.value && type === 'pj') {
+                    cnpjField.value = window.formatCNPJ ? window.formatCNPJ(cnpjField.value) : cnpjField.value;
+                }
+            }
+        }, 100);
+
+        document.getElementById('person_type')?.addEventListener('change', function() {
+            togglePersonFields();
+            setTimeout(() => {
+                if (typeof VanillaMask !== 'undefined') {
+                    const type = this.value;
+                    if (type === 'pf') {
+                        new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
+                    } else if (type === 'pj') {
+                        new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
+                    }
+                }
+            }, 200);
+        });
 
             // Validação de data de nascimento
             function isValidBirthDate(value) {

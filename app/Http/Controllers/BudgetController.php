@@ -295,29 +295,6 @@ class BudgetController extends Controller
     }
 
     /**
-     * Exportar orçamento para Excel (XLSX).
-     */
-    public function exportXlsx(string $code)
-    {
-        $result = $this->budgetService->findByCode($code, [
-            'customer.commonData',
-            'services.serviceItems',
-        ]);
-
-        if ($result->isError()) {
-            abort(404, 'Orçamento não encontrado.');
-        }
-
-        $budget = $result->getData();
-        $this->authorize('view', $budget);
-
-        // Por enquanto, redireciona para o print ou implementa a exportação real
-        // se houver uma biblioteca de Excel instalada (como Maatwebsite/Laravel-Excel)
-        // Para este exemplo, vamos apenas retornar uma mensagem ou implementar básico
-        return redirect()->back()->with('info', 'Funcionalidade de exportação XLSX para orçamento individual em desenvolvimento.');
-    }
-
-    /**
      * Envia o orçamento para o cliente por e-mail.
      */
     public function sendToCustomer(Request $request, string $code): RedirectResponse

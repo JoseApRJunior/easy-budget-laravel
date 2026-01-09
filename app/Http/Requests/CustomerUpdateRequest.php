@@ -51,9 +51,15 @@ class CustomerUpdateRequest extends FormRequest
      */
     private function cleanAndFormatData(): void
     {
-        // NÃO limpar o CEP ou Datas aqui. 
-        // A validação deve ocorrer no formato original enviado pelo formulário (com máscara).
-        
+        // Limpar CPF/CNPJ - manter apenas números para validação
+        if ($this->filled('cpf')) {
+            $this->merge(['cpf' => preg_replace('/\D/', '', (string) $this->input('cpf'))]);
+        }
+
+        if ($this->filled('cnpj')) {
+            $this->merge(['cnpj' => preg_replace('/\D/', '', (string) $this->input('cnpj'))]);
+        }
+
         // Limpar telefones - manter apenas números para consistência
         if ($this->filled('phone_personal')) {
             $phone = preg_replace('/\D/', '', (string) $this->input('phone_personal'));

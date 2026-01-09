@@ -121,7 +121,7 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     public function canEdit(): bool
     {
         return match ($this) {
-            self::DRAFT, self::PENDING => true,
+            self::DRAFT => true,
             default => false,
         };
     }

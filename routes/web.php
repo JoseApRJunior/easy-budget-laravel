@@ -82,10 +82,10 @@ Route::group([], function () {
         // Budget sharing public routes
         Route::get('/shared/{token}', [BudgetShareController::class, 'access'])->name('shared.view');
         Route::post('/shared/{token}/accept', [BudgetShareController::class, 'approve'])->name('shared.accept');
-        Route::post('/shared/{token}/reject', [BudgetShareController::class, 'rejectShare'])->name('shared.reject');
+        Route::post('/shared/{token}/reject', [BudgetShareController::class, 'reject'])->name('shared.reject');
+        Route::post('/shared/{token}/cancel', [BudgetShareController::class, 'cancel'])->name('shared.cancel');
         Route::post('/shared/{token}/comment', [BudgetShareController::class, 'addComment'])->name('shared.comment');
         Route::get('/shared/{token}/download-pdf', [BudgetShareController::class, 'downloadPdf'])->name('shared.download-pdf');
-        Route::get('/shared/{token}/download-xlsx', [BudgetShareController::class, 'downloadXlsx'])->name('shared.download-xlsx');
     });
 
 
@@ -312,7 +312,6 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::post('/{code}/change-status', [BudgetController::class, 'changeStatus'])->name('change-status');
         Route::delete('/{code}', [BudgetController::class, 'destroy'])->name('destroy');
         Route::get('/{code}/print', [BudgetController::class, 'print'])->name('print');
-        Route::get('/{code}/export-xlsx', [BudgetController::class, 'exportXlsx'])->name('export-xlsx');
         Route::get('/{code}/services/create', [ServiceController::class, 'create'])->name('services.create');
         Route::post('/{code}/send-to-customer', [BudgetController::class, 'sendToCustomer'])->name('send-to-customer');
     });

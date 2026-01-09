@@ -79,7 +79,7 @@
                             <div class="col-md-4">
                                 @php
                                     $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
-                                    $docValue = $budget->customer->commonData->cnpj 
+                                    $docValue = $budget->customer->commonData->cnpj
                                         ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
                                         : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
                                 @endphp
@@ -191,8 +191,10 @@
             :total="$budget->services?->count() ?? 0"
         >
             <x-slot:actions>
-                <x-button type="link" :href="route('provider.budgets.services.create', $budget->code)"
-                    variant="success" size="sm" icon="plus" label="Novo Serviço" />
+                @if ($budget->canBeEdited())
+                    <x-button type="link" :href="route('provider.budgets.services.create', $budget->code)"
+                        variant="success" size="sm" icon="plus" label="Novo Serviço" />
+                @endif
             </x-slot:actions>
 
             @if ($budget->services && $budget->services->count())
@@ -289,16 +291,18 @@
                     @endphp
 
                     <x-button type="button" class="d-flex align-items-center"
-                        variant="{{ $isSent ? 'outline-info' : 'info' }}" 
-                        icon="send-fill" 
+                        variant="{{ $isSent ? 'outline-info' : 'info' }}"
+                        icon="send-fill"
                         label="{{ $isSent ? 'Reenviar' : 'Enviar' }}"
                         data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
 
                     <x-button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
                         variant="outline-secondary" icon="share-fill" label="Links" />
 
-                    <x-button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                        variant="primary" icon="pencil-fill" label="Editar" />
+                    @if ($budget->canBeEdited())
+                        <x-button type="link" :href="route('provider.budgets.edit', $budget->code)"
+                            variant="primary" icon="pencil-fill" label="Editar" />
+                    @endif
 
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center w-100" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -320,12 +324,7 @@
                                     PDF
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center" href="{{ route('provider.budgets.export-xlsx', $budget->code) }}">
-                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i>
-                                    Excel (XLSX)
-                                </a>
-                            </li>
+
                         </ul>
                     </div>
                 </div>

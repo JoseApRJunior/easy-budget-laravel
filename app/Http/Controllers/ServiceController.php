@@ -102,7 +102,7 @@ class ServiceController extends Controller
     /**
      * Show the form for creating a new service.
      */
-    public function create(?string $budgetCode = null): View
+    public function create(?string $budgetCode = null): View|RedirectResponse
     {
         $this->authorize('create', Service::class);
         $budget = null;
@@ -112,6 +112,12 @@ class ServiceController extends Controller
             if ($budgetResult->isSuccess()) {
                 $budget = $budgetResult->getData();
                 $this->authorize('view', $budget);
+
+                // Verificar se orçamento está editável (skill: budget-lifecycle-rules)
+                if (! $budget->canBeEdited()) {
+                    return redirect()->route('provider.budgets.show', $budget->code)
+                        ->with('error', 'Orçamentos com status '.$budget->status->label().' não podem ter serviços adicionados.');
+                }
             }
         }
 

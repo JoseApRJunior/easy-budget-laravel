@@ -26,11 +26,7 @@
                 @if($permissions['can_print'] ?? true)
                     <a href="{{ route('budgets.public.shared.download-pdf', ['token' => $budgetShare->share_token]) }}"
                        class="btn btn-sm btn-outline-danger shadow-sm">
-                        <i class="bi bi-file-pdf me-1"></i>PDF / Imprimir
-                    </a>
-                    <a href="{{ route('budgets.public.shared.download-xlsx', ['token' => $budgetShare->share_token]) }}"
-                       class="btn btn-sm btn-outline-success shadow-sm">
-                        <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                        <i class="bi bi-file-pdf me-1"></i>Baixar Orçamento (PDF)
                     </a>
                 @endif
 
@@ -41,8 +37,18 @@
                 @endif
 
                 @if(($permissions['can_approve'] ?? false) && $budget->status->value === 'pending')
+                    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm px-3" onclick="cancelBudget()">
+                        <i class="bi bi-slash-circle me-1"></i>CANCELAR
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" onclick="rejectBudget()">
+                        <i class="bi bi-x-circle me-1"></i>REJEITAR
+                    </button>
                     <button type="button" class="btn btn-sm btn-success fw-semibold px-3 shadow-sm" onclick="approveBudget()">
                         <i class="bi bi-check-all me-1"></i>APROVAR
+                    </button>
+                @elseif($budget->status->value === 'approved')
+                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" onclick="cancelApprovedBudget()">
+                        <i class="bi bi-slash-circle me-1"></i>CANCELAR ORÇAMENTO APROVADO
                     </button>
                 @endif
             </div>
@@ -410,6 +416,81 @@
                     location.reload();
                 } else {
                     alert('Erro ao aprovar orçamento: ' + (result.message || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao processar solicitação');
+            });
+        }
+    }
+
+    function rejectBudget() {
+        if (confirm('Deseja realmente rejeitar este orçamento? Esta ação não pode ser desfeita.')) {
+            fetch("{{ route('budgets.public.shared.reject', ['token' => $budgetShare->share_token]) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Orçamento rejeitado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao rejeitar orçamento: ' + (result.message || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao processar solicitação');
+            });
+        }
+    }
+
+    function cancelBudget() {
+        if (confirm('Deseja realmente cancelar este orçamento? Esta ação não pode ser desfeita.')) {
+            fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Orçamento cancelado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao cancelar orçamento: ' + (result.message || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao processar solicitação');
+            });
+        }
+    }
+
+    function cancelApprovedBudget() {
+        if (confirm('Atenção: Este orçamento já foi aprovado. Cancelá-lo agora pode incorrer em custos pelo trabalho já realizado. Serviços em andamento serão faturados como \'Parcialmente Concluídos\'. Deseja continuar?')) {
+            fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Orçamento aprovado foi cancelado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao cancelar orçamento aprovado: ' + (result.message || 'Erro desconhecido'));
                 }
             })
             .catch(error => {

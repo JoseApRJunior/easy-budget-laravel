@@ -723,8 +723,6 @@ class VanillaMask {
  * @type {Array.<{id: string, type: string, validator?: Function}>}
  */
 const DEFAULT_MASK_CONFIG = [
-   { id: "cnpj", type: "cnpj", validator: validateCNPJ },
-   { id: "cpf", type: "cpf", validator: validateCPF },
    { id: "cep", type: "cep" },
    { id: "phone_personal", type: "phone" },
    { id: "phone_business", type: "phone" },

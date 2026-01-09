@@ -22,6 +22,37 @@ class BudgetUpdateRequest extends FormRequest
     }
 
     /**
+     * Get custom validator for budget status checks.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            // Get the budget ID from the route
+            $budgetId = $this->route('budget')?->id ?? $this->route('id');
+
+            if (! $budgetId) {
+                return;
+            }
+
+            // Fetch the budget with its tenant scope
+            $budget = \App\Models\Budget::where('id', $budgetId)
+                ->where('tenant_id', auth()->user()->tenant_id)
+                ->first();
+
+            if (! $budget) {
+                $validator->errors()->add('budget', 'Orçamento não encontrado.');
+
+                return;
+            }
+
+            // Block edits on non-DRAFT budgets
+            if ($budget->status !== \App\Enums\BudgetStatus::DRAFT->value) {
+                $validator->errors()->add('status', 'Orçamentos enviados (pendentes), aprovados ou concluídos não podem ser editados. Para alterar, crie um novo orçamento ou rejeite o atual.');
+            }
+        });
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array

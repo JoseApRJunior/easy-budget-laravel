@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\ServiceStatus;
+use App\Models\Budget;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ServiceStoreRequest extends FormRequest
@@ -116,6 +117,26 @@ class ServiceStoreRequest extends FormRequest
             'items.*.quantity.min' => 'Quantidade deve ser maior que zero',
             'items.*.unit_value.min' => 'Valor unitário deve ser maior que zero',
         ];
+    }
+
+    /**
+     * Validação adicional após regras padrão (skill: budget-lifecycle-rules).
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->any()) {
+                return;
+            }
+
+            $budgetId = $this->input('budget_id');
+
+            // Verificar se orçamento está editável
+            $budget = Budget::find($budgetId);
+            if ($budget && ! $budget->canBeEdited()) {
+                $validator->errors()->add('budget_id', 'Este orçamento não pode mais receber serviços porque está com status '.$budget->status->label().'. Orçamentos só podem ser editados quando estão em rascunho ou rejeitados.');
+            }
+        });
     }
 
     /**

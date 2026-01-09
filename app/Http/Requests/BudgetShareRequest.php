@@ -28,7 +28,7 @@ class BudgetShareRequest extends FormRequest
             'email' => 'required|email|max:255',
             'expires_at' => 'nullable|date|after:now',
             'permissions' => 'nullable|array|min:1',
-            'permissions.*' => 'in:view,download,comment',
+            'permissions.*' => 'in:view,print,comment,approve,reject',
         ];
     }
 
@@ -45,7 +45,7 @@ class BudgetShareRequest extends FormRequest
             'expires_at.after' => 'A data de expiração deve ser futura.',
             'permissions.array' => 'As permissões devem ser um array.',
             'permissions.min' => 'Deve haver pelo menos uma permissão.',
-            'permissions.*.in' => 'Permissão inválida. As permissões válidas são: view, download, comment.',
+            'permissions.*.in' => 'Permissão inválida. As permissões válidas são: view, print, comment, approve, reject.',
         ];
     }
 
@@ -68,7 +68,7 @@ class BudgetShareRequest extends FormRequest
     {
         // Define permissões padrão se não fornecidas
         if (! $this->has('permissions')) {
-            $this->merge(['permissions' => ['view']]);
+            $this->merge(['permissions' => ['view', 'print', 'comment', 'approve']]);
         }
 
         // Define expiração padrão de 7 dias se não fornecida

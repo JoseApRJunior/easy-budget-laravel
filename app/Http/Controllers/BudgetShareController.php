@@ -59,26 +59,6 @@ class BudgetShareController extends Controller
     }
 
     /**
-     * Rejeita um compartilhamento (recusa o acesso)
-     */
-    public function rejectShare(string $token, Request $request): JsonResponse|RedirectResponse
-    {
-        $result = $this->budgetShareService->rejectShare($token);
-
-        if ($request->expectsJson()) {
-            return $this->jsonResponse($result);
-        }
-
-        if (! $result->isSuccess()) {
-            return redirect()->back()
-                ->with('error', $this->getServiceErrorMessage($result, 'Erro ao rejeitar compartilhamento'));
-        }
-
-        return redirect()->route('budgets.public.shared.view', ['token' => $token])
-            ->with('success', 'Compartilhamento rejeitado com sucesso.');
-    }
-
-    /**
      * Lista todos os compartilhamentos do tenant
      */
     public function index(Request $request): View
@@ -296,6 +276,46 @@ class BudgetShareController extends Controller
     }
 
     /**
+     * Rejeita um orçamento via compartilhamento
+     */
+    public function reject(string $token, Request $request): JsonResponse|RedirectResponse
+    {
+        $result = $this->budgetShareService->rejectBudget($token);
+
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
+        }
+
+        if ($result->isSuccess()) {
+            return redirect()->route('budgets.public.shared.view', $token)
+                ->with('success', 'Orçamento rejeitado com sucesso!');
+        }
+
+        return redirect()->route('budgets.public.shared.view', $token)
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao rejeitar orçamento'));
+    }
+
+    /**
+     * Cancela um orçamento via compartilhamento
+     */
+    public function cancel(string $token, Request $request): JsonResponse|RedirectResponse
+    {
+        $result = $this->budgetShareService->cancelBudget($token);
+
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
+        }
+
+        if ($result->isSuccess()) {
+            return redirect()->route('budgets.public.shared.view', $token)
+                ->with('success', 'Orçamento cancelado com sucesso!');
+        }
+
+        return redirect()->route('budgets.public.shared.view', $token)
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao cancelar orçamento'));
+    }
+
+    /**
      * Adiciona um comentário ao orçamento
      */
     public function addComment(string $token, Request $request): JsonResponse
@@ -363,22 +383,5 @@ class BudgetShareController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
-    }
-
-    /**
-     * Download do Excel do orçamento via compartilhamento
-     */
-    public function downloadXlsx(string $token)
-    {
-        $result = $this->budgetShareService->validateAccess($token);
-
-        if (! $result->isSuccess()) {
-            abort(403, 'Acesso negado ou link expirado.');
-        }
-
-        // Como o Excel ainda não está implementado no sistema base,
-        // vamos redirecionar para a visualização com a mensagem.
-        return redirect()->route('budgets.public.shared.view', $token)
-            ->with('info', 'A exportação para Excel estará disponível em breve.');
     }
 }
