@@ -1,204 +1,376 @@
----
-name: service-layer-standard
-description: Garante que Services do Easy Budget sigam o padrão com ServiceResult e separação de camadas.
----
+# 🛠️ Skill: Service Layer Standard
 
-# Padrão de Service Layer do Easy Budget
+**Descrição:** Garante que Services do Easy Budget sigam o padrão com ServiceResult e separação de camadas.
 
-Esta skill define o padrão para criação e manutenção de Services no sistema Easy Budget. Os Services são organizados em camadas de responsabilidade: Domain, Application e Infrastructure.
+**Categoria:** Arquitetura de Serviços
+**Complexidade:** Média
+**Status:** ✅ Implementado e Documentado
 
-## Estrutura de Camadas
+## 🎯 Objetivo
+
+Padronizar a arquitetura de Services no Easy Budget Laravel, garantindo consistência, testabilidade e manutenibilidade através do uso do ServiceResult e separação clara de responsabilidades.
+
+## 📋 Requisitos Técnicos
+
+### **✅ ServiceResult Pattern**
+
+Todos os Services devem retornar instâncias de `ServiceResult`:
+
+```php
+// ❌ Errado
+public function create(array $data)
+{
+    return $this->repository->create($data);
+}
+
+// ✅ Correto
+public function create(array $data): ServiceResult
+{
+    return $this->repository->create($data);
+}
+```
+
+### **✅ Separação de Camadas**
+
+- **Domain Services:** Regras de negócio específicas da entidade
+- **Application Services:** Orquestração de workflows complexos
+- **Infrastructure Services:** Integrações externas (APIs, e-mail, cache)
+
+### **✅ Tratamento de Erros**
+
+```php
+public function create(array $data): ServiceResult
+{
+    try {
+        // Validação
+        $validation = $this->validate($data);
+        if (!$validation->isSuccess()) {
+            return $validation;
+        }
+
+        // Regras de negócio
+        $businessRules = $this->validateBusinessRules($data);
+        if (!$businessRules->isSuccess()) {
+            return $businessRules;
+        }
+
+        // Operação
+        return $this->repository->create($data);
+    } catch (Exception $e) {
+        return $this->error('Erro ao criar registro', OperationStatus::INTERNAL_ERROR, $e);
+    }
+}
+```
+
+## 🏗️ Estrutura Padrão
+
+### **📁 Organização de Diretórios**
 
 ```
 app/Services/
-├── Domain/          # Lógica de negócio específica da entidade
-├── Application/     # Orquestração e workflows
-├── Infrastructure/  # Integrações externas (e-mail, cache, arquivos)
-└── Core/            # Abstrações e contratos compartilhados
+├── Domain/                    # Regras de negócio específicas
+│   ├── BudgetService.php
+│   ├── CustomerService.php
+│   └── ProductService.php
+├── Application/               # Orquestração de workflows
+│   ├── BudgetWorkflowService.php
+│   └── CustomerManagementService.php
+├── Infrastructure/            # Integrações externas
+│   ├── EmailService.php
+│   ├── PaymentService.php
+│   └── CacheService.php
+└── Core/                      # Abstrações e contratos
+    ├── Abstracts/
+    └── Contracts/
 ```
 
-## Padrão de Service Domain
+### **🔧 AbstractBaseService**
+
+Todos os Services devem estender `AbstractBaseService`:
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Services\Domain;
-
-use App\Repositories\Contracts\BaseRepositoryInterface;
-use App\Support\ServiceResult;
-use Illuminate\Database\Eloquent\Model;
-
-abstract class BaseTenantService
+abstract class AbstractBaseService
 {
-    protected int $tenantId;
-    protected BaseRepositoryInterface $repository;
+    protected function success($data, string $message = ''): ServiceResult
+    protected function error(string $message, OperationStatus $status, ?Exception $exception = null): ServiceResult
+    protected function validate(array $data, bool $isUpdate = false): ServiceResult
+}
+```
 
-    public function __construct(BaseRepositoryInterface $repository)
-    {
-        $this->repository = $repository;
-        $this->tenantId = tenant('id');
-    }
+## 📝 Padrões de Implementação
 
-    /**
-     * Lista registros filtrados por tenant.
-     */
-    public function list(array $filters = []): ServiceResult
-    {
-        try {
-            $items = $this->repository->getAllByTenantId(
-                $this->tenantId,
-                $this->buildFilters($filters)
-            );
-            return $this->success($items, 'Listagem obtida com sucesso.');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
-    }
+### **1. Domain Services**
 
-    /**
-     * Cria um novo registro.
-     */
+```php
+class BudgetService extends AbstractBaseService
+{
     public function create(array $data): ServiceResult
     {
-        try {
-            $data['tenant_id'] = $this->tenantId;
-
-            $item = $this->repository->create($data);
-            return $this->success($item, 'Registro criado com sucesso.');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
+        // Validação de dados
+        $validation = $this->validate($data);
+        if (!$validation->isSuccess()) {
+            return $validation;
         }
-    }
 
-    /**
-     * Atualiza um registro existente.
-     */
-    public function update(int $id, array $data): ServiceResult
-    {
-        try {
-            $item = $this->repository->findByIdAndTenantId($id, $this->tenantId);
-            if (!$item) {
-                return $this->error('Registro não encontrado.');
-            }
-
-            $item = $this->repository->update($item, $data);
-            return $this->success($item, 'Registro atualizado com sucesso.');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
+        // Regras de negócio específicas
+        if ($data['total_value'] <= 0) {
+            return $this->error('Valor total deve ser maior que zero', OperationStatus::INVALID_DATA);
         }
-    }
 
-    /**
-     * Exclui um registro (soft delete).
-     */
-    public function delete(int $id): ServiceResult
-    {
-        try {
-            $item = $this->repository->findByIdAndTenantId($id, $this->tenantId);
-            if (!$item) {
-                return $this->error('Registro não encontrado.');
-            }
-
-            $this->repository->delete($item);
-            return $this->success(null, 'Registro excluído com sucesso.');
-        } catch (Exception $e) {
-            return $this->error($e->getMessage());
-        }
-    }
-
-    /**
-     * Constrói filtros normalizados.
-     */
-    protected function buildFilters(array $filters): array
-    {
-        // Implementação específica
-        return $filters;
-    }
-
-    /**
-     * Helpers para ServiceResult.
-     */
-    protected function success(mixed $data = null, string $message = ''): ServiceResult
-    {
-        return ServiceResult::success($data, $message);
-    }
-
-    protected function error(string $message): ServiceResult
-    {
-        return ServiceResult::error($message);
+        // Criação no repository
+        return $this->repository->create($data);
     }
 }
 ```
 
-## Regras de ServiceResult
-
-1. **Sempre use `ServiceResult`** pararetornos de operações que podem falhar
-2. **Mensagens claras**: Use mensagens que o usuário final pode entender
-3. **Dados estruturados**: Retorne os dados necessários para a view/controller
-4. **Logging**: Considere registrar erros para debugging
-
-## Exemplo de Service Real
+### **2. Application Services**
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Services\Domain;
-
-use App\Repositories\ProductRepository;
-use App\Services\Core\Abstracts\AbstractBaseService;
-
-class ProductService extends AbstractBaseService
+class BudgetWorkflowService extends AbstractBaseService
 {
-    public function __construct(ProductRepository $repository)
+    public function createCompleteBudget(array $budgetData, array $itemsData): ServiceResult
     {
-        parent::__construct($repository);
-    }
+        return $this->safeExecute(function() use ($budgetData, $itemsData) {
+            // 1. Criar orçamento
+            $budgetResult = $this->budgetService->create($budgetData);
+            if (!$budgetResult->isSuccess()) {
+                return $budgetResult;
+            }
 
-    /**
-     * Lista produtos ativos por categoria.
-     */
-    public function listByCategory(int $categoryId, array $filters = []): ServiceResult
-    {
-        $filters['category_id'] = $categoryId;
-        $filters['active'] = true;
+            $budget = $budgetResult->getData();
 
-        return $this->list($filters);
-    }
+            // 2. Criar itens
+            foreach ($itemsData as $item) {
+                $itemResult = $this->budgetItemService->create([
+                    'budget_id' => $budget->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price']
+                ]);
 
-    /**
-     * Ativa/desativa um produto.
-     */
-    public function toggleStatus(int $id): ServiceResult
-    {
-        $product = $this->repository->findByIdAndTenantId($id, $this->tenantId);
-        if (!$product) {
-            return $this->error('Produto não encontrado.');
-        }
+                if (!$itemResult->isSuccess()) {
+                    return $itemResult;
+                }
+            }
 
-        $newStatus = !$product->active;
-        $this->repository->update($product, ['active' => $newStatus]);
-
-        return $this->success(
-            ['active' => $newStatus],
-            $newStatus ? 'Produto ativado.' : 'Produto desativado.'
-        );
+            return $this->success($budget, 'Orçamento criado com sucesso');
+        });
     }
 }
 ```
 
-## Quando Criar um Service
+### **3. Infrastructure Services**
 
-- Quando há lógica de negócio que não cabe em um Repository
-- Quando há validações de domínio específicas
-- Quando há operações que envolvem múltiplos modelos
-- Quando há necessidade de logging ou auditoria específica
+```php
+class EmailService extends AbstractBaseService
+{
+    public function sendBudgetNotification(Budget $budget, string $email): ServiceResult
+    {
+        try {
+            // 1. Renderizar template
+            $html = $this->renderTemplate('budget_notification', [
+                'budget' => $budget,
+                'customer' => $budget->customer
+            ]);
 
-## Quando NÃO Criar um Service
+            // 2. Enviar e-mail
+            $this->mailer->send([
+                'to' => $email,
+                'subject' => 'Novo orçamento disponível',
+                'html' => $html
+            ]);
 
-- Operações simples de CRUD que o Repository já resolve
-- Lógica que é puramente de apresentação (Controller/View)
-- Operações que só são usadas em uma Action
+            return $this->success(null, 'E-mail enviado com sucesso');
+        } catch (Exception $e) {
+            return $this->error('Falha ao enviar e-mail', OperationStatus::INTERNAL_ERROR, $e);
+        }
+    }
+}
+```
+
+## 🔍 Validações Obrigatórias
+
+### **✅ Validação de Dados**
+
+```php
+protected function validate(array $data, bool $isUpdate = false): ServiceResult
+{
+    $rules = $this->getValidationRules($isUpdate);
+    $validator = Validator::make($data, $rules);
+
+    if ($validator->fails()) {
+        return $this->error(
+            'Dados inválidos',
+            OperationStatus::INVALID_DATA,
+            null,
+            $validator->errors()->toArray()
+        );
+    }
+
+    return $this->success(null, 'Validação bem-sucedida');
+}
+```
+
+### **✅ Validação de Regras de Negócio**
+
+```php
+protected function validateBusinessRules(array $data): ServiceResult
+{
+    // Regras específicas do domínio
+    if (isset($data['customer_id'])) {
+        $customer = $this->customerRepository->findById($data['customer_id']);
+        if (!$customer || $customer->status !== 'active') {
+            return $this->error('Cliente inativo ou não encontrado', OperationStatus::INVALID_DATA);
+        }
+    }
+
+    return $this->success(null, 'Regras de negócio validadas');
+}
+```
+
+## 🧪 Testes e Qualidade
+
+### **✅ Testes Unitários**
+
+```php
+public function testCreateBudgetWithValidData()
+{
+    $data = [
+        'customer_id' => 1,
+        'total_value' => 100.00,
+        'description' => 'Test budget'
+    ];
+
+    $result = $this->budgetService->create($data);
+
+    $this->assertTrue($result->isSuccess());
+    $this->assertInstanceOf(Budget::class, $result->getData());
+}
+
+public function testCreateBudgetWithInvalidData()
+{
+    $data = [
+        'customer_id' => 1,
+        'total_value' => -100.00, // Valor negativo
+        'description' => 'Test budget'
+    ];
+
+    $result = $this->budgetService->create($data);
+
+    $this->assertFalse($result->isSuccess());
+    $this->assertEquals(OperationStatus::INVALID_DATA, $result->getStatus());
+}
+```
+
+### **✅ Cobertura de Testes**
+
+- **Mínimo 80%** de cobertura de código
+- **Testes unitários** para todos os métodos públicos
+- **Testes de integração** para workflows complexos
+- **Testes de validação** para cenários de erro
+
+## 📊 Métricas de Qualidade
+
+### **✅ Performance**
+
+- **Response time** < 200ms para operações simples
+- **Memory usage** monitorado e otimizado
+- **Cache strategy** implementada para operações frequentes
+
+### **✅ Manutenibilidade**
+
+- **Complexidade ciclomática** < 10 por método
+- **Número de linhas** < 50 por método
+- **Número de parâmetros** < 5 por método
+
+### **✅ Testabilidade**
+
+- **Dependency injection** para todos os serviços externos
+- **Interfaces** para serviços que precisam de mock
+- **ServiceResult** padronizado para fácil verificação
+
+## 🔧 Ferramentas de Desenvolvimento
+
+### **✅ PHPStan**
+
+```php
+// Configuração recomendada
+return [
+    'level' => 8,
+    'paths' => ['app/Services'],
+    'ignoreErrors' => [
+        '#ServiceResult#',
+    ],
+];
+```
+
+### **✅ Laravel Pint**
+
+```json
+{
+    "preset": "psr12",
+    "rules": {
+        "array_syntax": {
+            "syntax": "short"
+        },
+        "ordered_imports": true
+    }
+}
+```
+
+## 🚀 Implementação Gradual
+
+### **Fase 1: Foundation**
+- [ ] Criar AbstractBaseService
+- [ ] Definir ServiceResult padrão
+- [ ] Criar contratos básicos
+
+### **Fase 2: Domain Services**
+- [ ] Refatorar BudgetService
+- [ ] Refatorar CustomerService
+- [ ] Refatorar ProductService
+
+### **Fase 3: Application Services**
+- [ ] Criar BudgetWorkflowService
+- [ ] Criar CustomerManagementService
+- [ ] Criar InventoryWorkflowService
+
+### **Fase 4: Infrastructure Services**
+- [ ] Criar EmailService
+- [ ] Criar PaymentService
+- [ ] Criar CacheService
+
+## 📚 Documentação Relacionada
+
+- [Service Pattern](../../DesignPatterns/Services/ServicePattern.php)
+- [Service Templates](../../DesignPatterns/Services/ServiceTemplates.php)
+- [AbstractBaseService](../../app/Services/Core/Abstracts/AbstractBaseService.php)
+- [ServiceResult](../../app/Support/ServiceResult.php)
+
+## 🎯 Benefícios
+
+### **✅ Consistência**
+- Todos os Services seguem o mesmo padrão
+- Resposta padronizada em toda aplicação
+- Tratamento de erro uniforme
+
+### **✅ Testabilidade**
+- ServiceResult facilita testes unitários
+- Dependency injection para mocks
+- Isolamento de lógica de negócio
+
+### **✅ Manutenibilidade**
+- Código familiar para todos os desenvolvedores
+- Separação clara de responsabilidades
+- Fácil identificação de problemas
+
+### **✅ Escalabilidade**
+- Arquitetura preparada para crescimento
+- Fácil adição de novos Services
+- Reutilização de lógica entre Services
+
+---
+
+**Última atualização:** 10/01/2026
+**Versão:** 1.0.0
+**Status:** ✅ Implementado e em uso

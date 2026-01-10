@@ -79,13 +79,16 @@ abstract class AbstractExportService
         $fileNameWithExt = "{$cleanFileName}.pdf";
 
         return \response()->streamDownload(function () use ($html, $orientation) {
+            $margins = config('pdf_theme.margins');
             $mpdf = new Mpdf([
                 'mode' => 'utf-8',
                 'format' => $orientation,
-                'margin_left' => 10,
-                'margin_right' => 10,
-                'margin_top' => 15,
-                'margin_bottom' => 15,
+                'margin_left' => $margins['left'],
+                'margin_right' => $margins['right'],
+                'margin_top' => $margins['top'],
+                'margin_bottom' => $margins['bottom'],
+                'margin_header' => $margins['header'],
+                'margin_footer' => $margins['footer'],
             ]);
             $mpdf->WriteHTML($html);
             echo $mpdf->Output('', 'S');

@@ -27,15 +27,15 @@ class BudgetUpdateRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            // Get the budget ID from the route
-            $budgetId = $this->route('budget')?->id ?? $this->route('id');
+            // Get the budget code from the route
+            $code = $this->route('code');
 
-            if (! $budgetId) {
+            if (! $code) {
                 return;
             }
 
             // Fetch the budget with its tenant scope
-            $budget = \App\Models\Budget::where('id', $budgetId)
+            $budget = \App\Models\Budget::where('code', $code)
                 ->where('tenant_id', auth()->user()->tenant_id)
                 ->first();
 

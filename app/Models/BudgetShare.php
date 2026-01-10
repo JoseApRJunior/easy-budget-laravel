@@ -58,7 +58,7 @@ class BudgetShare extends Model
         'permissions' => 'array',
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
-        'status' => 'string',
+        'status' => \App\Enums\BudgetShareStatus::class,
         'access_count' => 'integer',
         'last_accessed_at' => 'datetime',
         'rejected_at' => 'datetime',
@@ -81,7 +81,7 @@ class BudgetShare extends Model
             'permissions' => 'nullable|array',
             'expires_at' => 'nullable|date|after:now',
             'is_active' => 'required|boolean',
-            'status' => 'required|string|in:active,rejected,expired',
+            'status' => 'required|string|in:active,approved,rejected,expired',
             'access_count' => 'required|integer|min:0',
         ];
     }

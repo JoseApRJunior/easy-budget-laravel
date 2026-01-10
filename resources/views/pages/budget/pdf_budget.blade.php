@@ -74,8 +74,8 @@
 
     <!-- Signatures -->
     <x-pdf.signatures
-        :providerName="$displayProvider && $displayProvider->commonData ? ($displayProvider->commonData->company_name ?: ($displayProvider->commonData->first_name . ' ' . $displayProvider->commonData->last_name)) : ($displayTenant->name ?? 'A EMPRESA')"
-        :customerName="$budget->customer->first_name . ' ' . $budget->customer->last_name"
+        :providerName="$displayProvider && $displayProvider->commonData ? $displayProvider->commonData->display_name : ($displayTenant->name ?? 'A EMPRESA')"
+        :customerName="$budget->customer->display_name ?: 'CLIENTE'"
     />
 
     <!-- Footer Note -->

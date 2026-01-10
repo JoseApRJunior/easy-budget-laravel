@@ -175,4 +175,16 @@ class CommonData extends Model
     {
         return $this->type === self::TYPE_COMPANY;
     }
+
+    /**
+     * Get the display name (company name or full name).
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        if ($this->isCompany()) {
+            return $this->company_name ?? '';
+        }
+
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+    }
 }

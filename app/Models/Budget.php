@@ -182,6 +182,21 @@ class Budget extends Model
     }
 
     /**
+     * Get the provider (business owner) for the Budget.
+     */
+    public function provider(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Provider::class,
+            Tenant::class,
+            'id', // Foreign key on tenants table...
+            'tenant_id', // Foreign key on providers table...
+            'tenant_id', // Local key on budgets table...
+            'id' // Local key on tenants table...
+        );
+    }
+
+    /**
      * Get the customer that owns the Budget.
      */
     public function customer(): BelongsTo

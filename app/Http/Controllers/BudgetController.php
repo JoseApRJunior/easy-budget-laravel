@@ -12,7 +12,10 @@ use App\Http\Requests\BudgetUpdateRequest;
 use App\Models\Budget;
 use App\Models\User;
 use App\Services\Domain\BudgetService;
+use App\Services\Domain\BudgetShareService;
 use App\Services\Domain\CustomerService;
+use App\Services\Infrastructure\BudgetTokenService;
+use App\Services\Infrastructure\MailerService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +30,9 @@ class BudgetController extends Controller
     public function __construct(
         private readonly BudgetService $budgetService,
         private readonly CustomerService $customerService,
+        private readonly BudgetShareService $budgetShareService,
+        private readonly BudgetTokenService $budgetTokenService,
+        private readonly MailerService $mailerService,
     ) {}
 
     /**
@@ -239,26 +245,46 @@ class BudgetController extends Controller
     /**
      * Imprimir ou gerar PDF do orçamento.
      */
-    public function print(Request $request, string $code)
+    public function print(Request $request, string $code, ?string $token = null)
     {
-        $result = $this->budgetService->findByCode($code, [
-            'customer.commonData',
-            'customer.contact',
-            'customer.address',
-            'services.serviceItems',
-            'services.category',
-        ]);
+        // Se houver um token, valida o acesso público
+        if ($token) {
+            $accessResult = $this->budgetShareService->validateAccess($token);
+            if ($accessResult->isError()) {
+                abort(403, $accessResult->getMessage());
+            }
 
-        if ($result->isError()) {
-            abort(404, 'Orçamento não encontrado.');
+            $accessData = $accessResult->getData();
+            $budget = $accessData['budget'];
+            $permissions = $accessData['permissions'];
+
+            if (! $permissions['can_print']) {
+                abort(403, 'Você não tem permissão para imprimir este orçamento.');
+            }
+
+            // O provider é o dono do orçamento (tenant), já carregado via validateAccess
+            $provider = $budget->tenant->provider;
+        } else {
+            // Acesso via área do provider (autenticado)
+            $result = $this->budgetService->findByCode($code, [
+                'customer.commonData',
+                'customer.contact',
+                'customer.address',
+                'services.serviceItems',
+                'services.category',
+            ]);
+
+            if ($result->isError()) {
+                abort(404, 'Orçamento não encontrado.');
+            }
+
+            $budget = $result->getData();
+            $this->authorize('view', $budget);
+
+            /** @var User $user */
+            $user = Auth::user();
+            $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
         }
-
-        $budget = $result->getData();
-        $this->authorize('view', $budget);
-
-        /** @var User $user */
-        $user = Auth::user();
-        $provider = $user->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
 
         $isPdf = $request->has('pdf');
         $download = $request->has('download');
@@ -266,19 +292,31 @@ class BudgetController extends Controller
         if ($isPdf) {
             $html = view('pages.budget.pdf_budget', compact('budget', 'provider'))->render();
 
+            $margins = config('pdf_theme.margins');
+
             $mpdf = new Mpdf([
                 'mode' => 'utf-8',
                 'format' => 'A4',
-                'margin_left' => 8,
-                'margin_right' => 8,
-                'margin_top' => 8,
-                'margin_bottom' => 8,
-                'margin_header' => 5,
-                'margin_footer' => 5,
+                'margin_left' => $margins['left'],
+                'margin_right' => $margins['right'],
+                'margin_top' => $margins['top'],
+                'margin_bottom' => $margins['bottom'],
+                'margin_header' => $margins['header'],
+                'margin_footer' => $margins['footer'],
             ]);
 
             $mpdf->SetHeader('Orçamento #'.$budget->code.'||Gerado em: '.now()->format('d/m/Y'));
-            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: '.Auth::user()->name.'|'.config('app.url'));
+
+            if (Auth::check()) {
+                $userName = Auth::user()->name;
+            } else {
+                $commonData = $provider->commonData ?? null;
+                $userName = $commonData
+                    ? ($commonData->company_name ?: ($commonData->first_name.' '.$commonData->last_name))
+                    : 'Sistema';
+            }
+
+            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: '.$userName.'|'.config('app.url'));
 
             $mpdf->WriteHTML($html);
 
@@ -304,6 +342,91 @@ class BudgetController extends Controller
 
         if ($result->isError()) {
             return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        return redirect()->back()->with('success', $result->getMessage());
+    }
+
+    /**
+     * Exibe a página pública para o cliente escolher o status do orçamento (Aprovar/Rejeitar).
+     */
+    public function chooseBudgetStatus(string $code, string $token): View
+    {
+        $result = $this->budgetShareService->validateAccess($token);
+
+        if ($result->isError()) {
+            // Se o erro for de expiração, tentamos regenerar e reenviar se for o public_token direto
+            if ($result->getStatusCode() === \App\Enums\OperationStatus::EXPIRED) {
+                $budgetResult = $this->budgetService->findByCode($code, ['customer.contact', 'tenant.provider']);
+
+                if ($budgetResult->isSuccess()) {
+                    $budget = $budgetResult->getData();
+
+                    // Apenas regeneramos se o token fornecido for o public_token atual (evita loop)
+                    if ($budget->public_token === $token) {
+                        $newToken = $this->budgetTokenService->regenerateToken($budget);
+
+                        // Verifica se o cliente tem um e-mail válido para reenvio
+                        $customerEmail = $budget->customer->contact?->email ?? $budget->customer->contact?->email_business;
+
+                        if ($customerEmail) {
+                            // Envia o novo link por e-mail
+                            $this->mailerService->sendBudgetNotificationMail(
+                                $budget,
+                                $budget->customer,
+                                'sent', // Usamos 'sent' para indicar reenvio
+                                $budget->tenant,
+                                null,
+                                route('budgets.choose-status', ['code' => $budget->code, 'token' => $newToken])
+                            );
+
+                            $info = 'Este link expirou. Um novo link de acesso foi enviado para o seu e-mail.';
+                        } else {
+                            $info = 'Este link expirou. Um novo token foi gerado, mas não foi possível enviar por e-mail (e-mail do cliente não encontrado).';
+                        }
+
+                        return view('pages.budget.choose_budget_status', [
+                            'budget' => $budget,
+                            'share' => null,
+                            'token' => $newToken,
+                            'info' => $info,
+                        ]);
+                    }
+                }
+            }
+
+            abort(403, $result->getMessage());
+        }
+
+        $data = $result->getData();
+
+        return view('pages.budget.choose_budget_status', [
+            'budget' => $data['budget'],
+            'share' => $data['share'],
+            'permissions' => $data['permissions'] ?? ['view', 'print', 'comment', 'approve'],
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * Processa a decisão do cliente sobre o orçamento.
+     */
+    public function chooseBudgetStatusStore(Request $request): RedirectResponse
+    {
+        $token = $request->input('token');
+        $action = $request->input('action'); // 'approve' ou 'reject'
+        $comment = $request->input('comment');
+
+        if ($action === 'approve') {
+            $result = $this->budgetShareService->approveBudget($token, $comment);
+        } elseif ($action === 'reject') {
+            $result = $this->budgetShareService->rejectBudget($token, $comment);
+        } else {
+            return redirect()->back()->with('error', 'Ação inválida.');
+        }
+
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage())->withInput();
         }
 
         return redirect()->back()->with('success', $result->getMessage());

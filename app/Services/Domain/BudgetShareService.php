@@ -29,85 +29,90 @@ class BudgetShareService extends AbstractBaseService
     /**
      * Aprova o orçamento vinculado ao compartilhamento
      */
-    public function approveBudget(string $token): ServiceResult
+    public function approveBudget(string $token, ?string $comment = null): ServiceResult
     {
-        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::APPROVED);
+        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::APPROVED, $comment);
     }
 
     /**
      * Rejeita o orçamento vinculado ao compartilhamento
      */
-    public function rejectBudget(string $token): ServiceResult
+    public function rejectBudget(string $token, ?string $comment = null): ServiceResult
     {
-        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::REJECTED);
+        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::REJECTED, $comment);
     }
 
     /**
      * Cancela o orçamento vinculado ao compartilhamento
      */
-    public function cancelBudget(string $token): ServiceResult
+    public function cancelBudget(string $token, ?string $comment = null): ServiceResult
     {
-        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::CANCELLED);
+        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::CANCELLED, $comment);
     }
 
     /**
      * Atualiza o status do orçamento via token
      */
-    private function updateBudgetStatus(string $token, \App\Enums\BudgetStatus $newStatus): ServiceResult
+    private function updateBudgetStatus(string $token, \App\Enums\BudgetStatus $newStatus, ?string $comment = null): ServiceResult
     {
-        return $this->safeExecute(function () use ($token, $newStatus) {
-            $share = $this->budgetShareRepository->findByToken($token);
-            $budget = null;
+        return $this->safeExecute(function () use ($token, $newStatus, $comment) {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($token, $newStatus, $comment) {
+                $share = $this->budgetShareRepository->findByToken($token);
+                $budget = null;
 
-            if (! $share) {
-                // Fallback para public_token na tabela budgets
-                $budget = Budget::where('public_token', $token)->first();
+                if (! $share) {
+                    // Fallback para public_token na tabela budgets
+                    $budget = Budget::where('public_token', $token)->first();
+                    if (! $budget) {
+                        return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                    }
+                } else {
+                    if (! $share->is_active) {
+                        return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                    }
+                    $budget = $this->budgetRepository->find($share->budget_id);
+                }
+
                 if (! $budget) {
-                    return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                    return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
                 }
-            } else {
-                if (! $share->is_active) {
-                    return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
-                }
-                $budget = $this->budgetRepository->find($share->budget_id);
-            }
 
-            if (! $budget) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
-            }
-
-            // Atualiza o status do orçamento
-            $updateData = [
-                'status' => $newStatus,
-            ];
-
-            if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
-                $updateData['approved_at'] = now();
-            } elseif ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
-                $updateData['rejected_at'] = now();
-            }
-
-            $this->budgetRepository->update($budget->id, $updateData);
-
-            // Marca o compartilhamento como concluído/rejeitado se for um compartilhamento real
-            if ($share) {
-                $this->budgetShareRepository->update($share->id, [
-                    'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'approved' : 'rejected',
-                    'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? false : true,
+                // Atualiza o status do orçamento
+                $this->budgetRepository->update($budget->id, [
+                    'status' => $newStatus,
+                    'customer_comment' => $comment,
+                    'status_updated_at' => now(),
+                    'status_updated_by' => null, // Ação realizada pelo cliente (público)
                 ]);
-            } else {
-                // Se for fallback, limpa o token do orçamento apenas se aprovado
-                if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
-                    $budget->update([
-                        'public_token' => null,
-                        'public_expires_at' => null,
-                    ]);
+
+                // Marca o compartilhamento como concluído/rejeitado se for um compartilhamento real
+                if ($share) {
+                    $shareUpdateData = [
+                        'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED 
+                            ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                            : \App\Enums\BudgetShareStatus::REJECTED->value,
+                        'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? false : true,
+                    ];
+
+                    if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
+                        $shareUpdateData['rejected_at'] = now();
+                    }
+
+                    $this->budgetShareRepository->update($share->id, $shareUpdateData);
+                } else {
+                    // Se for fallback, limpa o token do orçamento apenas se aprovado
+                    if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
+                        $budget->update([
+                            'public_token' => null,
+                            'public_expires_at' => null,
+                        ]);
+                    }
                 }
-            }
 
-            $message = $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado com sucesso.' : 'Orçamento rejeitado com sucesso.';
+                $message = $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado com sucesso.' : 'Orçamento rejeitado com sucesso.';
 
-            return $this->success($budget, $message);
+                return $this->success($budget, $message);
+            });
         }, 'Erro ao atualizar status do orçamento.');
     }
 
@@ -134,7 +139,7 @@ class BudgetShareService extends AbstractBaseService
             $data['share_token'] = $this->generateUniqueToken();
             $data['is_active'] = true;
             $data['access_count'] = 0;
-            $data['status'] = 'active';
+            $data['status'] = \App\Enums\BudgetShareStatus::ACTIVE->value;
 
             $dto = BudgetShareDTO::fromArray($data);
 
@@ -174,7 +179,7 @@ class BudgetShareService extends AbstractBaseService
                         'share_token' => $token,
                         'permissions' => ['view', 'print', 'comment', 'approve'],
                         'is_active' => true,
-                        'status' => 'active',
+                        'status' => \App\Enums\BudgetShareStatus::ACTIVE,
                         'tenant_id' => $budget->tenant_id,
                     ]);
 
@@ -188,7 +193,7 @@ class BudgetShareService extends AbstractBaseService
 
             // Verifica expiração para BudgetShare real
             if ($share->id && $share->expires_at && now()->gt($share->expires_at)) {
-                $this->budgetShareRepository->update($share->id, ['is_active' => false, 'status' => 'expired']);
+                $this->budgetShareRepository->update($share->id, ['is_active' => false, 'status' => \App\Enums\BudgetShareStatus::EXPIRED->value]);
 
                 return $this->error(OperationStatus::EXPIRED, 'Token de compartilhamento expirado.');
             }
@@ -203,9 +208,29 @@ class BudgetShareService extends AbstractBaseService
 
             // Carrega o orçamento com relacionamentos necessários se não tiver sido carregado no fallback
             if (! isset($budget)) {
-                $budget = $this->budgetRepository->find($share->budget_id, ['tenant', 'customer', 'services.serviceItems']);
+                $budget = $this->budgetRepository->find($share->budget_id, [
+                    'tenant.provider.commonData',
+                    'tenant.provider.contact',
+                    'tenant.provider.address',
+                    'tenant.provider.businessData',
+                    'customer.commonData',
+                    'customer.contact',
+                    'customer.address',
+                    'services.serviceItems',
+                    'services.category',
+                ]);
             } else {
-                $budget->load(['tenant', 'customer', 'services.serviceItems']);
+                $budget->load([
+                    'tenant.provider.commonData',
+                    'tenant.provider.contact',
+                    'tenant.provider.address',
+                    'tenant.provider.businessData',
+                    'customer.commonData',
+                    'customer.contact',
+                    'customer.address',
+                    'services.serviceItems',
+                    'services.category',
+                ]);
             }
 
             if (! $budget) {

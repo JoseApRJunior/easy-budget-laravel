@@ -32,4 +32,18 @@ return [
     'fonts' => [
         'primary' => "'Segoe UI', Arial, sans-serif",
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Margins (mm)
+    |--------------------------------------------------------------------------
+    */
+    'margins' => [
+        'left' => 8,
+        'right' => 8,
+        'top' => 10, // Espaço para o cabeçalho não encavalar
+        'bottom' => 12,
+        'header' => 5,
+        'footer' => 5,
+    ],
 ];

@@ -12,7 +12,7 @@
     $colors = config('pdf_theme.colors');
 @endphp
 
-<div style="margin-bottom: 20px;">
+<div >
     <table style="width: 100%; border-collapse: collapse;">
         <tr>
             <td style="width: 60%; vertical-align: top; padding: 0;">

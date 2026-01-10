@@ -444,10 +444,15 @@ class Customer extends Model
      */
     public function getFullNameAttribute(): string
     {
-        $firstName = $this->commonData?->first_name ?? '';
-        $lastName = $this->commonData?->last_name ?? '';
+        return $this->commonData?->display_name ?? '';
+    }
 
-        return trim($firstName.' '.$lastName);
+    /**
+     * Get the display name for the customer.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->commonData?->display_name ?? '';
     }
 
     /**
