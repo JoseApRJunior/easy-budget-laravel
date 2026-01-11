@@ -35,8 +35,8 @@
                                 <h5 class="mb-1">Serviço {{ $service->code }}</h5>
                                 <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
                             </div>
-                            <div>
-                                <x-status-badge :item="$service" statusField="status" />
+                            <div class="text-end">
+                                <x-status-description :item="$service" statusField="status" />
                             </div>
                         </div>
                     </div>

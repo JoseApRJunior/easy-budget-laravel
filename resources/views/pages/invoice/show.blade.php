@@ -29,7 +29,7 @@
                                 Gerada em {{ $invoice->created_at->format('d/m/Y H:i') }}
                             </p>
                         </div>
-                        <x-status-badge :item="$invoice" />
+                        <x-status-description :item="$invoice" />
                     </div>
 
                     <!-- Dados do Cliente e Empresa -->
@@ -205,7 +205,8 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <x-status-badge :item="$invoice" class="w-100 py-2 fs-6" />
+                        <x-status-badge :item="$invoice" class="w-100 py-2 fs-6 mb-1" />
+                        <x-status-description :item="$invoice" class="mt-1" />
                     </div>
 
                     @if ($invoice->due_date)

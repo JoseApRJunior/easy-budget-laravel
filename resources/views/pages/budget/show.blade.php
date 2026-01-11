@@ -38,7 +38,9 @@
                         </div>
                         <div>
                             <label class="text-muted small d-block mb-1">Status Atual</label>
-                            <x-status-badge :item="$budget" statusField="status" />
+                            <div class="d-flex flex-column">
+                                <x-status-description :item="$budget" statusField="status" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -63,15 +65,15 @@
                 {{-- Segunda Linha: Cliente --}}
                 <div class="col-12 mt-2">
                     <h6 class="fw-bold mb-3 d-flex align-items-center">
-                        <i class="bi bi-person me-2 text-primary"></i>
+                        <i class="bi bi-person me-2"></i>
                         Dados do Cliente
                     </h6>
                     <div class="row g-3">
-                        @if ($budget->customer && $budget->customer->commonData)
+                        @if ($budget->customer)
                             <div class="col-md-4">
                                 <x-resource-info
                                     title="Nome/Razão Social"
-                                    :subtitle="$budget->customer->commonData->company_name ?? ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)"
+                                    :subtitle="$budget->customer->name"
                                     icon="person"
                                     class="small"
                                 />
@@ -346,10 +348,15 @@
                     <div class="alert alert-info small">
                         <i class="bi bi-info-circle me-2"></i>
                         @if($isSent)
-                            Os produtos deste orçamento já foram reservados. O reenvio atualizará o PDF e gerará um novo link de acesso, mas <strong>não duplicará a reserva de estoque</strong>.
+                            O orçamento já foi enviado. O reenvio atualizará o PDF e gerará um novo link de acesso.
                         @else
-                            O PDF do orçamento será gerado, o link de visualização pública será criado e <strong>os produtos serão reservados no estoque automaticamente</strong>.
+                            O PDF do orçamento será gerado e o link de visualização pública será criado.
                         @endif
+                        <br>
+                        <span class="mt-1 d-block">
+                            <i class="bi bi-shield-check me-1"></i>
+                            <strong>Reserva de Estoque:</strong> Conforme nossa política, os produtos serão reservados automaticamente apenas quando o serviço for movido para o status <strong>"Em Preparação"</strong>.
+                        </span>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">

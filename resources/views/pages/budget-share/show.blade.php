@@ -110,12 +110,12 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Status do Orçamento</label>
-                                <p class="form-control-plaintext">
-                                    <span class="badge bg-{{ $share->budget->status === 'approved' ? 'success' : 
-                                                           ($share->budget->status === 'pending' ? 'warning' : 'secondary') }}">
-                                        {{ ucfirst($share->budget->status) }}
-                                    </span>
-                                </p>
+                                <div class="d-flex flex-column">
+                                    <div class="mb-1">
+                                        <x-status-badge :item="$share->budget" statusField="status" />
+                                    </div>
+                                    <x-status-description :item="$share->budget" statusField="status" />
+                                </div>
                             </div>
                         </div>
                     </div>

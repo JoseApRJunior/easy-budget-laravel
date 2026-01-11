@@ -1,144 +1,51 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('emails.layouts.base')
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ $appName }} - Nova mensagem de contato</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      line-height: 1.6;
-      color: #333;
-      background-color: #f0f0f0;
-      margin: 0;
-      padding: 0;
-    }
+@section('content')
+<div style="margin-bottom: 25px;">
+    <h2 style="color: {{ $statusColor ?? '#0d6efd' }}; margin-bottom: 15px;">Nova Mensagem de Contato</h2>
+    <p>Você recebeu uma nova mensagem através do formulário de contato.</p>
+</div>
 
-    .container {
-      width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
-      background-color: #ffffff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+    <h3 style="color: #495057; font-size: 16px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #dee2e6; padding-bottom: 10px;">
+        Informações do Remetente
+    </h3>
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="padding: 5px 0; color: #6c757d; width: 100px;"><strong>Nome:</strong></td>
+            <td style="padding: 5px 0; color: #212529;">{{ $contactData['name'] ?? 'N/A' }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 0; color: #6c757d;"><strong>E-mail:</strong></td>
+            <td style="padding: 5px 0; color: #212529;">
+                <a href="mailto:{{ $contactData['email'] ?? '' }}" style="color: {{ $statusColor ?? '#0d6efd' }}; text-decoration: none;">
+                    {{ $contactData['email'] ?? 'N/A' }}
+                </a>
+            </td>
+        </tr>
+        @if(isset($contactData['phone']) && !empty($contactData['phone']))
+        <tr>
+            <td style="padding: 5px 0; color: #6c757d;"><strong>Telefone:</strong></td>
+            <td style="padding: 5px 0; color: #212529;">{{ $contactData['phone'] }}</td>
+        </tr>
+        @endif
+        @if(isset($contactData['subject']) && !empty($contactData['subject']))
+        <tr>
+            <td style="padding: 5px 0; color: #6c757d;"><strong>Assunto:</strong></td>
+            <td style="padding: 5px 0; color: #212529;">{{ $contactData['subject'] }}</td>
+        </tr>
+        @endif
+    </table>
+</div>
 
-    .header {
-      background-color: #0D6EFD;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+<div style="background-color: #ffffff; border-left: 4px solid {{ $statusColor ?? '#0d6efd' }}; padding: 15px 20px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <h3 style="color: #495057; font-size: 16px; margin-top: 0; margin-bottom: 10px;">Mensagem:</h3>
+    <p style="white-space: pre-wrap; color: #212529; font-style: italic; line-height: 1.6;">{{ $contactData['message'] ?? 'Sem mensagem.' }}</p>
+</div>
 
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .content {
-      padding: 30px;
-    }
-
-    .contact-info {
-      background-color: #f8f9fa;
-      padding: 20px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-
-    .contact-info h3 {
-      margin-top: 0;
-      color: #0D6EFD;
-    }
-
-    .contact-info ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .contact-info li {
-      margin-bottom: 10px;
-    }
-
-    .contact-info strong {
-      color: #495057;
-    }
-
-    .message-box {
-      background-color: #f8f9fa;
-      border-left: 4px solid #0D6EFD;
-      padding: 15px;
-      margin: 20px 0;
-      font-style: italic;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      padding: 20px;
-      background-color: #f8f9fa;
-      font-size: 0.9em;
-      color: #6c757d;
-    }
-
-    .btn {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #0D6EFD;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-      margin-top: 15px;
-    }
-
-    .btn:hover {
-      background-color: #0b5ed7;
-    }
-  </style>
-</head>
-
-<body>
-  <div class='container'>
-    <div class='header'>
-      <h1>{{ $appName }}</h1>
-      <p>Nova mensagem de contato recebida</p>
-    </div>
-    <div class='content'>
-      <p>Olá,</p>
-      <p>Uma nova mensagem de contato foi recebida através do formulário de suporte. Aqui estão os detalhes:</p>
-
-      <div class="contact-info">
-        <h3>Informações do Contato</h3>
-        <ul>
-          <li><strong>Nome:</strong> {{ $contactData[ 'first_name' ] ?? '' }} {{ $contactData[ 'last_name' ] ?? '' }}</li>
-          <li><strong>E-mail:</strong> {{ $contactData[ 'email' ] }}</li>
-          <li><strong>Assunto:</strong> {{ $contactData[ 'subject' ] }}</li>
-          <li><strong>Data/Hora:</strong> {{ now()->format( 'd/m/Y H:i:s' ) }}</li>
-          @if( $tenant )
-            <li><strong>Empresa:</strong> {{ $tenant->name }}</li>
-          @endif
-        </ul>
-      </div>
-
-      <div class="message-box">
-        <strong>Mensagem:</strong><br>
-        {{ $contactData[ 'message' ] }}
-      </div>
-
-      <p>Por favor, responda ao contato o mais breve possível para manter um bom atendimento ao cliente.</p>
-
-      <hr>
-      <a href="{{ $supportUrl }}" class="btn">Acessar Sistema de Suporte</a>
-    </div>
-    <div class='footer'>
-      <p>Este é um e-mail automático enviado pelo sistema {{ $appName }}.</p>
-      <p>&copy; {{ date( 'Y' ) }} {{ $appName }}.<br>Todos os direitos reservados.</p>
-    </div>
-  </div>
-
-</body>
-
-</html>
+<div style="text-align: center; margin-top: 30px;">
+    <a href="mailto:{{ $contactData['email'] ?? '' }}" style="display: inline-block; padding: 12px 24px; background-color: {{ $statusColor ?? '#0d6efd' }}; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+        Responder Cliente
+    </a>
+</div>
+@endsection

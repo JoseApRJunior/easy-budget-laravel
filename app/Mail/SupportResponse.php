@@ -99,8 +99,27 @@ class SupportResponse extends Mailable implements ShouldQueue
                 'tenant' => $this->tenant,
                 'support_email' => $this->getSupportEmail(),
                 'ticket_url' => $this->generateTicketUrl(),
+                'isSystemEmail' => false,
+                'statusColor' => $this->getStatusColor(),
             ],
         );
+    }
+
+    /**
+     * Obtém a cor baseada no status do ticket.
+     */
+    private function getStatusColor(): string
+    {
+        $status = $this->ticket['status'] ?? 'open';
+        
+        return match ($status) {
+            'open' => '#ffc107', // Amarelo/Avisando
+            'in_progress' => '#0dcaf0', // Azul claro/Info
+            'resolved' => '#198754', // Verde/Sucesso
+            'closed' => '#6c757d', // Cinza
+            'cancelled' => '#dc3545', // Vermelho
+            default => '#0d6efd',
+        };
     }
 
     /**
@@ -122,23 +141,44 @@ class SupportResponse extends Mailable implements ShouldQueue
             return $this->company;
         }
 
-        // Tentar obter dados da empresa através do tenant
+        // Tentar obter dados da empresa através do tenant com carregamento antecipado
         if ($this->tenant) {
+            try {
+                // Carregar relações necessárias sem scopes globais para evitar problemas em filas
+                $tenantData = Tenant::withoutGlobalScopes()
+                    ->with(['provider.commonData', 'provider.contact'])
+                    ->find($this->tenant->id);
+
+                if ($tenantData && $tenantData->provider && $tenantData->provider->commonData) {
+                    $common = $tenantData->provider->commonData;
+                    $contact = $tenantData->provider->contact;
+
+                    return [
+                        'company_name' => $common->company_name ?? $tenantData->name,
+                        'address_line1' => $common->address_line1,
+                        'address_line2' => $common->address_line2,
+                        'city' => $common->city,
+                        'state' => $common->state,
+                        'postal_code' => $common->postal_code,
+                        'phone' => $contact?->phone_business ?? $contact?->phone_personal,
+                        'email' => $contact?->email_business ?? $contact?->email_personal,
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Fallback silencioso em caso de erro no banco
+            }
+
             return [
                 'company_name' => $this->tenant->name,
                 'email' => null,
-                'email_business' => null,
                 'phone' => null,
-                'phone_business' => null,
             ];
         }
 
         return [
-            'company_name' => 'Easy Budget',
+            'company_name' => config('app.name', 'Easy Budget'),
             'email' => null,
-            'email_business' => null,
             'phone' => null,
-            'phone_business' => null,
         ];
     }
 

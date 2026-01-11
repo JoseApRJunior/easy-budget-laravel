@@ -17,7 +17,7 @@
                         <i class="bi bi-shield-check me-1 text-success"></i>
                         Acesso seguro via link oficial •  {{ $budget->code }}
                     </span>
-                    <x-status-description :item="$budget" :useColor="false" class="ms-md-2" />
+                    <x-status-description :item="$budget" class="ms-md-2" />
                 </div>
             </div>
         </div>

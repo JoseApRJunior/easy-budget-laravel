@@ -18,7 +18,7 @@
             @endif
         </h1>
 
-        <p>Olá, {{ $customer->first_name }}.</p>
+        <p>Olá, {{ $budgetData['customer_name'] }}.</p>
 
         <div class="panel">
             <p><strong>Código:</strong> {{ $budgetData['code'] }}</p>

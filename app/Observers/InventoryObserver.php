@@ -61,13 +61,15 @@ class InventoryObserver
             $this->returnBudgetItemsToInventory($budget);
         }
 
-        // Se orçamento foi aprovado, reservar produtos do estoque
+        // Se orçamento foi aprovado, não reservamos mais aqui (conforme nova lógica: reserva no início da preparação)
+        /*
         if (
             $newStatus->value === BudgetStatus::APPROVED->value &&
             in_array($oldStatus, [BudgetStatus::DRAFT->value, BudgetStatus::PENDING->value])
         ) {
             $this->reserveBudgetItemsFromInventory($budget);
         }
+        */
     }
 
     /**
@@ -96,11 +98,19 @@ class InventoryObserver
             $this->returnServiceItemsToInventory($service);
         }
 
-        // Se serviço foi para preparação ou direto para execução, consumir produtos do estoque
-        // Isso transforma a reserva (se existir) em baixa física
+        // Se serviço foi para preparação, reservar produtos do estoque
         if (
-            in_array($newStatus->value, [ServiceStatus::PREPARING->value, ServiceStatus::IN_PROGRESS->value]) &&
-            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value])
+            $newStatus->value === ServiceStatus::PREPARING->value &&
+            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value, ServiceStatus::APPROVED->value])
+        ) {
+            $this->reserveServiceItemsFromInventory($service);
+        }
+
+        // Se serviço foi para execução, consumir produtos do estoque
+        // Isso confirma a reserva (se existir) ou faz a baixa direta
+        if (
+            $newStatus->value === ServiceStatus::IN_PROGRESS->value &&
+            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value, ServiceStatus::PREPARING->value, ServiceStatus::APPROVED->value])
         ) {
             $this->consumeServiceItemsFromInventory($service);
         }
@@ -150,8 +160,8 @@ class InventoryObserver
             );
         }
 
-        // Se o serviço estiver aprovado, reservar do estoque
-        if ($service->status->value === ServiceStatus::APPROVED->value) {
+        // Se o serviço estiver em preparação, reservar do estoque
+        if ($service->status->value === ServiceStatus::PREPARING->value) {
             $this->inventoryService->reserveProduct(
                 $serviceItem->product_id,
                 $serviceItem->quantity,
@@ -183,8 +193,8 @@ class InventoryObserver
             );
         }
 
-        // Se o serviço estava aprovado, liberar reserva
-        if ($service->status->value === ServiceStatus::APPROVED->value) {
+        // Se o serviço estava em preparação, liberar reserva
+        if ($service->status->value === ServiceStatus::PREPARING->value) {
             $this->inventoryService->releaseReservation(
                 $serviceItem->product_id,
                 $serviceItem->quantity,
@@ -193,6 +203,33 @@ class InventoryObserver
                 $serviceItem->id,
                 $service->tenant_id,
             );
+        }
+    }
+
+    /**
+     * Reserva itens do serviço no estoque
+     */
+    protected function reserveServiceItemsFromInventory(Service $service): void
+    {
+        try {
+            $service->loadMissing('serviceItems');
+            foreach ($service->serviceItems as $item) {
+                if ($item->product_id) {
+                    $this->inventoryService->reserveProduct(
+                        $item->product_id,
+                        $item->quantity,
+                        'Início de preparação - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $item->id,
+                        $service->tenant_id,
+                    );
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao reservar itens do serviço no estoque', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -216,6 +253,7 @@ class InventoryObserver
 
     /**
      * Reserva itens do orçamento no estoque
+     * @deprecated Usar reserveServiceItemsFromInventory quando o serviço entrar em preparação
      */
     protected function reserveBudgetItemsFromInventory(Budget $budget): void
     {

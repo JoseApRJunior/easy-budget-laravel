@@ -35,23 +35,20 @@ class ContactEmail extends Mailable implements ShouldQueue
     /**
      * Dados adicionais da empresa para o template.
      */
-    public array $company;
+    private ?array $companyData = null;
 
     /**
      * Cria uma nova instância da mailable.
      *
      * @param  array  $contactData  Dados do contato
      * @param  Tenant|null  $tenant  Tenant do usuário (opcional)
-     * @param  array|null  $company  Dados da empresa (opcional)
      */
     public function __construct(
         array $contactData,
         ?Tenant $tenant = null,
-        ?array $company = null,
     ) {
         $this->contactData = $contactData;
         $this->tenant = $tenant;
-        $this->company = $company ?? [];
     }
 
     /**
@@ -82,13 +79,69 @@ class ContactEmail extends Mailable implements ShouldQueue
             with: [
                 'contactData' => $this->contactData,
                 'tenant' => $this->tenant,
-                'company' => $this->company,
+                'company' => $this->getCompanyData(),
                 'supportEmail' => $this->getSupportEmail(),
                 'supportUrl' => $this->getSupportUrl(),
+                'isSystemEmail' => false,
+                'statusColor' => '#0d6efd',
                 'appName' => config('app.name', 'Easy Budget'),
                 'appUrl' => config('app.url'),
             ],
         );
+    }
+
+    /**
+     * Obtém os dados da empresa de forma segura e completa.
+     */
+    private function getCompanyData(): array
+    {
+        if ($this->companyData !== null) {
+            return $this->companyData;
+        }
+
+        if ($this->tenant) {
+            try {
+                // Busca o tenant sem escopos globais para garantir acesso em jobs de fila
+                // E carrega os relacionamentos necessários de uma vez
+                $tenantData = Tenant::withoutGlobalScopes()
+                    ->with(['provider.commonData', 'provider.contact'])
+                    ->find($this->tenant->id);
+
+                if ($tenantData && $tenantData->provider && $tenantData->provider->commonData) {
+                    $common = $tenantData->provider->commonData;
+                    $contact = $tenantData->provider->contact;
+
+                    $this->companyData = [
+                        'company_name' => $common->company_name ?? $tenantData->name,
+                        'address_line1' => $common->address_line1,
+                        'address_line2' => $common->address_line2,
+                        'city' => $common->city,
+                        'state' => $common->state,
+                        'postal_code' => $common->postal_code,
+                        'phone' => $contact?->phone_business ?? $contact?->phone_personal,
+                        'email' => $contact?->email_business ?? $contact?->email_personal,
+                    ];
+
+                    return $this->companyData;
+                }
+            } catch (\Exception $e) {
+                // Fallback silencioso em caso de erro no banco
+            }
+
+            // Fallback para dados básicos do tenant se os relacionamentos falharem
+            return [
+                'company_name' => $this->tenant->name,
+                'email' => null,
+                'phone' => null,
+            ];
+        }
+
+        // Fallback para dados do sistema se não houver tenant
+        return [
+            'company_name' => config('app.name', 'Easy Budget'),
+            'email' => null,
+            'phone' => null,
+        ];
     }
 
     /**

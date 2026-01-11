@@ -213,13 +213,43 @@ class Customer extends Model
     }
 
     /**
+     * Get the customer's full name or company name.
+     */
+    public function getNameAttribute(): ?string
+    {
+        if ($this->isCompany()) {
+            return $this->commonData?->company_name;
+        }
+
+        if ($this->commonData?->first_name || $this->commonData?->last_name) {
+            return trim(($this->commonData->first_name ?? '') . ' ' . ($this->commonData->last_name ?? ''));
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the customer's company name.
+     */
+    public function getCompanyNameAttribute(): ?string
+    {
+        return $this->commonData?->company_name;
+    }
+
+    /**
      * Get the customer's primary email.
      */
     public function getPrimaryEmailAttribute(): ?string
     {
-        $primaryContact = $this->contact()->where('type', 'email')->where('is_primary', true)->first();
+        return $this->contact?->email_personal ?? $this->contact?->email_business;
+    }
 
-        return $primaryContact?->value;
+    /**
+     * Get the customer's email (alias for primary_email).
+     */
+    public function getEmailAttribute(): ?string
+    {
+        return $this->primary_email;
     }
 
     /**
@@ -227,9 +257,15 @@ class Customer extends Model
      */
     public function getPrimaryPhoneAttribute(): ?string
     {
-        $primaryContact = $this->contact()->where('type', 'phone')->where('is_primary', true)->first();
+        return $this->contact?->phone_personal ?? $this->contact?->phone_business;
+    }
 
-        return $primaryContact?->value;
+    /**
+     * Get the customer's phone (alias for primary_phone).
+     */
+    public function getPhoneAttribute(): ?string
+    {
+        return $this->primary_phone;
     }
 
     /**
@@ -364,8 +400,6 @@ class Customer extends Model
      */
     public function scopeOrdered($query)
     {
-        // Abordagem simplificada: ordenar por ID para evitar problemas de join
-        // Em produção, pode ser melhorado com uma coluna de nome normalizada na tabela customers
         return $query->orderBy('customers.id');
     }
 
@@ -440,22 +474,6 @@ class Customer extends Model
     }
 
     /**
-     * Get the customer's full name from common data.
-     */
-    public function getFullNameAttribute(): string
-    {
-        return $this->commonData?->display_name ?? '';
-    }
-
-    /**
-     * Get the display name for the customer.
-     */
-    public function getDisplayNameAttribute(): string
-    {
-        return $this->commonData?->display_name ?? '';
-    }
-
-    /**
      * Get the customer's formatted CPF.
      */
     public function getFormattedCpfAttribute(): string
@@ -480,22 +498,6 @@ class Customer extends Model
     }
 
     /**
-     * Get the customer's formatted primary phone.
-     */
-    public function getFormattedPhoneAttribute(): string
-    {
-        return $this->formatPhone($this->contact?->phone ?? '');
-    }
-
-    /**
-     * Get the customer's formatted business phone.
-     */
-    public function getFormattedBusinessPhoneAttribute(): string
-    {
-        return $this->formatPhone($this->contact?->phone_business ?? '');
-    }
-
-    /**
      * Get the customer's age based on birth date.
      */
     public function getAgeAttribute(): ?int
@@ -505,102 +507,6 @@ class Customer extends Model
         }
 
         return $this->commonData->birth_date->age;
-    }
-
-    /**
-     * Get the customer's email from contact.
-     */
-    public function getEmailAttribute(): ?string
-    {
-        return $this->contact?->email;
-    }
-
-    /**
-     * Get the customer's business email from contact.
-     */
-    public function getEmailBusinessAttribute(): ?string
-    {
-        return $this->contact?->email_business;
-    }
-
-    /**
-     * Get the customer's primary phone from contact.
-     */
-    public function getPhoneAttribute(): ?string
-    {
-        return $this->contact?->phone;
-    }
-
-    /**
-     * Get the customer's business phone from contact.
-     */
-    public function getPhoneBusinessAttribute(): ?string
-    {
-        return $this->contact?->phone_business;
-    }
-
-    /**
-     * Get the customer's website from contact.
-     */
-    public function getContactWebsiteAttribute(): ?string
-    {
-        return $this->contact?->website;
-    }
-
-    /**
-     * Get the customer's first name from common data.
-     */
-    public function getFirstNameAttribute(): ?string
-    {
-        return $this->commonData?->first_name;
-    }
-
-    /**
-     * Get the customer's last name from common data.
-     */
-    public function getLastNameAttribute(): ?string
-    {
-        return $this->commonData?->last_name;
-    }
-
-    /**
-     * Get the customer's CPF from common data.
-     */
-    public function getCpfAttribute(): ?string
-    {
-        return $this->commonData?->cpf;
-    }
-
-    /**
-     * Get the customer's CNPJ from common data.
-     */
-    public function getCnpjAttribute(): ?string
-    {
-        return $this->commonData?->cnpj;
-    }
-
-    /**
-     * Get the customer's company name from common data.
-     */
-    public function getCompanyNameAttribute(): ?string
-    {
-        return $this->commonData?->company_name;
-    }
-
-    /**
-     * Get the customer's profession from common data.
-     */
-    public function getProfessionAttribute(): ?string
-    {
-        return $this->commonData?->profession?->name;
-    }
-
-    /**
-     * Get the customer's area of activity from common data.
-     */
-    public function getAreaOfActivityAttribute(): ?string
-    {
-        return $this->commonData?->areaOfActivity?->name;
     }
 
     /**

@@ -62,7 +62,7 @@ class BudgetShareService extends AbstractBaseService
 
                 if (! $share) {
                     // Fallback para public_token na tabela budgets
-                    $budget = Budget::where('public_token', $token)->first();
+                    $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
                     if (! $budget) {
                         return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
                     }
@@ -70,15 +70,15 @@ class BudgetShareService extends AbstractBaseService
                     if (! $share->is_active) {
                         return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
                     }
-                    $budget = $this->budgetRepository->find($share->budget_id);
+                    $budget = Budget::withoutGlobalScopes()->find($share->budget_id);
                 }
 
                 if (! $budget) {
                     return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
                 }
 
-                // Atualiza o status do orçamento
-                $this->budgetRepository->update($budget->id, [
+                // Atualiza o status do orçamento sem escopo global (ação do cliente)
+                $budget->update([
                     'status' => $newStatus,
                     'customer_comment' => $comment,
                     'status_updated_at' => now(),
@@ -98,7 +98,7 @@ class BudgetShareService extends AbstractBaseService
                         $shareUpdateData['rejected_at'] = now();
                     }
 
-                    $this->budgetShareRepository->update($share->id, $shareUpdateData);
+                    $share->update($shareUpdateData);
                 } else {
                     // Se for fallback, limpa o token do orçamento apenas se aprovado
                     if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {

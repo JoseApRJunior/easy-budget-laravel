@@ -326,10 +326,6 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
      */
     private function getCustomerName(): string
     {
-        if ($this->customer->commonData) {
-            return trim($this->customer->commonData->first_name.' '.$this->customer->commonData->last_name);
-        }
-
-        return 'Cliente';
+        return $this->customer->name ?? 'Cliente';
     }
 }
