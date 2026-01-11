@@ -141,7 +141,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                     'discount' => number_format((float) $this->budget->discount, 2, ',', '.'),
                     'due_date' => $this->budget->due_date?->format('d/m/Y'),
                     'description' => $this->budget->description ?? 'Orçamento sem descrição',
-                    'status' => $this->budget->status->label(),
+                    'status' => $this->budget->status->getDescription(),
                     'customer_name' => $this->getCustomerName(),
                 ],
             ],
@@ -216,38 +216,88 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             return $this->company;
         }
 
-        // Tentar obter dados da empresa através do tenant
-        if ($this->tenant) {
-            $provider = $this->tenant->provider()->with(['commonData', 'contact'])->first();
+        // Tentar obter o provider com cautela para contexto de fila
+        try {
+            $provider = $this->budget->provider()
+                ->withoutGlobalScopes()
+                ->with([
+                    'commonData' => fn($q) => $q->withoutGlobalScopes(),
+                    'contact' => fn($q) => $q->withoutGlobalScopes(),
+                    'address' => fn($q) => $q->withoutGlobalScopes(),
+                ])
+                ->first();
+
+            if (! $provider && $this->tenant) {
+                $provider = $this->tenant->provider()
+                    ->withoutGlobalScopes()
+                    ->with([
+                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn($q) => $q->withoutGlobalScopes(),
+                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                    ])
+                    ->first();
+            }
 
             if ($provider) {
                 $commonData = $provider->commonData;
                 $contact = $provider->contact;
+                $address = $provider->address;
+
+                $addressLine1 = null;
+                $addressLine2 = null;
+                if ($address) {
+                    $addressLine1 = "{$address->address}, {$address->address_number}";
+                    if ($address->neighborhood) {
+                        $addressLine1 .= " | {$address->neighborhood}";
+                    }
+                    
+                    $addressLine2 = "{$address->city}/{$address->state}";
+                    if ($address->cep) {
+                        $addressLine2 .= " - CEP: {$address->cep}";
+                    }
+                }
+
+                $document = null;
+                if ($commonData) {
+                    $document = $commonData->cnpj 
+                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) 
+                        : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
+                }
 
                 return [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $this->tenant->name),
-                    'email' => $contact?->email,
-                    'email_business' => $contact?->email_business,
-                    'phone' => $contact?->phone,
-                    'phone_business' => $contact?->phone_business,
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : ($this->tenant?->name ?? $this->budget->tenant?->name ?? 'Minha Empresa')),
+                    'email' => $contact?->email_personal ?: $contact?->email_business,
+                    'phone' => $contact?->phone_personal ?: $contact?->phone_business,
+                    'address_line1' => $addressLine1,
+                    'address_line2' => $addressLine2,
+                    'document' => $document,
                 ];
             }
+        } catch (\Exception $e) {
+            // Silenciosamente falha para o fallback se houver erro de DB na fila
+        }
 
+        // Fallback para o nome do tenant se não houver provider
+        $tenantName = $this->tenant?->name ?? $this->budget->tenant?->name;
+        
+        if ($tenantName) {
             return [
-                'company_name' => $this->tenant->name,
+                'company_name' => $tenantName,
                 'email' => null,
-                'email_business' => null,
                 'phone' => null,
-                'phone_business' => null,
+                'address_line1' => null,
+                'address_line2' => null,
+                'document' => null,
             ];
         }
 
         return [
             'company_name' => config('app.name', 'Easy Budget'),
             'email' => null,
-            'email_business' => null,
             'phone' => null,
-            'phone_business' => null,
+            'address_line1' => null,
+            'address_line2' => null,
+            'document' => null,
         ];
     }
 

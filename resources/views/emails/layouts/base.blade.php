@@ -119,7 +119,13 @@
 <body>
     <div class="email-wrap">
         <div class="header">
-            <h1>{{ config( 'app.name', 'Easy Budget' ) }}</h1>
+            @if(!empty($isSystemEmail))
+                <h1>{{ config( 'app.name', 'Easy Budget' ) }}</h1>
+            @elseif(!empty($company['company_name']))
+                <h1>{{ $company['company_name'] }}</h1>
+            @else
+                <h1>{{ config( 'app.name', 'Easy Budget' ) }}</h1>
+            @endif
         </div>
 
         <div class="content">
@@ -127,11 +133,29 @@
         </div>
 
        <div class="footer">
-  © {{ date('Y') }} {{ config('app.name', 'Easy Budget') }}.
-  @hasSection('footerExtra')
-    <div>@yield('footerExtra')</div>
-  @endif
-  @if(!empty($supportEmail))<br>Suporte: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>@endif
+        @if(!empty($isSystemEmail))
+            © {{ date('Y') }} {{ config('app.name', 'Easy Budget') }}.
+            @hasSection('footerExtra')
+                <div>@yield('footerExtra')</div>
+            @endif
+            @if(!empty($supportEmail))<br>Suporte: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>@endif
+        @else
+            @if(!empty($company['company_name']))
+                <strong>{{ $company['company_name'] }}</strong><br>
+            @endif
+            @if(!empty($company['address_line1']))
+                {{ $company['address_line1'] }}<br>
+            @endif
+            @if(!empty($company['address_line2']))
+                {{ $company['address_line2'] }}<br>
+            @endif
+            @if(!empty($company['phone']) || !empty($company['email']))
+                {{ $company['phone'] ?? '' }} {{ !empty($company['phone']) && !empty($company['email']) ? '|' : '' }} {{ $company['email'] ?? '' }}
+            @endif
+            <p style="margin-top: 10px; font-size: 10px; color: #9ca3af;">
+                Enviado via {{ config('app.name', 'Easy Budget') }}
+            </p>
+        @endif
 </div>
     </div>
 </body>

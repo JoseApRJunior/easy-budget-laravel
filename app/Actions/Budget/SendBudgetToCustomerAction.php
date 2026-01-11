@@ -27,7 +27,7 @@ class SendBudgetToCustomerAction
     {
         try {
             // 0. Carregar relações iniciais
-            $budget->loadMissing(['customer.commonData', 'tenant', 'tenant.provider.commonData']);
+            $budget->loadMissing(['customer.commonData', 'tenant.provider.commonData', 'tenant.provider.address', 'tenant.provider.contact']);
             $customer = $budget->customer;
 
             if (! $customer || ! $customer->email) {
@@ -36,12 +36,49 @@ class SendBudgetToCustomerAction
 
             $recipientName = $customer->commonData->name ?? $customer->email;
 
+            // Preparar dados da empresa (Tenant/Provider) para o e-mail
+            $provider = $budget->tenant->provider;
+            $companyData = [];
+            
+            if ($provider) {
+                $commonData = $provider->commonData;
+                $address = $provider->address;
+                $contact = $provider->contact;
+
+                $addressLine1 = null;
+                $addressLine2 = null;
+                if ($address) {
+                    $addressLine1 = "{$address->address}, {$address->address_number}";
+                    if ($address->neighborhood) {
+                        $addressLine1 .= " | {$address->neighborhood}";
+                    }
+                    
+                    $addressLine2 = "{$address->city}/{$address->state}";
+                    if ($address->cep) {
+                        $addressLine2 .= " - CEP: {$address->cep}";
+                    }
+                }
+
+                $companyData = [
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $budget->tenant->name),
+                    'email' => $contact?->email_personal ?: $contact?->email_business,
+                    'phone' => $contact?->phone_personal ?: $contact?->phone_business,
+                    'address_line1' => $addressLine1,
+                    'address_line2' => $addressLine2,
+                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
+                ];
+            } else {
+                $companyData = [
+                    'company_name' => $budget->tenant->name,
+                ];
+            }
+
             // Variáveis para uso fora da transação
             $publicUrl = null;
             $pdfPath = null;
 
             // Executar operações de banco dentro da transação
-            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath) {
+            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, $provider) {
                 // 1. Gerar ou recuperar Token Público via BudgetShareService
                 $shareResult = $this->shareService->createShare([
                     'budget_id' => $budget->id,
@@ -61,7 +98,6 @@ class SendBudgetToCustomerAction
                 $publicUrl = route('budgets.public.shared.view', ['token' => $share->share_token]);
 
                 // 2. Preparar dados para o PDF
-                $provider = $budget->tenant->provider()->with(['commonData', 'address', 'contact'])->first();
                 $pdfPath = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
 
                 // 3. Atualizar orçamento: status para pendente e anexo
@@ -87,6 +123,7 @@ class SendBudgetToCustomerAction
                 customer: $customer,
                 notificationType: 'sent_to_customer',
                 tenant: $budget->tenant,
+                company: $companyData,
                 publicUrl: $publicUrl,
                 customMessage: $customMessage
             ));

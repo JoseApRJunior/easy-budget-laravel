@@ -46,6 +46,46 @@ class SendBudgetNotification implements ShouldQueue
                 default => 'updated'
             };
 
+            // Carregar relações necessárias para os dados da empresa
+            $budget->loadMissing(['tenant.provider.commonData', 'tenant.provider.address', 'tenant.provider.contact']);
+            
+            // Preparar dados da empresa (Tenant/Provider) para o e-mail
+            $provider = $budget->tenant->provider;
+            $companyData = [];
+            
+            if ($provider) {
+                $commonData = $provider->commonData;
+                $address = $provider->address;
+                $contact = $provider->contact;
+
+                $addressLine1 = null;
+                $addressLine2 = null;
+                if ($address) {
+                    $addressLine1 = "{$address->address}, {$address->address_number}";
+                    if ($address->neighborhood) {
+                        $addressLine1 .= " | {$address->neighborhood}";
+                    }
+                    
+                    $addressLine2 = "{$address->city}/{$address->state}";
+                    if ($address->cep) {
+                        $addressLine2 .= " - CEP: {$address->cep}";
+                    }
+                }
+
+                $companyData = [
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $budget->tenant->name),
+                    'email' => $contact?->email_personal ?: $contact?->email_business,
+                    'phone' => $contact?->phone_personal ?: $contact?->phone_business,
+                    'address_line1' => $addressLine1,
+                    'address_line2' => $addressLine2,
+                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
+                ];
+            } else {
+                $companyData = [
+                    'company_name' => $budget->tenant->name,
+                ];
+            }
+
             // Enviar email
             Mail::to($customer->contact->email_personal)
                 ->send(new BudgetNotificationMail(
@@ -53,6 +93,7 @@ class SendBudgetNotification implements ShouldQueue
                     customer: $customer,
                     notificationType: $notificationType,
                     tenant: $budget->tenant,
+                    company: $companyData,
                     customMessage: $event->comment
                 ));
 

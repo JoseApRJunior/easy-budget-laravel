@@ -49,24 +49,5 @@
 
         <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
         <p class="subcopy">{{ $budgetUrl }}</p>
-
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e5e7eb;">
-
-        <h3>Informações da Empresa</h3>
-        <p>
-            <strong>{{ $company['company_name'] ?? config('app.name') }}</strong><br>
-            @if($company['email_business'] ?? $company['email'] ?? null)
-                Email: {{ $company['email_business'] ?? $company['email'] }}<br>
-            @endif
-            @if($company['phone_business'] ?? $company['phone'] ?? null)
-                Telefone: {{ $company['phone_business'] ?? $company['phone'] }}<br>
-            @endif
-        </p>
-
-        @if($supportEmail)
-            <p style="font-size: 13px; color: #6b7280; margin-top: 20px;">
-                Precisa de ajuda? Entre em contato: <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>
-            </p>
-        @endif
     </div>
 @endsection
