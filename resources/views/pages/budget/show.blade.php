@@ -304,29 +304,12 @@
                             variant="primary" icon="pencil-fill" label="Editar" />
                     @endif
 
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center w-100" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-download me-2"></i>
-                            <span class="d-none d-md-inline">Exportar</span>
-                            <span class="d-md-none">Ações</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center" href="{{ route('provider.budgets.print', $budget->code) }}" target="_blank">
-                                    <i class="bi bi-printer me-2 text-secondary"></i>
-                                    Imprimir
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center" href="{{ route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true, 'download' => true]) }}">
-                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>
-                                    PDF
-                                </a>
-                            </li>
-
-                        </ul>
-                    </div>
+                    <x-button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                        target="_blank"
+                        variant="outline-secondary"
+                        icon="file-earmark-pdf"
+                        label="Imprimir PDF"
+                    />
                 </div>
             </div>
         </div>

@@ -89,7 +89,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $this->company = $company ?? [];
         $this->publicUrl = $publicUrl;
         $this->customMessage = $customMessage;
-        
+
         if ($locale) {
             $this->locale($locale);
         }
@@ -141,7 +141,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                     'discount' => number_format((float) $this->budget->discount, 2, ',', '.'),
                     'due_date' => $this->budget->due_date?->format('d/m/Y'),
                     'description' => $this->budget->description ?? 'Orçamento sem descrição',
-                    'status' => $this->budget->budgetStatus->name ?? 'Status não definido',
+                    'status' => $this->budget->status->label(),
                     'customer_name' => $this->getCustomerName(),
                 ],
             ],
@@ -218,6 +218,21 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
 
         // Tentar obter dados da empresa através do tenant
         if ($this->tenant) {
+            $provider = $this->tenant->provider()->with(['commonData', 'contact'])->first();
+
+            if ($provider) {
+                $commonData = $provider->commonData;
+                $contact = $provider->contact;
+
+                return [
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $this->tenant->name),
+                    'email' => $contact?->email,
+                    'email_business' => $contact?->email_business,
+                    'phone' => $contact?->phone,
+                    'phone_business' => $contact?->phone_business,
+                ];
+            }
+
             return [
                 'company_name' => $this->tenant->name,
                 'email' => null,

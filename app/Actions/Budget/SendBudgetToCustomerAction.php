@@ -39,10 +39,9 @@ class SendBudgetToCustomerAction
             // Variáveis para uso fora da transação
             $publicUrl = null;
             $pdfPath = null;
-            $company = [];
 
             // Executar operações de banco dentro da transação
-            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, &$company) {
+            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath) {
                 // 1. Gerar ou recuperar Token Público via BudgetShareService
                 $shareResult = $this->shareService->createShare([
                     'budget_id' => $budget->id,
@@ -55,7 +54,7 @@ class SendBudgetToCustomerAction
                 ], false); // Não envia notificação duplicada
 
                 if ($shareResult->isError()) {
-                    throw new Exception('Erro ao gerar link de compartilhamento: ' . $shareResult->getMessage());
+                    throw new Exception('Erro ao gerar link de compartilhamento: '.$shareResult->getMessage());
                 }
 
                 $share = $shareResult->getData();
@@ -70,12 +69,6 @@ class SendBudgetToCustomerAction
                     'status' => \App\Enums\BudgetStatus::PENDING,
                     'attachment' => $pdfPath,
                 ]);
-
-                // 4. Preparar dados da empresa
-                $company = [
-                    'company_name' => $budget->tenant->name ?? config('app.name'),
-                    'email' => $budget->tenant->email ?? config('mail.from.address'),
-                ];
 
                 // 5. Registrar histórico
                 if (method_exists($budget, 'actionHistory')) {
@@ -94,7 +87,6 @@ class SendBudgetToCustomerAction
                 customer: $customer,
                 notificationType: 'sent_to_customer',
                 tenant: $budget->tenant,
-                company: $company,
                 publicUrl: $publicUrl,
                 customMessage: $customMessage
             ));

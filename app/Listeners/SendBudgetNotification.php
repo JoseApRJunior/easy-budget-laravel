@@ -46,22 +46,6 @@ class SendBudgetNotification implements ShouldQueue
                 default => 'updated'
             };
 
-            // Preparar dados da empresa
-            $companyData = [
-                'company_name' => $budget->tenant->name ?? config('app.name'),
-                'email_business' => null,
-                'phone_business' => null,
-            ];
-
-            // Tentar obter dados do provider se disponível
-            if ($budget->tenant && $budget->tenant->providers->isNotEmpty()) {
-                $provider = $budget->tenant->providers->first();
-                if ($provider->contact) {
-                    $companyData['email_business'] = $provider->contact->email_business;
-                    $companyData['phone_business'] = $provider->contact->phone_business;
-                }
-            }
-
             // Enviar email
             Mail::to($customer->contact->email_personal)
                 ->send(new BudgetNotificationMail(
@@ -69,7 +53,6 @@ class SendBudgetNotification implements ShouldQueue
                     customer: $customer,
                     notificationType: $notificationType,
                     tenant: $budget->tenant,
-                    company: $companyData,
                     customMessage: $event->comment
                 ));
 

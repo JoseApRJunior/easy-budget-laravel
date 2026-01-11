@@ -1,49 +1,69 @@
-# 🔄 Skill: Customer Lifecycle Management (Ciclo de Vida de Clientes)
+# 🔄 Skill: Customer Lifecycle Management (Gestão de Ciclo de Vida)
 
-**Descrição:** Sistema completo de gestão do ciclo de vida do cliente, desde o lead até a retenção, com automação de fluxos e estratégias de relacionamento.
+**Descrição:** Sistema completo de gestão do ciclo de vida do cliente, desde o lead até a retenção, com automação de estágios, estratégias de retenção e análise de churn.
 
-**Categoria:** CRM e Automação
+**Categoria:** CRM e Gestão de Relacionamento
 **Complexidade:** Alta
 **Status:** ✅ Implementado e Documentado
 
 ## 🎯 Objetivo
 
-Padronizar a gestão completa do ciclo de vida do cliente no Easy Budget, automatizando processos de onboarding, acompanhamento, retenção e reengajamento, com estratégias específicas para cada fase do relacionamento.
+Gerenciar todo o ciclo de vida do cliente de forma automatizada e estratégica, maximizando o valor do cliente ao longo do tempo e reduzindo a taxa de churn.
 
 ## 📋 Requisitos Técnicos
 
-### **✅ Fases do Ciclo de Vida**
+### **✅ Estágios do Ciclo de Vida**
 
 ```php
 enum CustomerLifecycleStage: string
 {
-    case LEAD = 'lead';                    // Lead/Potencial Cliente
+    case LEAD = 'lead';                    // Lead
     case PROSPECT = 'prospect';            // Prospect
-    case QUALIFIED = 'qualified';          // Lead Qualificado
-    case PROPOSAL = 'proposal';            // Em Proposta
-    case NEGOTIATION = 'negotiation';      // Em Negociação
-    case CLOSED_WON = 'closed_won';        // Fechado Ganho
-    case CLOSED_LOST = 'closed_lost';      // Fechado Perdido
-    case ACTIVE = 'active';                // Cliente Ativo
-    case INACTIVE = 'inactive';            // Cliente Inativo
-    case CHURNED = 'churned';              // Cliente Churned
-    case REACTIVATED = 'reactivated';      // Cliente Reativado
+    case QUALIFIED = 'qualified';          // Lead qualificado
+    case PROPOSAL = 'proposal';            // Proposta enviada
+    case NEGOTIATION = 'negotiation';      // Em negociação
+    case CLOSED_WON = 'closed_won';        // Fechado ganho
+    case CLOSED_LOST = 'closed_lost';      // Fechado perdido
+    case ACTIVE = 'active';                // Cliente ativo
+    case INACTIVE = 'inactive';            // Cliente inativo
+    case CHURNED = 'churned';              // Cliente churned
+    case REACTIVATED = 'reactivated';      // Cliente reativado
 
-    public function getNextStages(): array
+    public function getDisplayName(): string
     {
         return match ($this) {
-            self::LEAD => [self::PROSPECT, self::CLOSED_LOST],
-            self::PROSPECT => [self::QUALIFIED, self::CLOSED_LOST],
-            self::QUALIFIED => [self::PROPOSAL, self::CLOSED_LOST],
-            self::PROPOSAL => [self::NEGOTIATION, self::CLOSED_LOST],
-            self::NEGOTIATION => [self::CLOSED_WON, self::CLOSED_LOST],
-            self::CLOSED_WON => [self::ACTIVE],
-            self::ACTIVE => [self::INACTIVE, self::CHURNED],
-            self::INACTIVE => [self::REACTIVATED, self::CHURNED],
-            self::CHURNED => [self::REACTIVATED],
-            self::REACTIVATED => [self::ACTIVE],
-            self::CLOSED_LOST => [],
+            self::LEAD => 'Lead',
+            self::PROSPECT => 'Prospect',
+            self::QUALIFIED => 'Lead Qualificado',
+            self::PROPOSAL => 'Proposta Enviada',
+            self::NEGOTIATION => 'Em Negociação',
+            self::CLOSED_WON => 'Fechado Ganho',
+            self::CLOSED_LOST => 'Fechado Perdido',
+            self::ACTIVE => 'Cliente Ativo',
+            self::INACTIVE => 'Cliente Inativo',
+            self::CHURNED => 'Cliente Churned',
+            self::REACTIVATED => 'Cliente Reativado',
         };
+    }
+
+    public function isLead(): bool
+    {
+        return in_array($this, [self::LEAD, self::PROSPECT, self::QUALIFIED]);
+    }
+
+    public function isOpportunity(): bool
+    {
+        return in_array($this, [self::PROPOSAL, self::NEGOTIATION]);
+    }
+
+    public function isCustomer(): bool
+    {
+        return in_array($this, [self::CLOSED_WON, self::ACTIVE, self::REACTIVATED]);
+    }
+
+    public function isAtRisk(): bool
+    {
+        return in_array($this, [self::INACTIVE, self::CHURNED]);
     }
 
     public function isClosed(): bool
@@ -51,105 +71,64 @@ enum CustomerLifecycleStage: string
         return in_array($this, [self::CLOSED_WON, self::CLOSED_LOST]);
     }
 
-    public function isActive(): bool
-    {
-        return in_array($this, [self::LEAD, self::PROSPECT, self::QUALIFIED, self::PROPOSAL, self::NEGOTIATION, self::ACTIVE, self::INACTIVE, self::REACTIVATED]);
-    }
-
-    public function isWon(): bool
-    {
-        return $this === self::CLOSED_WON;
-    }
-
-    public function isLost(): bool
-    {
-        return $this === self::CLOSED_LOST;
-    }
-}
-```
-
-### **✅ Motivos de Perda**
-
-```php
-enum LostReason: string
-{
-    case PRICE = 'price';                  // Preço
-    case QUALITY = 'quality';              // Qualidade
-    case SERVICE = 'service';              // Serviço
-    case TIMING = 'timing';                // Timing
-    case COMPETITOR = 'competitor';        // Concorrente
-    case BUDGET = 'budget';                // Orçamento
-    case NO_NEED = 'no_need';              // Não tem necessidade
-    case NO_RESPONSE = 'no_response';      // Sem resposta
-    case OTHER = 'other';                  // Outro
-
-    public function getDisplayName(): string
+    public function getNextStages(): array
     {
         return match ($this) {
-            self::PRICE => 'Preço',
-            self::QUALITY => 'Qualidade',
-            self::SERVICE => 'Serviço',
-            self::TIMING => 'Timing',
-            self::COMPETITOR => 'Concorrente',
-            self::BUDGET => 'Orçamento',
-            self::NO_NEED => 'Não tem necessidade',
-            self::NO_RESPONSE => 'Sem resposta',
-            self::OTHER => 'Outro',
+            self::LEAD => [self::PROSPECT],
+            self::PROSPECT => [self::QUALIFIED],
+            self::QUALIFIED => [self::PROPOSAL],
+            self::PROPOSAL => [self::NEGOTIATION],
+            self::NEGOTIATION => [self::CLOSED_WON, self::CLOSED_LOST],
+            self::CLOSED_WON => [self::ACTIVE],
+            self::ACTIVE => [self::INACTIVE],
+            self::INACTIVE => [self::CHURNED, self::REACTIVATED],
+            self::CHURNED => [self::REACTIVATED],
+            self::REACTIVATED => [self::ACTIVE],
+            self::CLOSED_LOST => [],
+        };
+    }
+
+    public function getPreviousStages(): array
+    {
+        return match ($this) {
+            self::LEAD => [],
+            self::PROSPECT => [self::LEAD],
+            self::QUALIFIED => [self::PROSPECT],
+            self::PROPOSAL => [self::QUALIFIED],
+            self::NEGOTIATION => [self::PROPOSAL],
+            self::CLOSED_WON => [self::NEGOTIATION],
+            self::CLOSED_LOST => [self::NEGOTIATION],
+            self::ACTIVE => [self::CLOSED_WON, self::REACTIVATED],
+            self::INACTIVE => [self::ACTIVE],
+            self::CHURNED => [self::INACTIVE],
+            self::REACTIVATED => [self::CHURNED],
         };
     }
 }
 ```
 
-### **✅ Estratégias de Retenção**
-
-```php
-enum RetentionStrategy: string
-{
-    case DISCOUNT = 'discount';            // Desconto
-    case UPGRADE = 'upgrade';              // Upgrade de plano
-    case BUNDLE = 'bundle';                // Pacote
-    case CUSTOMIZATION = 'customization';  // Customização
-    case SUPPORT = 'support';              // Suporte premium
-    case TRAINING = 'training';            // Treinamento
-    case CONSULTING = 'consulting';        // Consultoria
-    case OTHER = 'other';                  // Outro
-
-    public function getDisplayName(): string
-    {
-        return match ($this) {
-            self::DISCOUNT => 'Desconto',
-            self::UPGRADE => 'Upgrade de plano',
-            self::BUNDLE => 'Pacote',
-            self::CUSTOMIZATION => 'Customização',
-            self::SUPPORT => 'Suporte premium',
-            self::TRAINING => 'Treinamento',
-            self::CONSULTING => 'Consultoria',
-            self::OTHER => 'Outro',
-        };
-    }
-}
-```
-
-## 🏗️ Estrutura do Ciclo de Vida
-
-### **📊 Modelo de Histórico de Ciclo de Vida**
+### **✅ Modelo de Histórico de Ciclo de Vida**
 
 ```php
 class CustomerLifecycleHistory extends Model
 {
+    use HasFactory, BelongsToTenant;
+
     protected $fillable = [
-        'customer_id',
         'tenant_id',
+        'customer_id',
         'from_stage',
         'to_stage',
         'reason',
         'notes',
         'moved_by',
-        'metadata',
+        'moved_at',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
+        'from_stage' => CustomerLifecycleStage::class,
+        'to_stage' => CustomerLifecycleStage::class,
+        'moved_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo
@@ -162,809 +141,977 @@ class CustomerLifecycleHistory extends Model
         return $this->belongsTo(User::class, 'moved_by');
     }
 
-    public function getStageLabelAttribute(): string
+    public function scopeByStage($query, CustomerLifecycleStage $stage)
     {
-        return match ($this->to_stage) {
-            'lead' => 'Lead',
-            'prospect' => 'Prospect',
-            'qualified' => 'Qualificado',
-            'proposal' => 'Proposta',
-            'negotiation' => 'Negociação',
-            'closed_won' => 'Fechado Ganho',
-            'closed_lost' => 'Fechado Perdido',
-            'active' => 'Ativo',
-            'inactive' => 'Inativo',
-            'churned' => 'Churned',
-            'reactivated' => 'Reativado',
-            default => 'Desconhecido',
-        };
+        return $query->where('to_stage', $stage);
+    }
+
+    public function scopeByCustomer($query, Customer $customer)
+    {
+        return $query->where('customer_id', $customer->id);
+    }
+
+    public function scopeByPeriod($query, Carbon $startDate, Carbon $endDate)
+    {
+        return $query->whereBetween('moved_at', [$startDate, $endDate]);
     }
 }
 ```
 
-### **📝 DTO de Transição de Ciclo de Vida**
-
-```php
-readonly class CustomerLifecycleTransitionDTO extends AbstractDTO
-{
-    public function __construct(
-        public string $from_stage,
-        public string $to_stage,
-        public ?string $reason = null,
-        public ?string $notes = null,
-        public ?array $metadata = [],
-    ) {}
-
-    public static function fromRequest(array $data): self
-    {
-        return new self(
-            from_stage: $data['from_stage'],
-            to_stage: $data['to_stage'],
-            reason: $data['reason'] ?? null,
-            notes: $data['notes'] ?? null,
-            metadata: $data['metadata'] ?? [],
-        );
-    }
-}
-```
-
-## 📋 Gestão do Ciclo de Vida
-
-### **✅ Transição de Fases**
+### **✅ Serviço de Gestão de Ciclo de Vida**
 
 ```php
 class CustomerLifecycleService extends AbstractBaseService
 {
-    public function transitionStage(Customer $customer, CustomerLifecycleTransitionDTO $dto, User $user): ServiceResult
+    public function moveCustomerStage(Customer $customer, CustomerLifecycleStage $newStage, string $reason = '', string $notes = '', User $movedBy = null): ServiceResult
     {
-        return $this->safeExecute(function() use ($customer, $dto, $user) {
-            // 1. Validar transição
-            $validation = $this->validateTransition($customer, $dto);
+        return $this->safeExecute(function() use ($customer, $newStage, $reason, $notes, $movedBy) {
+            // 1. Validar transição de estágio
+            $validation = $this->validateStageTransition($customer, $newStage);
             if (!$validation->isSuccess()) {
                 return $validation;
             }
 
-            // 2. Salvar histórico
-            $historyData = [
-                'customer_id' => $customer->id,
-                'tenant_id' => $customer->tenant_id,
-                'from_stage' => $customer->lifecycle_stage,
-                'to_stage' => $dto->to_stage,
-                'reason' => $dto->reason,
-                'notes' => $dto->notes,
-                'moved_by' => $user->id,
-                'metadata' => $dto->metadata,
-            ];
+            // 2. Atualizar estágio do cliente
+            $updateResult = $this->updateCustomerStage($customer, $newStage, $movedBy);
+            if (!$updateResult->isSuccess()) {
+                return $updateResult;
+            }
 
-            $historyResult = $this->historyRepository->create($historyData);
+            // 3. Criar histórico
+            $historyResult = $this->createLifecycleHistory($customer, $newStage, $reason, $notes, $movedBy);
             if (!$historyResult->isSuccess()) {
                 return $historyResult;
             }
 
-            // 3. Atualizar estágio do cliente
-            $customer->update([
-                'lifecycle_stage' => $dto->to_stage,
-                'stage_changed_at' => now(),
-                'stage_changed_by' => $user->id,
-            ]);
-
-            // 4. Disparar eventos específicos
-            $this->triggerLifecycleEvents($customer, $dto, $user);
+            // 4. Disparar eventos
+            $this->triggerLifecycleEvents($customer, $newStage);
 
             // 5. Executar ações automatizadas
-            $this->executeAutomatedActions($customer, $dto);
+            $this->executeAutomatedActions($customer, $newStage);
 
-            return $this->success($customer, 'Estágio atualizado com sucesso');
+            return $this->success([
+                'customer' => $customer->fresh(),
+                'history' => $historyResult->getData(),
+            ], 'Estágio do cliente atualizado com sucesso');
         });
     }
 
-    public function moveLeadToProspect(Customer $customer, User $user): ServiceResult
+    public function autoMoveCustomerStage(Customer $customer): ServiceResult
     {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'lead',
-            to_stage: 'prospect',
-            reason: 'qualified',
-            notes: 'Lead qualificado através de contato inicial',
-        );
+        return $this->safeExecute(function() use ($customer) {
+            $currentStage = CustomerLifecycleStage::from($customer->lifecycle_stage);
+            $newStage = $this->determineNextStage($customer, $currentStage);
 
-        return $this->transitionStage($customer, $dto, $user);
+            if ($newStage !== $currentStage) {
+                return $this->moveCustomerStage(
+                    $customer,
+                    $newStage,
+                    'Movimento automático',
+                    'Sistema detectou condições para avanço de estágio',
+                    null // Sistema como responsável
+                );
+            }
+
+            return $this->success($customer, 'Estágio já está atualizado');
+        });
     }
 
-    public function moveProspectToQualified(Customer $customer, User $user): ServiceResult
+    public function getCustomerLifecycleJourney(Customer $customer): ServiceResult
     {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'prospect',
-            to_stage: 'qualified',
-            reason: 'needs_assessment',
-            notes: 'Necessidades do cliente avaliadas e validadas',
-        );
+        return $this->safeExecute(function() use ($customer) {
+            $history = $customer->lifecycleHistory()
+                ->with('movedBy')
+                ->orderBy('moved_at', 'asc')
+                ->get();
 
-        return $this->transitionStage($customer, $dto, $user);
+            $journey = [
+                'current_stage' => $customer->lifecycle_stage,
+                'stage_changed_at' => $customer->stage_changed_at,
+                'stage_changed_by' => $customer->stage_changed_by,
+                'history' => $history,
+                'time_in_current_stage' => $this->calculateTimeInCurrentStage($customer),
+                'next_possible_stages' => $this->getNextPossibleStages($customer),
+                'stage_progress' => $this->calculateStageProgress($customer),
+            ];
+
+            return $this->success($journey, 'Jornada do cliente obtida');
+        });
     }
 
-    public function moveQualifiedToProposal(Customer $customer, User $user): ServiceResult
+    public function getLifecycleAnalytics(int $tenantId, array $filters = []): ServiceResult
     {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'qualified',
-            to_stage: 'proposal',
-            reason: 'proposal_sent',
-            notes: 'Proposta comercial enviada ao cliente',
-        );
+        return $this->safeExecute(function() use ($tenantId, $filters) {
+            $analytics = [
+                'stage_distribution' => $this->getStageDistribution($tenantId, $filters),
+                'conversion_rates' => $this->getConversionRates($tenantId, $filters),
+                'average_stage_duration' => $this->getAverageStageDuration($tenantId, $filters),
+                'churn_analysis' => $this->getChurnAnalysis($tenantId, $filters),
+                'retention_analysis' => $this->getRetentionAnalysis($tenantId, $filters),
+                'lifecycle_value' => $this->getLifecycleValueAnalysis($tenantId, $filters),
+            ];
 
-        return $this->transitionStage($customer, $dto, $user);
+            return $this->success($analytics, 'Analytics de ciclo de vida gerados');
+        });
     }
 
-    public function moveProposalToNegotiation(Customer $customer, User $user): ServiceResult
+    private function validateStageTransition(Customer $customer, CustomerLifecycleStage $newStage): ServiceResult
     {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'proposal',
-            to_stage: 'negotiation',
-            reason: 'proposal_reviewed',
-            notes: 'Proposta revisada e cliente em negociação',
-        );
-
-        return $this->transitionStage($customer, $dto, $user);
-    }
-
-    public function moveNegotiationToClosedWon(Customer $customer, User $user, string $reason = 'agreement'): ServiceResult
-    {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'negotiation',
-            to_stage: 'closed_won',
-            reason: $reason,
-            notes: 'Negociação concluída com sucesso',
-        );
-
-        return $this->transitionStage($customer, $dto, $user);
-    }
-
-    public function moveNegotiationToClosedLost(Customer $customer, User $user, LostReason $lostReason, string $notes = ''): ServiceResult
-    {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'negotiation',
-            to_stage: 'closed_lost',
-            reason: $lostReason->value,
-            notes: $notes ?: "Negócio perdido por motivo: {$lostReason->getDisplayName()}",
-        );
-
-        return $this->transitionStage($customer, $dto, $user);
-    }
-
-    public function moveActiveToInactive(Customer $customer, User $user, string $reason = 'no_activity'): ServiceResult
-    {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'active',
-            to_stage: 'inactive',
-            reason: $reason,
-            notes: 'Cliente inativo por falta de atividade',
-        );
-
-        return $this->transitionStage($customer, $dto, $user);
-    }
-
-    public function moveInactiveToChurned(Customer $customer, User $user, string $reason = 'no_response'): ServiceResult
-    {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'inactive',
-            to_stage: 'churned',
-            reason: $reason,
-            notes: 'Cliente churned por falta de retorno',
-        );
-
-        return $this->transitionStage($customer, $dto, $user);
-    }
-
-    public function moveChurnedToReactivated(Customer $customer, User $user, RetentionStrategy $strategy, string $notes = ''): ServiceResult
-    {
-        $dto = new CustomerLifecycleTransitionDTO(
-            from_stage: 'churned',
-            to_stage: 'reactivated',
-            reason: $strategy->value,
-            notes: $notes ?: "Reativado com estratégia: {$strategy->getDisplayName()}",
-        );
-
-        return $this->transitionStage($customer, $dto, $user);
-    }
-
-    private function validateTransition(Customer $customer, CustomerLifecycleTransitionDTO $dto): ServiceResult
-    {
-        // Validar estágio atual
-        if (! CustomerLifecycleStage::tryFrom($customer->lifecycle_stage)) {
-            return $this->error('Estágio atual inválido', OperationStatus::INVALID_DATA);
-        }
-
-        // Validar próximo estágio
-        if (! CustomerLifecycleStage::tryFrom($dto->to_stage)) {
-            return $this->error('Próximo estágio inválido', OperationStatus::INVALID_DATA);
-        }
-
-        // Validar transição permitida
         $currentStage = CustomerLifecycleStage::from($customer->lifecycle_stage);
-        $allowedNextStages = $currentStage->getNextStages();
 
-        if (! in_array($dto->to_stage, $allowedNextStages)) {
-            return $this->error('Transição de estágio não permitida', OperationStatus::INVALID_DATA);
+        // Verificar se a transição é válida
+        $validNextStages = $currentStage->getNextStages();
+        if (! in_array($newStage, $validNextStages)) {
+            return $this->error('Transição de estágio inválida', OperationStatus::INVALID_DATA);
+        }
+
+        // Verificar regras de negócio específicas
+        $businessValidation = $this->validateBusinessRules($customer, $currentStage, $newStage);
+        if (!$businessValidation->isSuccess()) {
+            return $businessValidation;
         }
 
         return $this->success(null, 'Transição válida');
     }
 
-    private function triggerLifecycleEvents(Customer $customer, CustomerLifecycleTransitionDTO $dto, User $user): void
+    private function validateBusinessRules(Customer $customer, CustomerLifecycleStage $currentStage, CustomerLifecycleStage $newStage): ServiceResult
     {
-        // Disparar eventos específicos para cada transição
-        match ($dto->to_stage) {
-            'prospect' => event(new LeadQualified($customer, $user)),
-            'qualified' => event(new ProspectQualified($customer, $user)),
-            'proposal' => event(new ProposalSent($customer, $user)),
-            'negotiation' => event(new NegotiationStarted($customer, $user)),
-            'closed_won' => event(new DealWon($customer, $user)),
-            'closed_lost' => event(new DealLost($customer, $user, $dto->reason)),
-            'inactive' => event(new CustomerInactive($customer, $user)),
-            'churned' => event(new CustomerChurned($customer, $user)),
-            'reactivated' => event(new CustomerReactivated($customer, $user)),
-            default => event(new LifecycleStageChanged($customer, $dto->from_stage, $dto->to_stage, $user)),
+        // Regras específicas para cada transição
+        switch ($currentStage) {
+            case CustomerLifecycleStage::QUALIFIED:
+                if ($newStage === CustomerLifecycleStage::PROPOSAL) {
+                    return $this->validateProposalReady($customer);
+                }
+                break;
+
+            case CustomerLifecycleStage::NEGOTIATION:
+                if ($newStage === CustomerLifecycleStage::CLOSED_WON) {
+                    return $this->validateClosedWon($customer);
+                }
+                break;
+
+            case CustomerLifecycleStage::ACTIVE:
+                if ($newStage === CustomerLifecycleStage::INACTIVE) {
+                    return $this->validateInactiveTransition($customer);
+                }
+                break;
+        }
+
+        return $this->success(null, 'Regras de negócio válidas');
+    }
+
+    private function validateProposalReady(Customer $customer): ServiceResult
+    {
+        // Verificar se há orçamentos pendentes
+        $pendingBudgets = $customer->budgets()->where('status', 'pending')->count();
+        if ($pendingBudgets === 0) {
+            return $this->error('Não é possível avançar para proposta sem orçamentos pendentes', OperationStatus::INVALID_DATA);
+        }
+
+        return $this->success(null, 'Proposta pronta');
+    }
+
+    private function validateClosedWon(Customer $customer): ServiceResult
+    {
+        // Verificar se há serviços ativos
+        $activeServices = $customer->services()->where('status', 'active')->count();
+        if ($activeServices === 0) {
+            return $this->error('Não é possível fechar como ganho sem serviços ativos', OperationStatus::INVALID_DATA);
+        }
+
+        return $this->success(null, 'Fechado ganho válido');
+    }
+
+    private function validateInactiveTransition(Customer $customer): ServiceResult
+    {
+        // Verificar tempo de inatividade
+        if ($customer->last_interaction_at) {
+            $inactivityDays = now()->diffInDays($customer->last_interaction_at);
+            if ($inactivityDays < 90) {
+                return $this->error('Cliente ainda não atingiu o tempo mínimo de inatividade (90 dias)', OperationStatus::INVALID_DATA);
+            }
+        }
+
+        return $this->success(null, 'Transição para inativo válida');
+    }
+
+    private function updateCustomerStage(Customer $customer, CustomerLifecycleStage $newStage, User $movedBy = null): ServiceResult
+    {
+        $updateData = [
+            'lifecycle_stage' => $newStage,
+            'stage_changed_at' => now(),
+            'stage_changed_by' => $movedBy?->id,
+        ];
+
+        $result = $this->repository->update($customer, $updateData);
+
+        if ($result->isSuccess()) {
+            // Atualizar estatísticas do cliente
+            $this->updateCustomerStatistics($customer, $newStage);
+        }
+
+        return $result;
+    }
+
+    private function createLifecycleHistory(Customer $customer, CustomerLifecycleStage $newStage, string $reason, string $notes, User $movedBy = null): ServiceResult
+    {
+        $historyData = [
+            'tenant_id' => $this->getTenantId(),
+            'customer_id' => $customer->id,
+            'from_stage' => $customer->lifecycle_stage,
+            'to_stage' => $newStage,
+            'reason' => $reason,
+            'notes' => $notes,
+            'moved_by' => $movedBy?->id,
+            'moved_at' => now(),
+        ];
+
+        return $this->repository->createLifecycleHistory($historyData);
+    }
+
+    private function triggerLifecycleEvents(Customer $customer, CustomerLifecycleStage $newStage): void
+    {
+        // Disparar eventos específicos para cada estágio
+        match ($newStage) {
+            CustomerLifecycleStage::PROPOSAL => event(new CustomerProposalSent($customer)),
+            CustomerLifecycleStage::CLOSED_WON => event(new CustomerClosedWon($customer)),
+            CustomerLifecycleStage::CLOSED_LOST => event(new CustomerClosedLost($customer)),
+            CustomerLifecycleStage::ACTIVE => event(new CustomerActivated($customer)),
+            CustomerLifecycleStage::INACTIVE => event(new CustomerInactivated($customer)),
+            CustomerLifecycleStage::CHURNED => event(new CustomerChurned($customer)),
+            CustomerLifecycleStage::REACTIVATED => event(new CustomerReactivated($customer)),
+            default => event(new CustomerStageChanged($customer, $newStage)),
         };
     }
 
-    private function executeAutomatedActions(Customer $customer, CustomerLifecycleTransitionDTO $dto): void
+    private function executeAutomatedActions(Customer $customer, CustomerLifecycleStage $newStage): void
     {
-        // Executar ações automatizadas baseadas na transição
-        match ($dto->to_stage) {
-            'prospect' => $this->executeProspectActions($customer),
-            'qualified' => $this->executeQualifiedActions($customer),
-            'proposal' => $this->executeProposalActions($customer),
-            'closed_won' => $this->executeClosedWonActions($customer),
-            'closed_lost' => $this->executeClosedLostActions($customer),
-            'inactive' => $this->executeInactiveActions($customer),
-            'churned' => $this->executeChurnedActions($customer),
-            'reactivated' => $this->executeReactivatedActions($customer),
+        // Executar ações automatizadas baseadas no estágio
+        match ($newStage) {
+            CustomerLifecycleStage::PROPOSAL => $this->executeProposalActions($customer),
+            CustomerLifecycleStage::CLOSED_WON => $this->executeClosedWonActions($customer),
+            CustomerLifecycleStage::INACTIVE => $this->executeInactiveActions($customer),
+            CustomerLifecycleStage::CHURNED => $this->executeChurnActions($customer),
+            CustomerLifecycleStage::REACTIVATED => $this->executeReactivationActions($customer),
             default => null,
         };
     }
 
-    private function executeProspectActions(Customer $customer): void
-    {
-        // Enviar e-mail de boas-vindas
-        $this->notificationService->sendWelcomeEmail($customer);
-
-        // Agendar follow-up
-        $this->followUpService->scheduleFollowUp($customer, 'initial_contact', now()->addDays(3));
-    }
-
-    private function executeQualifiedActions(Customer $customer): void
-    {
-        // Enviar proposta inicial
-        $this->proposalService->sendInitialProposal($customer);
-
-        // Agendar reunião de apresentação
-        $this->scheduleService->schedulePresentation($customer, now()->addDays(5));
-    }
-
     private function executeProposalActions(Customer $customer): void
     {
-        // Agendar follow-up de proposta
-        $this->followUpService->scheduleFollowUp($customer, 'proposal_follow_up', now()->addDays(7));
+        // Enviar e-mail de proposta
+        SendProposalEmail::dispatch($customer);
+
+        // Criar tarefa de follow-up
+        $this->createFollowUpTask($customer, 'Enviar proposta', now()->addDays(3));
     }
 
     private function executeClosedWonActions(Customer $customer): void
     {
-        // Enviar contrato
-        $this->contractService->sendContract($customer);
+        // Enviar e-mail de boas-vindas
+        SendWelcomeEmail::dispatch($customer);
 
-        // Iniciar processo de onboarding
-        $this->onboardingService->startOnboarding($customer);
+        // Criar tarefa de onboarding
+        $this->createOnboardingTask($customer);
 
-        // Agendar treinamento
-        $this->trainingService->scheduleTraining($customer);
-    }
-
-    private function executeClosedLostActions(Customer $customer): void
-    {
-        // Enviar pesquisa de satisfação
-        $this->surveyService->sendLostCustomerSurvey($customer);
-
-        // Agendar follow-up de retenção
-        $this->retentionService->scheduleRetentionFollowUp($customer);
+        // Atualizar estatísticas de vendas
+        $this->updateSalesStatistics($customer);
     }
 
     private function executeInactiveActions(Customer $customer): void
     {
-        // Enviar e-mail de reengajamento
-        $this->engagementService->sendReengagementEmail($customer);
+        // Criar campanha de retenção
+        $this->createRetentionCampaign($customer);
 
-        // Agendar contato de retenção
-        $this->retentionService->scheduleRetentionContact($customer);
+        // Enviar pesquisa de satisfação
+        SendSatisfactionSurvey::dispatch($customer);
     }
 
-    private function executeChurnedActions(Customer $customer): void
+    private function executeChurnActions(Customer $customer): void
     {
-        // Enviar pesquisa de churn
-        $this->surveyService->sendChurnSurvey($customer);
+        // Criar tarefa de análise de churn
+        $this->createChurnAnalysisTask($customer);
 
-        // Adicionar a lista de retenção
-        $this->retentionService->addToRetentionList($customer);
+        // Enviar pesquisa de churn
+        SendChurnSurvey::dispatch($customer);
     }
 
-    private function executeReactivatedActions(Customer $customer): void
+    private function executeReactivationActions(Customer $customer): void
     {
         // Enviar e-mail de boas-vindas de volta
-        $this->notificationService->sendWelcomeBackEmail($customer);
+        SendWelcomeBackEmail::dispatch($customer);
 
-        // Iniciar processo de reonboarding
-        $this->onboardingService->startReonboarding($customer);
-    }
-}
-```
-
-### **✅ Automação de Ciclo de Vida**
-
-```php
-class CustomerLifecycleAutomationService extends AbstractBaseService
-{
-    public function runLifecycleAutomation(): ServiceResult
-    {
-        return $this->safeExecute(function() {
-            $actions = [];
-
-            // 1. Identificar leads inativos
-            $inactiveLeads = $this->identifyInactiveLeads();
-            foreach ($inactiveLeads as $lead) {
-                $actions[] = $this->handleInactiveLead($lead);
-            }
-
-            // 2. Identificar prospects sem follow-up
-            $staleProspects = $this->identifyStaleProspects();
-            foreach ($staleProspects as $prospect) {
-                $actions[] = $this->handleStaleProspect($prospect);
-            }
-
-            // 3. Identificar clientes inativos
-            $inactiveCustomers = $this->identifyInactiveCustomers();
-            foreach ($inactiveCustomers as $customer) {
-                $actions[] = $this->handleInactiveCustomer($customer);
-            }
-
-            // 4. Identificar clientes em risco de churn
-            $atRiskCustomers = $this->identifyAtRiskCustomers();
-            foreach ($atRiskCustomers as $customer) {
-                $actions[] = $this->handleAtRiskCustomer($customer);
-            }
-
-            return $this->success($actions, 'Automação de ciclo de vida executada');
-        });
+        // Criar tarefa de reonboarding
+        $this->createReonboardingTask($customer);
     }
 
-    private function identifyInactiveLeads(): Collection
+    private function determineNextStage(Customer $customer, CustomerLifecycleStage $currentStage): CustomerLifecycleStage
     {
-        return Customer::where('lifecycle_stage', 'lead')
-            ->where('created_at', '<', now()->subDays(7))
-            ->whereDoesntHave('interactions', function($query) {
-                $query->where('interaction_date', '>=', now()->subDays(7));
-            })
-            ->get();
+        // Lógica de determinação automática de próximo estágio
+        switch ($currentStage) {
+            case CustomerLifecycleStage::LEAD:
+                return $this->shouldMoveToProspect($customer) ? CustomerLifecycleStage::PROSPECT : $currentStage;
+
+            case CustomerLifecycleStage::PROSPECT:
+                return $this->shouldMoveToQualified($customer) ? CustomerLifecycleStage::QUALIFIED : $currentStage;
+
+            case CustomerLifecycleStage::QUALIFIED:
+                return $this->shouldMoveToProposal($customer) ? CustomerLifecycleStage::PROPOSAL : $currentStage;
+
+            case CustomerLifecycleStage::PROPOSAL:
+                return $this->shouldMoveToNegotiation($customer) ? CustomerLifecycleStage::NEGOTIATION : $currentStage;
+
+            case CustomerLifecycleStage::NEGOTIATION:
+                return $this->shouldMoveToClosedWon($customer) ? CustomerLifecycleStage::CLOSED_WON : CustomerLifecycleStage::CLOSED_LOST;
+
+            case CustomerLifecycleStage::ACTIVE:
+                return $this->shouldMoveToInactive($customer) ? CustomerLifecycleStage::INACTIVE : $currentStage;
+
+            case CustomerLifecycleStage::INACTIVE:
+                return $this->shouldMoveToChurned($customer) ? CustomerLifecycleStage::CHURNED : $this->shouldMoveToReactivated($customer) ? CustomerLifecycleStage::REACTIVATED : $currentStage;
+
+            default:
+                return $currentStage;
+        }
     }
 
-    private function identifyStaleProspects(): Collection
+    private function shouldMoveToProspect(Customer $customer): bool
     {
-        return Customer::where('lifecycle_stage', 'prospect')
-            ->where('stage_changed_at', '<', now()->subDays(14))
-            ->whereDoesntHave('interactions', function($query) {
-                $query->where('interaction_date', '>=', now()->subDays(7));
-            })
-            ->get();
+        // Lógica para determinar se deve avançar para prospect
+        return $customer->interactions()->where('interaction_date', '>=', now()->subDays(30))->exists();
     }
 
-    private function identifyInactiveCustomers(): Collection
+    private function shouldMoveToQualified(Customer $customer): bool
     {
-        return Customer::where('lifecycle_stage', 'active')
-            ->where('last_interaction_at', '<', now()->subDays(30))
-            ->whereDoesntHave('budgets', function($query) {
-                $query->where('created_at', '>=', now()->subMonths(3));
-            })
-            ->get();
+        // Lógica para determinar se deve avançar para qualificado
+        return $customer->budgets()->where('status', 'pending')->exists();
     }
 
-    private function identifyAtRiskCustomers(): Collection
+    private function shouldMoveToProposal(Customer $customer): bool
     {
-        return Customer::where('lifecycle_stage', 'active')
-            ->where('last_interaction_at', '<', now()->subDays(15))
-            ->whereHas('budgets', function($query) {
-                $query->where('status', 'cancelled')
-                    ->where('created_at', '>=', now()->subMonth());
-            })
-            ->get();
+        // Lógica para determinar se deve avançar para proposta
+        return $customer->budgets()->where('status', 'approved')->exists();
     }
 
-    private function handleInactiveLead(Customer $lead): array
+    private function shouldMoveToNegotiation(Customer $customer): bool
     {
-        // Enviar e-mail de nutrição
-        $this->nurtureService->sendNurtureEmail($lead);
-
-        // Agendar follow-up
-        $this->followUpService->scheduleFollowUp($lead, 'lead_nurture', now()->addDays(3));
-
-        return [
-            'customer_id' => $lead->id,
-            'action' => 'lead_nurtured',
-            'message' => 'Lead inativo nutrido',
-        ];
+        // Lógica para determinar se deve avançar para negociação
+        return $customer->services()->where('status', 'pending')->exists();
     }
 
-    private function handleStaleProspect(Customer $prospect): array
+    private function shouldMoveToClosedWon(Customer $customer): bool
     {
-        // Enviar proposta de valor
-        $this->proposalService->sendValueProposal($prospect);
-
-        // Agendar contato direto
-        $this->contactService->scheduleDirectContact($prospect);
-
-        return [
-            'customer_id' => $prospect->id,
-            'action' => 'prospect_reengaged',
-            'message' => 'Prospect reengajado',
-        ];
+        // Lógica para determinar se deve fechar como ganho
+        return $customer->services()->where('status', 'active')->exists();
     }
 
-    private function handleInactiveCustomer(Customer $customer): array
+    private function shouldMoveToInactive(Customer $customer): bool
     {
-        // Enviar oferta de retenção
-        $this->retentionService->sendRetentionOffer($customer);
+        // Lógica para determinar se deve inativar
+        return $customer->last_interaction_at && $customer->last_interaction_at < now()->subMonths(3);
+    }
 
-        // Agendar contato de retenção
-        $this->retentionService->scheduleRetentionContact($customer);
+    private function shouldMoveToChurned(Customer $customer): bool
+    {
+        // Lógica para determinar se deve churnar
+        return $customer->last_interaction_at && $customer->last_interaction_at < now()->subMonths(6);
+    }
 
-        return [
+    private function shouldMoveToReactivated(Customer $customer): bool
+    {
+        // Lógica para determinar se deve reativar
+        return $customer->last_interaction_at && $customer->last_interaction_at >= now()->subMonths(1);
+    }
+
+    private function calculateTimeInCurrentStage(Customer $customer): int
+    {
+        return $customer->stage_changed_at ? now()->diffInDays($customer->stage_changed_at) : 0;
+    }
+
+    private function getNextPossibleStages(Customer $customer): array
+    {
+        $currentStage = CustomerLifecycleStage::from($customer->lifecycle_stage);
+        return $currentStage->getNextStages();
+    }
+
+    private function calculateStageProgress(Customer $customer): float
+    {
+        $currentStage = CustomerLifecycleStage::from($customer->lifecycle_stage);
+        $stages = CustomerLifecycleStage::cases();
+
+        $currentIndex = array_search($currentStage, $stages);
+        $totalStages = count($stages);
+
+        return $totalStages > 0 ? ($currentIndex / ($totalStages - 1)) * 100 : 0;
+    }
+
+    private function updateCustomerStatistics(Customer $customer, CustomerLifecycleStage $newStage): void
+    {
+        // Atualizar estatísticas do cliente baseado no novo estágio
+        $customer->update([
+            'stage_changed_at' => now(),
+            'stage_changed_by' => auth()->id(),
+        ]);
+    }
+
+    private function createFollowUpTask(Customer $customer, string $description, Carbon $dueDate): void
+    {
+        // Criar tarefa de follow-up
+        Task::create([
+            'tenant_id' => $this->getTenantId(),
             'customer_id' => $customer->id,
-            'action' => 'customer_retained',
-            'message' => 'Cliente inativo retido',
-        ];
+            'description' => $description,
+            'due_date' => $dueDate,
+            'priority' => 'medium',
+            'status' => 'pending',
+        ]);
     }
 
-    private function handleAtRiskCustomer(Customer $customer): array
+    private function createOnboardingTask(Customer $customer): void
     {
-        // Enviar pesquisa de satisfação
-        $this->surveyService->sendSatisfactionSurvey($customer);
-
-        // Oferecer suporte premium
-        $this->supportService->offerPremiumSupport($customer);
-
-        // Agendar reunião de relacionamento
-        $this->relationshipService->scheduleRelationshipMeeting($customer);
-
-        return [
+        // Criar tarefa de onboarding
+        Task::create([
+            'tenant_id' => $this->getTenantId(),
             'customer_id' => $customer->id,
-            'action' => 'customer_saved',
-            'message' => 'Cliente em risco salvo',
-        ];
-    }
-}
-```
-
-### **✅ Métricas de Ciclo de Vida**
-
-```php
-class CustomerLifecycleMetricsService extends AbstractBaseService
-{
-    public function getLifecycleMetrics(array $filters = []): array
-    {
-        $query = Customer::query();
-
-        // Aplicar filtros
-        if (isset($filters['tenant_id'])) {
-            $query->where('tenant_id', $filters['tenant_id']);
-        }
-
-        if (isset($filters['date_from'])) {
-            $query->where('created_at', '>=', $filters['date_from']);
-        }
-
-        if (isset($filters['date_to'])) {
-            $query->where('created_at', '<=', $filters['date_to']);
-        }
-
-        $customers = $query->get();
-
-        return [
-            'total_customers' => $customers->count(),
-            'by_stage' => $this->getCustomersByStage($customers),
-            'conversion_rates' => $this->getConversionRates($customers),
-            'average_cycle_time' => $this->getAverageCycleTime($customers),
-            'churn_rate' => $this->getChurnRate($customers),
-            'retention_rate' => $this->getRetentionRate($customers),
-            'lifecycle_value' => $this->getLifecycleValue($customers),
-        ];
+            'description' => 'Realizar onboarding do cliente',
+            'due_date' => now()->addDays(7),
+            'priority' => 'high',
+            'status' => 'pending',
+        ]);
     }
 
-    private function getCustomersByStage(Collection $customers): array
+    private function createRetentionCampaign(Customer $customer): void
     {
-        return $customers->groupBy('lifecycle_stage')
-            ->map(fn($group) => $group->count())
+        // Criar campanha de retenção
+        Campaign::create([
+            'tenant_id' => $this->getTenantId(),
+            'name' => "Campanha de Retenção - {$customer->commonData?->first_name}",
+            'type' => 'retention',
+            'status' => 'active',
+            'start_date' => now(),
+            'end_date' => now()->addMonths(1),
+            'target_customers' => [$customer->id],
+        ]);
+    }
+
+    private function createChurnAnalysisTask(Customer $customer): void
+    {
+        // Criar tarefa de análise de churn
+        Task::create([
+            'tenant_id' => $this->getTenantId(),
+            'customer_id' => $customer->id,
+            'description' => 'Analisar motivo do churn',
+            'due_date' => now()->addDays(3),
+            'priority' => 'high',
+            'status' => 'pending',
+        ]);
+    }
+
+    private function createReonboardingTask(Customer $customer): void
+    {
+        // Criar tarefa de reonboarding
+        Task::create([
+            'tenant_id' => $this->getTenantId(),
+            'customer_id' => $customer->id,
+            'description' => 'Realizar reonboarding do cliente',
+            'due_date' => now()->addDays(7),
+            'priority' => 'medium',
+            'status' => 'pending',
+        ]);
+    }
+
+    private function updateSalesStatistics(Customer $customer): void
+    {
+        // Atualizar estatísticas de vendas
+        $user = auth()->user();
+        if ($user) {
+            $user->update([
+                'total_customers_won' => $user->total_customers_won + 1,
+                'last_customer_won_at' => now(),
+            ]);
+        }
+    }
+
+    private function getStageDistribution(int $tenantId, array $filters): array
+    {
+        return Customer::where('tenant_id', $tenantId)
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('created_at', '<=', $dateTo);
+            })
+            ->groupBy('lifecycle_stage')
+            ->selectRaw('lifecycle_stage, count(*) as count')
+            ->pluck('count', 'lifecycle_stage')
             ->toArray();
     }
 
-    private function getConversionRates(Collection $customers): array
+    private function getConversionRates(int $tenantId, array $filters): array
     {
-        $totalLeads = $customers->where('lifecycle_stage', 'lead')->count();
-        $totalProspects = $customers->where('lifecycle_stage', 'prospect')->count();
-        $totalQualified = $customers->where('lifecycle_stage', 'qualified')->count();
-        $totalProposals = $customers->where('lifecycle_stage', 'proposal')->count();
-        $totalNegotiations = $customers->where('lifecycle_stage', 'negotiation')->count();
-        $totalClosedWon = $customers->where('lifecycle_stage', 'closed_won')->count();
+        $totalLeads = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'lead')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->count();
+
+        $totalProspects = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'prospect')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->count();
+
+        $totalQualified = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'qualified')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->count();
+
+        $totalClosedWon = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'closed_won')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->count();
 
         return [
             'lead_to_prospect' => $totalLeads > 0 ? ($totalProspects / $totalLeads) * 100 : 0,
             'prospect_to_qualified' => $totalProspects > 0 ? ($totalQualified / $totalProspects) * 100 : 0,
-            'qualified_to_proposal' => $totalQualified > 0 ? ($totalProposals / $totalQualified) * 100 : 0,
-            'proposal_to_negotiation' => $totalProposals > 0 ? ($totalNegotiations / $totalProposals) * 100 : 0,
-            'negotiation_to_closed_won' => $totalNegotiations > 0 ? ($totalClosedWon / $totalNegotiations) * 100 : 0,
+            'qualified_to_closed_won' => $totalQualified > 0 ? ($totalClosedWon / $totalQualified) * 100 : 0,
             'overall_conversion' => $totalLeads > 0 ? ($totalClosedWon / $totalLeads) * 100 : 0,
         ];
     }
 
-    private function getAverageCycleTime(Collection $customers): array
+    private function getAverageStageDuration(int $tenantId, array $filters): array
     {
-        $cycleTimes = [];
+        $stages = CustomerLifecycleStage::cases();
+        $durations = [];
 
-        foreach ($customers as $customer) {
-            $history = $customer->lifecycleHistory()->orderBy('created_at')->get();
+        foreach ($stages as $stage) {
+            $customers = Customer::where('tenant_id', $tenantId)
+                ->where('lifecycle_stage', $stage)
+                ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                    $query->where('created_at', '>=', $dateFrom);
+                })
+                ->get();
 
-            if ($history->count() >= 2) {
-                $firstStage = $history->first();
-                $lastStage = $history->last();
+            $totalDays = $customers->sum(function($customer) {
+                return $customer->stage_changed_at ? now()->diffInDays($customer->stage_changed_at) : 0;
+            });
 
-                $cycleTime = $firstStage->created_at->diffInDays($lastStage->created_at);
-                $cycleTimes[] = $cycleTime;
-            }
+            $durations[$stage->value] = $customers->count() > 0 ? ($totalDays / $customers->count()) : 0;
         }
 
+        return $durations;
+    }
+
+    private function getChurnAnalysis(int $tenantId, array $filters): array
+    {
+        $churnedCustomers = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'churned')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('stage_changed_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('stage_changed_at', '<=', $dateTo);
+            })
+            ->get();
+
+        $totalCustomers = Customer::where('tenant_id', $tenantId)
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->count();
+
         return [
-            'average_days' => count($cycleTimes) > 0 ? array_sum($cycleTimes) / count($cycleTimes) : 0,
-            'median_days' => $this->calculateMedian($cycleTimes),
-            'min_days' => count($cycleTimes) > 0 ? min($cycleTimes) : 0,
-            'max_days' => count($cycleTimes) > 0 ? max($cycleTimes) : 0,
+            'total_churned' => $churnedCustomers->count(),
+            'churn_rate' => $totalCustomers > 0 ? ($churnedCustomers->count() / $totalCustomers) * 100 : 0,
+            'average_time_to_churn' => $churnedCustomers->avg(function($customer) {
+                return $customer->stage_changed_at ? now()->diffInDays($customer->stage_changed_at) : 0;
+            }) ?? 0,
+            'churn_reasons' => $this->getChurnReasons($churnedCustomers),
         ];
     }
 
-    private function getChurnRate(Collection $customers): float
+    private function getRetentionAnalysis(int $tenantId, array $filters): array
     {
-        $totalCustomers = $customers->count();
-        $churnedCustomers = $customers->where('lifecycle_stage', 'churned')->count();
+        $reactivatedCustomers = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'reactivated')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('stage_changed_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('stage_changed_at', '<=', $dateTo);
+            })
+            ->get();
 
-        return $totalCustomers > 0 ? ($churnedCustomers / $totalCustomers) * 100 : 0.0;
+        $totalChurned = Customer::where('tenant_id', $tenantId)
+            ->where('lifecycle_stage', 'churned')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('stage_changed_at', '>=', $dateFrom);
+            })
+            ->count();
+
+        return [
+            'total_reactivated' => $reactivatedCustomers->count(),
+            'reactivation_rate' => $totalChurned > 0 ? ($reactivatedCustomers->count() / $totalChurned) * 100 : 0,
+            'average_time_to_reactivation' => $reactivatedCustomers->avg(function($customer) {
+                return $customer->stage_changed_at ? now()->diffInDays($customer->stage_changed_at) : 0;
+            }) ?? 0,
+        ];
     }
 
-    private function getRetentionRate(Collection $customers): float
+    private function getLifecycleValueAnalysis(int $tenantId, array $filters): array
     {
-        $totalCustomers = $customers->count();
-        $activeCustomers = $customers->where('lifecycle_stage', 'active')->count();
+        $customers = Customer::where('tenant_id', $tenantId)
+            ->with('invoices')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->get();
 
-        return $totalCustomers > 0 ? ($activeCustomers / $totalCustomers) * 100 : 0.0;
+        return [
+            'average_ltv' => $customers->avg(function($customer) {
+                return $customer->invoices->where('status', 'paid')->sum('total');
+            }) ?? 0,
+            'total_ltv' => $customers->sum(function($customer) {
+                return $customer->invoices->where('status', 'paid')->sum('total');
+            }),
+            'ltv_by_stage' => $this->getLTVByStage($customers),
+        ];
     }
 
-    private function getLifecycleValue(Collection $customers): float
+    private function getChurnReasons(Collection $churnedCustomers): array
     {
-        $totalValue = 0;
-        $customerCount = 0;
-
-        foreach ($customers as $customer) {
-            $customerValue = $customer->invoices()->sum('total');
-            if ($customerValue > 0) {
-                $totalValue += $customerValue;
-                $customerCount++;
-            }
-        }
-
-        return $customerCount > 0 ? $totalValue / $customerCount : 0.0;
+        return $churnedCustomers->groupBy(function($customer) {
+            return $customer->lifecycleHistory->last()?->reason ?? 'unknown';
+        })->map->count()->toArray();
     }
 
-    private function calculateMedian(array $values): float
+    private function getLTVByStage(Collection $customers): array
     {
-        if (empty($values)) {
-            return 0.0;
-        }
-
-        sort($values);
-        $count = count($values);
-        $middle = floor(($count - 1) / 2);
-
-        if ($count % 2) {
-            return $values[$middle];
-        } else {
-            return ($values[$middle] + $values[$middle + 1]) / 2;
-        }
+        return $customers->groupBy('lifecycle_stage')
+            ->map(function($stageCustomers) {
+                return $stageCustomers->avg(function($customer) {
+                    return $customer->invoices->where('status', 'paid')->sum('total');
+                }) ?? 0;
+            })
+            ->toArray();
     }
 }
 ```
 
-## 📊 Dashboard de Ciclo de Vida
-
-### **✅ Dashboard Executivo**
+### **✅ Sistema de Estratégias de Retenção**
 
 ```php
-class CustomerLifecycleDashboardService extends AbstractBaseService
+class CustomerRetentionService extends AbstractBaseService
 {
-    public function getLifecycleDashboard(int $tenantId): array
+    public function analyzeChurnRisk(Customer $customer): ServiceResult
     {
-        return [
-            'funnel_metrics' => $this->getFunnelMetrics($tenantId),
-            'conversion_trends' => $this->getConversionTrends($tenantId),
-            'churn_analysis' => $this->getChurnAnalysis($tenantId),
-            'retention_insights' => $this->getRetentionInsights($tenantId),
-            'revenue_impact' => $this->getRevenueImpact($tenantId),
-        ];
+        return $this->safeExecute(function() use ($customer) {
+            $riskFactors = $this->identifyRiskFactors($customer);
+            $riskScore = $this->calculateChurnRiskScore($customer, $riskFactors);
+            $recommendations = $this->generateRetentionRecommendations($customer, $riskScore);
+
+            return $this->success([
+                'risk_score' => $riskScore,
+                'risk_factors' => $riskFactors,
+                'recommendations' => $recommendations,
+                'risk_level' => $this->getRiskLevel($riskScore),
+            ], 'Análise de risco de churn concluída');
+        });
     }
 
-    private function getFunnelMetrics(int $tenantId): array
+    public function createRetentionCampaign(Customer $customer, array $strategies): ServiceResult
     {
-        $stages = CustomerLifecycleStage::cases();
-        $metrics = [];
+        return $this->safeExecute(function() use ($customer, $strategies) {
+            $campaign = Campaign::create([
+                'tenant_id' => $this->getTenantId(),
+                'name' => "Campanha de Retenção - {$customer->commonData?->first_name}",
+                'type' => 'retention',
+                'status' => 'active',
+                'start_date' => now(),
+                'end_date' => now()->addMonths(3),
+                'target_customers' => [$customer->id],
+                'strategies' => $strategies,
+                'budget' => $this->calculateCampaignBudget($customer, $strategies),
+            ]);
 
-        foreach ($stages as $stage) {
-            $count = Customer::where('tenant_id', $tenantId)
-                ->where('lifecycle_stage', $stage->value)
-                ->count();
+            // Criar ações específicas da campanha
+            $this->createRetentionActions($customer, $campaign, $strategies);
 
-            $metrics[$stage->value] = [
-                'count' => $count,
-                'label' => $stage->name,
-                'percentage' => 0, // Será calculado no frontend
+            return $this->success($campaign, 'Campanha de retenção criada');
+        });
+    }
+
+    public function executeRetentionStrategy(Customer $customer, string $strategyType): ServiceResult
+    {
+        return $this->safeExecute(function() use ($customer, $strategyType) {
+            switch ($strategyType) {
+                case 'discount':
+                    return $this->executeDiscountStrategy($customer);
+                case 'loyalty_program':
+                    return $this->executeLoyaltyProgramStrategy($customer);
+                case 'personalized_service':
+                    return $this->executePersonalizedServiceStrategy($customer);
+                case 'feedback_collection':
+                    return $this->executeFeedbackCollectionStrategy($customer);
+                case 'win_back':
+                    return $this->executeWinBackStrategy($customer);
+                default:
+                    return $this->error('Estratégia de retenção não reconhecida', OperationStatus::INVALID_DATA);
+            }
+        });
+    }
+
+    private function identifyRiskFactors(Customer $customer): array
+    {
+        $riskFactors = [];
+
+        // Fatores de risco
+        if ($customer->last_interaction_at && $customer->last_interaction_at < now()->subMonths(3)) {
+            $riskFactors[] = [
+                'factor' => 'inactivity',
+                'severity' => 'high',
+                'description' => 'Cliente inativo há mais de 3 meses',
+                'weight' => 40,
             ];
         }
 
-        return $metrics;
-    }
-
-    private function getConversionTrends(int $tenantId): array
-    {
-        return CustomerLifecycleHistory::whereHas('customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->selectRaw('DATE(created_at) as date, to_stage, count(*) as count')
-        ->groupBy('date', 'to_stage')
-        ->orderBy('date')
-        ->get()
-        ->groupBy('date')
-        ->map(function($dayData) {
-            return $dayData->pluck('count', 'to_stage')->toArray();
-        })
-        ->toArray();
-    }
-
-    private function getChurnAnalysis(int $tenantId): array
-    {
-        $churnedCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'churned')
-            ->with('lifecycleHistory')
-            ->get();
-
-        $reasons = $churnedCustomers->flatMap(function($customer) {
-            return $customer->lifecycleHistory->where('to_stage', 'churned')->pluck('reason');
-        })->groupBy(function($reason) {
-            return $reason ?: 'unknown';
-        })->map->count()->toArray();
-
-        return [
-            'total_churned' => $churnedCustomers->count(),
-            'by_reason' => $reasons,
-            'average_lifecycle_days' => $this->calculateAverageChurnLifecycle($churnedCustomers),
-            'revenue_lost' => $churnedCustomers->sum(function($customer) {
-                return $customer->invoices->sum('total');
-            }),
-        ];
-    }
-
-    private function getRetentionInsights(int $tenantId): array
-    {
-        $reactivatedCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'reactivated')
-            ->get();
-
-        return [
-            'total_reactivated' => $reactivatedCustomers->count(),
-            'reactivation_rate' => $this->calculateReactivationRate($tenantId),
-            'average_reactivation_time' => $this->calculateAverageReactivationTime($reactivatedCustomers),
-            'retention_strategies' => $this->getRetentionStrategiesUsed($reactivatedCustomers),
-        ];
-    }
-
-    private function getRevenueImpact(int $tenantId): array
-    {
-        $customers = Customer::where('tenant_id', $tenantId)->get();
-
-        return [
-            'total_revenue' => $customers->sum(function($customer) {
-                return $customer->invoices->sum('total');
-            }),
-            'revenue_by_stage' => $this->getRevenueByStage($customers),
-            'lifecycle_roi' => $this->calculateLifecycleROI($customers),
-            'customer_acquisition_cost' => $this->calculateCAC($customers),
-        ];
-    }
-
-    private function calculateAverageChurnLifecycle(Collection $churnedCustomers): float
-    {
-        $lifetimes = [];
-
-        foreach ($churnedCustomers as $customer) {
-            $firstStage = $customer->lifecycleHistory()->oldest()->first();
-            $churnStage = $customer->lifecycleHistory()->where('to_stage', 'churned')->latest()->first();
-
-            if ($firstStage && $churnStage) {
-                $lifetime = $firstStage->created_at->diffInDays($churnStage->created_at);
-                $lifetimes[] = $lifetime;
-            }
+        if ($customer->invoices()->where('due_date', '<', now())->where('status', 'pending')->exists()) {
+            $overdueAmount = $customer->invoices()->where('due_date', '<', now())->where('status', 'pending')->sum('total');
+            $riskFactors[] = [
+                'factor' => 'financial_issues',
+                'severity' => 'medium',
+                'description' => "Cliente com faturas vencidas no valor de R$ {$overdueAmount}",
+                'weight' => 30,
+            ];
         }
 
-        return count($lifetimes) > 0 ? array_sum($lifetimes) / count($lifetimes) : 0.0;
-    }
-
-    private function calculateReactivationRate(int $tenantId): float
-    {
-        $totalChurned = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'churned')
-            ->count();
-
-        $totalReactivated = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'reactivated')
-            ->count();
-
-        return $totalChurned > 0 ? ($totalReactivated / $totalChurned) * 100 : 0.0;
-    }
-
-    private function calculateAverageReactivationTime(Collection $reactivatedCustomers): float
-    {
-        $reactivationTimes = [];
-
-        foreach ($reactivatedCustomers as $customer) {
-            $churnStage = $customer->lifecycleHistory()->where('to_stage', 'churned')->latest()->first();
-            $reactivationStage = $customer->lifecycleHistory()->where('to_stage', 'reactivated')->latest()->first();
-
-            if ($churnStage && $reactivationStage) {
-                $reactivationTime = $churnStage->created_at->diffInDays($reactivationStage->created_at);
-                $reactivationTimes[] = $reactivationTime;
-            }
+        if ($customer->lifecycle_stage === 'inactive') {
+            $riskFactors[] = [
+                'factor' => 'stage_risk',
+                'severity' => 'medium',
+                'description' => 'Cliente no estágio inativo',
+                'weight' => 20,
+            ];
         }
 
-        return count($reactivationTimes) > 0 ? array_sum($reactivationTimes) / count($reactivationTimes) : 0.0;
+        if ($customer->services()->where('status', 'cancelled')->count() > 0) {
+            $riskFactors[] = [
+                'factor' => 'service_issues',
+                'severity' => 'high',
+                'description' => 'Cliente teve serviços cancelados',
+                'weight' => 35,
+            ];
+        }
+
+        if ($customer->interactions()->where('outcome', 'negative')->count() > 0) {
+            $riskFactors[] = [
+                'factor' => 'negative_experience',
+                'severity' => 'high',
+                'description' => 'Cliente teve interações negativas',
+                'weight' => 50,
+            ];
+        }
+
+        return $riskFactors;
     }
 
-    private function getRetentionStrategiesUsed(Collection $reactivatedCustomers): array
+    private function calculateChurnRiskScore(Customer $customer, array $riskFactors): float
     {
-        return $reactivatedCustomers->flatMap(function($customer) {
-            return $customer->lifecycleHistory->where('to_stage', 'reactivated')->pluck('reason');
-        })->groupBy(function($strategy) {
-            return $strategy ?: 'unknown';
-        })->map->count()->toArray();
+        $baseScore = 10; // Score base para clientes ativos
+
+        // Score baseado no estágio
+        switch ($customer->lifecycle_stage) {
+            case 'inactive':
+                $baseScore += 40;
+                break;
+            case 'churned':
+                $baseScore += 80;
+                break;
+            case 'reactivated':
+                $baseScore -= 10; // Reduz score para clientes reativados
+                break;
+        }
+
+        // Score baseado nos fatores de risco
+        $riskScore = array_sum(array_column($riskFactors, 'weight'));
+
+        // Score baseado no histórico financeiro
+        $paymentHistory = $customer->invoices()->where('status', 'paid')->get();
+        if ($paymentHistory->count() > 0) {
+            $latePayments = $paymentHistory->filter(function($invoice) {
+                return $invoice->transaction_date && $invoice->transaction_date > $invoice->due_date;
+            })->count();
+
+            $latePaymentRate = $paymentHistory->count() > 0 ? ($latePayments / $paymentHistory->count()) * 100 : 0;
+            $baseScore += $latePaymentRate;
+        }
+
+        // Score baseado na frequência de interações
+        $interactionCount = $customer->interactions()->count();
+        if ($interactionCount < 5) {
+            $baseScore += 20;
+        } elseif ($interactionCount < 10) {
+            $baseScore += 10;
+        }
+
+        return min($baseScore + $riskScore, 100);
     }
 
-    private function getRevenueByStage(Collection $customers): array
+    private function generateRetentionRecommendations(Customer $customer, float $riskScore): array
     {
-        return $customers->groupBy('lifecycle_stage')
-            ->map(function($stageCustomers) {
-                return $stageCustomers->sum(function($customer) {
-                    return $customer->invoices->sum('total');
-                });
-            })
-            ->toArray();
+        $recommendations = [];
+
+        if ($riskScore >= 80) {
+            $recommendations[] = [
+                'priority' => 'high',
+                'action' => 'Contato imediato',
+                'description' => 'Realizar contato telefônico urgente para entender motivos de insatisfação',
+                'responsible' => 'Gerente de contas',
+                'deadline' => now()->addDays(1),
+            ];
+            $recommendations[] = [
+                'priority' => 'high',
+                'action' => 'Oferta especial',
+                'description' => 'Oferecer desconto ou benefício exclusivo para retenção',
+                'responsible' => 'Equipe comercial',
+                'deadline' => now()->addDays(2),
+            ];
+        } elseif ($riskScore >= 60) {
+            $recommendations[] = [
+                'priority' => 'medium',
+                'action' => 'Follow-up programado',
+                'description' => 'Agendar follow-up em 1 semana para verificar necessidades',
+                'responsible' => 'Consultor de vendas',
+                'deadline' => now()->addDays(7),
+            ];
+            $recommendations[] = [
+                'priority' => 'medium',
+                'action' => 'Pesquisa de satisfação',
+                'description' => 'Enviar pesquisa de satisfação para identificar pontos de melhoria',
+                'responsible' => 'Equipe de CX',
+                'deadline' => now()->addDays(3),
+            ];
+        } elseif ($riskScore >= 40) {
+            $recommendations[] = [
+                'priority' => 'low',
+                'action' => 'Monitoramento ativo',
+                'description' => 'Aumentar frequência de interações e monitorar indicadores',
+                'responsible' => 'Consultor de contas',
+                'deadline' => now()->addDays(14),
+            ];
+            $recommendations[] = [
+                'priority' => 'low',
+                'action' => 'Programa de fidelidade',
+                'description' => 'Oferecer programa de fidelidade ou benefícios',
+                'responsible' => 'Equipe de marketing',
+                'deadline' => now()->addDays(30),
+            ];
+        } else {
+            $recommendations[] = [
+                'priority' => 'low',
+                'action' => 'Manutenção de relacionamento',
+                'description' => 'Manter relacionamento atual e monitorar indicadores',
+                'responsible' => 'Consultor de contas',
+                'deadline' => now()->addDays(60),
+            ];
+        }
+
+        return $recommendations;
     }
 
-    private function calculateLifecycleROI(Collection $customers): float
+    private function getRiskLevel(float $riskScore): string
     {
-        $totalRevenue = $customers->sum(function($customer) {
-            return $customer->invoices->sum('total');
-        });
-
-        $totalCost = $customers->count() * 100; // Custo médio de aquisição
-
-        return $totalCost > 0 ? (($totalRevenue - $totalCost) / $totalCost) * 100 : 0.0;
+        if ($riskScore >= 80) return 'critical';
+        if ($riskScore >= 60) return 'high';
+        if ($riskScore >= 40) return 'medium';
+        if ($riskScore >= 20) return 'low';
+        return 'minimal';
     }
 
-    private function calculateCAC(Collection $customers): float
+    private function calculateCampaignBudget(Customer $customer, array $strategies): float
     {
-        $totalMarketingCost = 50000; // Exemplo de custo de marketing
-        $totalAcquiredCustomers = $customers->where('lifecycle_stage', '!=', 'lead')->count();
+        $baseBudget = 100.00; // Budget base
+        $customerValue = $customer->invoices()->where('status', 'paid')->sum('total');
 
-        return $totalAcquiredCustomers > 0 ? $totalMarketingCost / $totalAcquiredCustomers : 0.0;
+        // Ajustar budget baseado no valor do cliente
+        if ($customerValue > 10000) {
+            $budgetMultiplier = 0.05; // 5% do valor do cliente
+        } elseif ($customerValue > 5000) {
+            $budgetMultiplier = 0.03; // 3% do valor do cliente
+        } elseif ($customerValue > 1000) {
+            $budgetMultiplier = 0.02; // 2% do valor do cliente
+        } else {
+            $budgetMultiplier = 0.01; // 1% do valor do cliente
+        }
+
+        $strategyMultiplier = count($strategies) * 0.1; // 10% adicional por estratégia
+
+        return max($baseBudget, $customerValue * $budgetMultiplier * (1 + $strategyMultiplier));
+    }
+
+    private function createRetentionActions(Customer $customer, Campaign $campaign, array $strategies): void
+    {
+        foreach ($strategies as $strategy) {
+            Action::create([
+                'tenant_id' => $this->getTenantId(),
+                'campaign_id' => $campaign->id,
+                'customer_id' => $customer->id,
+                'type' => 'retention',
+                'description' => $this->getStrategyDescription($strategy),
+                'status' => 'pending',
+                'priority' => 'medium',
+                'due_date' => now()->addDays(7),
+                'assigned_to' => auth()->id(),
+            ]);
+        }
+    }
+
+    private function getStrategyDescription(string $strategy): string
+    {
+        return match ($strategy) {
+            'discount' => 'Aplicar desconto especial para retenção',
+            'loyalty_program' => 'Oferecer programa de fidelidade',
+            'personalized_service' => 'Oferecer serviço personalizado',
+            'feedback_collection' => 'Coletar feedback do cliente',
+            'win_back' => 'Estratégia de reconquista',
+            default => 'Ação de retenção personalizada',
+        };
+    }
+
+    private function executeDiscountStrategy(Customer $customer): ServiceResult
+    {
+        // Implementar lógica de estratégia de desconto
+        return $this->success(null, 'Estratégia de desconto executada');
+    }
+
+    private function executeLoyaltyProgramStrategy(Customer $customer): ServiceResult
+    {
+        // Implementar lógica de programa de fidelidade
+        return $this->success(null, 'Estratégia de programa de fidelidade executada');
+    }
+
+    private function executePersonalizedServiceStrategy(Customer $customer): ServiceResult
+    {
+        // Implementar lógica de serviço personalizado
+        return $this->success(null, 'Estratégia de serviço personalizado executada');
+    }
+
+    private function executeFeedbackCollectionStrategy(Customer $customer): ServiceResult
+    {
+        // Implementar lógica de coleta de feedback
+        return $this->success(null, 'Estratégia de coleta de feedback executada');
+    }
+
+    private function executeWinBackStrategy(Customer $customer): ServiceResult
+    {
+        // Implementar lógica de estratégia de reconquista
+        return $this->success(null, 'Estratégia de reconquista executada');
     }
 }
 ```
@@ -974,159 +1121,176 @@ class CustomerLifecycleDashboardService extends AbstractBaseService
 ### **✅ Testes de Ciclo de Vida**
 
 ```php
-public function testLifecycleTransition()
+public function testCustomerStageTransition()
 {
     $customer = Customer::factory()->create(['lifecycle_stage' => 'lead']);
-    $user = User::factory()->create();
 
-    $dto = new CustomerLifecycleTransitionDTO([
-        'from_stage' => 'lead',
-        'to_stage' => 'prospect',
-        'reason' => 'qualified',
-        'notes' => 'Lead qualificado',
-    ]);
+    $result = $this->lifecycleService->moveCustomerStage(
+        $customer,
+        CustomerLifecycleStage::PROSPECT,
+        'Lead qualificado',
+        'Cliente demonstrou interesse',
+        User::factory()->create()
+    );
 
-    $result = $this->lifecycleService->transitionStage($customer, $dto, $user);
     $this->assertTrue($result->isSuccess());
 
     $this->assertEquals('prospect', $customer->fresh()->lifecycle_stage);
+    $this->assertNotNull($customer->fresh()->stage_changed_at);
 }
 
-public function testLeadToProspectTransition()
+public function testInvalidStageTransition()
 {
     $customer = Customer::factory()->create(['lifecycle_stage' => 'lead']);
-    $user = User::factory()->create();
 
-    $result = $this->lifecycleService->moveLeadToProspect($customer, $user);
-    $this->assertTrue($result->isSuccess());
+    $result = $this->lifecycleService->moveCustomerStage(
+        $customer,
+        CustomerLifecycleStage::CLOSED_WON,
+        'Teste',
+        'Teste',
+        User::factory()->create()
+    );
 
-    $this->assertEquals('prospect', $customer->fresh()->lifecycle_stage);
-}
-
-public function testInvalidTransition()
-{
-    $customer = Customer::factory()->create(['lifecycle_stage' => 'lead']);
-    $user = User::factory()->create();
-
-    $dto = new CustomerLifecycleTransitionDTO([
-        'from_stage' => 'lead',
-        'to_stage' => 'closed_won', // Transição inválida
-        'reason' => 'test',
-    ]);
-
-    $result = $this->lifecycleService->transitionStage($customer, $dto, $user);
     $this->assertFalse($result->isSuccess());
-    $this->assertEquals('Transição de estágio não permitida', $result->getMessage());
+    $this->assertEquals('Transição de estágio inválida', $result->getMessage());
 }
 
-public function testLifecycleAutomation()
+public function testAutoStageTransition()
 {
-    // Criar lead inativo
-    $inactiveLead = Customer::factory()->create([
-        'lifecycle_stage' => 'lead',
-        'created_at' => now()->subDays(10),
+    $customer = Customer::factory()->create(['lifecycle_stage' => 'lead']);
+    CustomerInteraction::factory()->create([
+        'customer_id' => $customer->id,
+        'interaction_date' => now()->subDays(15),
     ]);
 
-    $result = $this->automationService->runLifecycleAutomation();
+    $result = $this->lifecycleService->autoMoveCustomerStage($customer);
     $this->assertTrue($result->isSuccess());
 
-    // Verificar se o lead foi nutrido
-    $this->assertTrue($inactiveLead->fresh()->lifecycle_stage === 'lead'); // Não deve mudar automaticamente
+    $this->assertEquals('prospect', $customer->fresh()->lifecycle_stage);
+}
+
+public function testLifecycleAnalytics()
+{
+    $tenant = Tenant::factory()->create();
+    Customer::factory()->count(10)->create(['tenant_id' => $tenant->id]);
+
+    $result = $this->lifecycleService->getLifecycleAnalytics($tenant->id);
+    $this->assertTrue($result->isSuccess());
+
+    $analytics = $result->getData();
+    $this->assertArrayHasKey('stage_distribution', $analytics);
+    $this->assertArrayHasKey('conversion_rates', $analytics);
+    $this->assertArrayHasKey('average_stage_duration', $analytics);
+    $this->assertArrayHasKey('churn_analysis', $analytics);
+    $this->assertArrayHasKey('retention_analysis', $analytics);
+    $this->assertArrayHasKey('lifecycle_value', $analytics);
 }
 ```
 
-### **✅ Testes de Métricas**
+### **✅ Testes de Retenção**
 
 ```php
-public function testLifecycleMetrics()
+public function testChurnRiskAnalysis()
 {
-    $tenant = Tenant::factory()->create();
-
-    // Criar clientes em diferentes estágios
-    Customer::factory()->count(10)->create(['tenant_id' => $tenant->id, 'lifecycle_stage' => 'lead']);
-    Customer::factory()->count(5)->create(['tenant_id' => $tenant->id, 'lifecycle_stage' => 'prospect']);
-    Customer::factory()->count(3)->create(['tenant_id' => $tenant->id, 'lifecycle_stage' => 'closed_won']);
-
-    $metrics = $this->metricsService->getLifecycleMetrics([
-        'tenant_id' => $tenant->id,
+    $customer = Customer::factory()->create();
+    CustomerInteraction::factory()->create([
+        'customer_id' => $customer->id,
+        'interaction_date' => now()->subMonths(4), // Cliente inativo
     ]);
 
-    $this->assertArrayHasKey('total_customers', $metrics);
-    $this->assertArrayHasKey('by_stage', $metrics);
-    $this->assertArrayHasKey('conversion_rates', $metrics);
+    $result = $this->retentionService->analyzeChurnRisk($customer);
+    $this->assertTrue($result->isSuccess());
+
+    $analysis = $result->getData();
+    $this->assertArrayHasKey('risk_score', $analysis);
+    $this->assertArrayHasKey('risk_factors', $analysis);
+    $this->assertArrayHasKey('recommendations', $analysis);
+    $this->assertArrayHasKey('risk_level', $analysis);
+    $this->assertGreaterThan(40, $analysis['risk_score']); // Deve ter score alto por inatividade
 }
 
-public function testDashboardData()
+public function testRetentionCampaignCreation()
 {
-    $tenant = Tenant::factory()->create();
+    $customer = Customer::factory()->create();
+    $strategies = ['discount', 'feedback_collection'];
 
-    $dashboard = $this->dashboardService->getLifecycleDashboard($tenant->id);
+    $result = $this->retentionService->createRetentionCampaign($customer, $strategies);
+    $this->assertTrue($result->isSuccess());
 
-    $this->assertArrayHasKey('funnel_metrics', $dashboard);
-    $this->assertArrayHasKey('conversion_trends', $dashboard);
-    $this->assertArrayHasKey('churn_analysis', $dashboard);
+    $campaign = $result->getData();
+    $this->assertEquals('retention', $campaign->type);
+    $this->assertEquals('active', $campaign->status);
+    $this->assertCount(2, $campaign->actions);
+}
+
+public function testRetentionStrategyExecution()
+{
+    $customer = Customer::factory()->create();
+
+    $result = $this->retentionService->executeRetentionStrategy($customer, 'discount');
+    $this->assertTrue($result->isSuccess());
+    $this->assertEquals('Estratégia de desconto executada', $result->getMessage());
 }
 ```
 
 ## 🚀 Implementação Gradual
 
 ### **Fase 1: Foundation**
-- [ ] Implementar CustomerLifecycleHistory model
-- [ ] Criar CustomerLifecycleTransitionDTO
 - [ ] Implementar CustomerLifecycleService básico
-- [ ] Definir enums de estágios e estratégias
+- [ ] Criar CustomerRetentionService básico
+- [ ] Definir estágios do ciclo de vida
+- [ ] Sistema de histórico de transições
 
 ### **Fase 2: Core Features**
-- [ ] Implementar CustomerLifecycleAutomationService
-- [ ] Criar CustomerLifecycleMetricsService
-- [ ] Implementar CustomerLifecycleDashboardService
+- [ ] Implementar validações de transição
 - [ ] Sistema de eventos de ciclo de vida
+- [ ] Estratégias de retenção básicas
+- [ ] Análise de risco de churn
 
 ### **Fase 3: Advanced Features**
-- [ ] Automação inteligente baseada em IA
-- [ ] Previsão de churn
-- [ ] Estratégias de retenção personalizadas
-- [ ] Integração com CRM externos
+- [ ] Machine learning para predição de churn
+- [ ] Campanhas de retenção automatizadas
+- [ ] Programas de fidelidade integrados
+- [ ] Dashboard de ciclo de vida
 
 ### **Fase 4: Integration**
-- [ ] Machine learning para otimização de conversão
-- [ ] Sistema de recomendação de estratégias
-- [ ] Dashboard executivo avançado
-- [ ] Integração com ferramentas de marketing
+- [ ] Integração com CRM externo
+- [ ] Sistema de notificações inteligentes
+- [ ] API para integração com marketing
+- [ ] Relatórios avançados de retenção
 
 ## 📚 Documentação Relacionada
 
-- [CustomerLifecycleHistory Model](../../app/Models/CustomerLifecycleHistory.php)
-- [CustomerLifecycleTransitionDTO](../../app/DTOs/Customer/CustomerLifecycleTransitionDTO.php)
 - [CustomerLifecycleService](../../app/Services/Domain/CustomerLifecycleService.php)
-- [CustomerLifecycleAutomationService](../../app/Services/Domain/CustomerLifecycleAutomationService.php)
-- [CustomerLifecycleMetricsService](../../app/Services/Domain/CustomerLifecycleMetricsService.php)
+- [CustomerRetentionService](../../app/Services/Domain/CustomerRetentionService.php)
+- [CustomerLifecycleHistory](../../app/Models/CustomerLifecycleHistory.php)
+- [CustomerLifecycleStage](../../app/Enums/CustomerLifecycleStage.php)
 
 ## 🎯 Benefícios
 
-### **✅ Gestão de Vendas**
-- Funil de vendas automatizado
-- Conversões otimizadas por fase
-- Identificação de gargalos no processo
-- Métricas de performance de vendas
+### **✅ Gestão Estratégica do Relacionamento**
+- Visão completa do ciclo de vida do cliente
+- Transições automatizadas baseadas em regras de negócio
+- Histórico detalhado de todas as mudanças de estágio
+- Estratégias de retenção baseadas em análise de risco
 
-### **✅ Retenção de Clientes**
-- Identificação precoce de churn
-- Estratégias de retenção automatizadas
-- Reengajamento inteligente
-- Análise de causas de perda
+### **✅ Redução de Churn**
+- Identificação precoce de clientes em risco
+- Estratégias de retenção personalizadas
+- Campanhas automatizadas de reconquista
+- Análise de causas de churn
 
-### **✅ Experiência do Cliente**
-- Onboarding personalizado
-- Comunicação segmentada por fase
-- Suporte proativo
-- Jornada de cliente otimizada
+### **✅ Aumento do Valor do Cliente**
+- Programas de fidelidade integrados
+- Estratégias de upsell/cross-sell baseadas no estágio
+- Personalização de ofertas por fase do ciclo de vida
+- Maximização do Customer Lifetime Value
 
-### **✅ Decisão de Negócio**
-- Dashboard executivo completo
-- Análise de ROI por fase
-- Previsão de receita
-- Otimização de estratégias
+### **✅ Eficiência Operacional**
+- Automação de processos de ciclo de vida
+- Redução de tempo em análises manuais
+- Estratégias padronizadas de retenção
+- Métricas claras de performance
 
 ---
 

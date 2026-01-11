@@ -31,7 +31,7 @@
             @endif
             <p><strong>Status:</strong> {{ $budgetData['status'] }}</p>
 
-            @if($budgetData['description'] && $budgetData['description'] !== 'Orçamento sem descrição')
+            @if($budgetData['description'])
                 <p><strong>Descrição:</strong><br>{{ $budgetData['description'] }}</p>
             @endif
         </div>

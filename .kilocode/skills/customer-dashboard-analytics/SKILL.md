@@ -1,794 +1,791 @@
 # 📊 Skill: Customer Dashboard and Analytics (Dashboard e Analytics)
 
-**Descrição:** Sistema completo de dashboards e analytics para visualização de métricas, KPIs e insights sobre o relacionamento com clientes.
+**Descrição:** Sistema avançado de dashboards e analytics para clientes, fornecendo insights detalhados sobre o comportamento, performance e valor dos clientes.
 
-**Categoria:** Dashboard e Analytics
+**Categoria:** Business Intelligence e Analytics
 **Complexidade:** Alta
 **Status:** ✅ Implementado e Documentado
 
 ## 🎯 Objetivo
 
-Fornecer dashboards executivos e analytics avançados para monitoramento do relacionamento com clientes, identificação de oportunidades e tomada de decisões baseada em dados.
+Fornecer dashboards executivos e analytics avançados para análise profunda do comportamento, performance e valor dos clientes, auxiliando na tomada de decisões estratégicas.
 
 ## 📋 Requisitos Técnicos
 
-### **✅ Estrutura de Dashboards**
+### **✅ Dashboard Executivo de Clientes**
 
 ```php
 class CustomerDashboardService extends AbstractBaseService
 {
-    public function getExecutiveDashboard(int $tenantId): ServiceResult
+    public function getExecutiveDashboard(int $tenantId, array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($tenantId) {
-            return $this->success([
-                'customer_overview' => $this->getCustomerOverview($tenantId),
-                'financial_metrics' => $this->getFinancialMetrics($tenantId),
-                'engagement_metrics' => $this->getEngagementMetrics($tenantId),
-                'growth_metrics' => $this->getGrowthMetrics($tenantId),
-                'risk_metrics' => $this->getRiskMetrics($tenantId),
-                'segmentation_analysis' => $this->getSegmentationAnalysis($tenantId),
-            ], 'Dashboard executivo gerado');
+        return $this->safeExecute(function() use ($tenantId, $filters) {
+            $dashboard = [
+                'kpi_summary' => $this->getKpiSummary($tenantId, $filters),
+                'customer_analytics' => $this->getCustomerAnalytics($tenantId, $filters),
+                'segmentation_analysis' => $this->getSegmentationAnalysis($tenantId, $filters),
+                'trend_analysis' => $this->getTrendAnalysis($tenantId, $filters),
+                'risk_assessment' => $this->getRiskAssessment($tenantId, $filters),
+                'performance_metrics' => $this->getPerformanceMetrics($tenantId, $filters),
+            ];
+
+            return $this->success($dashboard, 'Dashboard executivo gerado');
         });
     }
 
-    public function getCustomerAnalytics(Customer $customer): ServiceResult
+    public function getCustomerAnalyticsDashboard(Customer $customer): ServiceResult
     {
         return $this->safeExecute(function() use ($customer) {
-            return $this->success([
-                'revenue_analysis' => $this->getRevenueAnalysis($customer),
-                'service_analysis' => $this->getServiceAnalysis($customer),
-                'payment_analysis' => $this->getPaymentAnalysis($customer),
-                'interaction_analysis' => $this->getInteractionAnalysis($customer),
-                'lifecycle_analysis' => $this->getLifecycleAnalysis($customer),
-                'risk_assessment' => $this->getRiskAssessment($customer),
-            ], 'Analytics do cliente gerado');
+            $analytics = [
+                'customer_profile' => $this->getCustomerProfile($customer),
+                'financial_analytics' => $this->getFinancialAnalytics($customer),
+                'behavioral_analytics' => $this->getBehavioralAnalytics($customer),
+                'engagement_metrics' => $this->getEngagementMetrics($customer),
+                'lifetime_value' => $this->getCustomerLifetimeValue($customer),
+                'predictive_insights' => $this->getPredictiveInsights($customer),
+            ];
+
+            return $this->success($analytics, 'Dashboard analítico do cliente gerado');
         });
     }
 
-    public function getCustomerSegmentationDashboard(int $tenantId): ServiceResult
+    public function getSegmentationDashboard(int $tenantId, array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($tenantId) {
-            return $this->success([
-                'segment_distribution' => $this->getSegmentDistribution($tenantId),
-                'segment_performance' => $this->getSegmentPerformance($tenantId),
-                'segment_trends' => $this->getSegmentTrends($tenantId),
-                'segment_comparisons' => $this->getSegmentComparisons($tenantId),
-            ], 'Dashboard de segmentação gerado');
+        return $this->safeExecute(function() use ($tenantId, $filters) {
+            $segmentation = [
+                'segments_overview' => $this->getSegmentsOverview($tenantId, $filters),
+                'segment_performance' => $this->getSegmentPerformance($tenantId, $filters),
+                'customer_distribution' => $this->getCustomerDistribution($tenantId, $filters),
+                'segment_trends' => $this->getSegmentTrends($tenantId, $filters),
+                'segment_comparisons' => $this->getSegmentComparisons($tenantId, $filters),
+            ];
+
+            return $this->success($segmentation, 'Dashboard de segmentação gerado');
         });
     }
 
-    private function getCustomerOverview(int $tenantId): array
+    private function getKpiSummary(int $tenantId, array $filters): array
     {
-        $totalCustomers = Customer::where('tenant_id', $tenantId)->count();
+        $totalCustomers = Customer::where('tenant_id', $tenantId)
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('created_at', '<=', $dateTo);
+            })
+            ->count();
+
         $activeCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('status', 'active')->count();
-        $inactiveCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('status', 'inactive')->count();
+            ->where('status', 'active')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('created_at', '<=', $dateTo);
+            })
+            ->count();
 
-        $newCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('created_at', '>=', now()->subMonth())->count();
+        $revenue = Invoice::where('tenant_id', $tenantId)
+            ->where('status', 'paid')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('created_at', '<=', $dateTo);
+            })
+            ->sum('total');
 
+        $avgCustomerValue = $totalCustomers > 0 ? ($revenue / $totalCustomers) : 0;
+
+        // Cálculo de churn rate
         $churnedCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'churned')
-            ->where('stage_changed_at', '>=', now()->subMonth())->count();
+            ->where('status', 'churned')
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('stage_changed_at', '>=', $dateFrom);
+            })
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('stage_changed_at', '<=', $dateTo);
+            })
+            ->count();
+
+        $churnRate = $totalCustomers > 0 ? ($churnedCustomers / $totalCustomers) * 100 : 0;
 
         return [
             'total_customers' => $totalCustomers,
             'active_customers' => $activeCustomers,
-            'inactive_customers' => $inactiveCustomers,
-            'new_customers_this_month' => $newCustomers,
-            'churned_customers_this_month' => $churnedCustomers,
-            'active_rate' => $totalCustomers > 0 ? ($activeCustomers / $totalCustomers) * 100 : 0,
-            'churn_rate' => $newCustomers > 0 ? ($churnedCustomers / $newCustomers) * 100 : 0,
+            'revenue' => $revenue,
+            'avg_customer_value' => $avgCustomerValue,
+            'churn_rate' => $churnRate,
+            'growth_rate' => $this->calculateGrowthRate($tenantId, $filters),
+            'retention_rate' => 100 - $churnRate,
         ];
     }
 
-    private function getFinancialMetrics(int $tenantId): array
+    private function getCustomerAnalytics(int $tenantId, array $filters): array
     {
-        $currentMonth = now()->startOfMonth();
-        $lastMonth = now()->subMonth()->startOfMonth();
-
-        // Receita atual
-        $currentRevenue = Invoice::whereHas('service.budget.customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->where('status', 'paid')
-        ->where('transaction_date', '>=', $currentMonth)
-        ->sum('total');
-
-        // Receita do mês anterior
-        $lastMonthRevenue = Invoice::whereHas('service.budget.customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->where('status', 'paid')
-        ->whereBetween('transaction_date', [$lastMonth, $currentMonth])
-        ->sum('total');
-
-        // Média de ticket
-        $avgTicket = Invoice::whereHas('service.budget.customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->where('status', 'paid')
-        ->where('transaction_date', '>=', $currentMonth)
-        ->avg('total') ?? 0;
-
-        // Receita recorrente
-        $recurringRevenue = Invoice::whereHas('service.budget.customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->where('status', 'paid')
-        ->where('transaction_date', '>=', $currentMonth)
-        ->whereHas('service', function($query) {
-            $query->where('is_recurring', true);
-        })
-        ->sum('total');
-
         return [
-            'current_month_revenue' => $currentRevenue,
-            'last_month_revenue' => $lastMonthRevenue,
-            'revenue_growth' => $lastMonthRevenue > 0 ? (($currentRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100 : 0,
-            'average_ticket' => $avgTicket,
-            'recurring_revenue' => $recurringRevenue,
-            'pending_revenue' => $this->getPendingRevenue($tenantId),
+            'acquisition_analytics' => $this->getAcquisitionAnalytics($tenantId, $filters),
+            'engagement_analytics' => $this->getEngagementAnalytics($tenantId, $filters),
+            'conversion_analytics' => $this->getConversionAnalytics($tenantId, $filters),
+            'satisfaction_analytics' => $this->getSatisfactionAnalytics($tenantId, $filters),
         ];
     }
 
-    private function getEngagementMetrics(int $tenantId): array
+    private function getAcquisitionAnalytics(int $tenantId, array $filters): array
     {
-        $totalCustomers = Customer::where('tenant_id', $tenantId)->count();
-
-        // Clientes com interações nos últimos 30 dias
-        $activeCustomers = Customer::where('tenant_id', $tenantId)
-            ->whereHas('interactions', function($query) {
-                $query->where('interaction_date', '>=', now()->subDays(30));
+        $acquisitionData = Customer::where('tenant_id', $tenantId)
+            ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+                $query->where('created_at', '>=', $dateFrom);
             })
-            ->count();
-
-        // Média de interações por cliente
-        $avgInteractions = Customer::where('tenant_id', $tenantId)
-            ->withCount('interactions')
-            ->get()
-            ->avg('interactions_count') ?? 0;
-
-        // Taxa de resposta
-        $responseRate = $this->calculateResponseRate($tenantId);
-
-        // Satisfação média
-        $satisfactionRate = $this->calculateSatisfactionRate($tenantId);
-
-        return [
-            'active_engagement_rate' => $totalCustomers > 0 ? ($activeCustomers / $totalCustomers) * 100 : 0,
-            'average_interactions_per_customer' => $avgInteractions,
-            'response_rate' => $responseRate,
-            'satisfaction_rate' => $satisfactionRate,
-            'recent_interactions' => $this->getRecentInteractionsCount($tenantId),
-        ];
-    }
-
-    private function getGrowthMetrics(int $tenantId): array
-    {
-        $currentMonth = now()->startOfMonth();
-        $last3Months = now()->subMonths(3)->startOfMonth();
-
-        // Crescimento de clientes
-        $newCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('created_at', '>=', $currentMonth)->count();
-
-        $customers3MonthsAgo = Customer::where('tenant_id', $tenantId)
-            ->where('created_at', '>=', $last3Months)->count();
-
-        // Conversão de leads
-        $conversionRate = $this->calculateConversionRate($tenantId);
-
-        // Retenção de clientes
-        $retentionRate = $this->calculateRetentionRate($tenantId);
-
-        return [
-            'new_customers_this_month' => $newCustomers,
-            'customers_last_3_months' => $customers3MonthsAgo,
-            'growth_rate' => $customers3MonthsAgo > 0 ? (($newCustomers / $customers3MonthsAgo) * 100) : 0,
-            'conversion_rate' => $conversionRate,
-            'retention_rate' => $retentionRate,
-            'customer_lifetime_value' => $this->calculateCLV($tenantId),
-        ];
-    }
-
-    private function getRiskMetrics(int $tenantId): array
-    {
-        $totalCustomers = Customer::where('tenant_id', $tenantId)->count();
-
-        // Clientes inativos
-        $inactiveCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('last_interaction_at', '<', now()->subMonths(3))
-            ->count();
-
-        // Clientes com faturas vencidas
-        $overdueCustomers = Customer::where('tenant_id', $tenantId)
-            ->whereHas('invoices', function($query) {
-                $query->where('due_date', '<', now())
-                    ->where('status', 'pending');
+            ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+                $query->where('created_at', '<=', $dateTo);
             })
-            ->count();
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
 
-        // Clientes em risco de churn
-        $atRiskCustomers = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'inactive')
-            ->count();
+        $sourceAnalysis = Customer::where('tenant_id', $tenantId)
+            ->selectRaw('source, COUNT(*) as count')
+            ->groupBy('source')
+            ->get();
 
         return [
-            'inactive_customers' => $inactiveCustomers,
-            'overdue_customers' => $overdueCustomers,
-            'at_risk_customers' => $atRiskCustomers,
-            'inactive_rate' => $totalCustomers > 0 ? ($inactiveCustomers / $totalCustomers) * 100 : 0,
-            'overdue_rate' => $totalCustomers > 0 ? ($overdueCustomers / $totalCustomers) * 100 : 0,
-            'churn_risk_score' => $this->calculateChurnRiskScore($tenantId),
+            'daily_acquisition' => $acquisitionData,
+            'source_analysis' => $sourceAnalysis,
+            'acquisition_trend' => $this->calculateAcquisitionTrend($acquisitionData),
+            'cost_per_acquisition' => $this->calculateCostPerAcquisition($tenantId, $filters),
         ];
     }
 
-    private function getSegmentationAnalysis(int $tenantId): array
+    private function getEngagementAnalytics(int $tenantId, array $filters): array
     {
-        // Distribuição por tags
-        $tagDistribution = CustomerTag::where('tenant_id', $tenantId)
-            ->withCount('customers')
-            ->get()
-            ->map(function($tag) {
-                return [
-                    'name' => $tag->name,
-                    'count' => $tag->customers_count,
-                    'percentage' => $this->calculateTagPercentage($tag->customers_count, $tag->tenant_id),
-                ];
-            });
+        $engagementData = Customer::where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->withCount(['interactions', 'budgets', 'services', 'invoices'])
+            ->get();
 
-        // Distribuição por tipo
-        $typeDistribution = Customer::where('tenant_id', $tenantId)
-            ->groupBy('type')
-            ->selectRaw('type, count(*) as count')
-            ->pluck('count', 'type')
-            ->toArray();
-
-        // Distribuição por estágio de ciclo de vida
-        $stageDistribution = Customer::where('tenant_id', $tenantId)
-            ->groupBy('lifecycle_stage')
-            ->selectRaw('lifecycle_stage, count(*) as count')
-            ->pluck('count', 'lifecycle_stage')
-            ->toArray();
+        $avgInteractions = $engagementData->avg('interactions_count') ?? 0;
+        $avgBudgets = $engagementData->avg('budgets_count') ?? 0;
+        $avgServices = $engagementData->avg('services_count') ?? 0;
+        $avgInvoices = $engagementData->avg('invoices_count') ?? 0;
 
         return [
-            'by_tags' => $tagDistribution,
-            'by_type' => $typeDistribution,
-            'by_lifecycle_stage' => $stageDistribution,
-            'segment_performance' => $this->getSegmentPerformance($tenantId),
+            'avg_interactions_per_customer' => $avgInteractions,
+            'avg_budgets_per_customer' => $avgBudgets,
+            'avg_services_per_customer' => $avgServices,
+            'avg_invoices_per_customer' => $avgInvoices,
+            'engagement_score' => $this->calculateEngagementScore($engagementData),
+            'activity_trend' => $this->getActivityTrend($tenantId, $filters),
         ];
     }
 
-    private function getRevenueAnalysis(Customer $customer): array
+    private function getConversionAnalytics(int $tenantId, array $filters): array
     {
-        $revenueByMonth = Invoice::whereHas('service.budget', function($query) use ($customer) {
-            $query->where('customer_id', $customer->id);
+        $conversionData = Customer::where('tenant_id', $tenantId)
+            ->with(['budgets', 'services'])
+            ->get();
+
+        $totalBudgets = $conversionData->sum->budgets->count();
+        $convertedBudgets = $conversionData->sum->services->count();
+        $conversionRate = $totalBudgets > 0 ? ($convertedBudgets / $totalBudgets) * 100 : 0;
+
+        $avgConversionTime = $this->calculateAverageConversionTime($conversionData);
+
+        return [
+            'budget_conversion_rate' => $conversionRate,
+            'service_conversion_rate' => $this->calculateServiceConversionRate($conversionData),
+            'avg_conversion_time' => $avgConversionTime,
+            'conversion_funnel' => $this->getConversionFunnel($tenantId, $filters),
+            'drop_off_points' => $this->getDropOffPoints($tenantId, $filters),
+        ];
+    }
+
+    private function getSatisfactionAnalytics(int $tenantId, array $filters): array
+    {
+        // Análise baseada em interações positivas vs negativas
+        $satisfactionData = CustomerInteraction::whereHas('customer', function($query) use ($tenantId) {
+            $query->where('tenant_id', $tenantId);
         })
-        ->where('status', 'paid')
-        ->selectRaw('DATE_FORMAT(transaction_date, "%Y-%m") as month, sum(total) as revenue')
-        ->groupBy('month')
-        ->orderBy('month')
+        ->when($filters['date_from'] ?? null, function($query, $dateFrom) {
+            $query->where('interaction_date', '>=', $dateFrom);
+        })
+        ->when($filters['date_to'] ?? null, function($query, $dateTo) {
+            $query->where('interaction_date', '<=', $dateTo);
+        })
+        ->selectRaw('outcome, COUNT(*) as count')
+        ->groupBy('outcome')
         ->get();
 
-        $avgRevenue = $customer->invoices()->where('status', 'paid')->avg('total') ?? 0;
-        $totalRevenue = $customer->invoices()->where('status', 'paid')->sum('total');
+        $positiveInteractions = $satisfactionData->where('outcome', 'positive')->sum('count');
+        $negativeInteractions = $satisfactionData->where('outcome', 'negative')->sum('count');
+        $totalInteractions = $positiveInteractions + $negativeInteractions;
+
+        $satisfactionRate = $totalInteractions > 0 ? ($positiveInteractions / $totalInteractions) * 100 : 0;
 
         return [
-            'revenue_by_month' => $revenueByMonth,
-            'average_revenue' => $avgRevenue,
-            'total_revenue' => $totalRevenue,
-            'revenue_trend' => $this->calculateRevenueTrend($customer),
-            'revenue_concentration' => $this->calculateRevenueConcentration($customer),
+            'satisfaction_rate' => $satisfactionRate,
+            'positive_interactions' => $positiveInteractions,
+            'negative_interactions' => $negativeInteractions,
+            'feedback_sentiment' => $this->getFeedbackSentiment($tenantId, $filters),
+            'complaint_resolution' => $this->getComplaintResolutionRate($tenantId, $filters),
         ];
     }
 
-    private function getServiceAnalysis(Customer $customer): array
+    private function getSegmentationAnalysis(int $tenantId, array $filters): array
     {
-        $servicesByType = $customer->services()
-            ->groupBy('service_type')
-            ->selectRaw('service_type, count(*) as count, sum(total) as total_value')
+        return [
+            'rfm_analysis' => $this->getRFMAnalysis($tenantId, $filters),
+            'behavioral_segments' => $this->getBehavioralSegments($tenantId, $filters),
+            'value_segments' => $this->getValueSegments($tenantId, $filters),
+            'demographic_segments' => $this->getDemographicSegments($tenantId, $filters),
+        ];
+    }
+
+    private function getRFMAnalysis(int $tenantId, array $filters): array
+    {
+        $customers = Customer::where('tenant_id', $tenantId)
+            ->with(['invoices' => function($query) {
+                $query->where('status', 'paid');
+            }])
             ->get();
 
-        $avgServiceValue = $customer->services()->avg('total') ?? 0;
-        $totalServices = $customer->services()->count();
+        $rfmScores = $customers->map(function($customer) {
+            $lastPurchase = $customer->invoices->max('transaction_date');
+            $frequency = $customer->invoices->count();
+            $monetary = $customer->invoices->sum('total');
+
+            return [
+                'customer_id' => $customer->id,
+                'recency' => $lastPurchase ? now()->diffInDays($lastPurchase) : 999,
+                'frequency' => $frequency,
+                'monetary' => $monetary,
+            ];
+        });
+
+        // Segmentação RFM
+        $segments = [
+            'champions' => $rfmScores->filter(fn($score) => $score['recency'] <= 30 && $score['frequency'] >= 10 && $score['monetary'] >= 1000),
+            'loyal_customers' => $rfmScores->filter(fn($score) => $score['frequency'] >= 5 && $score['monetary'] >= 500),
+            'potential_loyalists' => $rfmScores->filter(fn($score) => $score['recency'] <= 90 && $score['frequency'] >= 2),
+            'new_customers' => $rfmScores->filter(fn($score) => $score['recency'] <= 30 && $score['frequency'] == 1),
+            'at_risk' => $rfmScores->filter(fn($score) => $score['recency'] > 90 && $score['frequency'] >= 5),
+            'cannot_lose' => $rfmScores->filter(fn($score) => $score['recency'] > 90 && $score['frequency'] >= 10 && $score['monetary'] >= 1000),
+        ];
 
         return [
-            'services_by_type' => $servicesByType,
-            'average_service_value' => $avgServiceValue,
-            'total_services' => $totalServices,
-            'service_frequency' => $this->calculateServiceFrequency($customer),
-            'service_satisfaction' => $this->calculateServiceSatisfaction($customer),
+            'segments' => $segments,
+            'segment_distribution' => $this->getSegmentDistribution($segments),
+            'segment_performance' => $this->getSegmentPerformanceAnalysis($segments),
         ];
     }
 
-    private function getPaymentAnalysis(Customer $customer): array
+    private function getBehavioralSegments(int $tenantId, array $filters): array
     {
-        $paymentHistory = $customer->invoices()
+        $customers = Customer::where('tenant_id', $tenantId)
+            ->with(['interactions', 'budgets', 'services'])
+            ->get();
+
+        $segments = [
+            'high_engagement' => $customers->filter(fn($c) => $c->interactions->count() > 10 && $c->budgets->count() > 5),
+            'medium_engagement' => $customers->filter(fn($c) => $c->interactions->count() > 5 && $c->budgets->count() > 2),
+            'low_engagement' => $customers->filter(fn($c) => $c->interactions->count() <= 5 && $c->budgets->count() <= 2),
+            'budget_heavy' => $customers->filter(fn($c) => $c->budgets->count() > 10),
+            'service_heavy' => $customers->filter(fn($c) => $c->services->count() > 5),
+        ];
+
+        return [
+            'segments' => $segments,
+            'segment_characteristics' => $this->getSegmentCharacteristics($segments),
+            'segment_behavior_patterns' => $this->getSegmentBehaviorPatterns($segments),
+        ];
+    }
+
+    private function getValueSegments(int $tenantId, array $filters): array
+    {
+        $customers = Customer::where('tenant_id', $tenantId)
+            ->with(['invoices' => function($query) {
+                $query->where('status', 'paid');
+            }])
+            ->get();
+
+        $segments = [
+            'vip' => $customers->filter(fn($c) => $c->invoices->sum('total') >= 10000),
+            'premium' => $customers->filter(fn($c) => $c->invoices->sum('total') >= 5000 && $c->invoices->sum('total') < 10000),
+            'standard' => $customers->filter(fn($c) => $c->invoices->sum('total') >= 1000 && $c->invoices->sum('total') < 5000),
+            'basic' => $customers->filter(fn($c) => $c->invoices->sum('total') < 1000),
+        ];
+
+        return [
+            'segments' => $segments,
+            'segment_revenue' => $this->getSegmentRevenue($segments),
+            'segment_growth_potential' => $this->getSegmentGrowthPotential($segments),
+        ];
+    }
+
+    private function getDemographicSegments(int $tenantId, array $filters): array
+    {
+        $segments = [
+            'by_type' => Customer::where('tenant_id', $tenantId)
+                ->selectRaw('type, COUNT(*) as count, AVG(invoices.total) as avg_revenue')
+                ->leftJoin('invoices', 'customers.id', '=', 'invoices.customer_id')
+                ->where('invoices.status', 'paid')
+                ->groupBy('type')
+                ->get(),
+            'by_location' => Customer::where('tenant_id', $tenantId)
+                ->whereHas('address')
+                ->selectRaw('addresses.state, COUNT(*) as count, AVG(invoices.total) as avg_revenue')
+                ->join('addresses', 'customers.id', '=', 'addresses.customer_id')
+                ->leftJoin('invoices', 'customers.id', '=', 'invoices.customer_id')
+                ->where('invoices.status', 'paid')
+                ->groupBy('addresses.state')
+                ->get(),
+            'by_industry' => Customer::where('tenant_id', $tenantId)
+                ->whereHas('commonData.areaOfActivity')
+                ->selectRaw('areas_of_activity.name as industry, COUNT(*) as count, AVG(invoices.total) as avg_revenue')
+                ->join('common_datas', 'customers.id', '=', 'common_datas.customer_id')
+                ->join('areas_of_activity', 'common_datas.area_of_activity_id', '=', 'areas_of_activity.id')
+                ->leftJoin('invoices', 'customers.id', '=', 'invoices.customer_id')
+                ->where('invoices.status', 'paid')
+                ->groupBy('areas_of_activity.name')
+                ->get(),
+        ];
+
+        return $segments;
+    }
+
+    private function getTrendAnalysis(int $tenantId, array $filters): array
+    {
+        return [
+            'customer_growth_trend' => $this->getCustomerGrowthTrend($tenantId, $filters),
+            'revenue_trend' => $this->getRevenueTrend($tenantId, $filters),
+            'engagement_trend' => $this->getEngagementTrend($tenantId, $filters),
+            'churn_trend' => $this->getChurnTrend($tenantId, $filters),
+            'seasonal_patterns' => $this->getSeasonalPatterns($tenantId, $filters),
+        ];
+    }
+
+    private function getRiskAssessment(int $tenantId, array $filters): array
+    {
+        return [
+            'churn_risk_analysis' => $this->getChurnRiskAnalysis($tenantId, $filters),
+            'payment_risk_analysis' => $this->getPaymentRiskAnalysis($tenantId, $filters),
+            'engagement_risk_analysis' => $this->getEngagementRiskAnalysis($tenantId, $filters),
+            'risk_scoring' => $this->getRiskScoring($tenantId, $filters),
+        ];
+    }
+
+    private function getPerformanceMetrics(int $tenantId, array $filters): array
+    {
+        return [
+            'customer_acquisition_cost' => $this->getCustomerAcquisitionCost($tenantId, $filters),
+            'customer_lifetime_value' => $this->getCustomerLifetimeValueMetrics($tenantId, $filters),
+            'return_on_investment' => $this->getReturnOnInvestment($tenantId, $filters),
+            'customer_satisfaction_score' => $this->getCustomerSatisfactionScore($tenantId, $filters),
+            'net_promoter_score' => $this->getNetPromoterScore($tenantId, $filters),
+        ];
+    }
+
+    private function getCustomerProfile(Customer $customer): array
+    {
+        return [
+            'basic_info' => [
+                'id' => $customer->id,
+                'name' => $customer->commonData?->first_name . ' ' . $customer->commonData?->last_name,
+                'type' => $customer->type,
+                'status' => $customer->status,
+                'created_at' => $customer->created_at,
+                'last_interaction' => $customer->last_interaction_at,
+            ],
+            'demographics' => [
+                'age' => $customer->commonData?->birth_date ? now()->diffInYears($customer->commonData->birth_date) : null,
+                'location' => $customer->address?->city . ', ' . $customer->address?->state,
+                'industry' => $customer->commonData?->areaOfActivity?->name,
+                'profession' => $customer->commonData?->profession?->name,
+            ],
+            'financial_summary' => [
+                'total_spent' => $customer->invoices()->where('status', 'paid')->sum('total'),
+                'avg_order_value' => $customer->invoices()->where('status', 'paid')->avg('total') ?? 0,
+                'last_purchase' => $customer->invoices()->where('status', 'paid')->latest('transaction_date')->first()?->transaction_date,
+                'payment_history' => $this->getPaymentHistory($customer),
+            ],
+        ];
+    }
+
+    private function getFinancialAnalytics(Customer $customer): array
+    {
+        $invoices = $customer->invoices()->where('status', 'paid')->get();
+
+        return [
+            'revenue_trends' => $this->getCustomerRevenueTrends($invoices),
+            'spending_patterns' => $this->getCustomerSpendingPatterns($invoices),
+            'payment_behavior' => $this->getCustomerPaymentBehavior($customer),
+            'financial_health' => $this->getCustomerFinancialHealth($customer),
+            'forecast' => $this->getCustomerRevenueForecast($invoices),
+        ];
+    }
+
+    private function getBehavioralAnalytics(Customer $customer): array
+    {
+        return [
+            'purchase_frequency' => $this->getPurchaseFrequency($customer),
+            'engagement_level' => $this->getEngagementLevel($customer),
+            'interaction_patterns' => $this->getInteractionPatterns($customer),
+            'preference_analysis' => $this->getPreferenceAnalysis($customer),
+            'behavioral_score' => $this->getBehavioralScore($customer),
+        ];
+    }
+
+    private function getEngagementMetrics(Customer $customer): array
+    {
+        return [
+            'interaction_frequency' => $customer->interactions()->count(),
+            'last_interaction_date' => $customer->last_interaction_at,
+            'interaction_channels' => $this->getInteractionChannels($customer),
+            'response_rate' => $this->getResponseRate($customer),
+            'engagement_score' => $this->calculateCustomerEngagementScore($customer),
+        ];
+    }
+
+    private function getCustomerLifetimeValue(Customer $customer): array
+    {
+        $invoices = $customer->invoices()->where('status', 'paid')->get();
+
+        $avgOrderValue = $invoices->avg('total') ?? 0;
+        $purchaseFrequency = $invoices->count();
+        $customerLifespan = $this->calculateCustomerLifespan($invoices);
+
+        $clv = $avgOrderValue * $purchaseFrequency * $customerLifespan;
+
+        return [
+            'clv' => $clv,
+            'avg_order_value' => $avgOrderValue,
+            'purchase_frequency' => $purchaseFrequency,
+            'customer_lifespan' => $customerLifespan,
+            'clv_prediction' => $this->predictCLV($customer),
+        ];
+    }
+
+    private function getPredictiveInsights(Customer $customer): array
+    {
+        return [
+            'churn_probability' => $this->calculateChurnProbability($customer),
+            'next_purchase_prediction' => $this->predictNextPurchase($customer),
+            'upsell_potential' => $this->calculateUpsellPotential($customer),
+            'lifetime_value_prediction' => $this->predictLifetimeValue($customer),
+            'risk_factors' => $this->identifyRiskFactors($customer),
+        ];
+    }
+
+    // Métodos auxiliares para cálculos de analytics
+    private function calculateGrowthRate(int $tenantId, array $filters): float
+    {
+        // Implementar cálculo de taxa de crescimento
+        return 0.0;
+    }
+
+    private function calculateCostPerAcquisition(int $tenantId, array $filters): float
+    {
+        // Implementar cálculo de CAC
+        return 0.0;
+    }
+
+    private function calculateEngagementScore(Collection $customers): float
+    {
+        // Implementar cálculo de score de engajamento
+        return 0.0;
+    }
+
+    private function getActivityTrend(int $tenantId, array $filters): array
+    {
+        // Implementar tendência de atividade
+        return [];
+    }
+
+    private function calculateAverageConversionTime(Collection $customers): float
+    {
+        // Implementar cálculo de tempo médio de conversão
+        return 0.0;
+    }
+
+    private function getConversionFunnel(int $tenantId, array $filters): array
+    {
+        // Implementar funil de conversão
+        return [];
+    }
+
+    private function getDropOffPoints(int $tenantId, array $filters): array
+    {
+        // Implementar pontos de abandono
+        return [];
+    }
+
+    private function getFeedbackSentiment(int $tenantId, array $filters): array
+    {
+        // Implementar análise de sentimento
+        return [];
+    }
+
+    private function getComplaintResolutionRate(int $tenantId, array $filters): float
+    {
+        // Implementar taxa de resolução de reclamações
+        return 0.0;
+    }
+
+    private function getSegmentDistribution(array $segments): array
+    {
+        return collect($segments)->map->count()->toArray();
+    }
+
+    private function getSegmentPerformanceAnalysis(array $segments): array
+    {
+        // Implementar análise de performance por segmento
+        return [];
+    }
+
+    private function getSegmentCharacteristics(array $segments): array
+    {
+        // Implementar características dos segmentos
+        return [];
+    }
+
+    private function getSegmentBehaviorPatterns(array $segments): array
+    {
+        // Implementar padrões de comportamento por segmento
+        return [];
+    }
+
+    private function getSegmentRevenue(array $segments): array
+    {
+        // Implementar receita por segmento
+        return [];
+    }
+
+    private function getSegmentGrowthPotential(array $segments): array
+    {
+        // Implementar potencial de crescimento por segmento
+        return [];
+    }
+
+    private function getCustomerGrowthTrend(int $tenantId, array $filters): array
+    {
+        // Implementar tendência de crescimento de clientes
+        return [];
+    }
+
+    private function getRevenueTrend(int $tenantId, array $filters): array
+    {
+        // Implementar tendência de receita
+        return [];
+    }
+
+    private function getEngagementTrend(int $tenantId, array $filters): array
+    {
+        // Implementar tendência de engajamento
+        return [];
+    }
+
+    private function getChurnTrend(int $tenantId, array $filters): array
+    {
+        // Implementar tendência de churn
+        return [];
+    }
+
+    private function getSeasonalPatterns(int $tenantId, array $filters): array
+    {
+        // Implementar padrões sazonais
+        return [];
+    }
+
+    private function getChurnRiskAnalysis(int $tenantId, array $filters): array
+    {
+        // Implementar análise de risco de churn
+        return [];
+    }
+
+    private function getPaymentRiskAnalysis(int $tenantId, array $filters): array
+    {
+        // Implementar análise de risco de pagamento
+        return [];
+    }
+
+    private function getEngagementRiskAnalysis(int $tenantId, array $filters): array
+    {
+        // Implementar análise de risco de engajamento
+        return [];
+    }
+
+    private function getRiskScoring(int $tenantId, array $filters): array
+    {
+        // Implementar scoring de risco
+        return [];
+    }
+
+    private function getCustomerAcquisitionCost(int $tenantId, array $filters): float
+    {
+        // Implementar CAC
+        return 0.0;
+    }
+
+    private function getCustomerLifetimeValueMetrics(int $tenantId, array $filters): float
+    {
+        // Implementar CLV
+        return 0.0;
+    }
+
+    private function getReturnOnInvestment(int $tenantId, array $filters): float
+    {
+        // Implementar ROI
+        return 0.0;
+    }
+
+    private function getCustomerSatisfactionScore(int $tenantId, array $filters): float
+    {
+        // Implementar CSAT
+        return 0.0;
+    }
+
+    private function getNetPromoterScore(int $tenantId, array $filters): float
+    {
+        // Implementar NPS
+        return 0.0;
+    }
+
+    private function getCustomerRevenueTrends(Collection $invoices): array
+    {
+        // Implementar tendência de receita do cliente
+        return [];
+    }
+
+    private function getCustomerSpendingPatterns(Collection $invoices): array
+    {
+        // Implementar padrões de gasto do cliente
+        return [];
+    }
+
+    private function getCustomerPaymentBehavior(Customer $customer): array
+    {
+        // Implementar comportamento de pagamento do cliente
+        return [];
+    }
+
+    private function getCustomerFinancialHealth(Customer $customer): array
+    {
+        // Implementar saúde financeira do cliente
+        return [];
+    }
+
+    private function getCustomerRevenueForecast(Collection $invoices): array
+    {
+        // Implementar forecast de receita do cliente
+        return [];
+    }
+
+    private function getPurchaseFrequency(Customer $customer): float
+    {
+        // Implementar frequência de compras
+        return 0.0;
+    }
+
+    private function getEngagementLevel(Customer $customer): float
+    {
+        // Implementar nível de engajamento
+        return 0.0;
+    }
+
+    private function getInteractionPatterns(Customer $customer): array
+    {
+        // Implementar padrões de interação
+        return [];
+    }
+
+    private function getPreferenceAnalysis(Customer $customer): array
+    {
+        // Implementar análise de preferências
+        return [];
+    }
+
+    private function getBehavioralScore(Customer $customer): float
+    {
+        // Implementar score comportamental
+        return 0.0;
+    }
+
+    private function getInteractionChannels(Customer $customer): array
+    {
+        // Implementar canais de interação
+        return [];
+    }
+
+    private function getResponseRate(Customer $customer): float
+    {
+        // Implementar taxa de resposta
+        return 0.0;
+    }
+
+    private function calculateCustomerEngagementScore(Customer $customer): float
+    {
+        // Implementar cálculo de score de engajamento
+        return 0.0;
+    }
+
+    private function calculateCustomerLifespan(Collection $invoices): float
+    {
+        // Implementar cálculo de tempo de vida do cliente
+        return 0.0;
+    }
+
+    private function predictCLV(Customer $customer): float
+    {
+        // Implementar predição de CLV
+        return 0.0;
+    }
+
+    private function calculateChurnProbability(Customer $customer): float
+    {
+        // Implementar cálculo de probabilidade de churn
+        return 0.0;
+    }
+
+    private function predictNextPurchase(Customer $customer): array
+    {
+        // Implementar predição da próxima compra
+        return [];
+    }
+
+    private function calculateUpsellPotential(Customer $customer): float
+    {
+        // Implementar potencial de upsell
+        return 0.0;
+    }
+
+    private function predictLifetimeValue(Customer $customer): float
+    {
+        // Implementar predição de lifetime value
+        return 0.0;
+    }
+
+    private function identifyRiskFactors(Customer $customer): array
+    {
+        // Implementar identificação de fatores de risco
+        return [];
+    }
+
+    private function getPaymentHistory(Customer $customer): array
+    {
+        return $customer->invoices()
             ->where('status', 'paid')
             ->orderBy('transaction_date', 'desc')
-            ->get();
-
-        $avgPaymentTime = $paymentHistory->avg(function($invoice) {
-            return $invoice->created_at->diffInDays($invoice->transaction_date);
-        }) ?? 0;
-
-        $paymentMethods = $customer->invoices()
-            ->where('status', 'paid')
-            ->groupBy('payment_method')
-            ->selectRaw('payment_method, count(*) as count')
-            ->pluck('count', 'payment_method')
-            ->toArray();
-
-        return [
-            'payment_history' => $paymentHistory,
-            'average_payment_time' => $avgPaymentTime,
-            'payment_methods' => $paymentMethods,
-            'payment_consistency' => $this->calculatePaymentConsistency($customer),
-            'late_payment_rate' => $this->calculateLatePaymentRate($customer),
-        ];
-    }
-
-    private function getInteractionAnalysis(Customer $customer): array
-    {
-        $interactionsByType = $customer->interactions()
-            ->groupBy('interaction_type')
-            ->selectRaw('interaction_type, count(*) as count')
-            ->get();
-
-        $lastInteraction = $customer->interactions()->latest('interaction_date')->first();
-        $interactionFrequency = $this->calculateInteractionFrequency($customer);
-
-        return [
-            'interactions_by_type' => $interactionsByType,
-            'last_interaction' => $lastInteraction,
-            'interaction_frequency' => $interactionFrequency,
-            'response_rate' => $this->calculateCustomerResponseRate($customer),
-            'engagement_score' => $this->calculateEngagementScore($customer),
-        ];
-    }
-
-    private function getLifecycleAnalysis(Customer $customer): array
-    {
-        $lifecycleHistory = $customer->lifecycleHistory()
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $currentStage = $customer->lifecycle_stage;
-        $stageDuration = $customer->stage_changed_at ? now()->diffInDays($customer->stage_changed_at) : 0;
-
-        return [
-            'lifecycle_history' => $lifecycleHistory,
-            'current_stage' => $currentStage,
-            'stage_duration_days' => $stageDuration,
-            'stage_progression' => $this->calculateStageProgression($customer),
-            'next_stage_probability' => $this->calculateNextStageProbability($customer),
-        ];
-    }
-
-    private function getRiskAssessment(Customer $customer): array
-    {
-        $riskFactors = [];
-
-        // Fatores de risco
-        if ($customer->last_interaction_at && $customer->last_interaction_at < now()->subMonths(3)) {
-            $riskFactors[] = 'Inatividade de mais de 3 meses';
-        }
-
-        if ($customer->invoices()->where('due_date', '<', now())->where('status', 'pending')->exists()) {
-            $riskFactors[] = 'Faturas vencidas';
-        }
-
-        if ($customer->lifecycle_stage === 'inactive') {
-            $riskFactors[] = 'Estágio inativo no ciclo de vida';
-        }
-
-        $churnProbability = $this->calculateCustomerChurnProbability($customer);
-
-        return [
-            'risk_factors' => $riskFactors,
-            'churn_probability' => $churnProbability,
-            'retention_score' => 100 - $churnProbability,
-            'recommended_actions' => $this->getRecommendedActions($customer, $riskFactors),
-        ];
-    }
-
-    private function getSegmentDistribution(int $tenantId): array
-    {
-        return Customer::where('tenant_id', $tenantId)
-            ->with('tags')
+            ->take(10)
             ->get()
-            ->groupBy(function($customer) {
-                return $customer->tags->pluck('name')->join(',');
-            })
-            ->map->count()
-            ->toArray();
-    }
-
-    private function getSegmentPerformance(int $tenantId): array
-    {
-        return Customer::where('tenant_id', $tenantId)
-            ->with(['tags', 'invoices'])
-            ->get()
-            ->groupBy(function($customer) {
-                return $customer->tags->pluck('name')->join(',');
-            })
-            ->map(function($customers) {
+            ->map(function($invoice) {
                 return [
-                    'customer_count' => $customers->count(),
-                    'total_revenue' => $customers->sum(function($customer) {
-                        return $customer->invoices->where('status', 'paid')->sum('total');
-                    }),
-                    'avg_revenue_per_customer' => $customers->avg(function($customer) {
-                        return $customer->invoices->where('status', 'paid')->avg('total') ?? 0;
-                    }),
-                    'avg_interaction_count' => $customers->avg(function($customer) {
-                        return $customer->interactions()->count();
-                    }),
+                    'date' => $invoice->transaction_date,
+                    'amount' => $invoice->total,
+                    'method' => $invoice->payment_method,
                 ];
             })
             ->toArray();
-    }
-
-    private function getSegmentTrends(int $tenantId): array
-    {
-        $segments = Customer::where('tenant_id', $tenantId)
-            ->with('tags')
-            ->get()
-            ->groupBy(function($customer) {
-                return $customer->tags->pluck('name')->join(',');
-            });
-
-        $trends = [];
-
-        foreach ($segments as $segmentName => $customers) {
-            $trends[$segmentName] = [
-                'growth_rate' => $this->calculateSegmentGrowthRate($customers),
-                'revenue_trend' => $this->calculateSegmentRevenueTrend($customers),
-                'churn_rate' => $this->calculateSegmentChurnRate($customers),
-            ];
-        }
-
-        return $trends;
-    }
-
-    private function getSegmentComparisons(int $tenantId): array
-    {
-        $segments = $this->getSegmentPerformance($tenantId);
-
-        $comparison = [
-            'best_performing' => $this->findBestPerformingSegment($segments),
-            'worst_performing' => $this->findWorstPerformingSegment($segments),
-            'highest_growth' => $this->findHighestGrowthSegment($tenantId),
-            'highest_churn' => $this->findHighestChurnSegment($tenantId),
-        ];
-
-        return $comparison;
-    }
-
-    // Métodos auxiliares para cálculos de métricas
-    private function getPendingRevenue(int $tenantId): float
-    {
-        return Invoice::whereHas('service.budget.customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->where('status', 'pending')
-        ->sum('total');
-    }
-
-    private function calculateResponseRate(int $tenantId): float
-    {
-        // Implementar lógica de cálculo de taxa de resposta
-        return 0.0; // Placeholder
-    }
-
-    private function calculateSatisfactionRate(int $tenantId): float
-    {
-        // Implementar lógica de cálculo de taxa de satisfação
-        return 0.0; // Placeholder
-    }
-
-    private function getRecentInteractionsCount(int $tenantId): int
-    {
-        return CustomerInteraction::whereHas('customer', function($query) use ($tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->where('interaction_date', '>=', now()->subWeek())
-        ->count();
-    }
-
-    private function calculateConversionRate(int $tenantId): float
-    {
-        $totalLeads = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'lead')->count();
-        $convertedLeads = Customer::where('tenant_id', $tenantId)
-            ->where('lifecycle_stage', 'closed_won')->count();
-
-        return $totalLeads > 0 ? ($convertedLeads / $totalLeads) * 100 : 0;
-    }
-
-    private function calculateRetentionRate(int $tenantId): float
-    {
-        // Implementar lógica de cálculo de taxa de retenção
-        return 0.0; // Placeholder
-    }
-
-    private function calculateCLV(int $tenantId): float
-    {
-        // Implementar cálculo de Customer Lifetime Value
-        return 0.0; // Placeholder
-    }
-
-    private function calculateTagPercentage(int $tagCount, int $tenantId): float
-    {
-        $totalCustomers = Customer::where('tenant_id', $tenantId)->count();
-        return $totalCustomers > 0 ? ($tagCount / $totalCustomers) * 100 : 0;
-    }
-
-    private function calculateRevenueTrend(Customer $customer): string
-    {
-        // Implementar lógica de tendência de receita
-        return 'stable'; // Placeholder
-    }
-
-    private function calculateRevenueConcentration(Customer $customer): float
-    {
-        $invoices = $customer->invoices()->where('status', 'paid')->get();
-        $totalRevenue = $invoices->sum('total');
-
-        if ($totalRevenue == 0) return 0;
-
-        $herfindahlIndex = $invoices->sum(function($invoice) use ($totalRevenue) {
-            $marketShare = $invoice->total / $totalRevenue;
-            return $marketShare * $marketShare;
-        });
-
-        return $herfindahlIndex;
-    }
-
-    private function calculateServiceFrequency(Customer $customer): float
-    {
-        $services = $customer->services;
-        if ($services->isEmpty()) return 0;
-
-        $firstService = $services->sortBy('created_at')->first();
-        $lastService = $services->sortByDesc('created_at')->first();
-
-        $daysDiff = $firstService->created_at->diffInDays($lastService->created_at);
-        return $daysDiff > 0 ? $services->count() / $daysDiff : 0;
-    }
-
-    private function calculateServiceSatisfaction(Customer $customer): float
-    {
-        // Implementar cálculo de satisfação com serviços
-        return 0.0; // Placeholder
-    }
-
-    private function calculatePaymentConsistency(Customer $customer): float
-    {
-        $invoices = $customer->invoices()->where('status', 'paid')->get();
-        if ($invoices->isEmpty()) return 0;
-
-        $paymentIntervals = [];
-        $sortedInvoices = $invoices->sortBy('transaction_date');
-
-        foreach ($sortedInvoices->slice(1) as $index => $invoice) {
-            $prevInvoice = $sortedInvoices[$index];
-            $interval = $prevInvoice->transaction_date->diffInDays($invoice->transaction_date);
-            $paymentIntervals[] = $interval;
-        }
-
-        if (empty($paymentIntervals)) return 0;
-
-        $avgInterval = array_sum($paymentIntervals) / count($paymentIntervals);
-        $stdDev = sqrt(array_sum(array_map(function($interval) use ($avgInterval) {
-            return pow($interval - $avgInterval, 2);
-        }, $paymentIntervals)) / count($paymentIntervals));
-
-        return $avgInterval > 0 ? (1 - ($stdDev / $avgInterval)) * 100 : 0;
-    }
-
-    private function calculateLatePaymentRate(Customer $customer): float
-    {
-        $totalInvoices = $customer->invoices()->count();
-        $lateInvoices = $customer->invoices()
-            ->where('transaction_date', '>', 'due_date')
-            ->count();
-
-        return $totalInvoices > 0 ? ($lateInvoices / $totalInvoices) * 100 : 0;
-    }
-
-    private function calculateInteractionFrequency(Customer $customer): float
-    {
-        $interactions = $customer->interactions;
-        if ($interactions->isEmpty()) return 0;
-
-        $firstInteraction = $interactions->sortBy('interaction_date')->first();
-        $lastInteraction = $interactions->sortByDesc('interaction_date')->first();
-
-        $daysDiff = $firstInteraction->interaction_date->diffInDays($lastInteraction->interaction_date);
-        return $daysDiff > 0 ? $interactions->count() / $daysDiff : 0;
-    }
-
-    private function calculateCustomerResponseRate(Customer $customer): float
-    {
-        // Implementar cálculo de taxa de resposta do cliente
-        return 0.0; // Placeholder
-    }
-
-    private function calculateEngagementScore(Customer $customer): float
-    {
-        $score = 0;
-
-        // Pontos por interações recentes
-        $recentInteractions = $customer->interactions()
-            ->where('interaction_date', '>=', now()->subMonths(3))
-            ->count();
-        $score += min($recentInteractions * 10, 50);
-
-        // Pontos por faturas pagas
-        $paidInvoices = $customer->invoices()->where('status', 'paid')->count();
-        $score += min($paidInvoices * 5, 30);
-
-        // Pontos por tempo de relacionamento
-        $daysSinceFirstContact = $customer->created_at->diffInDays(now());
-        $score += min($daysSinceFirstContact / 30 * 2, 20);
-
-        return min($score, 100);
-    }
-
-    private function calculateStageProgression(Customer $customer): array
-    {
-        $history = $customer->lifecycleHistory;
-        $stages = $history->pluck('to_stage')->toArray();
-
-        return [
-            'stages_completed' => count($stages),
-            'current_progress' => $this->getStageProgressPercentage($customer->lifecycle_stage),
-            'time_in_current_stage' => $customer->stage_changed_at ? now()->diffInDays($customer->stage_changed_at) : 0,
-        ];
-    }
-
-    private function calculateNextStageProbability(Customer $customer): float
-    {
-        // Implementar lógica de probabilidade de avanço de estágio
-        return 0.0; // Placeholder
-    }
-
-    private function calculateCustomerChurnProbability(Customer $customer): float
-    {
-        $score = 0;
-
-        // Fatores de risco
-        if ($customer->last_interaction_at && $customer->last_interaction_at < now()->subMonths(3)) {
-            $score += 40; // Alta probabilidade por inatividade
-        }
-
-        if ($customer->invoices()->where('due_date', '<', now())->where('status', 'pending')->exists()) {
-            $score += 30; // Média probabilidade por inadimplência
-        }
-
-        if ($customer->lifecycle_stage === 'inactive') {
-            $score += 20; // Média probabilidade por estágio
-        }
-
-        // Fatores de proteção
-        if ($customer->invoices()->where('status', 'paid')->exists()) {
-            $score -= 10; // Reduz probabilidade por histórico de pagamento
-        }
-
-        return min(max($score, 0), 100);
-    }
-
-    private function getRecommendedActions(Customer $customer, array $riskFactors): array
-    {
-        $actions = [];
-
-        foreach ($riskFactors as $factor) {
-            switch ($factor) {
-                case 'Inatividade de mais de 3 meses':
-                    $actions[] = 'Enviar campanha de reengajamento';
-                    $actions[] = 'Oferecer promoção especial';
-                    break;
-                case 'Faturas vencidas':
-                    $actions[] = 'Negociar dívida';
-                    $actions[] = 'Oferecer desconto por pagamento à vista';
-                    break;
-                case 'Estágio inativo no ciclo de vida':
-                    $actions[] = 'Agendar contato de retenção';
-                    $actions[] = 'Analisar causas do desinteresse';
-                    break;
-            }
-        }
-
-        if (empty($riskFactors)) {
-            $actions[] = 'Manter relacionamento atual';
-            $actions[] = 'Oferecer upsell/cross-sell';
-        }
-
-        return $actions;
-    }
-
-    private function calculateSegmentGrowthRate(Collection $customers): float
-    {
-        // Implementar cálculo de taxa de crescimento do segmento
-        return 0.0; // Placeholder
-    }
-
-    private function calculateSegmentRevenueTrend(Collection $customers): string
-    {
-        // Implementar cálculo de tendência de receita do segmento
-        return 'stable'; // Placeholder
-    }
-
-    private function calculateSegmentChurnRate(Collection $customers): float
-    {
-        $totalCustomers = $customers->count();
-        $churnedCustomers = $customers->where('lifecycle_stage', 'churned')->count();
-
-        return $totalCustomers > 0 ? ($churnedCustomers / $totalCustomers) * 100 : 0;
-    }
-
-    private function findBestPerformingSegment(array $segments): ?string
-    {
-        $bestSegment = null;
-        $bestRevenue = 0;
-
-        foreach ($segments as $segmentName => $data) {
-            if ($data['total_revenue'] > $bestRevenue) {
-                $bestRevenue = $data['total_revenue'];
-                $bestSegment = $segmentName;
-            }
-        }
-
-        return $bestSegment;
-    }
-
-    private function findWorstPerformingSegment(array $segments): ?string
-    {
-        $worstSegment = null;
-        $worstRevenue = PHP_FLOAT_MAX;
-
-        foreach ($segments as $segmentName => $data) {
-            if ($data['total_revenue'] < $worstRevenue) {
-                $worstRevenue = $data['total_revenue'];
-                $worstSegment = $segmentName;
-            }
-        }
-
-        return $worstSegment;
-    }
-
-    private function findHighestGrowthSegment(int $tenantId): ?string
-    {
-        // Implementar lógica para encontrar segmento com maior crescimento
-        return null; // Placeholder
-    }
-
-    private function findHighestChurnSegment(int $tenantId): ?string
-    {
-        // Implementar lógica para encontrar segmento com maior churn
-        return null; // Placeholder
-    }
-
-    private function getStageProgressPercentage(string $stage): float
-    {
-        $stages = [
-            'lead' => 10,
-            'prospect' => 30,
-            'qualified' => 50,
-            'proposal' => 70,
-            'negotiation' => 85,
-            'closed_won' => 100,
-            'closed_lost' => 0,
-            'active' => 90,
-            'inactive' => 20,
-            'churned' => 0,
-            'reactivated' => 60,
-        ];
-
-        return $stages[$stage] ?? 0;
     }
 }
 ```
@@ -798,632 +795,719 @@ class CustomerDashboardService extends AbstractBaseService
 ```php
 class CustomerReportingService extends AbstractBaseService
 {
-    public function generateCustomerReport(array $filters = [], string $reportType = 'summary'): ServiceResult
+    public function generateCustomerReport(int $tenantId, string $reportType, array $filters = []): ServiceResult
     {
-        return $this->safeExecute(function() use ($filters, $reportType) {
+        return $this->safeExecute(function() use ($tenantId, $reportType, $filters) {
             switch ($reportType) {
-                case 'summary':
-                    return $this->generateSummaryReport($filters);
-                case 'detailed':
-                    return $this->generateDetailedReport($filters);
-                case 'financial':
-                    return $this->generateFinancialReport($filters);
-                case 'engagement':
-                    return $this->generateEngagementReport($filters);
-                case 'risk':
-                    return $this->generateRiskReport($filters);
+                case 'customer_analysis':
+                    return $this->generateCustomerAnalysisReport($tenantId, $filters);
+                case 'segmentation_report':
+                    return $this->generateSegmentationReport($tenantId, $filters);
+                case 'trend_analysis':
+                    return $this->generateTrendAnalysisReport($tenantId, $filters);
+                case 'risk_assessment':
+                    return $this->generateRiskAssessmentReport($tenantId, $filters);
+                case 'performance_metrics':
+                    return $this->generatePerformanceMetricsReport($tenantId, $filters);
                 default:
                     return $this->error('Tipo de relatório não suportado', OperationStatus::INVALID_DATA);
             }
         });
     }
 
-    public function generateCustomerTrendReport(array $filters = [], int $months = 12): ServiceResult
+    public function generateCustomerAnalysisReport(int $tenantId, array $filters): ServiceResult
     {
-        return $this->safeExecute(function() use ($filters, $months) {
-            $trends = [];
-
-            for ($i = $months; $i >= 0; $i--) {
-                $month = now()->subMonths($i);
-                $monthData = $this->getMonthlyData($month, $filters);
-
-                $trends[] = [
-                    'month' => $month->format('Y-m'),
-                    'month_name' => $month->format('F Y'),
-                    'data' => $monthData,
-                ];
-            }
-
-            return $this->success([
-                'trends' => $trends,
-                'period' => "$months meses",
-                'analysis' => $this->analyzeTrends($trends),
-            ], 'Relatório de tendências gerado');
-        });
-    }
-
-    private function generateSummaryReport(array $filters): ServiceResult
-    {
-        $customers = $this->getFilteredCustomers($filters);
-
-        $summary = [
-            'total_customers' => $customers->count(),
-            'by_status' => $customers->groupBy('status')->map->count()->toArray(),
-            'by_type' => $customers->groupBy('type')->map->count()->toArray(),
-            'by_lifecycle_stage' => $customers->groupBy('lifecycle_stage')->map->count()->toArray(),
-            'financial_summary' => $this->getFinancialSummaryForReport($customers),
-            'engagement_summary' => $this->getEngagementSummaryForReport($customers),
+        $reportData = [
+            'executive_summary' => $this->getExecutiveSummary($tenantId, $filters),
+            'customer_insights' => $this->getCustomerInsights($tenantId, $filters),
+            'market_analysis' => $this->getMarketAnalysis($tenantId, $filters),
+            'recommendations' => $this->getRecommendations($tenantId, $filters),
         ];
 
-        return $this->success($summary, 'Relatório resumido gerado');
+        return $this->success($reportData, 'Relatório de análise de clientes gerado');
     }
 
-    private function generateDetailedReport(array $filters): ServiceResult
+    public function generateSegmentationReport(int $tenantId, array $filters): ServiceResult
     {
-        $customers = $this->getFilteredCustomers($filters);
-
-        $detailedData = $customers->map(function($customer) {
-            return [
-                'customer' => $customer->load(['commonData', 'contact', 'address']),
-                'financial_data' => $this->getCustomerFinancialData($customer),
-                'engagement_data' => $this->getCustomerEngagementData($customer),
-                'risk_data' => $this->getCustomerRiskData($customer),
-            ];
-        });
-
-        return $this->success([
-            'customers' => $detailedData,
-            'summary' => $this->generateSummaryFromDetailed($detailedData),
-        ], 'Relatório detalhado gerado');
-    }
-
-    private function generateFinancialReport(array $filters): ServiceResult
-    {
-        $customers = $this->getFilteredCustomers($filters);
-
-        $financialData = [
-            'revenue_by_customer' => $this->getRevenueByCustomer($customers),
-            'revenue_by_month' => $this->getRevenueByMonth($customers),
-            'payment_analysis' => $this->getPaymentAnalysisForReport($customers),
-            'outstanding_analysis' => $this->getOutstandingAnalysisForReport($customers),
-            'financial_trends' => $this->getFinancialTrendsForReport($customers),
+        $reportData = [
+            'segment_overview' => $this->getSegmentOverview($tenantId, $filters),
+            'segment_characteristics' => $this->getSegmentCharacteristicsReport($tenantId, $filters),
+            'segment_performance' => $this->getSegmentPerformanceReport($tenantId, $filters),
+            'segment_strategies' => $this->getSegmentStrategies($tenantId, $filters),
         ];
 
-        return $this->success($financialData, 'Relatório financeiro gerado');
+        return $this->success($reportData, 'Relatório de segmentação gerado');
     }
 
-    private function generateEngagementReport(array $filters): ServiceResult
+    public function generateTrendAnalysisReport(int $tenantId, array $filters): ServiceResult
     {
-        $customers = $this->getFilteredCustomers($filters);
-
-        $engagementData = [
-            'interaction_analysis' => $this->getInteractionAnalysisForReport($customers),
-            'communication_preferences' => $this->getCommunicationPreferencesForReport($customers),
-            'satisfaction_analysis' => $this->getSatisfactionAnalysisForReport($customers),
-            'engagement_trends' => $this->getEngagementTrendsForReport($customers),
+        $reportData = [
+            'trend_summary' => $this->getTrendSummary($tenantId, $filters),
+            'historical_analysis' => $this->getHistoricalAnalysis($tenantId, $filters),
+            'future_projections' => $this->getFutureProjections($tenantId, $filters),
+            'trend_impact' => $this->getTrendImpact($tenantId, $filters),
         ];
 
-        return $this->success($engagementData, 'Relatório de engajamento gerado');
+        return $this->success($reportData, 'Relatório de análise de tendências gerado');
     }
 
-    private function generateRiskReport(array $filters): ServiceResult
+    public function generateRiskAssessmentReport(int $tenantId, array $filters): ServiceResult
     {
-        $customers = $this->getFilteredCustomers($filters);
-
-        $riskData = [
-            'churn_risk_analysis' => $this->getChurnRiskAnalysisForReport($customers),
-            'payment_risk_analysis' => $this->getPaymentRiskAnalysisForReport($customers),
-            'inactive_customers' => $this->getInactiveCustomersForReport($customers),
-            'risk_mitigation_strategies' => $this->getRiskMitigationStrategiesForReport($customers),
+        $reportData = [
+            'risk_overview' => $this->getRiskOverview($tenantId, $filters),
+            'risk_factors' => $this->getRiskFactors($tenantId, $filters),
+            'risk_mitigation' => $this->getRiskMitigation($tenantId, $filters),
+            'risk_monitoring' => $this->getRiskMonitoring($tenantId, $filters),
         ];
 
-        return $this->success($riskData, 'Relatório de risco gerado');
+        return $this->success($reportData, 'Relatório de avaliação de risco gerado');
     }
 
-    private function getMonthlyData(Carbon $month, array $filters): array
+    public function generatePerformanceMetricsReport(int $tenantId, array $filters): ServiceResult
     {
-        $startOfMonth = $month->startOfMonth();
-        $endOfMonth = $month->endOfMonth();
-
-        $customers = Customer::whereBetween('created_at', [$startOfMonth, $endOfMonth])
-            ->when($filters['tenant_id'] ?? null, function($query, $tenantId) {
-                $query->where('tenant_id', $tenantId);
-            })
-            ->get();
-
-        return [
-            'new_customers' => $customers->count(),
-            'revenue' => $this->getMonthlyRevenue($startOfMonth, $endOfMonth, $filters),
-            'interactions' => $this->getMonthlyInteractions($startOfMonth, $endOfMonth, $filters),
-            'churned_customers' => $this->getMonthlyChurnedCustomers($startOfMonth, $endOfMonth, $filters),
-        ];
-    }
-
-    private function analyzeTrends(array $trends): array
-    {
-        $analysis = [
-            'growth_trend' => $this->analyzeGrowthTrend($trends),
-            'revenue_trend' => $this->analyzeRevenueTrend($trends),
-            'engagement_trend' => $this->analyzeEngagementTrend($trends),
-            'risk_trend' => $this->analyzeRiskTrend($trends),
+        $reportData = [
+            'kpi_summary' => $this->getKpiSummaryReport($tenantId, $filters),
+            'performance_trends' => $this->getPerformanceTrends($tenantId, $filters),
+            'benchmark_analysis' => $this->getBenchmarkAnalysis($tenantId, $filters),
+            'improvement_opportunities' => $this->getImprovementOpportunities($tenantId, $filters),
         ];
 
-        return $analysis;
+        return $this->success($reportData, 'Relatório de métricas de performance gerado');
     }
 
-    private function analyzeGrowthTrend(array $trends): string
-    {
-        if (count($trends) < 2) return 'insufficient_data';
-
-        $growthRates = [];
-        for ($i = 1; $i < count($trends); $i++) {
-            $prev = $trends[$i - 1]['data']['new_customers'] ?? 0;
-            $curr = $trends[$i]['data']['new_customers'] ?? 0;
-
-            if ($prev > 0) {
-                $growthRates[] = (($curr - $prev) / $prev) * 100;
-            }
-        }
-
-        if (empty($growthRates)) return 'stable';
-
-        $avgGrowth = array_sum($growthRates) / count($growthRates);
-
-        if ($avgGrowth > 5) return 'growing';
-        if ($avgGrowth < -5) return 'declining';
-        return 'stable';
-    }
-
-    private function analyzeRevenueTrend(array $trends): string
-    {
-        // Implementar análise de tendência de receita
-        return 'stable'; // Placeholder
-    }
-
-    private function analyzeEngagementTrend(array $trends): string
-    {
-        // Implementar análise de tendência de engajamento
-        return 'stable'; // Placeholder
-    }
-
-    private function analyzeRiskTrend(array $trends): string
-    {
-        // Implementar análise de tendência de risco
-        return 'stable'; // Placeholder
-    }
-
-    private function getFilteredCustomers(array $filters): Collection
-    {
-        $query = Customer::query();
-
-        if (isset($filters['tenant_id'])) {
-            $query->where('tenant_id', $filters['tenant_id']);
-        }
-
-        if (isset($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (isset($filters['type'])) {
-            $query->where('type', $filters['type']);
-        }
-
-        if (isset($filters['date_from'])) {
-            $query->where('created_at', '>=', $filters['date_from']);
-        }
-
-        if (isset($filters['date_to'])) {
-            $query->where('created_at', '<=', $filters['date_to']);
-        }
-
-        return $query->get();
-    }
-
-    private function getFinancialSummaryForReport(Collection $customers): array
+    private function getExecutiveSummary(int $tenantId, array $filters): array
     {
         return [
-            'total_revenue' => $customers->sum(function($customer) {
-                return $customer->invoices()->where('status', 'paid')->sum('total');
-            }),
-            'pending_revenue' => $customers->sum(function($customer) {
-                return $customer->invoices()->where('status', 'pending')->sum('total');
-            }),
-            'average_ticket' => $customers->avg(function($customer) {
-                return $customer->invoices()->where('status', 'paid')->avg('total') ?? 0;
-            }),
-            'revenue_distribution' => $this->getRevenueDistribution($customers),
+            'total_customers' => Customer::where('tenant_id', $tenantId)->count(),
+            'active_customers' => Customer::where('tenant_id', $tenantId)->where('status', 'active')->count(),
+            'revenue' => Invoice::where('tenant_id', $tenantId)->where('status', 'paid')->sum('total'),
+            'growth_rate' => $this->calculateGrowthRate($tenantId, $filters),
+            'key_insights' => $this->getKeyInsights($tenantId, $filters),
         ];
     }
 
-    private function getEngagementSummaryForReport(Collection $customers): array
+    private function getCustomerInsights(int $tenantId, array $filters): array
     {
         return [
-            'total_interactions' => $customers->sum(function($customer) {
-                return $customer->interactions()->count();
-            }),
-            'average_interactions_per_customer' => $customers->avg(function($customer) {
-                return $customer->interactions()->count();
-            }),
-            'active_engagement_rate' => $this->calculateActiveEngagementRate($customers),
-            'satisfaction_score' => $this->calculateSatisfactionScore($customers),
+            'customer_behavior' => $this->getCustomerBehaviorInsights($tenantId, $filters),
+            'customer_preferences' => $this->getCustomerPreferencesInsights($tenantId, $filters),
+            'customer_satisfaction' => $this->getCustomerSatisfactionInsights($tenantId, $filters),
+            'customer_needs' => $this->getCustomerNeedsInsights($tenantId, $filters),
         ];
     }
 
-    private function getCustomerFinancialData(Customer $customer): array
+    private function getMarketAnalysis(int $tenantId, array $filters): array
     {
         return [
-            'total_spent' => $customer->invoices()->where('status', 'paid')->sum('total'),
-            'pending_amount' => $customer->invoices()->where('status', 'pending')->sum('total'),
-            'payment_history' => $customer->invoices()->where('status', 'paid')->orderBy('transaction_date', 'desc')->take(10)->get(),
-            'average_ticket' => $customer->invoices()->where('status', 'paid')->avg('total') ?? 0,
-            'payment_methods' => $customer->invoices()->where('status', 'paid')->groupBy('payment_method')->pluck('payment_method'),
+            'market_position' => $this->getMarketPosition($tenantId, $filters),
+            'competitive_analysis' => $this->getCompetitiveAnalysis($tenantId, $filters),
+            'market_trends' => $this->getMarketTrends($tenantId, $filters),
+            'opportunity_analysis' => $this->getOpportunityAnalysis($tenantId, $filters),
         ];
     }
 
-    private function getCustomerEngagementData(Customer $customer): array
+    private function getRecommendations(int $tenantId, array $filters): array
     {
         return [
-            'total_interactions' => $customer->interactions()->count(),
-            'last_interaction' => $customer->interactions()->latest('interaction_date')->first(),
-            'interaction_frequency' => $this->calculateCustomerInteractionFrequency($customer),
-            'preferred_contact_method' => $this->getPreferredContactMethod($customer),
-            'engagement_score' => $this->calculateCustomerEngagementScore($customer),
+            'strategic_recommendations' => $this->getStrategicRecommendations($tenantId, $filters),
+            'tactical_recommendations' => $this->getTacticalRecommendations($tenantId, $filters),
+            'operational_recommendations' => $this->getOperationalRecommendations($tenantId, $filters),
+            'implementation_plan' => $this->getImplementationPlan($tenantId, $filters),
         ];
     }
 
-    private function getCustomerRiskData(Customer $customer): array
+    private function getSegmentOverview(int $tenantId, array $filters): array
     {
         return [
-            'churn_risk_score' => $this->calculateCustomerChurnRiskScore($customer),
-            'payment_risk_score' => $this->calculateCustomerPaymentRiskScore($customer),
-            'inactivity_days' => $customer->last_interaction_at ? now()->diffInDays($customer->last_interaction_at) : 0,
-            'overdue_invoices' => $customer->invoices()->where('due_date', '<', now())->where('status', 'pending')->count(),
-            'recommended_actions' => $this->getCustomerRecommendedActions($customer),
+            'total_segments' => $this->getTotalSegments($tenantId, $filters),
+            'segment_distribution' => $this->getSegmentDistribution($tenantId, $filters),
+            'segment_characteristics' => $this->getSegmentCharacteristics($tenantId, $filters),
+            'segment_performance' => $this->getSegmentPerformance($tenantId, $filters),
         ];
     }
 
-    private function getRevenueByCustomer(Collection $customers): array
-    {
-        return $customers->map(function($customer) {
-            return [
-                'customer_name' => $customer->commonData?->first_name . ' ' . $customer->commonData?->last_name,
-                'total_revenue' => $customer->invoices()->where('status', 'paid')->sum('total'),
-                'pending_amount' => $customer->invoices()->where('status', 'pending')->sum('total'),
-                'invoice_count' => $customer->invoices()->count(),
-            ];
-        })->sortByDesc('total_revenue')->toArray();
-    }
-
-    private function getRevenueByMonth(Collection $customers): array
-    {
-        return Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })
-        ->where('status', 'paid')
-        ->selectRaw('DATE_FORMAT(transaction_date, "%Y-%m") as month, sum(total) as revenue')
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get()
-        ->toArray();
-    }
-
-    private function getPaymentAnalysisForReport(Collection $customers): array
+    private function getSegmentCharacteristicsReport(int $tenantId, array $filters): array
     {
         return [
-            'payment_methods_distribution' => $this->getPaymentMethodsDistribution($customers),
-            'average_payment_time' => $this->getAveragePaymentTime($customers),
-            'late_payment_rate' => $this->getLatePaymentRate($customers),
-            'payment_consistency' => $this->getPaymentConsistency($customers),
+            'demographic_characteristics' => $this->getDemographicCharacteristics($tenantId, $filters),
+            'behavioral_characteristics' => $this->getBehavioralCharacteristics($tenantId, $filters),
+            'psychographic_characteristics' => $this->getPsychographicCharacteristics($tenantId, $filters),
+            'segment_needs' => $this->getSegmentNeeds($tenantId, $filters),
         ];
     }
 
-    private function getOutstandingAnalysisForReport(Collection $customers): array
+    private function getSegmentPerformanceReport(int $tenantId, array $filters): array
     {
         return [
-            'total_outstanding' => $customers->sum(function($customer) {
-                return $customer->invoices()->where('status', 'pending')->sum('total');
-            }),
-            'outstanding_by_customer' => $this->getOutstandingByCustomer($customers),
-            'average_days_overdue' => $this->getAverageDaysOverdue($customers),
-            'collection_efficiency' => $this->getCollectionEfficiency($customers),
+            'revenue_by_segment' => $this->getRevenueBySegment($tenantId, $filters),
+            'growth_by_segment' => $this->getGrowthBySegment($tenantId, $filters),
+            'engagement_by_segment' => $this->getEngagementBySegment($tenantId, $filters),
+            'satisfaction_by_segment' => $this->getSatisfactionBySegment($tenantId, $filters),
         ];
     }
 
-    private function getFinancialTrendsForReport(Collection $customers): array
+    private function getSegmentStrategies(int $tenantId, array $filters): array
     {
         return [
-            'monthly_revenue_trend' => $this->getMonthlyRevenueTrend($customers),
-            'customer_lifetime_value_trend' => $this->getCustomerLifetimeValueTrend($customers),
-            'average_ticket_trend' => $this->getAverageTicketTrend($customers),
-            'revenue_concentration_trend' => $this->getRevenueConcentrationTrend($customers),
+            'acquisition_strategies' => $this->getAcquisitionStrategies($tenantId, $filters),
+            'retention_strategies' => $this->getRetentionStrategies($tenantId, $filters),
+            'engagement_strategies' => $this->getEngagementStrategies($tenantId, $filters),
+            'monetization_strategies' => $this->getMonetizationStrategies($tenantId, $filters),
         ];
     }
 
-    // Métodos auxiliares para cálculos específicos de relatórios
-    private function getMonthlyRevenue(Carbon $start, Carbon $end, array $filters): float
-    {
-        return Invoice::whereHas('service.budget.customer', function($query) use ($filters) {
-            if (isset($filters['tenant_id'])) {
-                $query->where('tenant_id', $filters['tenant_id']);
-            }
-        })
-        ->where('status', 'paid')
-        ->whereBetween('transaction_date', [$start, $end])
-        ->sum('total');
-    }
-
-    private function getMonthlyInteractions(Carbon $start, Carbon $end, array $filters): int
-    {
-        return CustomerInteraction::whereHas('customer', function($query) use ($filters) {
-            if (isset($filters['tenant_id'])) {
-                $query->where('tenant_id', $filters['tenant_id']);
-            }
-        })
-        ->whereBetween('interaction_date', [$start, $end])
-        ->count();
-    }
-
-    private function getMonthlyChurnedCustomers(Carbon $start, Carbon $end, array $filters): int
-    {
-        return Customer::whereHas('lifecycleHistory', function($query) use ($start, $end) {
-            $query->where('to_stage', 'churned')
-                ->whereBetween('created_at', [$start, $end]);
-        })
-        ->when($filters['tenant_id'] ?? null, function($query, $tenantId) {
-            $query->where('tenant_id', $tenantId);
-        })
-        ->count();
-    }
-
-    private function getRevenueDistribution(Collection $customers): array
-    {
-        // Implementar lógica de distribuição de receita
-        return []; // Placeholder
-    }
-
-    private function calculateActiveEngagementRate(Collection $customers): float
-    {
-        $activeCustomers = $customers->filter(function($customer) {
-            return $customer->last_interaction_at && $customer->last_interaction_at >= now()->subMonths(3);
-        });
-
-        return $customers->count() > 0 ? ($activeCustomers->count() / $customers->count()) * 100 : 0;
-    }
-
-    private function calculateSatisfactionScore(Collection $customers): float
-    {
-        // Implementar cálculo de score de satisfação
-        return 0.0; // Placeholder
-    }
-
-    private function calculateCustomerInteractionFrequency(Customer $customer): float
-    {
-        $interactions = $customer->interactions;
-        if ($interactions->isEmpty()) return 0;
-
-        $firstInteraction = $interactions->sortBy('interaction_date')->first();
-        $lastInteraction = $interactions->sortByDesc('interaction_date')->first();
-
-        $daysDiff = $firstInteraction->interaction_date->diffInDays($lastInteraction->interaction_date);
-        return $daysDiff > 0 ? $interactions->count() / $daysDiff : 0;
-    }
-
-    private function getPreferredContactMethod(Customer $customer): string
-    {
-        $contactMethods = $customer->interactions()
-            ->groupBy('interaction_type')
-            ->selectRaw('interaction_type, count(*) as count')
-            ->orderByDesc('count')
-            ->first();
-
-        return $contactMethods?->interaction_type ?? 'unknown';
-    }
-
-    private function calculateCustomerEngagementScore(Customer $customer): float
-    {
-        // Implementar cálculo de score de engajamento
-        return 0.0; // Placeholder
-    }
-
-    private function calculateCustomerChurnRiskScore(Customer $customer): float
-    {
-        // Implementar cálculo de score de risco de churn
-        return 0.0; // Placeholder
-    }
-
-    private function calculateCustomerPaymentRiskScore(Customer $customer): float
-    {
-        // Implementar cálculo de score de risco de pagamento
-        return 0.0; // Placeholder
-    }
-
-    private function getCustomerRecommendedActions(Customer $customer): array
-    {
-        // Implementar lógica de ações recomendadas
-        return []; // Placeholder
-    }
-
-    private function getPaymentMethodsDistribution(Collection $customers): array
-    {
-        return Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })
-        ->where('status', 'paid')
-        ->groupBy('payment_method')
-        ->selectRaw('payment_method, count(*) as count')
-        ->pluck('count', 'payment_method')
-        ->toArray();
-    }
-
-    private function getAveragePaymentTime(Collection $customers): float
-    {
-        return Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })
-        ->where('status', 'paid')
-        ->avg(function($invoice) {
-            return $invoice->created_at->diffInDays($invoice->transaction_date);
-        }) ?? 0;
-    }
-
-    private function getLatePaymentRate(Collection $customers): float
-    {
-        $totalInvoices = Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })->count();
-
-        $lateInvoices = Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })
-        ->where('transaction_date', '>', 'due_date')
-        ->count();
-
-        return $totalInvoices > 0 ? ($lateInvoices / $totalInvoices) * 100 : 0;
-    }
-
-    private function getPaymentConsistency(Collection $customers): float
-    {
-        // Implementar cálculo de consistência de pagamento
-        return 0.0; // Placeholder
-    }
-
-    private function getOutstandingByCustomer(Collection $customers): array
-    {
-        return $customers->map(function($customer) {
-            return [
-                'customer_name' => $customer->commonData?->first_name . ' ' . $customer->commonData?->last_name,
-                'outstanding_amount' => $customer->invoices()->where('status', 'pending')->sum('total'),
-                'overdue_invoices' => $customer->invoices()->where('due_date', '<', now())->where('status', 'pending')->count(),
-            ];
-        })->toArray();
-    }
-
-    private function getAverageDaysOverdue(Collection $customers): float
-    {
-        $overdueInvoices = Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })
-        ->where('due_date', '<', now())
-        ->where('status', 'pending')
-        ->get();
-
-        if ($overdueInvoices->isEmpty()) return 0;
-
-        return $overdueInvoices->avg(function($invoice) {
-            return now()->diffInDays($invoice->due_date);
-        });
-    }
-
-    private function getCollectionEfficiency(Collection $customers): float
-    {
-        $totalInvoices = Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })->sum('total');
-
-        $paidInvoices = Invoice::whereHas('service.budget.customer', function($query) use ($customers) {
-            $query->whereIn('id', $customers->pluck('id'));
-        })
-        ->where('status', 'paid')->sum('total');
-
-        return $totalInvoices > 0 ? ($paidInvoices / $totalInvoices) * 100 : 0;
-    }
-
-    private function getMonthlyRevenueTrend(Collection $customers): array
-    {
-        // Implementar lógica de tendência mensal de receita
-        return []; // Placeholder
-    }
-
-    private function getCustomerLifetimeValueTrend(Collection $customers): array
-    {
-        // Implementar lógica de tendência de CLV
-        return []; // Placeholder
-    }
-
-    private function getAverageTicketTrend(Collection $customers): array
-    {
-        // Implementar lógica de tendência de ticket médio
-        return []; // Placeholder
-    }
-
-    private function getRevenueConcentrationTrend(Collection $customers): array
-    {
-        // Implementar lógica de tendência de concentração de receita
-        return []; // Placeholder
-    }
-
-    private function generateSummaryFromDetailed(Collection $detailedData): array
+    private function getTrendSummary(int $tenantId, array $filters): array
     {
         return [
-            'total_customers' => $detailedData->count(),
-            'total_revenue' => $detailedData->sum('financial_data.total_spent'),
-            'total_pending' => $detailedData->sum('financial_data.pending_amount'),
-            'average_engagement_score' => $detailedData->avg('engagement_data.engagement_score'),
-            'average_churn_risk' => $detailedData->avg('risk_data.churn_risk_score'),
+            'trend_overview' => $this->getTrendOverview($tenantId, $filters),
+            'trend_direction' => $this->getTrendDirection($tenantId, $filters),
+            'trend_magnitude' => $this->getTrendMagnitude($tenantId, $filters),
+            'trend_impact' => $this->getTrendImpact($tenantId, $filters),
         ];
     }
 
-    private function getInteractionAnalysisForReport(Collection $customers): array
+    private function getHistoricalAnalysis(int $tenantId, array $filters): array
     {
-        // Implementar análise de interações para relatório
-        return []; // Placeholder
+        return [
+            'historical_data' => $this->getHistoricalData($tenantId, $filters),
+            'historical_trends' => $this->getHistoricalTrends($tenantId, $filters),
+            'historical_patterns' => $this->getHistoricalPatterns($tenantId, $filters),
+            'historical_events' => $this->getHistoricalEvents($tenantId, $filters),
+        ];
     }
 
-    private function getCommunicationPreferencesForReport(Collection $customers): array
+    private function getFutureProjections(int $tenantId, array $filters): array
     {
-        // Implementar preferências de comunicação para relatório
-        return []; // Placeholder
+        return [
+            'forecast_data' => $this->getForecastData($tenantId, $filters),
+            'projection_confidence' => $this->getProjectionConfidence($tenantId, $filters),
+            'scenario_analysis' => $this->getScenarioAnalysis($tenantId, $filters),
+            'risk_factors' => $this->getRiskFactors($tenantId, $filters),
+        ];
     }
 
-    private function getSatisfactionAnalysisForReport(Collection $customers): array
+    private function getTrendImpact(int $tenantId, array $filters): array
     {
-        // Implementar análise de satisfação para relatório
-        return []; // Placeholder
+        return [
+            'business_impact' => $this->getBusinessImpact($tenantId, $filters),
+            'customer_impact' => $this->getCustomerImpact($tenantId, $filters),
+            'market_impact' => $this->getMarketImpact($tenantId, $filters),
+            'strategic_impact' => $this->getStrategicImpact($tenantId, $filters),
+        ];
     }
 
-    private function getEngagementTrendsForReport(Collection $customers): array
+    private function getRiskOverview(int $tenantId, array $filters): array
     {
-        // Implementar tendências de engajamento para relatório
-        return []; // Placeholder
+        return [
+            'risk_summary' => $this->getRiskSummary($tenantId, $filters),
+            'risk_categories' => $this->getRiskCategories($tenantId, $filters),
+            'risk_levels' => $this->getRiskLevels($tenantId, $filters),
+            'risk_trends' => $this->getRiskTrends($tenantId, $filters),
+        ];
     }
 
-    private function getChurnRiskAnalysisForReport(Collection $customers): array
+    private function getRiskFactors(int $tenantId, array $filters): array
     {
-        // Implementar análise de risco de churn para relatório
-        return []; // Placeholder
+        return [
+            'internal_risks' => $this->getInternalRisks($tenantId, $filters),
+            'external_risks' => $this->getExternalRisks($tenantId, $filters),
+            'operational_risks' => $this->getOperationalRisks($tenantId, $filters),
+            'strategic_risks' => $this->getStrategicRisks($tenantId, $filters),
+        ];
     }
 
-    private function getPaymentRiskAnalysisForReport(Collection $customers): array
+    private function getRiskMitigation(int $tenantId, array $filters): array
     {
-        // Implementar análise de risco de pagamento para relatório
-        return []; // Placeholder
+        return [
+            'mitigation_strategies' => $this->getMitigationStrategies($tenantId, $filters),
+            'preventive_measures' => $this->getPreventiveMeasures($tenantId, $filters),
+            'contingency_plans' => $this->getContingencyPlans($tenantId, $filters),
+            'risk_monitoring' => $this->getRiskMonitoring($tenantId, $filters),
+        ];
     }
 
-    private function getInactiveCustomersForReport(Collection $customers): array
+    private function getRiskMonitoring(int $tenantId, array $filters): array
     {
-        return $customers->filter(function($customer) {
-            return $customer->last_interaction_at && $customer->last_interaction_at < now()->subMonths(3);
-        })->map(function($customer) {
-            return [
-                'customer_name' => $customer->commonData?->first_name . ' ' . $customer->commonData?->last_name,
-                'last_interaction' => $customer->last_interaction_at,
-                'inactivity_days' => now()->diffInDays($customer->last_interaction_at),
-                'total_spent' => $customer->invoices()->where('status', 'paid')->sum('total'),
-            ];
-        })->toArray();
+        return [
+            'monitoring_framework' => $this->getMonitoringFramework($tenantId, $filters),
+            'risk_indicators' => $this->getRiskIndicators($tenantId, $filters),
+            'alert_systems' => $this->getAlertSystems($tenantId, $filters),
+            'reporting_mechanisms' => $this->getReportingMechanisms($tenantId, $filters),
+        ];
     }
 
-    private function getRiskMitigationStrategiesForReport(Collection $customers): array
+    private function getKpiSummaryReport(int $tenantId, array $filters): array
     {
-        // Implementar estratégias de mitigação de risco para relatório
-        return []; // Placeholder
+        return [
+            'kpi_overview' => $this->getKpiOverview($tenantId, $filters),
+            'kpi_trends' => $this->getKpiTrends($tenantId, $filters),
+            'kpi_benchmarks' => $this->getKpiBenchmarks($tenantId, $filters),
+            'kpi_targets' => $this->getKpiTargets($tenantId, $filters),
+        ];
+    }
+
+    private function getPerformanceTrends(int $tenantId, array $filters): array
+    {
+        return [
+            'performance_history' => $this->getPerformanceHistory($tenantId, $filters),
+            'performance_direction' => $this->getPerformanceDirection($tenantId, $filters),
+            'performance_momentum' => $this->getPerformanceMomentum($tenantId, $filters),
+            'performance_outliers' => $this->getPerformanceOutliers($tenantId, $filters),
+        ];
+    }
+
+    private function getBenchmarkAnalysis(int $tenantId, array $filters): array
+    {
+        return [
+            'industry_benchmarks' => $this->getIndustryBenchmarks($tenantId, $filters),
+            'competitor_benchmarks' => $this->getCompetitorBenchmarks($tenantId, $filters),
+            'internal_benchmarks' => $this->getInternalBenchmarks($tenantId, $filters),
+            'benchmark_gaps' => $this->getBenchmarkGaps($tenantId, $filters),
+        ];
+    }
+
+    private function getImprovementOpportunities(int $tenantId, array $filters): array
+    {
+        return [
+            'performance_gaps' => $this->getPerformanceGaps($tenantId, $filters),
+            'improvement_areas' => $this->getImprovementAreas($tenantId, $filters),
+            'optimization_potential' => $this->getOptimizationPotential($tenantId, $filters),
+            'implementation_priorities' => $this->getImplementationPriorities($tenantId, $filters),
+        ];
+    }
+
+    // Métodos auxiliares para relatórios
+    private function getKeyInsights(int $tenantId, array $filters): array
+    {
+        // Implementar insights chave
+        return [];
+    }
+
+    private function getCustomerBehaviorInsights(int $tenantId, array $filters): array
+    {
+        // Implementar insights de comportamento
+        return [];
+    }
+
+    private function getCustomerPreferencesInsights(int $tenantId, array $filters): array
+    {
+        // Implementar insights de preferências
+        return [];
+    }
+
+    private function getCustomerSatisfactionInsights(int $tenantId, array $filters): array
+    {
+        // Implementar insights de satisfação
+        return [];
+    }
+
+    private function getCustomerNeedsInsights(int $tenantId, array $filters): array
+    {
+        // Implementar insights de necessidades
+        return [];
+    }
+
+    private function getMarketPosition(int $tenantId, array $filters): array
+    {
+        // Implementar posição de mercado
+        return [];
+    }
+
+    private function getCompetitiveAnalysis(int $tenantId, array $filters): array
+    {
+        // Implementar análise competitiva
+        return [];
+    }
+
+    private function getMarketTrends(int $tenantId, array $filters): array
+    {
+        // Implementar tendências de mercado
+        return [];
+    }
+
+    private function getOpportunityAnalysis(int $tenantId, array $filters): array
+    {
+        // Implementar análise de oportunidades
+        return [];
+    }
+
+    private function getStrategicRecommendations(int $tenantId, array $filters): array
+    {
+        // Implementar recomendações estratégicas
+        return [];
+    }
+
+    private function getTacticalRecommendations(int $tenantId, array $filters): array
+    {
+        // Implementar recomendações táticas
+        return [];
+    }
+
+    private function getOperationalRecommendations(int $tenantId, array $filters): array
+    {
+        // Implementar recomendações operacionais
+        return [];
+    }
+
+    private function getImplementationPlan(int $tenantId, array $filters): array
+    {
+        // Implementar plano de implementação
+        return [];
+    }
+
+    private function getTotalSegments(int $tenantId, array $filters): int
+    {
+        // Implementar total de segmentos
+        return 0;
+    }
+
+    private function getDemographicCharacteristics(int $tenantId, array $filters): array
+    {
+        // Implementar características demográficas
+        return [];
+    }
+
+    private function getBehavioralCharacteristics(int $tenantId, array $filters): array
+    {
+        // Implementar características comportamentais
+        return [];
+    }
+
+    private function getPsychographicCharacteristics(int $tenantId, array $filters): array
+    {
+        // Implementar características psicográficas
+        return [];
+    }
+
+    private function getSegmentNeeds(int $tenantId, array $filters): array
+    {
+        // Implementar necessidades dos segmentos
+        return [];
+    }
+
+    private function getRevenueBySegment(int $tenantId, array $filters): array
+    {
+        // Implementar receita por segmento
+        return [];
+    }
+
+    private function getGrowthBySegment(int $tenantId, array $filters): array
+    {
+        // Implementar crescimento por segmento
+        return [];
+    }
+
+    private function getEngagementBySegment(int $tenantId, array $filters): array
+    {
+        // Implementar engajamento por segmento
+        return [];
+    }
+
+    private function getSatisfactionBySegment(int $tenantId, array $filters): array
+    {
+        // Implementar satisfação por segmento
+        return [];
+    }
+
+    private function getAcquisitionStrategies(int $tenantId, array $filters): array
+    {
+        // Implementar estratégias de aquisição
+        return [];
+    }
+
+    private function getRetentionStrategies(int $tenantId, array $filters): array
+    {
+        // Implementar estratégias de retenção
+        return [];
+    }
+
+    private function getEngagementStrategies(int $tenantId, array $filters): array
+    {
+        // Implementar estratégias de engajamento
+        return [];
+    }
+
+    private function getMonetizationStrategies(int $tenantId, array $filters): array
+    {
+        // Implementar estratégias de monetização
+        return [];
+    }
+
+    private function getTrendOverview(int $tenantId, array $filters): array
+    {
+        // Implementar visão geral de tendências
+        return [];
+    }
+
+    private function getTrendDirection(int $tenantId, array $filters): array
+    {
+        // Implementar direção das tendências
+        return [];
+    }
+
+    private function getTrendMagnitude(int $tenantId, array $filters): array
+    {
+        // Implementar magnitude das tendências
+        return [];
+    }
+
+    private function getBusinessImpact(int $tenantId, array $filters): array
+    {
+        // Implementar impacto nos negócios
+        return [];
+    }
+
+    private function getCustomerImpact(int $tenantId, array $filters): array
+    {
+        // Implementar impacto nos clientes
+        return [];
+    }
+
+    private function getMarketImpact(int $tenantId, array $filters): array
+    {
+        // Implementar impacto no mercado
+        return [];
+    }
+
+    private function getStrategicImpact(int $tenantId, array $filters): array
+    {
+        // Implementar impacto estratégico
+        return [];
+    }
+
+    private function getHistoricalData(int $tenantId, array $filters): array
+    {
+        // Implementar dados históricos
+        return [];
+    }
+
+    private function getHistoricalTrends(int $tenantId, array $filters): array
+    {
+        // Implementar tendências históricas
+        return [];
+    }
+
+    private function getHistoricalPatterns(int $tenantId, array $filters): array
+    {
+        // Implementar padrões históricos
+        return [];
+    }
+
+    private function getHistoricalEvents(int $tenantId, array $filters): array
+    {
+        // Implementar eventos históricos
+        return [];
+    }
+
+    private function getForecastData(int $tenantId, array $filters): array
+    {
+        // Implementar dados de forecast
+        return [];
+    }
+
+    private function getProjectionConfidence(int $tenantId, array $filters): array
+    {
+        // Implementar confiança das projeções
+        return [];
+    }
+
+    private function getScenarioAnalysis(int $tenantId, array $filters): array
+    {
+        // Implementar análise de cenários
+        return [];
+    }
+
+    private function getRiskSummary(int $tenantId, array $filters): array
+    {
+        // Implementar resumo de risco
+        return [];
+    }
+
+    private function getRiskCategories(int $tenantId, array $filters): array
+    {
+        // Implementar categorias de risco
+        return [];
+    }
+
+    private function getRiskLevels(int $tenantId, array $filters): array
+    {
+        // Implementar níveis de risco
+        return [];
+    }
+
+    private function getRiskTrends(int $tenantId, array $filters): array
+    {
+        // Implementar tendências de risco
+        return [];
+    }
+
+    private function getInternalRisks(int $tenantId, array $filters): array
+    {
+        // Implementar riscos internos
+        return [];
+    }
+
+    private function getExternalRisks(int $tenantId, array $filters): array
+    {
+        // Implementar riscos externos
+        return [];
+    }
+
+    private function getOperationalRisks(int $tenantId, array $filters): array
+    {
+        // Implementar riscos operacionais
+        return [];
+    }
+
+    private function getStrategicRisks(int $tenantId, array $filters): array
+    {
+        // Implementar riscos estratégicos
+        return [];
+    }
+
+    private function getMitigationStrategies(int $tenantId, array $filters): array
+    {
+        // Implementar estratégias de mitigação
+        return [];
+    }
+
+    private function getPreventiveMeasures(int $tenantId, array $filters): array
+    {
+        // Implementar medidas preventivas
+        return [];
+    }
+
+    private function getContingencyPlans(int $tenantId, array $filters): array
+    {
+        // Implementar planos de contingência
+        return [];
+    }
+
+    private function getMonitoringFramework(int $tenantId, array $filters): array
+    {
+        // Implementar framework de monitoramento
+        return [];
+    }
+
+    private function getRiskIndicators(int $tenantId, array $filters): array
+    {
+        // Implementar indicadores de risco
+        return [];
+    }
+
+    private function getAlertSystems(int $tenantId, array $filters): array
+    {
+        // Implementar sistemas de alerta
+        return [];
+    }
+
+    private function getReportingMechanisms(int $tenantId, array $filters): array
+    {
+        // Implementar mecanismos de reporte
+        return [];
+    }
+
+    private function getKpiOverview(int $tenantId, array $filters): array
+    {
+        // Implementar visão geral de KPIs
+        return [];
+    }
+
+    private function getKpiTrends(int $tenantId, array $filters): array
+    {
+        // Implementar tendências de KPIs
+        return [];
+    }
+
+    private function getKpiBenchmarks(int $tenantId, array $filters): array
+    {
+        // Implementar benchmarks de KPIs
+        return [];
+    }
+
+    private function getKpiTargets(int $tenantId, array $filters): array
+    {
+        // Implementar metas de KPIs
+        return [];
+    }
+
+    private function getPerformanceHistory(int $tenantId, array $filters): array
+    {
+        // Implementar histórico de performance
+        return [];
+    }
+
+    private function getPerformanceDirection(int $tenantId, array $filters): array
+    {
+        // Implementar direção da performance
+        return [];
+    }
+
+    private function getPerformanceMomentum(int $tenantId, array $filters): array
+    {
+        // Implementar momentum da performance
+        return [];
+    }
+
+    private function getPerformanceOutliers(int $tenantId, array $filters): array
+    {
+        // Implementar outliers de performance
+        return [];
+    }
+
+    private function getIndustryBenchmarks(int $tenantId, array $filters): array
+    {
+        // Implementar benchmarks da indústria
+        return [];
+    }
+
+    private function getCompetitorBenchmarks(int $tenantId, array $filters): array
+    {
+        // Implementar benchmarks de competidores
+        return [];
+    }
+
+    private function getInternalBenchmarks(int $tenantId, array $filters): array
+    {
+        // Implementar benchmarks internos
+        return [];
+    }
+
+    private function getBenchmarkGaps(int $tenantId, array $filters): array
+    {
+        // Implementar gaps de benchmarks
+        return [];
+    }
+
+    private function getPerformanceGaps(int $tenantId, array $filters): array
+    {
+        // Implementar gaps de performance
+        return [];
+    }
+
+    private function getImprovementAreas(int $tenantId, array $filters): array
+    {
+        // Implementar áreas de melhoria
+        return [];
+    }
+
+    private function getOptimizationPotential(int $tenantId, array $filters): array
+    {
+        // Implementar potencial de otimização
+        return [];
+    }
+
+    private function getImplementationPriorities(int $tenantId, array $filters): array
+    {
+        // Implementar prioridades de implementação
+        return [];
     }
 }
 ```
 
 ## 🧪 Testes e Validação
 
-### **✅ Testes de Dashboards**
+### **✅ Testes de Dashboard**
 
 ```php
 public function testExecutiveDashboard()
@@ -1435,34 +1519,34 @@ public function testExecutiveDashboard()
     $this->assertTrue($result->isSuccess());
 
     $dashboard = $result->getData();
-    $this->assertArrayHasKey('customer_overview', $dashboard);
-    $this->assertArrayHasKey('financial_metrics', $dashboard);
-    $this->assertArrayHasKey('engagement_metrics', $dashboard);
-    $this->assertArrayHasKey('growth_metrics', $dashboard);
-    $this->assertArrayHasKey('risk_metrics', $dashboard);
+    $this->assertArrayHasKey('kpi_summary', $dashboard);
+    $this->assertArrayHasKey('customer_analytics', $dashboard);
+    $this->assertArrayHasKey('segmentation_analysis', $dashboard);
+    $this->assertArrayHasKey('trend_analysis', $dashboard);
+    $this->assertArrayHasKey('risk_assessment', $dashboard);
+    $this->assertArrayHasKey('performance_metrics', $dashboard);
 }
 
-public function testCustomerAnalytics()
+public function testCustomerAnalyticsDashboard()
 {
     $customer = Customer::factory()->create();
-    Invoice::factory()->count(5)->create([
-        'service_id' => Service::factory()->create([
-            'budget_id' => Budget::factory()->create(['customer_id' => $customer->id])->id
-        ])->id,
-        'status' => 'paid',
-        'total' => 100,
+    Budget::factory()->count(5)->create(['customer_id' => $customer->id]);
+    Service::factory()->count(3)->create(['customer_id' => $customer->id]);
+    Invoice::factory()->count(8)->create([
+        'customer_id' => $customer->id,
+        'service_id' => Service::factory()->create(['customer_id' => $customer->id])->id,
     ]);
 
-    $result = $this->dashboardService->getCustomerAnalytics($customer);
+    $result = $this->dashboardService->getCustomerAnalyticsDashboard($customer);
     $this->assertTrue($result->isSuccess());
 
     $analytics = $result->getData();
-    $this->assertArrayHasKey('revenue_analysis', $analytics);
-    $this->assertArrayHasKey('service_analysis', $analytics);
-    $this->assertArrayHasKey('payment_analysis', $analytics);
-    $this->assertArrayHasKey('interaction_analysis', $analytics);
-    $this->assertArrayHasKey('lifecycle_analysis', $analytics);
-    $this->assertArrayHasKey('risk_assessment', $analytics);
+    $this->assertArrayHasKey('customer_profile', $analytics);
+    $this->assertArrayHasKey('financial_analytics', $analytics);
+    $this->assertArrayHasKey('behavioral_analytics', $analytics);
+    $this->assertArrayHasKey('engagement_metrics', $analytics);
+    $this->assertArrayHasKey('lifetime_value', $analytics);
+    $this->assertArrayHasKey('predictive_insights', $analytics);
 }
 
 public function testSegmentationDashboard()
@@ -1470,80 +1554,64 @@ public function testSegmentationDashboard()
     $tenant = Tenant::factory()->create();
     Customer::factory()->count(20)->create(['tenant_id' => $tenant->id]);
 
-    $result = $this->dashboardService->getCustomerSegmentationDashboard($tenant->id);
+    $result = $this->dashboardService->getSegmentationDashboard($tenant->id);
     $this->assertTrue($result->isSuccess());
 
-    $dashboard = $result->getData();
-    $this->assertArrayHasKey('segment_distribution', $dashboard);
-    $this->assertArrayHasKey('segment_performance', $dashboard);
-    $this->assertArrayHasKey('segment_trends', $dashboard);
-    $this->assertArrayHasKey('segment_comparisons', $dashboard);
+    $segmentation = $result->getData();
+    $this->assertArrayHasKey('segments_overview', $segmentation);
+    $this->assertArrayHasKey('segment_performance', $segmentation);
+    $this->assertArrayHasKey('customer_distribution', $segmentation);
+    $this->assertArrayHasKey('segment_trends', $segmentation);
+    $this->assertArrayHasKey('segment_comparisons', $segmentation);
 }
 ```
 
 ### **✅ Testes de Relatórios**
 
 ```php
-public function testSummaryReport()
+public function testCustomerAnalysisReport()
+{
+    $tenant = Tenant::factory()->create();
+    Customer::factory()->count(15)->create(['tenant_id' => $tenant->id]);
+
+    $result = $this->reportingService->generateCustomerReport($tenant->id, 'customer_analysis');
+    $this->assertTrue($result->isSuccess());
+
+    $reportData = $result->getData();
+    $this->assertArrayHasKey('executive_summary', $reportData);
+    $this->assertArrayHasKey('customer_insights', $reportData);
+    $this->assertArrayHasKey('market_analysis', $reportData);
+    $this->assertArrayHasKey('recommendations', $reportData);
+}
+
+public function testSegmentationReport()
+{
+    $tenant = Tenant::factory()->create();
+    Customer::factory()->count(25)->create(['tenant_id' => $tenant->id]);
+
+    $result = $this->reportingService->generateCustomerReport($tenant->id, 'segmentation_report');
+    $this->assertTrue($result->isSuccess());
+
+    $reportData = $result->getData();
+    $this->assertArrayHasKey('segment_overview', $reportData);
+    $this->assertArrayHasKey('segment_characteristics', $reportData);
+    $this->assertArrayHasKey('segment_performance', $reportData);
+    $this->assertArrayHasKey('segment_strategies', $reportData);
+}
+
+public function testTrendAnalysisReport()
 {
     $tenant = Tenant::factory()->create();
     Customer::factory()->count(10)->create(['tenant_id' => $tenant->id]);
 
-    $result = $this->reportingService->generateCustomerReport([
-        'tenant_id' => $tenant->id,
-    ], 'summary');
-
+    $result = $this->reportingService->generateCustomerReport($tenant->id, 'trend_analysis');
     $this->assertTrue($result->isSuccess());
 
-    $report = $result->getData();
-    $this->assertArrayHasKey('total_customers', $report);
-    $this->assertArrayHasKey('by_status', $report);
-    $this->assertArrayHasKey('by_type', $report);
-    $this->assertArrayHasKey('financial_summary', $report);
-}
-
-public function testFinancialReport()
-{
-    $tenant = Tenant::factory()->create();
-    $customer = Customer::factory()->create(['tenant_id' => $tenant->id]);
-
-    Invoice::factory()->count(5)->create([
-        'service_id' => Service::factory()->create([
-            'budget_id' => Budget::factory()->create(['customer_id' => $customer->id])->id
-        ])->id,
-        'status' => 'paid',
-        'total' => 100,
-    ]);
-
-    $result = $this->reportingService->generateCustomerReport([
-        'tenant_id' => $tenant->id,
-    ], 'financial');
-
-    $this->assertTrue($result->isSuccess());
-
-    $report = $result->getData();
-    $this->assertArrayHasKey('revenue_by_customer', $report);
-    $this->assertArrayHasKey('revenue_by_month', $report);
-    $this->assertArrayHasKey('payment_analysis', $report);
-    $this->assertArrayHasKey('outstanding_analysis', $report);
-}
-
-public function testTrendReport()
-{
-    $tenant = Tenant::factory()->create();
-    Customer::factory()->count(5)->create(['tenant_id' => $tenant->id]);
-
-    $result = $this->reportingService->generateCustomerTrendReport([
-        'tenant_id' => $tenant->id,
-    ], 6);
-
-    $this->assertTrue($result->isSuccess());
-
-    $report = $result->getData();
-    $this->assertArrayHasKey('trends', $report);
-    $this->assertArrayHasKey('period', $report);
-    $this->assertArrayHasKey('analysis', $report);
-    $this->assertCount(7, $report['trends']); // 6 meses + mês atual
+    $reportData = $result->getData();
+    $this->assertArrayHasKey('trend_summary', $reportData);
+    $this->assertArrayHasKey('historical_analysis', $reportData);
+    $this->assertArrayHasKey('future_projections', $reportData);
+    $this->assertArrayHasKey('trend_impact', $reportData);
 }
 ```
 
@@ -1552,59 +1620,60 @@ public function testTrendReport()
 ### **Fase 1: Foundation**
 - [ ] Implementar CustomerDashboardService básico
 - [ ] Criar CustomerReportingService básico
-- [ ] Implementar métricas básicas de dashboard
-- [ ] Sistema de filtros para dashboards
+- [ ] Sistema de KPIs básicos
+- [ ] Dashboard executivo simples
 
 ### **Fase 2: Core Features**
-- [ ] Implementar analytics avançados por cliente
-- [ ] Criar dashboards de segmentação
-- [ ] Sistema de relatórios detalhados
-- [ ] Exportação de dashboards para PDF/Excel
+- [ ] Implementar analytics avançados
+- [ ] Sistema de segmentação RFM
+- [ ] Análise de tendências
+- [ ] Avaliação de risco
 
 ### **Fase 3: Advanced Features**
-- [ ] Machine learning para predição de churn
-- [ ] Análise de sentimento em interações
-- [ ] Dashboard em tempo real
-- [ ] Alertas e notificações baseados em métricas
+- [ ] Machine learning para predições
+- [ ] Visualizações interativas
+- [ ] Relatórios customizáveis
+- [ ] Exportação de dashboards
 
 ### **Fase 4: Integration**
-- [ ] Integração com ferramentas de BI externas
-- [ ] API para dashboards personalizados
-- [ ] Sistema de compartilhamento de dashboards
-- [ ] Dashboard móvel responsivo
+- [ ] Integração com BI externo
+- [ ] API para dashboards
+- [ ] Sistema de alertas inteligentes
+- [ ] Dashboard em tempo real
 
 ## 📚 Documentação Relacionada
 
 - [CustomerDashboardService](../../app/Services/Domain/CustomerDashboardService.php)
 - [CustomerReportingService](../../app/Services/Domain/CustomerReportingService.php)
-- [Dashboard Views](../../resources/views/pages/dashboard/)
-- [Analytics Components](../../resources/views/components/analytics/)
+- [CustomerAnalytics](../../app/Models/CustomerAnalytics.php)
+- [CustomerReport](../../app/Models/CustomerReport.php)
+- [CustomerKPI](../../app/Models/CustomerKPI.php)
 
 ## 🎯 Benefícios
 
-### **✅ Tomada de Decisão Baseada em Dados**
-- Dashboards executivos com KPIs essenciais
-- Analytics detalhados por cliente
-- Identificação de oportunidades de negócio
-- Previsão de tendências e comportamentos
+### **✅ Insights Estratégicos**
+- Visão completa do comportamento dos clientes
+- Identificação de oportunidades de crescimento
+- Análise de segmentos de alto valor
+- Previsões baseadas em dados
 
-### **✅ Gestão de Relacionamento**
-- Monitoramento de engajamento
-- Identificação precoce de riscos
-- Estratégias de retenção baseadas em dados
-- Personalização de abordagens
+### **✅ Tomada de Decisão**
+- Dashboards executivos para alta gestão
+- Métricas de performance em tempo real
+- Análise de tendências e padrões
+- Avaliação de risco e oportunidades
 
 ### **✅ Eficiência Operacional**
-- Relatórios automatizados
 - Redução de tempo em análises manuais
-- Identificação de gargalos no processo
-- Otimização de recursos
+- Identificação automática de problemas
+- Otimização de recursos baseada em dados
+- Melhoria contínua baseada em métricas
 
-### **✅ Conformidade e Auditoria**
-- Histórico completo de métricas
-- Relatórios para auditoria
-- Conformidade com requisitos regulatórios
-- Rastreabilidade de decisões
+### **✅ Vantagem Competitiva**
+- Decisões baseadas em dados reais
+- Identificação precoce de tendências
+- Segmentação avançada de clientes
+- Personalização baseada em insights
 
 ---
 

@@ -42,7 +42,7 @@ return [
         'left' => 8,
         'right' => 8,
         'top' => 10, // Espaço para o cabeçalho não encavalar
-        'bottom' => 12,
+        'bottom' => 10,
         'header' => 5,
         'footer' => 5,
     ],
