@@ -115,8 +115,44 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 'tenant' => $this->tenant,
                 'entity' => $this->entity,
                 'isSystemEmail' => false,
+                'statusColor' => $this->getStatusColor(),
             ],
         );
+    }
+
+    /**
+     * Obtém a cor do status da entidade.
+     *
+     * @return string Cor hexadecimal
+     */
+    private function getStatusColor(): string
+    {
+        // Se a entidade tem o status atual como enum
+        if (isset($this->entity->status) && $this->entity->status instanceof \App\Contracts\Interfaces\StatusEnumInterface) {
+            return $this->entity->status->getColor();
+        }
+
+        // Tentar obter do enum baseado no tipo da entidade e no valor da string de status
+        try {
+            $entityType = $this->getEntityType();
+            $enumClass = match ($entityType) {
+                'Orçamento' => \App\Enums\BudgetStatus::class,
+                'Fatura' => \App\Enums\InvoiceStatus::class,
+                'Serviço' => \App\Enums\ServiceStatus::class,
+                default => null,
+            };
+
+            if ($enumClass && method_exists($enumClass, 'from')) {
+                $statusEnum = $enumClass::from($this->status);
+                if ($statusEnum instanceof \App\Contracts\Interfaces\StatusEnumInterface) {
+                    return $statusEnum->getColor();
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignora erro e usa padrão
+        }
+
+        return '#0d6efd';
     }
 
     /**

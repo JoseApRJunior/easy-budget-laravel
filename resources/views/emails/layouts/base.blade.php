@@ -24,7 +24,7 @@
         }
 
         .header {
-            background: #0d6efd;
+            background: {{ $statusColor ?? '#0d6efd' }};
             color: #fff;
             text-align: center;
             padding: 20px;
@@ -44,7 +44,7 @@
 
         .btn {
             display: inline-block;
-            background: #0d6efd;
+            background: {{ $statusColor ?? '#0d6efd' }};
             color: #fff;
             text-decoration: none;
             padding: 12px 18px;

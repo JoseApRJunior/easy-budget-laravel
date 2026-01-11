@@ -37,7 +37,7 @@
         </div>
 
         @if($customMessage)
-            <div class="panel" style="border-left: 4px solid #0d6efd;">
+            <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }};">
                 <p><strong>Mensagem do Profissional:</strong></p>
                 <p>{{ $customMessage }}</p>
             </div>

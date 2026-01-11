@@ -128,6 +128,7 @@ class InvoiceNotification extends Mailable implements ShouldQueue
                 'appName' => config('app.name', 'Easy Budget'),
                 'supportEmail' => $this->getSupportEmail(),
                 'isSystemEmail' => false,
+                'statusColor' => $this->invoice->status->getColor(),
                 'customMessage' => $this->customMessage,
                 'publicLink' => $this->publicLink ?? $this->generatePublicLink(),
                 'invoiceData' => [
