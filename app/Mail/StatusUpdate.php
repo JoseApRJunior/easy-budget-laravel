@@ -114,6 +114,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 'urlSuporte' => config('app.url').'/support',
                 'tenant' => $this->tenant,
                 'entity' => $this->entity,
+                'isSystemEmail' => false,
             ],
         );
     }
@@ -262,23 +263,93 @@ class StatusUpdate extends Mailable implements ShouldQueue
             return $this->company;
         }
 
-        // Tentar obter dados da empresa através do tenant
-        if ($this->tenant) {
+        // Tentar obter o provider com cautela para contexto de fila
+        try {
+            // Verificar se a entidade tem um relacionamento provider ou tenant
+            $provider = null;
+            
+            if (method_exists($this->entity, 'provider')) {
+                $provider = $this->entity->provider()
+                    ->withoutGlobalScopes()
+                    ->with([
+                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn($q) => $q->withoutGlobalScopes(),
+                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                    ])
+                    ->first();
+            }
+
+            if (! $provider && $this->tenant) {
+                $provider = $this->tenant->provider()
+                    ->withoutGlobalScopes()
+                    ->with([
+                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn($q) => $q->withoutGlobalScopes(),
+                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                    ])
+                    ->first();
+            }
+
+            if ($provider) {
+                $commonData = $provider->commonData;
+                $contact = $provider->contact;
+                $address = $provider->address;
+
+                $addressLine1 = null;
+                $addressLine2 = null;
+                if ($address) {
+                    $addressLine1 = "{$address->address}, {$address->address_number}";
+                    if ($address->neighborhood) {
+                        $addressLine1 .= " | {$address->neighborhood}";
+                    }
+                    
+                    $addressLine2 = "{$address->city}/{$address->state}";
+                    if ($address->cep) {
+                        $addressLine2 .= " - CEP: {$address->cep}";
+                    }
+                }
+
+                $document = null;
+                if ($commonData) {
+                    $document = $commonData->cnpj 
+                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) 
+                        : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
+                }
+
+                return [
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : ($this->tenant?->name ?? $this->entity->tenant?->name ?? 'Minha Empresa')),
+                    'email' => $contact?->email_personal ?: $contact?->email_business,
+                    'phone' => $contact?->phone_personal ?: $contact?->phone_business,
+                    'address_line1' => $addressLine1,
+                    'address_line2' => $addressLine2,
+                    'document' => $document,
+                ];
+            }
+        } catch (\Exception $e) {
+            // Silenciosamente falha para o fallback se houver erro de DB na fila
+        }
+
+        // Fallback para o nome do tenant
+        $tenantName = $this->tenant?->name ?? (method_exists($this->entity, 'tenant') ? $this->entity->tenant?->name : null);
+        
+        if ($tenantName) {
             return [
-                'company_name' => $this->tenant->name,
+                'company_name' => $tenantName,
                 'email' => null,
-                'email_business' => null,
                 'phone' => null,
-                'phone_business' => null,
+                'address_line1' => null,
+                'address_line2' => null,
+                'document' => null,
             ];
         }
 
         return [
-            'company_name' => 'Easy Budget',
+            'company_name' => config('app.name', 'Easy Budget'),
             'email' => null,
-            'email_business' => null,
             'phone' => null,
-            'phone_business' => null,
+            'address_line1' => null,
+            'address_line2' => null,
+            'document' => null,
         ];
     }
 }

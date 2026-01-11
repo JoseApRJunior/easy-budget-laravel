@@ -177,6 +177,7 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
             'email' => $this->getUserEmail(),
             'company_data' => $this->getCompanyData(),
             'support_email' => $this->getSupportEmail(),
+            'isSystemEmail' => true,
         ];
     }
 

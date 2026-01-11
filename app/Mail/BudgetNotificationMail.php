@@ -134,6 +134,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                 'locale' => $this->locale,
                 'appName' => config('app.name', 'Easy Budget'),
                 'supportEmail' => $this->getSupportEmail(),
+                'isSystemEmail' => false,
                 'customMessage' => $this->customMessage,
                 'budgetData' => [
                     'code' => $this->budget->code,

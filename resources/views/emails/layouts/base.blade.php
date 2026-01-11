@@ -119,7 +119,7 @@
 <body>
     <div class="email-wrap">
         <div class="header">
-            @if(!empty($isSystemEmail))
+            @if(!isset($isSystemEmail) || $isSystemEmail === true)
                 <h1>{{ config( 'app.name', 'Easy Budget' ) }}</h1>
             @elseif(!empty($company['company_name']))
                 <h1>{{ $company['company_name'] }}</h1>
@@ -133,7 +133,7 @@
         </div>
 
        <div class="footer">
-        @if(!empty($isSystemEmail))
+        @if(!isset($isSystemEmail) || $isSystemEmail === true)
             © {{ date('Y') }} {{ config('app.name', 'Easy Budget') }}.
             @hasSection('footerExtra')
                 <div>@yield('footerExtra')</div>

@@ -43,6 +43,7 @@ abstract class AbstractBaseConfirmationEmail extends BaseEmail
         return array_merge($this->getUserBasicData(), [
             'confirmationLink' => $this->confirmationLink,
             'tenant_name' => $this->tenant?->name ?? 'Easy Budget',
+            'isSystemEmail' => true,
         ]);
     }
 }
