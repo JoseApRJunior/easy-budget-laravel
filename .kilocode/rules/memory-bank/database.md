@@ -1148,6 +1148,70 @@ invoices (1) ──── (N) payments
 -  Connection pool monitoring
 -  Backup verification
 
+### **🚀 Otimizações de Performance (Novo - 27/11/2025)**
+
+#### **📊 Análise e Recomendações de Otimização**
+
+**Otimizações Já Implementadas:**
+- ✅ Cache de Roles e Permissions (User Model)
+- ✅ Eager loading de tenant (protected $with)
+- ✅ Middleware OptimizeAuthUser para carregar roles antecipadamente
+
+**Oportunidades de Otimização Identificadas:**
+
+1. **Configuração de Cache:** Trocar de database para file ou Redis (ganho de 40-60%)
+2. **Índices de Banco de Dados:** Adicionar índices em tabelas críticas (ganho de 50-70%)
+3. **Eager Loading em Models:** Adicionar $with em Product, ProductInventory, InventoryMovement
+4. **Cache de Configurações:** Rodar comandos de cache em produção (ganho de 20-30%)
+5. **Otimização de Session:** Trocar de database para file ou Redis (ganho de 15-25ms por request)
+
+**Plano de Ação Recomendado:**
+- **Fase 1 - Rápido Ganho (1-2 horas):**
+  - Trocar cache para `file`
+  - Trocar session para `file`
+  - Rodar commands de cache em produção
+  - Adicionar `$with` em Product, ProductInventory
+
+- **Fase 2 - Médio Prazo (3-5 horas):**
+  - Criar migration com índices
+  - Adicionar eager loading em controllers
+  - Otimizar queries grandes
+
+- **Fase 3 - Longo Prazo (opcional):**
+  - Implementar Redis para cache
+  - Implementar Redis para sessions
+  - Implementar queue para tarefas pesadas
+
+**Ganhos Esperados:**
+- Queries duplicadas: De 4 para 0
+- Tempo de resposta: De ~550ms para ~150-200ms
+- Queries totais: De 9 para ~4-5
+- Uso de memória: Redução de ~20%
+
+**Índices Recomendados para Adicionar:**
+```sql
+-- Tabela users
+CREATE INDEX idx_users_tenant_email ON users (tenant_id, email);
+CREATE INDEX idx_users_tenant_active ON users (tenant_id, is_active);
+
+-- Tabela products
+CREATE INDEX idx_products_tenant_sku ON products (tenant_id, code);
+CREATE INDEX idx_products_tenant_active ON products (tenant_id, active);
+
+-- Tabela product_inventory
+CREATE INDEX idx_product_inventory_product_tenant ON product_inventory (product_id, tenant_id);
+
+-- Tabela inventory_movements
+CREATE INDEX idx_inventory_movements_product_type_date ON inventory_movements (product_id, type, created_at);
+
+-- Tabela user_roles
+CREATE INDEX idx_user_roles_user_tenant_role ON user_roles (user_id, tenant_id, role_id);
+
+-- Tabela sessions
+CREATE INDEX idx_sessions_user_id ON sessions (user_id);
+CREATE INDEX idx_sessions_last_activity ON sessions (last_activity);
+```
+
 Este documento descreve o schema completo e otimizado do banco de dados Easy Budget Laravel, incluindo todas as tabelas, relacionamentos, índices e estratégias de performance implementadas.
 
-**Última atualização:** 23/10/2025 - Revisão completa baseada na migration inicial, adicionadas tabelas faltantes (user_settings, system_settings, cache, cache_locks, sessions, audit_logs) e atualizado contador para 50+ tabelas.
+**Última atualização:** 12/01/2026 - Revisão completa baseada na migration inicial, adicionadas tabelas faltantes (user_settings, system_settings, cache, cache_locks, sessions, audit_logs) e atualizado contador para 50+ tabelas. Incluídas recomendações de otimização de performance e índices recomendados.

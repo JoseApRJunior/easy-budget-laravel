@@ -76,17 +76,17 @@
             <div class="col-md-6">
                 <x-resource-list-card
                     title="Distribuição por Status"
-                    icon="pie-chart-fill"
-                    class="h-100 border-0 shadow-sm"
+                    icon="pie-chart"
+                    padding="p-3"
                 >
-                    <div class="p-3">
-                        <div class="chart-container" style="position: relative; height: 160px;">
-                            <canvas id="statusChart"></canvas>
-                        </div>
-                        <p class="text-muted small mb-0 mt-3 text-center">
-                            Acompanhe o fluxo de trabalho por status atual.
-                        </p>
-                    </div>
+                    <x-chart-doughnut
+                        id="statusChart"
+                        :data="$stats['status_breakdown'] ?? []"
+                        empty-text="Nenhum serviço cadastrado"
+                    />
+                    <p class="text-muted small mb-0 mt-3 text-center">
+                        Acompanhe o fluxo de trabalho por status atual.
+                    </p>
                 </x-resource-list-card>
             </div>
         </div>
@@ -99,7 +99,6 @@
                     title="Serviços Recentes"
                     icon="clock-history"
                     :total="$recent->count()"
-                    class="border-0 shadow-sm"
                 >
                     @if ($recent->isNotEmpty())
                         <x-slot name="desktop">
@@ -167,7 +166,7 @@
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
-                                            <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                                            <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                                         </div>
                                         <div class="col-6 text-end">
                                             <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
@@ -193,40 +192,32 @@
                 <x-resource-list-card
                     title="Insights Rápidos"
                     icon="lightbulb"
-                    class="border-0 shadow-sm mb-4"
+                    class="mb-4"
+                    padding="p-3"
+                    gap="3"
                 >
-                    <div class="p-3">
-                        <div class="d-flex flex-column gap-3">
-                            <div class="d-flex align-items-start">
-                                <div class="avatar-circle-xs bg-success bg-opacity-10 p-2 rounded me-3">
-                                    <i class="bi bi-check-circle-fill text-success"></i>
-                                </div>
-                                <div>
-                                    <p class="small mb-0 text-muted">Serviços concluídos geram receita garantida para seu negócio.</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <div class="avatar-circle-xs bg-warning bg-opacity-10 p-2 rounded me-3">
-                                    <i class="bi bi-clock-fill text-warning"></i>
-                                </div>
-                                <div>
-                                    <p class="small mb-0 text-muted">Acompanhe serviços em andamento para manter prazos.</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-start">
-                                <div class="avatar-circle-xs bg-primary bg-opacity-10 p-2 rounded me-3">
-                                    <i class="bi bi-graph-up-arrow text-primary"></i>
-                                </div>
-                                <div>
-                                    <p class="small mb-0 text-muted">Monitore a taxa de conclusão para otimizar processos.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <x-insight-item
+                        icon="check-circle-fill"
+                        variant="success"
+                        description="Serviços concluídos geram receita garantida para seu negócio."
+                    />
+                    <x-insight-item
+                        icon="clock-fill"
+                        variant="warning"
+                        description="Acompanhe serviços em andamento para manter prazos."
+                    />
+                    <x-insight-item
+                        icon="graph-up-arrow"
+                        variant="primary"
+                        description="Monitore a taxa de conclusão para otimizar processos."
+                    />
                 </x-resource-list-card>
 
                 <!-- Atalhos -->
-                <x-quick-actions title="Atalhos Rápidos" icon="link-45deg" variant="none">
+                <x-quick-actions
+                    title="Atalhos Rápidos"
+                    icon="link-45deg"
+                >
                     <x-button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
                     <x-button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
                     <x-button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
@@ -236,108 +227,6 @@
     </x-page-container>
 @endsection
 
-@push('styles')
-    <style>
-        .text-code {
-            font-family: 'Courier New', monospace;
-            background-color: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.85em;
-        }
-
-        .chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 120px;
-            width: 100%;
-        }
-
-        .chart-container canvas {
-            max-width: 100% !important;
-            height: auto !important;
-        }
-    </style>
-@endpush
-
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Dados para o gráfico de status
-            const statusData = @json($stats['status_breakdown'] ?? []);
-            const statusLabels = [];
-            const statusValues = [];
-            const statusColors = [];
-
-            // Preparar dados para o gráfico usando cores e labels do backend
-            Object.keys(statusData).forEach(status => {
-                const statusInfo = statusData[status];
-                if (statusInfo && typeof statusInfo === 'object' && statusInfo.count > 0) {
-                    // Garantir que a label esteja traduzida ou formatada
-                    let label = statusInfo.label;
-                    if (!label) {
-                        label = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
-                    }
-                    statusLabels.push(label);
-                    statusValues.push(statusInfo.count);
-                    statusColors.push(statusInfo.color || '#6c757d');
-                }
-            });
-
-            // Só criar gráfico se houver dados
-            if (statusValues.length === 0) {
-                // Mostrar mensagem quando não há dados
-                const chartContainer = document.querySelector('.chart-container');
-                if (chartContainer) {
-                    chartContainer.innerHTML =
-                        '<p class="text-muted text-center mb-0 small">Nenhum serviço cadastrado</p>';
-                }
-                return;
-            }
-
-            // Criar gráfico de pizza
-            const ctx = document.getElementById('statusChart');
-            if (!ctx) {
-                console.error('Canvas element not found');
-                return;
-            }
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues,
-                        backgroundColor: statusColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                    return context.label + ': ' + context.parsed + ' (' + percentage +
-                                        '%)';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
 @endpush

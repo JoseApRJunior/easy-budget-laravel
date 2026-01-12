@@ -70,7 +70,7 @@
 
     <!-- Cabeçalho -->
     <div class="header text-center">
-      <h1 class="mb-2">Easy Budget</h1>
+      <h1 class="mb-2">Comprovante de Serviço</h1>
       <h3 class="text-muted">Serviço #{{ $service->code }}</h3>
       <p class="mb-0">{{ date( 'd/m/Y H:i:s' ) }}</p>
     </div>
@@ -205,9 +205,6 @@
 
     <!-- Rodapé -->
   <div class="text-center mt-5 pt-4 border-top">
-    <p class="text-muted mb-1">
-      <strong>Easy Budget</strong>
-    </p>
     <p class="text-muted mb-0">
       <small>Documento gerado em {{ date( 'd/m/Y \à\s H:i:s' ) }}</small>
     </p>
