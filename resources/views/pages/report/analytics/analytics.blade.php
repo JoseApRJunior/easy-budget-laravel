@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Relatório de Analytics"
             icon="pie-chart"
             :breadcrumb-items="[
@@ -13,11 +13,11 @@
                 'Analytics' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshData()" />
-                <x-button type="button" variant="success" size="sm" icon="file-earmark-spreadsheet" label="Exportar" onclick="exportAnalytics()" />
-                <x-button type="link" :href="route('provider.reports.index')" variant="secondary" size="sm" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="button" variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshData()" />
+                <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-spreadsheet" label="Exportar" onclick="exportAnalytics()" />
+                <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" size="sm" icon="arrow-left" label="Voltar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Métricas Principais -->
         <div class="row mb-4">

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Gerenciamento de Alertas"
             icon="exclamation-triangle"
             :breadcrumb-items="[
@@ -23,9 +23,9 @@
                             </a></li>
                     </ul>
                 </div>
-                <x-button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
+                <x-ui.button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">
@@ -148,8 +148,8 @@
                             <div class="form-group">
                                 <label>&nbsp;</label>
                                 <div class="d-flex gap-2">
-                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
-                                    <x-button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Limpar" />
+                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                                    <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -231,9 +231,9 @@
                                         <td>{{ $alert['created_at']->format('d/m/Y H:i') }}</td>
                                         <td>
                                             <div class="d-flex gap-1">
-                                                <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" title="Ver Detalhes" />
-                                                <x-button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                                <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" title="Ver Detalhes" />
+                                                <x-ui.button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                     onclick="confirmDelete({{ $alert['id'] }})" />
                                             </div>
                                         </td>
@@ -279,9 +279,9 @@
                                         <strong>Data:</strong> {{ $alert['created_at']->format('d/m/Y H:i') }}
                                     </p>
                                     <div class="d-flex gap-2 mt-3">
-                                        <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
-                                        <x-button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
-                                        <x-button variant="danger" size="sm" icon="trash" label="Excluir" class="flex-grow-1"
+                                        <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                                        <x-ui.button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
+                                        <x-ui.button variant="danger" size="sm" icon="trash" label="Excluir" class="flex-grow-1"
                                             onclick="confirmDelete({{ $alert['id'] }})" />
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@
                         <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                         <h5 class="text-muted">Nenhum alerta encontrado</h5>
                         <p class="text-muted mb-4">Não há alertas para exibir com os filtros aplicados.</p>
-                        <x-button type="link" :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Criar Primeiro Alerta" />
+                        <x-ui.button type="link" :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Criar Primeiro Alerta" />
                     </div>
                 @endif
             </div>
@@ -338,11 +338,11 @@
                     Tem certeza que deseja excluir este alerta? Esta ação não pode ser desfeita.
                 </div>
                 <div class="modal-footer">
-                    <x-button variant="secondary" label="Cancelar" data-bs-dismiss="modal" />
+                    <x-ui.button variant="secondary" label="Cancelar" data-bs-dismiss="modal" />
                     <form id="deleteForm" method="POST" style="display: inline;">
                         @csrf
                         @method('DELETE')
-                        <x-button type="submit" variant="danger" label="Excluir" />
+                        <x-ui.button type="submit" variant="danger" label="Excluir" />
                     </form>
                 </div>
             </div>

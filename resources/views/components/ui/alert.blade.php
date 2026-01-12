@@ -1,4 +1,4 @@
-@props( [ 'type', 'message' ] )
+@props( [ 'type' => 'message', 'message' => null ] )
 
 @php
     $baseClasses = 'alert alert-dismissible fade show py-1 px-2';
@@ -7,6 +7,7 @@
         'error'   => 'alert-danger',
         'success' => 'alert-success',
         'message' => 'alert-info',
+        'info'    => 'alert-info',
         'warning' => 'alert-warning',
     ];
 
@@ -14,6 +15,7 @@
         'error'   => 'bi-exclamation-triangle',
         'success' => 'bi-check-circle',
         'message' => 'bi-info-circle',
+        'info'    => 'bi-info-circle',
         'warning' => 'bi-exclamation-triangle',
     ];
 
@@ -25,7 +27,9 @@
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" {{ $attributes->merge( [ 'class' => $baseClasses . ' ' . $alertClass ] ) }} role="alert">
         <div class="d-flex align-items-center">
             <i class="bi {{ $iconClass }} me-2"></i>
-            <div class="flex-grow-1 small">{!! $message !!}</div>
+            <div class="flex-grow-1 small">
+                {!! $message ?? $slot !!}
+            </div>
             <button @click="show = false" type="button" data-bs-dismiss="alert" class="m-0 p-0 ms-2 align-self-center" style="line-height:1; font-size:.875rem; cursor:pointer; color:#dc3545; background:transparent; border:0; outline:0; box-shadow:none;" aria-label="Fechar">×</button>
         </div>
     </div>

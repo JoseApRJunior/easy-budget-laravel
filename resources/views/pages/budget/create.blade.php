@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Novo Orçamento"
         icon="file-earmark-plus"
         :breadcrumb-items="[
@@ -13,7 +13,7 @@
             'Novo' => '#'
         ]">
         <p class="text-muted mb-0">Preencha os dados para criar um novo orçamento</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
@@ -108,8 +108,8 @@
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-5">
-                    <x-button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="x-circle" label="Cancelar" />
-                    <x-button type="submit" variant="primary" icon="check-circle" label="Criar Orçamento" />
+                    <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="x-circle" label="Cancelar" />
+                    <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Orçamento" />
                 </div>
             </form>
         </div>

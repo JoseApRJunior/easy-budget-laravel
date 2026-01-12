@@ -2,14 +2,14 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Logs do Sistema"
             icon="file-earmark-text"
             :breadcrumb-items="[
                 'Admin' => url('/admin'),
                 'Logs' => '#'
             ]">
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">

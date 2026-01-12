@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Entrada de Estoque"
         icon="arrow-down"
         :breadcrumb-items="[
@@ -14,7 +14,7 @@
             'Entrada' => '#'
         ]">
         <p class="text-muted mb-0">Registrar entrada de estoque físico</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="row">
         <div class="col-12">
@@ -105,7 +105,7 @@
                 <div class="mt-4">
                     <div class="row align-items-center g-3">
                         <div class="col-12 col-md-auto order-2 order-md-1">
-                            <x-back-button index-route="provider.inventory.index" class="w-100 w-md-auto px-md-3" />
+                            <x-ui.back-button index-route="provider.inventory.index" class="w-100 w-md-auto px-md-3" />
                         </div>
                         <div class="col-12 col-md text-center d-none d-md-block order-md-2">
                             <!-- Espaçador central para alinhar com o padrão show -->

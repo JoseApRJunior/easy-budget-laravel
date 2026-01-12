@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Relatório de Orçamentos"
             icon="file-earmark-bar-graph"
             :breadcrumb-items="[
@@ -12,8 +12,8 @@
                 'Relatórios' => route('provider.reports.index'),
                 'Orçamentos' => '#'
             ]">
-            <x-button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">
@@ -32,7 +32,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 name="start_date"
                                 label="Data Inicial"
@@ -41,7 +41,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 name="end_date"
                                 label="Data Final"
@@ -85,8 +85,8 @@
 
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterBudgets" />
-                                <x-button type="link" :href="route('provider.reports.budgets')" variant="outline-secondary" icon="x" label="Limpar" />
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterBudgets" />
+                                <x-ui.button type="link" :href="route('provider.reports.budgets')" variant="outline-secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -132,8 +132,8 @@
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
                                 <div class="d-flex gap-2">
-                                    <x-button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                    <x-button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>
@@ -236,8 +236,8 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                    <x-button type="link" :href="route('provider.budgets.edit', $budget->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                    <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>

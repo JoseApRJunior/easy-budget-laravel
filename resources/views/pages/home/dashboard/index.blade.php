@@ -15,7 +15,7 @@
       @includeWhen( $user?->isTrial() || ( $pendingPlan && $pendingPlan->status === 'pending' ), 'partials.components.provider.plan-modal' )
     @endunless
 
-    <x-page-header
+    <x-layout.page-header
       :title="$isAdmin ? 'Painel Administrativo' : 'Painel do Prestador'"
       :icon="$isAdmin ? 'shield-lock' : 'speedometer2'"
       :breadcrumb-items="[
@@ -61,10 +61,10 @@
 
       <div class="row g-4">
         <div class="col-12 col-lg-6">
-          <x-financial-summary :summary="$financialSummary" />
+          <x-dashboard.financial-summary :summary="$financialSummary" />
         </div>
         <div class="col-12 col-lg-6">
-          <x-activities :activities="$recentTransactions" :translations="$translations" :total="count( $recentTransactions )" />
+          <x-dashboard.activities :activities="$recentTransactions" :translations="$translations" :total="count( $recentTransactions )" />
         </div>
       </div>
 
@@ -72,14 +72,14 @@
       @if( !$isAdmin )
         <div class="row g-4 mt-2">
           <div class="col-12">
-            <x-quick-actions>
+            <x-resource.quick-actions>
                 <div class="d-flex flex-wrap gap-2">
-                    <x-button type="link" :href="route('provider.budgets.create')" variant="primary" icon="file-earmark-plus" label="Criar Novo Orçamento" />
-                    <x-button type="link" :href="route('provider.reports.index')" variant="info" icon="graph-up" label="Ver Relatórios" />
-                    <x-button type="link" :href="route('provider.services.index')" variant="success" outline icon="tools" label="Gerenciar Serviços" />
-                    <x-button type="link" :href="route('provider.customers.index')" variant="dark" outline icon="people" label="Clientes" />
+                    <x-ui.button type="link" :href="route('provider.budgets.create')" variant="primary" icon="file-earmark-plus" label="Criar Novo Orçamento" />
+                    <x-ui.button type="link" :href="route('provider.reports.index')" variant="info" icon="graph-up" label="Ver Relatórios" />
+                    <x-ui.button type="link" :href="route('provider.services.index')" variant="success" outline icon="tools" label="Gerenciar Serviços" />
+                    <x-ui.button type="link" :href="route('provider.customers.index')" variant="dark" outline icon="people" label="Clientes" />
                 </div>
-            </x-quick-actions>
+            </x-resource.quick-actions>
           </div>
         </div>
       @else
@@ -93,9 +93,9 @@
               </div>
               <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
-                  <x-button type="link" :href="route( 'admin.users.index' )" variant="primary" icon="people" label="Gerenciar Usuários" />
-                  <x-button type="link" :href="route( 'admin.settings' )" variant="info" icon="gear" label="Configurações do Sistema" />
-                  <x-button type="link" :href="route( 'admin.index' )" variant="success" outline icon="speedometer" label="Painel Principal" />
+                  <x-ui.button type="link" :href="route( 'admin.users.index' )" variant="primary" icon="people" label="Gerenciar Usuários" />
+                  <x-ui.button type="link" :href="route( 'admin.settings' )" variant="info" icon="gear" label="Configurações do Sistema" />
+                  <x-ui.button type="link" :href="route( 'admin.index' )" variant="success" outline icon="speedometer" label="Painel Principal" />
                 </div>
               </div>
             </div>

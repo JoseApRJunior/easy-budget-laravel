@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Monitoramento do Sistema"
             icon="graph-up"
             :breadcrumb-items="[
@@ -10,8 +10,8 @@
                 'Monitoramento' => url('/admin/monitoring/dashboard'),
                 'Métricas' => '#'
             ]">
-            <x-button type="link" :href="url('/admin/monitoring/dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="url('/admin/monitoring/dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
                 <!-- Navegação por Abas -->
                 <ul class="nav nav-tabs mb-4" id="monitoringTabs" role="tablist">

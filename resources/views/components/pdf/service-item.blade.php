@@ -3,7 +3,7 @@
 ])
 
 @php
-    $colors = config('pdf_theme.colors');
+    $colors = config('theme.colors');
 @endphp
 
 <div style="width: 100%; margin-bottom: 25px; page-break-inside: avoid;">

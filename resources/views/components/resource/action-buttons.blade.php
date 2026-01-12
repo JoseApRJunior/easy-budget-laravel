@@ -19,7 +19,7 @@
 <div {{ $attributes->merge(['class' => 'action-btn-group']) }}>
     @if ($isDeleted)
         {{-- Item deletado: mostrar Visualizar + Restaurar --}}
-        <x-button
+        <x-ui.button
             type="link"
             :href="route('provider.' . $resource . '.show', $identifierValue)"
             variant="info"
@@ -28,7 +28,7 @@
             :size="$size"
         />
 
-        <x-button
+        <x-ui.button
             variant="success"
             icon="arrow-counterclockwise"
             data-bs-toggle="modal"
@@ -43,7 +43,7 @@
         />
     @else
         {{-- Item ativo: mostrar Visualizar + Editar + Deletar (condicional) --}}
-        <x-button
+        <x-ui.button
             type="link"
             :href="route('provider.' . $resource . '.show', $identifierValue)"
             variant="info"
@@ -52,7 +52,7 @@
             :size="$size"
         />
 
-        <x-button
+        <x-ui.button
             type="link"
             :href="route('provider.' . $resource . '.edit', $identifierValue)"
             icon="pencil-square"
@@ -61,7 +61,7 @@
         />
 
         @if ($canDelete)
-            <x-button
+            <x-ui.button
                 variant="danger"
                 icon="trash"
                 data-bs-toggle="modal"

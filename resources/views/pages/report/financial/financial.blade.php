@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Relatório Financeiro"
             icon="graph-up"
             :breadcrumb-items="[
@@ -12,8 +12,8 @@
                 'Relatórios' => route('provider.reports.index'),
                 'Financeiro' => '#'
             ]">
-            <x-button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">
@@ -45,7 +45,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 name="start_date"
                                 label="Data Inicial"
@@ -54,7 +54,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 name="end_date"
                                 label="Data Final"
@@ -82,8 +82,8 @@
 
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterFinancial" />
-                                <x-button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="x" label="Limpar" />
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterFinancial" />
+                                <x-ui.button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -149,8 +149,8 @@
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
                                 <div class="d-flex gap-1" role="group">
-                                    <x-button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                    <x-button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>

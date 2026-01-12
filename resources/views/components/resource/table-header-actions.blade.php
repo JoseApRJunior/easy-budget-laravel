@@ -35,7 +35,7 @@
     <div class="d-flex justify-content-start justify-content-lg-end gap-2">
         @if ($showExport)
             <div class="dropdown">
-                <x-button
+                <x-ui.button
                     variant="outline-secondary"
                     :size="$size"
                     icon="download"
@@ -70,7 +70,7 @@
             @php
                 $resolvedCreateRoute = $createRoute ?? (Route::has('provider.' . $resource . '.create') ? route('provider.' . $resource . '.create') : '#');
             @endphp
-            <x-button
+            <x-ui.button
                 type="link"
                 :href="$resolvedCreateRoute"
                 :size="$size"

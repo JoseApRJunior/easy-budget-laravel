@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Editar Orçamento"
         icon="pencil-square"
         :breadcrumb-items="[
@@ -14,7 +14,7 @@
             'Editar' => '#'
         ]">
         <p class="text-muted mb-0">Atualize as informações do orçamento <strong>{{ $budget->code }}</strong></p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <form id="edit-budget-form" action="{{ route('provider.budgets.update', $budget->code) }}" method="POST">
         @csrf
@@ -140,8 +140,8 @@
 
         <!-- Botões -->
         <div class="d-flex justify-content-between align-items-center mt-5">
-            <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="outline-secondary" icon="x-circle" label="Cancelar" />
-            <x-button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
+            <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="outline-secondary" icon="x-circle" label="Cancelar" />
+            <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
         </div>
     </form>
 </div>

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             :title="$title ?? 'Mailtrap - Ferramentas de E-mail'"
             icon="envelope-paper"
             :breadcrumb-items="[
@@ -10,11 +10,11 @@
                 'Mailtrap' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshDashboard()" />
-                <x-button :href="route('mailtrap.providers')" variant="primary" icon="gear" label="Configurar Provedores" />
-                <x-button :href="route('provider.dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshDashboard()" />
+                <x-ui.button :href="route('mailtrap.providers')" variant="primary" icon="gear" label="Configurar Provedores" />
+                <x-ui.button :href="route('provider.dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Status do Provedor Atual -->
         <div class="row mb-4">

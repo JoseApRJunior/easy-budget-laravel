@@ -5,7 +5,7 @@
 @section('content')
     <div class="container-fluid py-4 d-flex flex-column" style="min-height: calc(100vh - 200px);">
         <div class="flex-grow-1">
-            <x-page-header
+            <x-layout.page-header
                 title="Detalhes do Cliente"
                 icon="person"
                 :breadcrumb-items="[
@@ -14,7 +14,7 @@
                     ($customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente #' . $customer->id) => '#'
                 ]">
                 <p class="text-muted mb-0">Visualize as informações completas do cliente</p>
-            </x-page-header>
+            </x-layout.page-header>
 
             <div class="row g-4">
                 <!-- Informações Pessoais e Status -->
@@ -250,7 +250,7 @@
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-end">
-                                                                <x-button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
+                                                                <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
                                                             </td>
                                                                 </tr>
                                                             @endforeach
@@ -272,7 +272,7 @@
         <div class="mt-auto pt-4 pb-2">
             <div class="row align-items-center g-3">
                 <div class="col-12 col-md-auto order-2 order-md-1">
-                    <x-back-button index-route="provider.customers.index" class="w-100 w-md-auto px-md-3" />
+                    <x-ui.back-button index-route="provider.customers.index" class="w-100 w-md-auto px-md-3" />
                 </div>
 
                 <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -284,15 +284,15 @@
 
                 <div class="col-12 col-md-auto order-1 order-md-3">
                     <div class="d-grid d-md-flex gap-2">
-                        <x-button type="link" :href="route('provider.customers.edit', $customer->id)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+                        <x-ui.button type="link" :href="route('provider.customers.edit', $customer->id)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
 
-                        <x-button :variant="$customer->status === 'active' ? 'warning' : 'success'" style="min-width: 120px;"
+                        <x-ui.button :variant="$customer->status === 'active' ? 'warning' : 'success'" style="min-width: 120px;"
                             data-bs-toggle="modal" data-bs-target="#toggleModal"
                             data-action="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}"
                             :icon="$customer->status === 'active' ? 'slash-circle' : 'check-lg'"
                             :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" />
 
-                        <x-button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        <x-ui.button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                             icon="trash-fill" label="Excluir" />
                     </div>
                 </div>
@@ -312,11 +312,11 @@
                     <p>Deseja realmente {{ $customer->status === 'active' ? 'desativar' : 'ativar' }} o cliente <strong>{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'este cliente' }}</strong>?</p>
                 </div>
                 <div class="modal-footer border-0">
-                    <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                    <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                     <form action="{{ route('provider.customers.toggle-status', $customer->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('PATCH')
-                        <x-button type="submit" :variant="$customer->status === 'active' ? 'warning' : 'success'" :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" />
+                        <x-ui.button type="submit" :variant="$customer->status === 'active' ? 'warning' : 'success'" :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" />
                     </form>
                 </div>
             </div>
@@ -339,11 +339,11 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                    <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                     <form action="{{ route('provider.customers.destroy', $customer->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <x-button type="submit" variant="danger" icon="trash" label="Confirmar Exclusão" />
+                        <x-ui.button type="submit" variant="danger" icon="trash" label="Confirmar Exclusão" />
                     </form>
                 </div>
             </div>

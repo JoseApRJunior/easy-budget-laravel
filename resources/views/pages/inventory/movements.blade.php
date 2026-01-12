@@ -3,8 +3,8 @@
 @section('title', 'Movimentações de Estoque')
 
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Movimentações de Estoque"
         icon="arrow-left-right"
         :breadcrumb-items="[
@@ -13,10 +13,10 @@
             'Movimentações' => '#'
         ]">
         <p class="text-muted mb-0">Histórico completo de movimentações de estoque</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Filtros de Busca -->
-    <x-filter-form
+    <x-form.filter-form
         id="filtersFormMovements"
         :route="route('provider.inventory.movements')"
         :filters="$filters ?? request()->all()"
@@ -28,7 +28,7 @@
             <input type="hidden" name="sku" value="{{ request('sku') }}">
         @endif
 
-        <x-filter-field
+        <x-form.filter-field
             col="col-md-3"
             name="search"
             label="Buscar Produto"
@@ -37,7 +37,7 @@
             :value="request('search') ?? request('sku')"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="select"
             col="col-md-3"
             name="type"
@@ -53,7 +53,7 @@
             ]"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="date"
             col="col-md-3"
             name="start_date"
@@ -61,23 +61,23 @@
             :filters="$filters ?? request()->all()"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="date"
             col="col-md-3"
             name="end_date"
             label="Data Final"
             :filters="$filters ?? request()->all()"
         />
-    </x-filter-form>
+    </x-form.filter-form>
 
-    <x-resource-list-card
+    <x-resource.resource-list-card
         title="Registros de Movimentação"
         mobileTitle="Movimentações"
         icon="arrow-left-right"
         :total="$movements->total()"
     >
         <x-slot:headerActions>
-            <x-table-header-actions
+            <x-resource.table-header-actions
                 resource="inventory.movements"
                 exportRoute="provider.inventory.export-movements"
                 :filters="request()->all()"
@@ -87,7 +87,7 @@
 
         @if($movements->count() > 0)
             <x-slot:desktop>
-                <x-resource-table>
+                <x-resource.resource-table>
                     <x-slot:thead>
                         <tr>
                             <th width="60"><i class="bi bi-clock" aria-hidden="true"></i></th>
@@ -110,16 +110,16 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <x-table-cell-datetime :datetime="$movement->created_at" />
+                                    <x-resource.table-cell-datetime :datetime="$movement->created_at" />
                                 </td>
                                 <td>
-                                    <x-product-info :name="$movement->product->name" :sku="$movement->product->sku" />
+                                    <x-resource.product-info :name="$movement->product->name" :sku="$movement->product->sku" />
                                 </td>
                                 <td class="text-center">
-                                    <x-movement-type-badge :type="$movement->type" />
+                                    <x-ui.movement-type-badge :type="$movement->type" />
                                 </td>
                                 <td class="text-center">
-                                    <x-movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
+                                    <x-resource.movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
                                 </td>
                                 <td class="text-center fw-bold text-dark">
                                     {{ \App\Helpers\CurrencyHelper::format($movement->new_quantity ?? 0, 0, false) }}
@@ -129,20 +129,20 @@
                                         {{ Str::limit($movement->reason, 30) }}
                                     </small>
                                 </td>
-                                <x-table-actions>
-                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" icon="eye" title="Ver Detalhes" />
-                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" icon="box" title="Ver Inventário" />
-                                </x-table-actions>
+                                <x-resource.table-actions>
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" icon="eye" title="Ver Detalhes" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" icon="box" title="Ver Inventário" />
+                                </x-resource.table-actions>
                             </tr>
                         @endforeach
                     </x-slot:tbody>
-                </x-resource-table>
+                </x-resource.resource-table>
             </x-slot:desktop>
 
             <x-slot:mobile>
                     @foreach($movements as $movement)
-                        <x-resource-mobile-item icon="arrow-left-right">
-                            <x-resource-info
+                        <x-resource.resource-mobile-item icon="arrow-left-right">
+                            <x-resource.resource-info
                                 :title="$movement->product->name"
                                 :subtitle="$movement->product->sku"
                                 icon="box"
@@ -151,26 +151,26 @@
 
                             <x-slot:description>
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <x-movement-type-badge :type="$movement->type" />
-                                    <x-movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
+                                    <x-ui.movement-type-badge :type="$movement->type" />
+                                    <x-resource.movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
                                 </div>
                             </x-slot:description>
 
                             <x-slot:footer>
-                                <x-table-cell-datetime :datetime="$movement->created_at" :stack="false" />
+                                <x-resource.table-cell-datetime :datetime="$movement->created_at" :stack="false" />
                             </x-slot:footer>
 
                             <x-slot:actions>
-                                <x-table-actions mobile>
-                                    <x-button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" size="sm" icon="eye" />
-                                    <x-button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" size="sm" icon="box" />
-                                </x-table-actions>
+                                <x-resource.table-actions mobile>
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" size="sm" icon="eye" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" size="sm" icon="box" />
+                                </x-resource.table-actions>
                             </x-slot:actions>
-                        </x-resource-mobile-item>
+                        </x-resource.resource-mobile-item>
                     @endforeach
                 </x-slot:mobile>
         @else
-            <x-empty-state
+            <x-resource.empty-state
                 resource="movimentações"
                 :isTrashView="false"
                 message="Nenhuma movimentação de estoque encontrada para os filtros aplicados."
@@ -187,8 +187,8 @@
                 ])
             @endif
         </x-slot:footer>
-    </x-resource-list-card>
-</x-page-container>
+    </x-resource.resource-list-card>
+</x-layout.page-container>
 @endsection
 
 @push('scripts')

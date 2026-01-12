@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Editar Agendamento #{{ $schedule->id }}"
             icon="pencil"
             :breadcrumb-items="[
@@ -12,8 +12,8 @@
                 'Agendamentos' => route('provider.schedules.index'),
                 'Editar' => '#'
             ]">
-            <x-button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">

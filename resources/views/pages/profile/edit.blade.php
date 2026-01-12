@@ -4,7 +4,7 @@
 
 @section( 'content' )
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Perfil Pessoal"
             icon="person"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Perfil Pessoal' => '#'
             ]">
             <p class="text-muted mb-0 small">Gerencie suas informações pessoais e de acesso</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <form action="{{ route( 'settings.profile.update' ) }}" method="POST" enctype="multipart/form-data">
             @csrf

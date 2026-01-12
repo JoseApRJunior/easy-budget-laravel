@@ -3,8 +3,8 @@
 @section('title', 'Detalhes do Orçamento')
 
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Detalhes do Orçamento"
         icon="file-earmark-text"
         :breadcrumb-items="[
@@ -13,7 +13,7 @@
             $budget->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize as informações completas do orçamento</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
@@ -39,7 +39,7 @@
                         <div>
                             <label class="text-muted small d-block mb-1">Status Atual</label>
                             <div class="d-flex flex-column">
-                                <x-status-description :item="$budget" statusField="status" />
+                                <x-ui.status-description :item="$budget" statusField="status" />
                             </div>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                     <div class="row g-3">
                         @if ($budget->customer)
                             <div class="col-md-4">
-                                <x-resource-info
+                                <x-resource.resource-info
                                     title="Nome/Razão Social"
                                     :subtitle="$budget->customer->name"
                                     icon="person"
@@ -85,7 +85,7 @@
                                         ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
                                         : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
                                 @endphp
-                                <x-resource-info
+                                <x-resource.resource-info
                                     :title="$docLabel"
                                     :subtitle="$docValue"
                                     icon="card-text"
@@ -93,7 +93,7 @@
                                 />
                             </div>
                             <div class="col-md-4">
-                                <x-resource-info
+                                <x-resource.resource-info
                                     title="Contato Principal"
                                     :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
                                     icon="envelope"
@@ -117,7 +117,7 @@
                 <div class="col-md-8 mt-2">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 title="Criado em"
                                 :subtitle="$budget->created_at->format('d/m/Y H:i')"
                                 icon="calendar-plus"
@@ -126,7 +126,7 @@
                         </div>
                         @if ($budget->due_date)
                         <div class="col-md-4">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 title="Vencimento"
                                 :subtitle="$budget->due_date->format('d/m/Y')"
                                 icon="calendar-event"
@@ -135,7 +135,7 @@
                         </div>
                         @endif
                         <div class="col-md-4">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 title="Última Atualização"
                                 :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
                                 icon="clock-history"
@@ -186,7 +186,7 @@
 
     {{-- Serviços Vinculados --}}
     <div class="mt-4">
-        <x-resource-list-card
+        <x-resource.resource-list-card
             title="Serviços Vinculados"
             mobileTitle="Serviços"
             icon="tools"
@@ -194,14 +194,14 @@
         >
             <x-slot:actions>
                 @if ($budget->canBeEdited())
-                    <x-button type="link" :href="route('provider.budgets.services.create', $budget->code)"
+                    <x-ui.button type="link" :href="route('provider.budgets.services.create', $budget->code)"
                         variant="success" size="sm" icon="plus" label="Novo Serviço" />
                 @endif
             </x-slot:actions>
 
             @if ($budget->services && $budget->services->count())
                 <x-slot:desktop>
-                    <x-resource-table>
+                    <x-resource.resource-table>
                         <x-slot:thead>
                             <tr>
                                 <th>Código</th>
@@ -219,13 +219,13 @@
                                     <td>{{ Str::limit($service->description, 50) }}</td>
                                     <td>{{ $service->category?->name ?? '-' }}</td>
                                     <td class="text-center">
-                                        <x-status-badge :item="$service" />
+                                        <x-ui.status-badge :item="$service" />
                                     </td>
                                     <td class="text-end text-primary fw-bold">
                                         R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}
                                     </td>
                                     <td class="text-center">
-                                        <x-action-buttons
+                                        <x-resource.action-buttons
                                             :item="$service"
                                             resource="services"
                                             identifier="code"
@@ -236,48 +236,48 @@
                                 </tr>
                             @endforeach
                         </x-slot:tbody>
-                    </x-resource-table>
+                    </x-resource.resource-table>
                 </x-slot:desktop>
 
                 <x-slot:mobile>
                     @foreach ($budget->services as $service)
-                        <x-resource-mobile-item>
-                            <x-resource-info
+                        <x-resource.resource-mobile-item>
+                            <x-resource.resource-info
                                 :title="$service->code"
                                 :subtitle="$service->description"
                                 icon="tools"
                             />
                             <x-slot:description>
                                 <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <x-status-badge :item="$service" />
+                                    <x-ui.status-badge :item="$service" />
                                     <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                                 </div>
                             </x-slot:description>
                             <x-slot:actions>
-                                <x-table-actions mobile>
-                                    <x-button type="link" :href="route('provider.services.show', $service->code)" variant="info" icon="eye" size="sm" />
-                                </x-table-actions>
+                                <x-resource.table-actions mobile>
+                                    <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="info" icon="eye" size="sm" />
+                                </x-resource.table-actions>
                             </x-slot:actions>
-                        </x-resource-mobile-item>
+                        </x-resource.resource-mobile-item>
                     @endforeach
                 </x-slot:mobile>
             @else
                 <div class="py-5">
-                    <x-empty-state
+                    <x-resource.empty-state
                         resource="serviços"
                         icon="tools"
                         message="Nenhum serviço vinculado a este orçamento"
                     />
                 </div>
             @endif
-        </x-resource-list-card>
+        </x-resource.resource-list-card>
     </div>
 
     {{-- Botões de Ação --}}
     <div class="mt-auto pt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto order-2 order-md-1">
-                <x-back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-3" />
+                <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-3" />
             </div>
 
             <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -292,21 +292,21 @@
                         $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
                     @endphp
 
-                    <x-button type="button" class="d-flex align-items-center"
+                    <x-ui.button type="button" class="d-flex align-items-center"
                         variant="{{ $isSent ? 'outline-info' : 'info' }}"
                         icon="send-fill"
                         label="{{ $isSent ? 'Reenviar' : 'Enviar' }}"
                         data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
 
-                    <x-button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
+                    <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
                         variant="outline-secondary" icon="share-fill" label="Links" />
 
                     @if ($budget->canBeEdited())
-                        <x-button type="link" :href="route('provider.budgets.edit', $budget->code)"
+                        <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
                             variant="primary" icon="pencil-fill" label="Editar" />
                     @endif
 
-                    <x-button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                    <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
                         target="_blank"
                         variant="outline-secondary"
                         icon="file-earmark-pdf"
@@ -316,7 +316,7 @@
             </div>
         </div>
     </div>
-</x-page-container>
+</x-layout.page-container>
 
 <!-- Modal Enviar para Cliente -->
 <div class="modal fade" id="sendToCustomerModal" tabindex="-1" aria-labelledby="sendToCustomerModalLabel" aria-hidden="true">

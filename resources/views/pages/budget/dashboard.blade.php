@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Dashboard de Orçamentos"
         icon="file-earmark-text"
         :breadcrumb-items="[
@@ -12,7 +12,7 @@
             'Orçamentos' => '#'
         ]">
             <p class="text-muted mb-0 small">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         @php
             $total = $stats['total_budgets'] ?? 0;
@@ -210,11 +210,11 @@
                                                     </td>
                                                     <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</td>
                                                     <td>
-                                                        <x-status-badge :item="$budget" />
+                                                        <x-ui.status-badge :item="$budget" />
                                                     </td>
                                                     <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
                                                     <td class="text-center">
-                                                        <x-action-buttons
+                                                        <x-resource.action-buttons
                                                             :item="$budget"
                                                             resource="budgets"
                                                             identifier="code"
@@ -259,7 +259,7 @@
                                                 </div>
                                                 <div class="col-6 text-end">
                                                     <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
-                                                    <x-status-badge :item="$budget" />
+                                                    <x-ui.status-badge :item="$budget" />
                                                 </div>
                                             </div>
                                         </a>

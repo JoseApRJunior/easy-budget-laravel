@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard de Compartilhamentos"
             icon="share-fill"
             :breadcrumb-items="[
@@ -13,8 +13,8 @@
                 'Compartilhamentos' => route('provider.budgets.shares.index'),
                 'Dashboard' => '#'
             ]">
-            <x-button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         @php
             $totalShares = $stats['total_shares'] ?? 0;
@@ -115,12 +115,12 @@
                         <h5 class="mb-0">
                             <i class="bi bi-clock-history me-2"></i>Compartilhamentos Recentes
                         </h5>
-                        <x-button 
+                        <x-ui.button 
                             href="{{ route('provider.budgets.shares.index') }}" 
                             variant="primary" 
                             size="sm">
                             Ver todos
-                        </x-button>
+                        </x-ui.button>
                     </div>
                     <div class="card-body">
                         @if ($recentShares instanceof \Illuminate\Support\Collection && $recentShares->isNotEmpty())
@@ -193,7 +193,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    <x-button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="info" size="sm" icon="eye" title="Visualizar Orçamento" />
+                                                    <x-ui.button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="info" size="sm" icon="eye" title="Visualizar Orçamento" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -291,16 +291,16 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <x-button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Compartilhamento" class="w-100" />
+                                <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Compartilhamento" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <x-button type="link" :href="route('provider.budgets.shares.index')" variant="primary" outline icon="list" label="Gerenciar Compartilhamentos" class="w-100" />
+                                <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="primary" outline icon="list" label="Gerenciar Compartilhamentos" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <x-button type="link" :href="route('provider.budgets.index')" variant="secondary" outline icon="file-earmark-text" label="Ver Orçamentos" class="w-100" />
+                                <x-ui.button type="link" :href="route('provider.budgets.index')" variant="secondary" outline icon="file-earmark-text" label="Ver Orçamentos" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <x-button type="link" :href="route('provider.reports.budgets')" variant="info" outline icon="graph-up" label="Relatórios" class="w-100" />
+                                <x-ui.button type="link" :href="route('provider.reports.budgets')" variant="info" outline icon="graph-up" label="Relatórios" class="w-100" />
                             </div>
                         </div>
                     </div>

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Lista de Clientes"
             icon="people"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Lista' => '#'
             ]">
             <p class="text-muted mb-0 small">Lista de todos os clientes registrados no sistema</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -125,7 +125,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-2">
-                                    <x-filter-field
+                                    <x-form.filter-field
                                         type="date"
                                         name="start_date"
                                         label="Cadastro inicial"
@@ -133,7 +133,7 @@
                                     />
                                 </div>
                                 <div class="col-md-2">
-                                    <x-filter-field
+                                    <x-form.filter-field
                                         type="date"
                                         name="end_date"
                                         label="Cadastro final"
@@ -192,7 +192,7 @@
                                 <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                                     <div class="d-flex justify-content-start justify-content-lg-end gap-2">
                     <div class="dropdown">
-                        <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar"
+                        <x-ui.button variant="outline-secondary" size="sm" icon="download" label="Exportar"
                             class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                             <li>
@@ -209,7 +209,7 @@
                             </li>
                         </ul>
                     </div>
-                    <x-button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" />
+                    <x-ui.button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" />
                 </div>
                                 </div>
                             </div>
@@ -337,18 +337,18 @@
                                                 <td class="text-center">
                                                     <div class="action-btn-group">
                                                         @if ($customer->deleted_at)
-                                                            <x-button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
-                                                            <x-button variant="success" icon="arrow-counterclockwise"
+                                                            <x-ui.button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
+                                                            <x-ui.button variant="success" icon="arrow-counterclockwise"
                                                                     data-bs-toggle="modal"
                                                                     data-bs-target="#restoreModal"
                                                                     data-restore-url="{{ route('provider.customers.restore', $customer->id) }}"
                                                                     data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
                                                                     title="Restaurar" />
                                                         @else
-                                                            <x-button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
-                                                            <x-button type="link" :href="route('provider.customers.edit', $customer->id)" icon="pencil-square" title="Editar" />
+                                                            <x-ui.button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
+                                                            <x-ui.button type="link" :href="route('provider.customers.edit', $customer->id)" icon="pencil-square" title="Editar" />
 
-                                                            <x-button variant="danger" icon="trash"
+                                                            <x-ui.button variant="danger" icon="trash"
                                                                     data-bs-toggle="modal"
                                                                     data-bs-target="#deleteModal"
                                                                     data-delete-url="{{ route('provider.customers.destroy', $customer->id) }}"

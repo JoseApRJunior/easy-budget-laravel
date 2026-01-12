@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Advanced Metrics Dashboard"
             icon="graph-up-arrow"
             :breadcrumb-items="[
@@ -50,7 +50,7 @@
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Card de Filtros (SEPARADO) -->
         <div class="card mb-4">

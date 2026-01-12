@@ -3,8 +3,8 @@
 @section('title', 'Editar Serviço')
 
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Editar Serviço"
         icon="tools"
         :breadcrumb-items="[
@@ -14,28 +14,28 @@
             'Editar' => '#'
         ]">
         <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
-    </x-page-header>
-    <x-grid-row>
-        <x-grid-col size="col-12">
-            <x-resource-list-card
+    </x-layout.page-header>
+    <x-layout.grid-row>
+        <x-layout.grid-col size="col-12">
+            <x-resource.resource-list-card
                 title="Dados do Serviço"
                 icon="tools"
                 padding="p-4"
             >
-                <x-alert type="info">
+                <x-ui.alert type="info">
                     <strong>Código do Serviço:</strong> {{ $service->code }}
                     <span class="ms-3"><strong>Status:</strong>
-                        <x-status-badge :item="$service" />
+                        <x-ui.status-badge :item="$service" />
                     </span>
-                </x-alert>
+                </x-ui.alert>
 
                 <form id="serviceForm" method="POST" action="{{ route('provider.services.update', $service->code) }}">
                     @csrf
                     @method('PUT')
 
                     <!-- Informações Básicas -->
-                    <x-grid-row>
-                        <x-grid-col size="col-md-6">
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-6">
                             <div class="mb-3">
                                 <label for="budget_id" class="form-label small fw-bold text-muted text-uppercase">
                                     Orçamento <span class="text-danger">*</span>
@@ -57,9 +57,9 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
+                        </x-layout.grid-col>
 
-                        <x-grid-col size="col-md-6">
+                        <x-layout.grid-col size="col-md-6">
                             <div class="mb-3">
                                 <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">
                                     Categoria <span class="text-danger">*</span>
@@ -79,11 +79,11 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
-                    </x-grid-row>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
-                    <x-grid-row>
-                        <x-grid-col size="col-md-6">
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-6">
                             <div class="mb-3">
                                 <label for="code" class="form-label small fw-bold text-muted text-uppercase">
                                     Código do Serviço
@@ -96,9 +96,9 @@
                                     readonly>
                                 <div class="form-text">O código não pode ser alterado.</div>
                             </div>
-                        </x-grid-col>
+                        </x-layout.grid-col>
 
-                        <x-grid-col size="col-md-6">
+                        <x-layout.grid-col size="col-md-6">
                             <div class="mb-3">
                                 <label for="service_statuses_id" class="form-label small fw-bold text-muted text-uppercase">
                                     Status <span class="text-danger">*</span>
@@ -118,12 +118,12 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
-                    </x-grid-row>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
                     <!-- Descrição e Detalhes -->
-                    <x-grid-row>
-                        <x-grid-col size="col-12">
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-12">
                             <div class="mb-3">
                                 <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror"
@@ -135,12 +135,12 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
-                    </x-grid-row>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
                     <!-- Valores e Datas -->
-                    <x-grid-row>
-                        <x-grid-col size="col-md-4">
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-4">
                             <div class="mb-3">
                                 <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
                                 <input type="text"
@@ -154,9 +154,9 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
+                        </x-layout.grid-col>
 
-                        <x-grid-col size="col-md-4">
+                        <x-layout.grid-col size="col-md-4">
                             <div class="mb-3">
                                 <label for="total" class="form-label small fw-bold text-muted text-uppercase">Total (R$)</label>
                                 <input type="text"
@@ -170,9 +170,9 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
+                        </x-layout.grid-col>
 
-                        <x-grid-col size="col-md-4">
+                        <x-layout.grid-col size="col-md-4">
                             <div class="mb-3">
                                 <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
                                 <input type="date"
@@ -185,8 +185,8 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                        </x-grid-col>
-                    </x-grid-row>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {
                                 try {
@@ -205,15 +205,15 @@
                         </script>
 
                         <!-- Produtos/Serviços -->
-                        <x-grid-row>
-                            <x-grid-col size="col-12">
+                        <x-layout.grid-row>
+                            <x-layout.grid-col size="col-12">
                                 <h5 class="mb-3">
                                     <i class="bi bi-box-seam me-2" aria-hidden="true"></i>
                                     Produtos/Serviços
                                 </h5>
 
                                 <div class="mb-3">
-                                    <x-button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" />
+                                    <x-ui.button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" />
                                 </div>
 
                                 <div id="itemsContainer">
@@ -222,8 +222,8 @@
                                     @if(is_array($oldItems) && count($oldItems) > 0)
                                     @foreach($oldItems as $index => $old)
                                     <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
-                                        <x-grid-row class="align-items-end">
-                                            <x-grid-col size="col-md-4">
+                                        <x-layout.grid-row class="align-items-end">
+                                            <x-layout.grid-col size="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
                                                 <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
@@ -235,8 +235,8 @@
                                                     </option>
                                                     @endforeach
                                                 </select>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Quantidade</label>
                                                 <div class="input-group">
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
@@ -250,8 +250,8 @@
                                                         required>
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
                                                 </div>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Valor Unit.</label>
                                                 <input type="text"
                                                     inputmode="numeric"
@@ -259,8 +259,8 @@
                                                     name="items[{{ $index }}][unit_value]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['unit_value'] ?? 0), 2, false) }}"
                                                     required readonly>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Total</label>
                                                 <input type="text"
                                                     inputmode="numeric"
@@ -268,28 +268,28 @@
                                                     name="items[{{ $index }}][total]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['total'] ?? 0), 2, false) }}"
                                                     readonly>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 @if(!empty($old['id']))
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $old['id'] }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
                                                 @else
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="create">
                                                 @endif
-                                                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                                                <x-button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
-                                            </x-grid-col>
-                                            <x-grid-col size="col-12" class="mt-2">
+                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-12" class="mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
-                                            </x-grid-col>
-                                        </x-grid-row>
+                                            </x-layout.grid-col>
+                                        </x-layout.grid-row>
                                     </div>
                                     @endforeach
                                     @else
                                     @foreach($service->serviceItems as $index => $item)
                                     <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
-                                        <x-grid-row class="align-items-end">
-                                            <x-grid-col size="col-md-4">
+                                        <x-layout.grid-row class="align-items-end">
+                                            <x-layout.grid-col size="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
                                                 <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
@@ -301,8 +301,8 @@
                                                     </option>
                                                     @endforeach
                                                 </select>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Quantidade</label>
                                                 <div class="input-group">
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
@@ -316,8 +316,8 @@
                                                         required>
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
                                                 </div>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Valor Unit.</label>
                                                 <input type="text"
                                                     inputmode="numeric"
@@ -325,8 +325,8 @@
                                                     name="items[{{ $index }}][unit_value]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, false) }}"
                                                     required readonly>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Total</label>
                                                 <input type="text"
                                                     inputmode="numeric"
@@ -334,36 +334,35 @@
                                                     name="items[{{ $index }}][total]"
                                                     value="{{ \App\Helpers\CurrencyHelper::format($item->total, 2, false) }}"
                                                     readonly>
-                                            </x-grid-col>
-                                            <x-grid-col size="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
-                                                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                                                <x-button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
-                                            </x-grid-col>
-                                            <x-grid-col size="col-12" class="mt-2">
+                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-12" class="mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
-                                            </x-grid-col>
-                                        </x-grid-row>
+                                            </x-layout.grid-col>
+                                        </x-layout.grid-row>
                                     </div>
                                     @endforeach
                                     @endif
                                 </div>
-                            </x-grid-col>
-                        </x-grid-row>
+                            </x-layout.grid-col>
+                        </x-layout.grid-row>
 
-                        <x-grid-row class="mt-4">
-                            <x-grid-col size="col-12 text-end">
-                                <x-button type="link" :href="route('provider.services.show', $service->code)" variant="outline-secondary" icon="x" label="Cancelar" />
-                                <x-button type="submit" variant="primary" icon="check-lg" label="Salvar Alterações" />
-                            </x-grid-col>
-                        </x-grid-row>
+                        <x-layout.grid-row class="mt-4">
+                            <x-layout.grid-col size="col-12 text-end">
+                                <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="outline-secondary" icon="x" label="Cancelar" />
+                                <x-ui.button type="submit" variant="primary" icon="check-lg" label="Salvar Alterações" />
+                            </x-layout.grid-col>
+                        </x-layout.grid-row>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</x-page-container>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 
 <!-- Template para novos itens -->
 <template id="itemTemplate">
@@ -413,8 +412,8 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                <x-button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
             </div>
             <div class="col-12 mt-2">
                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>

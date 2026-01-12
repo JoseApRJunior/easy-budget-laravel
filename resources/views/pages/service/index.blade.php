@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-    <x-page-container>
-        <x-page-header
+    <x-layout.page-container>
+        <x-layout.page-header
             title="Lista de Serviços"
             icon="tools"
             :breadcrumb-items="[
@@ -28,13 +28,13 @@
             ]"
         >
             <p class="text-muted mb-0">Lista de todos os serviços registrados no sistema</p>
-        </x-page-header>
+        </x-layout.page-header>
 
-        <x-grid-row>
-            <x-grid-col size="col-12">
+        <x-layout.grid-row>
+            <x-layout.grid-col size="col-12">
                 <!-- Filtros de Busca -->
-                <x-filter-form :route="route('provider.services.index')" id="filtersFormServices" :filters="$filters">
-                            <x-filter-field
+                <x-form.filter-form :route="route('provider.services.index')" id="filtersFormServices" :filters="$filters">
+                            <x-form.filter-field
                                 col="col-md-2"
                                 name="search"
                                 label="Buscar"
@@ -42,7 +42,7 @@
                                 :filters="$filters"
                             />
 
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="select"
                                 col="col-md-2"
                                 name="category_id"
@@ -56,9 +56,9 @@
                                         {{ $category->name }}
                                     </option>
                                 @endforeach
-                            </x-filter-field>
+                            </x-form.filter-field>
 
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="select"
                                 col="col-md-2"
                                 name="status"
@@ -72,9 +72,9 @@
                                         {{ $label }}
                                     </option>
                                 @endforeach
-                            </x-filter-field>
+                            </x-form.filter-field>
 
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 col="col-md-2"
                                 name="start_date"
@@ -82,18 +82,17 @@
                                 :filters="$filters"
                             />
 
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 col="col-md-2"
                                 name="end_date"
                                 label="Fim"
                                 :filters="$filters"
                             />
-                        </x-filter-form>
-                    </div>
+                </x-form.filter-form>
 
                 <!-- Card de Tabela -->
-                <x-resource-list-card
+                <x-resource.resource-list-card
                     title="Lista de Serviços"
                     mobileTitle="Serviços"
                     icon="list-ul"
@@ -102,7 +101,7 @@
                 >
                     <x-slot name="headerActions">
                         <div class="col-12 col-lg-4 text-lg-end">
-                            <x-table-header-actions
+                            <x-resource.table-header-actions
                                 resource="services"
                                 :filters="$filters"
                                 createLabel="Novo"
@@ -113,47 +112,47 @@
 
                     @if($services->isNotEmpty())
                         <x-slot name="desktop">
-                            <x-resource-table>
+                            <x-resource.resource-table>
                                 <x-slot name="thead">
-                                    <x-table-row>
-                                        <x-table-cell header>Código</x-table-cell>
-                                        <x-table-cell header>Cliente</x-table-cell>
-                                        <x-table-cell header>Categoria</x-table-cell>
-                                        <x-table-cell header>Prazo</x-table-cell>
-                                        <x-table-cell header>Valor</x-table-cell>
-                                        <x-table-cell header>Status</x-table-cell>
-                                        <x-table-cell header align="center">Ações</x-table-cell>
-                                    </x-table-row>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Código</x-resource.table-cell>
+                                        <x-resource.table-cell header>Cliente</x-resource.table-cell>
+                                        <x-resource.table-cell header>Categoria</x-resource.table-cell>
+                                        <x-resource.table-cell header>Prazo</x-resource.table-cell>
+                                        <x-resource.table-cell header>Valor</x-resource.table-cell>
+                                        <x-resource.table-cell header>Status</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                    </x-resource.table-row>
                                 </x-slot>
 
                                 @foreach($services as $service)
                                     @php
                                         $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                     @endphp
-                                    <x-table-row>
-                                        <x-table-cell class="fw-bold text-dark">{{ $service->code }}</x-table-cell>
-                                        <x-table-cell>
-                                            <x-table-cell-truncate :text="$customerName" />
-                                        </x-table-cell>
-                                        <x-table-cell>{{ $service->category->name ?? 'N/A' }}</x-table-cell>
-                                        <x-table-cell class="text-muted small">
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell class="fw-bold text-dark">{{ $service->code }}</x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-resource.table-cell-truncate :text="$customerName" />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>{{ $service->category->name ?? 'N/A' }}</x-resource.table-cell>
+                                        <x-resource.table-cell class="text-muted small">
                                             {{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}
-                                        </x-table-cell>
-                                        <x-table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-table-cell>
-                                        <x-table-cell>
-                                            <x-status-badge :item="$service" statusField="status" />
-                                        </x-table-cell>
-                                        <x-table-cell align="center">
-                                            <x-action-buttons
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-ui.status-badge :item="$service" statusField="status" />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            <x-resource.action-buttons
                                                 :item="$service"
                                                 resource="services"
                                                 identifier="code"
                                                 size="sm"
                                             />
-                                        </x-table-cell>
-                                    </x-table-row>
+                                        </x-resource.table-cell>
+                                    </x-resource.table-row>
                                 @endforeach
-                            </x-resource-table>
+                            </x-resource.resource-table>
                         </x-slot>
 
                         <x-slot name="mobile">
@@ -161,39 +160,39 @@
                                 @php
                                     $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                 @endphp
-                                <x-resource-mobile-item
+                                <x-resource.resource-mobile-item
                                     icon="tools"
                                     :href="route('provider.services.show', $service->code)"
                                 >
-                                    <x-resource-mobile-header
+                                    <x-resource.resource-mobile-header
                                         :title="$service->code"
                                         :subtitle="$service->due_date ? $service->due_date->format('d/m/Y') : '-'"
                                     />
 
-                                    <x-resource-mobile-field
+                                    <x-resource.resource-mobile-field
                                         label="Cliente"
                                         :value="$customerName"
                                     />
 
-                                    <x-grid-row g="2">
-                                        <x-resource-mobile-field
+                                    <x-layout.grid-row g="2">
+                                        <x-resource.resource-mobile-field
                                             label="Valor"
                                             :value="\App\Helpers\CurrencyHelper::format($service->total)"
                                             col="col-6"
                                         />
-                                        <x-resource-mobile-field
+                                        <x-resource.resource-mobile-field
                                             label="Status"
                                             col="col-6"
                                             align="end"
                                         >
-                                            <x-status-badge :item="$service" statusField="status" />
-                                        </x-resource-mobile-field>
-                                    </x-grid-row>
-                                </x-resource-mobile-item>
+                                            <x-ui.status-badge :item="$service" statusField="status" />
+                                        </x-resource.resource-mobile-field>
+                                    </x-layout.grid-row>
+                                </x-resource.resource-mobile-item>
                             @endforeach
                         </x-slot>
                     @else
-                        <x-empty-state
+                        <x-resource.empty-state
                             title="Nenhum serviço encontrado"
                             description="Não encontramos serviços com os filtros aplicados."
                             icon="gear"
@@ -205,10 +204,10 @@
                             {{ $services->appends(request()->query())->links() }}
                         </x-slot>
                     @endif
-                </x-resource-list-card>
-            </x-grid-col>
-        </x-grid-row>
-    </x-page-container>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 
 @push('scripts')
     <script>

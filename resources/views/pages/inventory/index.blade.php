@@ -10,7 +10,7 @@
 @endphp
 
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Inventário"
         icon="archive"
         :breadcrumb-items="[
@@ -19,7 +19,7 @@
             'Lista' => '#'
         ]">
         <p class="text-muted mb-0">Gerencie o estoque e movimentações de seus produtos</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Resumo de Inventário -->
     <div class="row g-3 mb-4">
@@ -160,7 +160,7 @@
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <x-filter-field
+                                <x-form.filter-field
                                     type="date"
                                     name="start_date"
                                     id="start_date"
@@ -169,7 +169,7 @@
                                 />
                             </div>
                             <div class="col-md-2">
-                                <x-filter-field
+                                <x-form.filter-field
                                     type="date"
                                     name="end_date"
                                     id="end_date"
@@ -190,8 +190,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2 flex-nowrap">
-                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
-                                    <x-button type="link" :href="route('provider.inventory.index')" variant="outline-secondary" icon="x" label="Limpar" />
+                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.index')" variant="outline-secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -221,9 +221,9 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                                <x-button type="link" :href="route('provider.inventory.movements')" variant="primary" size="sm" icon="clock-history" label="Histórico" />
+                                <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="primary" size="sm" icon="clock-history" label="Histórico" />
                                 <div class="dropdown">
-                                    <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                                    <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
                                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                         <li>
                                             <a class="dropdown-item"
@@ -318,10 +318,10 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="plus" title="Entrada" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="dash" title="Saída" size="sm" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" title="Ver Inventário" size="sm" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="plus" title="Entrada" size="sm" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="dash" title="Saída" size="sm" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" title="Ajustar" size="sm" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -402,10 +402,10 @@
                                             <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($currentQuantity * $product->price) }}</span>
                                         </div>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" size="sm" title="Ver Inventário" />
-                                            <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
-                                            <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" size="sm" title="Ver Inventário" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                         </div>
                                     </div>
                                 </div>

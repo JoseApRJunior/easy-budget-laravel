@@ -3,8 +3,8 @@
 @section('title', 'Dashboard de Serviços')
 
 @section('content')
-    <x-page-container>
-        <x-page-header
+    <x-layout.page-container>
+        <x-layout.page-header
             title="Dashboard de Serviços"
             icon="tools"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
             ]"
         >
             <p class="text-muted mb-0">Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance.</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         @php
             $total = $stats['total_services'] ?? 0;
@@ -28,8 +28,8 @@
         @endphp
 
         <!-- Cards de Métricas -->
-        <x-grid-row>
-            <x-stat-card
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
                 title="Total de Serviços"
                 :value="$total"
                 description="Quantidade total de serviços cadastrados para o seu negócio."
@@ -37,7 +37,7 @@
                 variant="primary"
             />
 
-            <x-stat-card
+            <x-dashboard.stat-card
                 title="Serviços Concluídos"
                 :value="$completed"
                 description="Serviços finalizados com sucesso e aprovados pelos clientes."
@@ -45,7 +45,7 @@
                 variant="success"
             />
 
-            <x-stat-card
+            <x-dashboard.stat-card
                 title="Em Andamento"
                 :value="$inProgress"
                 description="Serviços atualmente em execução pela equipe."
@@ -53,18 +53,18 @@
                 variant="warning"
             />
 
-            <x-stat-card
+            <x-dashboard.stat-card
                 title="Taxa de Conclusão"
                 :value="$completionRate . '%'"
                 description="Percentual de serviços concluídos em relação ao total."
                 icon="graph-up-arrow"
                 variant="info"
             />
-        </x-grid-row>
+        </x-layout.grid-row>
 
         <!-- Cards de Valores Financeiros -->
-        <x-grid-row>
-            <x-stat-card
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
                 title="Valor Total em Serviços"
                 :value="\App\Helpers\CurrencyHelper::format($totalValue)"
                 description="Valor total de todos os serviços cadastrados no sistema."
@@ -73,13 +73,13 @@
                 col="col-md-6"
             />
 
-            <x-resource-list-card
+            <x-resource.resource-list-card
                 title="Distribuição por Status"
                 icon="pie-chart"
                 padding="p-3"
                 col="col-md-6"
             >
-                <x-chart-doughnut
+                <x-dashboard.chart-doughnut
                     id="statusChart"
                     :data="$stats['status_breakdown'] ?? []"
                     empty-text="Nenhum serviço cadastrado"
@@ -87,13 +87,13 @@
                 <p class="text-muted small mb-0 mt-3 text-center">
                     Acompanhe o fluxo de trabalho por status atual.
                 </p>
-            </x-resource-list-card>
-        </x-grid-row>
+            </x-resource.resource-list-card>
+        </x-layout.grid-row>
 
         <!-- Serviços Recentes e Atalhos -->
-        <x-grid-row class="mb-0">
+        <x-layout.grid-row class="mb-0">
             <!-- Serviços Recentes -->
-            <x-resource-list-card
+            <x-resource.resource-list-card
                 title="Serviços Recentes"
                 icon="clock-history"
                 :total="$recent->count()"
@@ -101,44 +101,44 @@
             >
                     @if ($recent->isNotEmpty())
                         <x-slot name="desktop">
-                            <x-resource-table>
+                            <x-resource.resource-table>
                                 <x-slot name="thead">
-                                    <x-table-row>
-                                        <x-table-cell header>Código</x-table-cell>
-                                        <x-table-cell header>Cliente</x-table-cell>
-                                        <x-table-cell header>Valor</x-table-cell>
-                                        <x-table-cell header>Status</x-table-cell>
-                                        <x-table-cell header>Data</x-table-cell>
-                                        <x-table-cell header align="center">Ações</x-table-cell>
-                                    </x-table-row>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Código</x-resource.table-cell>
+                                        <x-resource.table-cell header>Cliente</x-resource.table-cell>
+                                        <x-resource.table-cell header>Valor</x-resource.table-cell>
+                                        <x-resource.table-cell header>Status</x-resource.table-cell>
+                                        <x-resource.table-cell header>Data</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                    </x-resource.table-row>
                                 </x-slot>
 
                                 @foreach ($recent as $service)
                                     @php
                                         $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                     @endphp
-                                    <x-table-row>
-                                        <x-table-cell class="fw-bold text-dark">{{ $service->code }}</x-table-cell>
-                                        <x-table-cell>
-                                            <x-table-cell-truncate :text="$customerName" />
-                                        </x-table-cell>
-                                        <x-table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-table-cell>
-                                        <x-table-cell>
-                                            <x-status-badge :item="$service" />
-                                        </x-table-cell>
-                                        <x-table-cell class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</x-table-cell>
-                                        <x-table-cell align="center">
-                                            <x-action-buttons
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell class="fw-bold text-dark">{{ $service->code }}</x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-resource.table-cell-truncate :text="$customerName" />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-ui.status-badge :item="$service" />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            <x-resource.action-buttons
                                                 :item="$service"
                                                 resource="services"
                                                 identifier="code"
                                                 :can-delete="false"
                                                 size="sm"
                                             />
-                                        </x-table-cell>
-                                    </x-table-row>
+                                        </x-resource.table-cell>
+                                    </x-resource.table-row>
                                 @endforeach
-                            </x-resource-table>
+                            </x-resource.resource-table>
                         </x-slot>
 
                         <x-slot name="mobile">
@@ -146,86 +146,86 @@
                                 @php
                                     $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                 @endphp
-                                <x-resource-mobile-item
+                                <x-resource.resource-mobile-item
                                     icon="tools"
                                     :href="route('provider.services.show', $service->code)"
                                 >
-                                    <x-resource-mobile-header
+                                    <x-resource.resource-mobile-header
                                         :title="$service->code"
                                         :subtitle="$service->created_at->format('d/m/Y')"
                                     />
 
-                                    <x-resource-mobile-field
+                                    <x-resource.resource-mobile-field
                                         label="Cliente"
                                         :value="$customerName"
                                     />
 
-                                    <x-grid-row g="2">
-                                        <x-resource-mobile-field
+                                    <x-layout.grid-row g="2">
+                                        <x-resource.resource-mobile-field
                                             label="Valor"
                                             :value="\App\Helpers\CurrencyHelper::format($service->total)"
                                             col="col-6"
                                         />
-                                        <x-resource-mobile-field
+                                        <x-resource.resource-mobile-field
                                             label="Status"
                                             col="col-6"
                                             align="end"
                                         >
-                                            <x-status-badge :item="$service" />
-                                        </x-resource-mobile-field>
-                                    </x-grid-row>
-                                </x-resource-mobile-item>
+                                            <x-ui.status-badge :item="$service" />
+                                        </x-resource.resource-mobile-field>
+                                    </x-layout.grid-row>
+                                </x-resource.resource-mobile-item>
                             @endforeach
                         </x-slot>
                     @else
-                        <x-empty-state
+                        <x-resource.empty-state
                             title="Nenhum serviço recente encontrado"
                             description="Crie novos serviços para visualizar aqui."
                             icon="inbox"
                         />
                     @endif
-                </x-resource-list-card>
+                </x-resource.resource-list-card>
 
             <!-- Insights e Atalhos -->
-            <x-grid-col size="col-lg-4">
-                <x-v-stack gap="4">
+            <x-layout.grid-col size="col-lg-4">
+                <x-layout.v-stack gap="4">
                     <!-- Insights -->
-                    <x-resource-list-card
+                    <x-resource.resource-list-card
                         title="Insights Rápidos"
                         icon="lightbulb"
                         padding="p-3"
                         gap="3"
                     >
-                        <x-insight-item
+                        <x-dashboard.insight-item
                             icon="check-circle-fill"
                             variant="success"
                             description="Serviços concluídos geram receita garantida para seu negócio."
                         />
-                        <x-insight-item
+                        <x-dashboard.insight-item
                             icon="clock-fill"
                             variant="warning"
                             description="Acompanhe serviços em andamento para manter prazos."
                         />
-                        <x-insight-item
+                        <x-dashboard.insight-item
                             icon="graph-up-arrow"
                             variant="primary"
                             description="Monitore a taxa de conclusão para otimizar processos."
                         />
-                    </x-resource-list-card>
+                    </x-resource.resource-list-card>
 
                     <!-- Atalhos -->
-                    <x-quick-actions
+                    <x-resource.quick-actions
                         title="Atalhos Rápidos"
                         icon="link-45deg"
                     >
-                        <x-button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
-                        <x-button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
-                        <x-button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
-                    </x-quick-actions>
-                </x-v-stack>
-            </x-grid-col>
-        </x-grid-row>
-    </x-page-container>
+                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
+                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
+                        <x-ui.button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
+                    </x-resource.quick-actions>
+                </x-layout.v-stack>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 @endsection
 
 @push('scripts')

@@ -56,7 +56,7 @@
         {{-- Área Sempre Visível (Botões) --}}
         <div class="card-footer bg-transparent pt-3 pb-3">
             <div class="d-flex gap-2">
-                <x-button
+                <x-ui.button
                     type="submit"
                     variant="primary"
                     :icon="$submitIcon"
@@ -66,7 +66,7 @@
                 />
 
                 @if($showResetButton)
-                    <x-button
+                    <x-ui.button
                         type="link"
                         :href="$resetRoute"
                         variant="outline-secondary"

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Relatório de Estoque"
             icon="boxes"
             :breadcrumb-items="[
@@ -12,8 +12,8 @@
                 'Relatórios' => route('provider.reports.index'),
                 'Estoque' => '#'
             ]">
-            <x-button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">
@@ -116,8 +116,8 @@
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
                                 <div class="d-flex gap-1" role="group">
-                                    <x-button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                    <x-button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>
@@ -225,8 +225,8 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.products.show', $item->product->code ?? '#')" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                    <x-button type="link" :href="route('provider.products.edit', $item->product->code ?? '#')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                    <x-ui.button type="link" :href="route('provider.products.show', $item->product->code ?? '#')" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-ui.button type="link" :href="route('provider.products.edit', $item->product->code ?? '#')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>

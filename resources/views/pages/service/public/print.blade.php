@@ -60,11 +60,11 @@
 </head>
 
 <body>
-  <x-page-container :fluid="false" padding="py-0">
+  <x-layout.page-container :fluid="false" padding="py-0">
     <!-- Botão de impressão (não aparece na impressão) -->
     <div class="text-center no-print mb-3 py-3">
-      <x-button onclick="window.print()" variant="primary" icon="printer" label="Imprimir" />
-      <x-button type="link" :href="route( 'provider.services.public.view-status', [ 'code' => $service->code, 'token' => request( 'token' ) ] )"
+      <x-ui.button onclick="window.print()" variant="primary" icon="printer" label="Imprimir" />
+      <x-ui.button type="link" :href="route( 'provider.services.public.view-status', [ 'code' => $service->code, 'token' => request( 'token' ) ] )"
         variant="outline-secondary" icon="arrow-left" label="Voltar" class="ms-2" />
     </div>
 
@@ -110,7 +110,7 @@
           <strong>Descrição:</strong> {{ $service->budget->description }}<br>
           <strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($service->budget->total) }}<br>
           <strong>Status:</strong>
-          <x-status-badge :item="$service->budget" />
+          <x-ui.status-badge :item="$service->budget" />
         </div>
       </div>
     </div>
@@ -142,7 +142,7 @@
 
         <div class="col-md-6">
           <strong>Status Atual:</strong><br>
-          <x-status-badge :item="$service" class="fs-5 mb-3" />
+          <x-ui.status-badge :item="$service" class="fs-5 mb-3" />
           <br><br>
 
           <strong>Valor do Serviço:</strong><br>
@@ -216,7 +216,7 @@
       </div>
     @endif
   </div>
-  </x-page-container>
+  </x-layout.page-container>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

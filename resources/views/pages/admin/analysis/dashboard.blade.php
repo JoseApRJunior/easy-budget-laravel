@@ -1,14 +1,14 @@
 @extends( 'layouts.admin' )
 
 @section( 'admin_content' )
-    <x-page-header
+    <x-layout.page-header
         title="Análise Histórica"
         icon="graph-up"
         :breadcrumb-items="[
             'Admin' => url('/admin'),
             'Análise' => '#'
         ]">
-    </x-page-header>
+    </x-layout.page-header>
                 <div class="card-body">
                     @if ( isset( $error ) )
                         <div class="alert alert-danger">{{ $error }}</div>

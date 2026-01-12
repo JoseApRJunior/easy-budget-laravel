@@ -110,10 +110,10 @@
         {{-- Linha 1: Resumo Financeiro + Alertas de Estoque --}}
         <div class="row g-4">
             <div class="col-12 col-lg-8">
-                <x-financial-summary :summary="$financial_summary" />
+                <x-dashboard.financial-summary :summary="$financial_summary" />
             </div>
             <div class="col-12 col-lg-4">
-                <x-inventory-alerts :items="$low_stock_items" :count="$low_stock_count" />
+                <x-dashboard.inventory-alerts :items="$low_stock_items" :count="$low_stock_count" />
             </div>
         </div>
 
@@ -130,40 +130,40 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-6 col-md-2 mb-3">
-                                <x-button type="link" :href="route('provider.budgets.create')" variant="primary" class="w-100 py-3 hover-card">
+                                <x-ui.button type="link" :href="route('provider.budgets.create')" variant="primary" class="w-100 py-3 hover-card">
                                     <i class="bi bi-file-earmark-plus fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Novo Orçamento</span>
-                                </x-button>
+                                </x-ui.button>
                             </div>
                             <div class="col-6 col-md-2 mb-3">
-                                <x-button type="link" :href="route('provider.customers.create')" variant="success" class="w-100 py-3 hover-card">
+                                <x-ui.button type="link" :href="route('provider.customers.create')" variant="success" class="w-100 py-3 hover-card">
                                     <i class="bi bi-person-plus fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Novo Cliente</span>
-                                </x-button>
+                                </x-ui.button>
                             </div>
                             <div class="col-6 col-md-2 mb-3">
-                                <x-button type="link" :href="route('provider.services.index')" variant="info" class="w-100 py-3 hover-card">
+                                <x-ui.button type="link" :href="route('provider.services.index')" variant="info" class="w-100 py-3 hover-card">
                                     <i class="bi bi-tools fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Serviços</span>
-                                </x-button>
+                                </x-ui.button>
                             </div>
                             <div class="col-6 col-md-2 mb-3">
-                                <x-button type="link" :href="route('provider.invoices.create')" variant="warning" class="w-100 py-3 hover-card">
+                                <x-ui.button type="link" :href="route('provider.invoices.create')" variant="warning" class="w-100 py-3 hover-card">
                                     <i class="bi bi-receipt fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Nova Fatura</span>
-                                </x-button>
+                                </x-ui.button>
                             </div>
                             <div class="col-6 col-md-2 mb-3">
-                                <x-button type="link" :href="route('provider.inventory.index')" variant="secondary" class="w-100 py-3 hover-card">
+                                <x-ui.button type="link" :href="route('provider.inventory.index')" variant="secondary" class="w-100 py-3 hover-card">
                                     <i class="bi bi-box-seam fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Estoque</span>
-                                </x-button>
+                                </x-ui.button>
                             </div>
                             <div class="col-6 col-md-2 mb-3">
-                                <x-button type="link" :href="route('provider.qrcode.index')" variant="dark" class="w-100 py-3 hover-card">
+                                <x-ui.button type="link" :href="route('provider.qrcode.index')" variant="dark" class="w-100 py-3 hover-card">
                                     <i class="bi bi-qr-code-scan fs-4 d-block mb-1"></i>
                                     <span class="small fw-bold">Gerar QR Code</span>
-                                </x-button>
+                                </x-ui.button>
                             </div>
                         </div>
                     </div>
@@ -174,10 +174,10 @@
         {{-- Linha 3: Orçamentos + Compromissos --}}
         <div class="row g-4 mt-2">
             <div class="col-12 col-lg-8">
-                <x-recent-budgets :budgets="$budgets" />
+                <x-dashboard.recent-budgets :budgets="$budgets" />
             </div>
             <div class="col-12 col-lg-4">
-                <x-upcoming-events :events="$events ?? []" />
+                <x-dashboard.upcoming-events :events="$events ?? []" />
             </div>
         </div>
 

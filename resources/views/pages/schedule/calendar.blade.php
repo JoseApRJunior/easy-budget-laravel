@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Calendário de Agendamentos"
             icon="calendar3"
             :breadcrumb-items="[
@@ -13,10 +13,10 @@
                 'Calendário' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="list-ul" label="Ver Lista" />
-                <x-button type="link" :href="route('provider.schedules.create')" variant="primary" icon="plus-circle" label="Novo Agendamento" />
+                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="list-ul" label="Ver Lista" />
+                <x-ui.button type="link" :href="route('provider.schedules.create')" variant="primary" icon="plus-circle" label="Novo Agendamento" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">

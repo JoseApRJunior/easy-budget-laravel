@@ -292,7 +292,7 @@ class BudgetController extends Controller
         if ($isPdf) {
             $html = view('pages.budget.pdf_budget', compact('budget', 'provider'))->render();
 
-            $margins = config('pdf_theme.margins');
+            $margins = config('theme.pdf.margins');
 
             $mpdf = new Mpdf([
                 'mode' => 'utf-8',

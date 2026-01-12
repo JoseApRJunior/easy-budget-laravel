@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         :title="'Editar Plano: ' . $plan->name"
         icon="pencil"
         :breadcrumb-items="[
@@ -13,7 +13,7 @@
         <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Voltar
         </a>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="row">
         <div class="col-md-8">

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard de Agendamentos"
             icon="calendar-check"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Dashboard' => '#'
             ]">
             <p class="text-muted mb-0 small">Visão geral dos agendamentos com métricas e próximos horários.</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         @php
             $total = $stats['total_schedules'] ?? 0;
@@ -50,7 +50,7 @@
                                 <h6 class="text-muted mb-1">Total</h6>
                                 <h3 class="mb-0">{{ $total }}</h3>
                             </div>
-                            <x-button type="link" :href="route('provider.schedules.index')" variant="link" size="sm" icon="chevron-right" class="p-0" />
+                            <x-ui.button type="link" :href="route('provider.schedules.index')" variant="link" size="sm" icon="chevron-right" class="p-0" />
                         </div>
                         <p class="text-muted small mb-0">Agendamentos registrados.</p>
                     </div>
@@ -318,7 +318,7 @@
                                                         </span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <x-button type="link" :href="route('provider.schedules.show', $sc->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                        <x-ui.button type="link" :href="route('provider.schedules.show', $sc->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -377,7 +377,7 @@
                                                 </div>
                                             </div>
                                             <div class="ms-2">
-                                                <x-button type="link" :href="route('provider.schedules.show', $sc->id)" variant="info" size="sm" icon="eye" />
+                                                <x-ui.button type="link" :href="route('provider.schedules.show', $sc->id)" variant="info" size="sm" icon="eye" />
                                             </div>
                                         </div>
                                     </div>
@@ -449,10 +449,10 @@
                         <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Atalhos</h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <x-button type="link" :href="route('provider.services.index')" variant="success" size="sm" icon="plus-circle" label="Ver Serviços" />
-                        <x-button type="link" :href="route('provider.schedules.index')" variant="primary" outline size="sm" icon="calendar3" label="Listar Todos" />
-                        <x-button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="warning" outline size="sm" icon="hourglass-split" label="Pendentes" />
-                        <x-button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="info" outline size="sm" icon="check-circle" label="Confirmados" />
+                        <x-ui.button type="link" :href="route('provider.services.index')" variant="success" size="sm" icon="plus-circle" label="Ver Serviços" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index')" variant="primary" outline size="sm" icon="calendar3" label="Listar Todos" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="warning" outline size="sm" icon="hourglass-split" label="Pendentes" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="info" outline size="sm" icon="check-circle" label="Confirmados" />
                     </div>
                 </div>
 
@@ -463,10 +463,10 @@
                     </div>
                     <div class="card-body d-grid gap-2">
                         @if ($pending > 0)
-                            <x-button variant="primary" outline size="sm" icon="check-all" label="Confirmar Todos Pendentes" onclick="confirmAllPending()" />
+                            <x-ui.button variant="primary" outline size="sm" icon="check-all" label="Confirmar Todos Pendentes" onclick="confirmAllPending()" />
                         @endif
-                        <x-button variant="secondary" outline size="sm" icon="download" label="Exportar Agendamentos" onclick="exportSchedules()" />
-                        <x-button type="link" :href="route('provider.schedules.calendar')" variant="info" outline size="sm" icon="calendar-week" label="Ver Calendário" />
+                        <x-ui.button variant="secondary" outline size="sm" icon="download" label="Exportar Agendamentos" onclick="exportSchedules()" />
+                        <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="info" outline size="sm" icon="calendar-week" label="Ver Calendário" />
                     </div>
                 </div>
             </div>

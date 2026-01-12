@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard de Métricas"
             icon="graph-up"
             :breadcrumb-items="[
                 'Admin' => url('/admin'),
                 'Métricas' => '#'
             ]">
-            <x-button type="link" :href="url('/admin')" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="url('/admin')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Cards de Resumo -->
         <div class="row mb-4">

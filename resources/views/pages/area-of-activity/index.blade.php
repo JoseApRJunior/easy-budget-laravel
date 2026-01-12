@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Áreas de Atividade"
             icon="diagram-3"
             :breadcrumb-items="[
                 'Admin' => url('/admin'),
                 'Áreas de Atividade' => '#'
             ]">
-            <x-button type="link" :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" />
-        </x-page-header>
+            <x-ui.button type="link" :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" />
+        </x-layout.page-header>
 
         <!-- Tabela de Áreas de Atividade -->
         <div class="card border-0 shadow-sm">
@@ -45,9 +45,9 @@
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <x-button type="link" :href="url('/admin/area-of-activities/' . $areaOfActivity->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                <x-button type="link" :href="url('/admin/area-of-activities/' . $areaOfActivity->id . '/edit')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                                <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                <x-ui.button type="link" :href="url('/admin/area-of-activities/' . $areaOfActivity->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-ui.button type="link" :href="url('/admin/area-of-activities/' . $areaOfActivity->id . '/edit')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                     onclick="confirmDelete('{{ $areaOfActivity->id }}', '{{ $areaOfActivity->name }}')" />
                                             </div>
                                         </td>

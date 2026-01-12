@@ -4,7 +4,7 @@
     <div class="container-fluid py-4">
         @php($activeTab = $activeTab ?? 'profile')
 
-        <x-page-header
+        <x-layout.page-header
             title="Configurações do Sistema"
             icon="gear"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Configurações' => '#'
             ]">
             <p class="text-muted mb-0 small">Gerencie as preferências e configurações da sua conta e empresa</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row g-4">
             <!-- Menu Lateral -->

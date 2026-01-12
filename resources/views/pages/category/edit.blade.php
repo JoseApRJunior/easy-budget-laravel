@@ -3,8 +3,8 @@
 @section('title', 'Editar Categoria')
 
 @section('content')
-    <x-page-container>
-        <x-page-header
+    <x-layout.page-container>
+        <x-layout.page-header
             title="Editar Categoria"
             icon="pencil-square"
             :breadcrumb-items="[
@@ -15,7 +15,7 @@
             ]"
         >
             <p class="text-muted mb-0">Atualize as informações da categoria</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         @php
             $hasChildren = $category->children_count > 0;
@@ -136,11 +136,11 @@
                 <hr class="my-4 opacity-25">
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <x-back-button index-route="provider.categories.index" label="Cancelar" />
-                    <x-button type="submit" icon="check-circle" label="Salvar Alterações" variant="primary" />
+                    <x-ui.back-button index-route="provider.categories.index" label="Cancelar" />
+                    <x-ui.button type="submit" icon="check-circle" label="Salvar Alterações" variant="primary" />
                 </div>
             </form>
         </div>
     </div>
-    </x-page-container>
+    </x-layout.page-container>
 @endsection

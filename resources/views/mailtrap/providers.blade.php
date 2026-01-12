@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             :title="$title ?? 'Configuração de Provedores de E-mail'"
             icon="gear"
             :breadcrumb-items="[
@@ -11,10 +11,10 @@
                 'Provedores' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshProviders()" />
-                <x-button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshProviders()" />
+                <x-ui.button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Status do Provedor Atual -->
         <div class="row mb-4">
@@ -43,7 +43,7 @@
                                 @endif
                             </div>
                             <div class="col-md-4 text-end">
-                                <x-button type="button" variant="primary" size="sm" icon="lightning" label="Testar Provedor" onclick="testCurrentProvider()" />
+                                <x-ui.button type="button" variant="primary" size="sm" icon="lightning" label="Testar Provedor" onclick="testCurrentProvider()" />
                             </div>
                         </div>
                     </div>
@@ -99,7 +99,7 @@
                                                                 Ativo
                                                             </span>
                                                         @else
-                                                            <x-button type="button" variant="primary" size="sm" icon="check-lg" label="Ativar"
+                                                            <x-ui.button type="button" variant="primary" size="sm" icon="check-lg" label="Ativar"
                                                                 onclick="activateProvider('{{ $providerKey }}')" />
                                                         @endif
                                                     </div>
@@ -132,13 +132,13 @@
 
                                                 <!-- Ações do Provedor -->
                                                 <div class="provider-actions d-flex gap-2">
-                                                    <x-button type="button" variant="primary" size="sm" icon="lightning" 
+                                                    <x-ui.button type="button" variant="primary" size="sm" icon="lightning" 
                                                         label="Testar" class="flex-fill" 
                                                         onclick="testProvider('{{ $providerKey }}')" />
-                                                    <x-button type="button" variant="info" size="sm" icon="eye" label="Detalhes"
+                                                    <x-ui.button type="button" variant="info" size="sm" icon="eye" label="Detalhes"
                                                         class="flex-fill" onclick="viewProviderConfig('{{ $providerKey }}')" />
                                                     @if ($providerKey !== 'log')
-                                                        <x-button type="button" variant="secondary" size="sm" icon="pencil" 
+                                                        <x-ui.button type="button" variant="secondary" size="sm" icon="pencil" 
                                                             label="Configurar" class="flex-fill" 
                                                             onclick="configureProvider('{{ $providerKey }}')" />
                                                     @endif

@@ -28,8 +28,8 @@
     $toggleVariant = $isCurrentlyActive ? 'warning' : 'success';
 @endphp
 
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Detalhes da Categoria"
         icon="tag"
         :breadcrumb-items="[
@@ -38,7 +38,7 @@
             $category->name => '#'
         ]">
         <p class="text-muted mb-0">Visualize as informações completas da categoria</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
@@ -82,7 +82,7 @@
                         </div>
                         <div>
                             <label class="text-muted small d-block mb-1">Status Atual</label>
-                            <x-status-badge :item="$category" />
+                            <x-ui.status-badge :item="$category" />
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,7 @@
                 </div>
 
                 <div class="col-md-4 mt-2">
-                    <x-resource-info
+                    <x-resource.resource-info
                         title="Criado em"
                         :subtitle="$category->created_at?->format('d/m/Y H:i')"
                         icon="calendar-plus"
@@ -102,7 +102,7 @@
                 </div>
 
                 <div class="col-md-4 mt-2">
-                    <x-resource-info
+                    <x-resource.resource-info
                         title="Atualizado em"
                         :subtitle="$category->updated_at?->format('d/m/Y H:i')"
                         icon="calendar-check"
@@ -112,7 +112,7 @@
 
                 @if($category->deleted_at)
                 <div class="col-md-4 mt-2">
-                    <x-resource-info
+                    <x-resource.resource-info
                         title="Deletado em"
                         :subtitle="$category->deleted_at->format('d/m/Y H:i')"
                         icon="calendar-x"
@@ -130,7 +130,7 @@
                 @endphp
                 @if ($children->isNotEmpty())
                     <div class="mt-5">
-                        <x-resource-list-card
+                        <x-resource.resource-list-card
                             title="Subcategorias"
                             mobileTitle="Subcategorias"
                             icon="diagram-3"
@@ -138,7 +138,7 @@
                             class="border shadow-none"
                         >
                             <x-slot:desktop>
-                                <x-resource-table>
+                                <x-resource.resource-table>
                                     <x-slot:thead>
                                         <tr>
                                             <th>Nome</th>
@@ -152,7 +152,7 @@
                                         @foreach ($children as $child)
                                             <tr>
                                                 <td>
-                                                    <x-resource-info
+                                                    <x-resource.resource-info
                                                         :title="$child->name"
                                                         icon="tag"
                                                     />
@@ -161,44 +161,44 @@
                                                     <span class="badge bg-light text-primary border border-primary-subtle px-2 py-1">Subcategoria</span>
                                                 </td>
                                                 <td class="text-center">
-                                                    <x-status-badge :item="$child" />
+                                                    <x-ui.status-badge :item="$child" />
                                                 </td>
                                                 <td>
                                                     <small class="text-muted">{{ $child->created_at?->format('d/m/Y H:i') }}</small>
                                                 </td>
                                                 <td class="text-center">
-                                                    <x-button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-ui.button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </x-slot:tbody>
-                                </x-resource-table>
+                                </x-resource.resource-table>
                             </x-slot:desktop>
 
                             <x-slot:mobile>
                                 @foreach ($children as $child)
-                                    <x-resource-mobile-item>
-                                        <x-resource-info
+                                    <x-resource.resource-mobile-item>
+                                        <x-resource.resource-info
                                             :title="$child->name"
                                             icon="tag"
                                         />
                                         <x-slot:description>
                                             <div class="mt-2">
-                                                <x-status-badge :item="$child" />
+                                                <x-ui.status-badge :item="$child" />
                                             </div>
                                         </x-slot:description>
                                         <x-slot:footer>
                                             <small class="text-muted">{{ $child->created_at?->format('d/m/Y') }}</small>
                                         </x-slot:footer>
                                         <x-slot:actions>
-                                            <x-table-actions mobile>
-                                                <x-button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" icon="eye" size="sm" />
-                                            </x-table-actions>
+                                            <x-resource.table-actions mobile>
+                                                <x-ui.button type="link" :href="route('provider.categories.show', $child->slug)" variant="info" icon="eye" size="sm" />
+                                            </x-resource.table-actions>
                                         </x-slot:actions>
-                                    </x-resource-mobile-item>
+                                    </x-resource.resource-mobile-item>
                                 @endforeach
                             </x-slot:mobile>
-                        </x-resource-list-card>
+                        </x-resource.resource-list-card>
                     </div>
                 @endif
             @endif
@@ -229,7 +229,7 @@
     <div class="mt-auto pt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto order-2 order-md-1">
-                <x-back-button index-route="provider.categories.index" class="w-100 w-md-auto px-md-3" />
+                <x-ui.back-button index-route="provider.categories.index" class="w-100 w-md-auto px-md-3" />
             </div>
 
             <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -244,7 +244,7 @@
                     @php
                         $parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed();
                     @endphp
-                    <x-button variant="success" style="min-width: 120px; {{ $parentIsTrashed ? 'cursor: not-allowed;' : '' }}"
+                    <x-ui.button variant="success" style="min-width: 120px; {{ $parentIsTrashed ? 'cursor: not-allowed;' : '' }}"
                          data-bs-toggle="modal"
                          data-bs-target="{{ $parentIsTrashed ? '' : '#restoreModal-' . $category->slug }}"
                          icon="arrow-counterclockwise"
@@ -253,7 +253,7 @@
                          :class="$parentIsTrashed ? 'opacity-50' : ''"
                          onclick="{{ $parentIsTrashed ? 'easyAlert.warning("<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.", { duration: 8000 }); return false;' : '' }}" />
                     @else
-                    <x-button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+                    <x-ui.button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
 
                     @php
                         $blockedMessage = '';
@@ -266,7 +266,7 @@
                         }
                     @endphp
 
-                    <x-button :variant="$toggleVariant"
+                    <x-ui.button :variant="$toggleVariant"
                         style="min-width: 120px; {{ $toggleDisabled ? 'cursor: not-allowed;' : '' }}"
                         data-bs-toggle="modal"
                         data-bs-target="{{ $toggleDisabled ? '' : '#toggleModal-' . $category->slug }}"
@@ -276,10 +276,10 @@
                         onclick="{{ $toggleDisabled ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>\' + \'' . addslashes($blockedMessage) . '\', { duration: 8000 }); return false;' : '' }}" />
 
                     @if ($canDelete)
-                        <x-button variant="outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
+                        <x-ui.button variant="outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
                             data-bs-target="#deleteModal-{{ $category->slug }}" icon="trash-fill" label="Excluir" />
                     @else
-                        <x-button variant="outline-danger"
+                        <x-ui.button variant="outline-danger"
                             style="min-width: 120px; cursor: not-allowed;"
                             icon="trash-fill"
                             label="Excluir"
@@ -297,5 +297,5 @@
         {{-- ... conteúdo do modal ... --}}
     </div>
     {{-- ... outros modais ... --}}
-</x-page-container>
+</x-layout.page-container>
 @endsection

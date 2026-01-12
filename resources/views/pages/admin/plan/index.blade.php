@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Gerenciamento de Planos"
         icon="box-seam"
         :breadcrumb-items="[
@@ -10,10 +10,10 @@
             'Planos' => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
-            <x-button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
+            <x-ui.button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
@@ -88,8 +88,8 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-12 d-flex gap-2">
-                        <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
-                        <x-button type="link" :href="route('admin.plans.index')" variant="secondary" icon="x-circle" label="Limpar" />
+                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="secondary" icon="x-circle" label="Limpar" />
                     </div>
                 </div>
             </form>
@@ -143,10 +143,10 @@
                                     <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('admin.plans.show', $plan)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
-                                            <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" size="sm" icon="people" title="Assinantes" />
-                                            <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                            <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" size="sm" icon="people" title="Assinantes" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                     onclick="confirmDelete('{{ route('admin.plans.destroy', $plan) }}')" 
                                                     :disabled="$plan->planSubscriptions()->exists()" />
                                         </div>
@@ -184,11 +184,11 @@
                 <p class="text-danger"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
-                <x-button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <x-button type="submit" variant="danger" label="Excluir" />
+                    <x-ui.button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>

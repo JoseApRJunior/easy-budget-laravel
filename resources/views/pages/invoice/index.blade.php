@@ -7,7 +7,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Faturas"
             icon="receipt"
             :breadcrumb-items="[
@@ -16,12 +16,12 @@
                 'Lista' => '#'
             ]">
             <p class="text-muted mb-0">Lista de todas as faturas registradas no sistema</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         {{-- Card de Filtros --}}
-        <x-filter-form :route="route('provider.invoices.index')" id="filtersFormInvoices" :filters="$filters">
+        <x-form.filter-form :route="route('provider.invoices.index')" id="filtersFormInvoices" :filters="$filters">
             <div class="col-md-3">
-                <x-filter-field
+                <x-form.filter-field
                     label="Buscar"
                     name="search"
                     id="search"
@@ -29,7 +29,7 @@
                     placeholder="Código, cliente..." />
             </div>
             <div class="col-md-2">
-                <x-filter-field
+                <x-form.filter-field
                     label="Status"
                     name="status"
                     id="status"
@@ -41,10 +41,10 @@
                             {{ $status->getDescription() }}
                         </option>
                     @endforeach
-                </x-filter-field>
+                </x-form.filter-field>
             </div>
             <div class="col-md-3">
-                <x-filter-field
+                <x-form.filter-field
                     label="Cliente"
                     name="customer_id"
                     id="customer_id"
@@ -56,10 +56,10 @@
                             {{ $customer->name }}
                         </option>
                     @endforeach
-                </x-filter-field>
+                </x-form.filter-field>
             </div>
             <div class="col-md-2">
-                <x-filter-field
+                <x-form.filter-field
                     label="Período Inicial"
                     name="date_from"
                     id="date_from"
@@ -67,14 +67,14 @@
                     :value="$filters['date_from'] ?? ''" />
             </div>
             <div class="col-md-2">
-                <x-filter-field
+                <x-form.filter-field
                     label="Período Final"
                     name="date_to"
                     id="date_to"
                     type="date"
                     :value="$filters['date_to'] ?? ''" />
             </div>
-        </x-filter-form>
+        </x-form.filter-form>
 
         {{-- Card de Tabela --}}
         <div class="card">
@@ -94,7 +94,7 @@
                     </div>
                     <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                         <div class="d-flex justify-content-start justify-content-lg-end">
-                            <x-button type="link" :href="route('provider.invoices.create')" variant="primary" size="sm" icon="plus" label="Novo" />
+                            <x-ui.button type="link" :href="route('provider.invoices.create')" variant="primary" size="sm" icon="plus" label="Novo" />
                         </div>
                     </div>
                 </div>
@@ -123,13 +123,13 @@
                                         <td><strong>{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</strong>
                                         </td>
                                         <td>
-                                            <x-status-badge :item="$invoice" />
+                                            <x-ui.status-badge :item="$invoice" />
                                         </td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <x-button type="link" :href="route('provider.invoices.show', $invoice->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-ui.button type="link" :href="route('provider.invoices.show', $invoice->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 @if ($invoice->status === 'PENDING')
-                                                    <x-button type="link" :href="route('provider.invoices.edit', $invoice->code)" variant="primary" size="sm" icon="pencil" title="Editar" />
+                                                    <x-ui.button type="link" :href="route('provider.invoices.edit', $invoice->code)" variant="primary" size="sm" icon="pencil" title="Editar" />
                                                 @endif
                                             </div>
                                         </td>
@@ -137,7 +137,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center text-muted py-5">
-                                            <x-empty-state
+                                            <x-resource.empty-state
                                                 icon="receipt"
                                                 title="Nenhuma fatura encontrada"
                                                 description="Tente ajustar seus filtros para encontrar o que procura." />
@@ -160,7 +160,7 @@
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold mb-2">{{ $invoice->code }}</div>
                                         <div class="d-flex gap-2 flex-wrap mb-2">
-                                            <x-status-badge :item="$invoice" />
+                                            <x-ui.status-badge :item="$invoice" />
                                         </div>
                                         <div class="small text-muted">
                                             <div>Cliente: {{ $invoice->customer->name ?? 'N/A' }}</div>
@@ -172,7 +172,7 @@
                             </a>
                         @empty
                             <div class="text-center py-5 text-muted">
-                                <x-empty-state
+                                <x-resource.empty-state
                                     icon="receipt"
                                     title="Nenhuma fatura encontrada"
                                     description="Tente ajustar seus filtros para encontrar o que procura." />

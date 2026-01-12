@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Relatórios"
             icon="bar-chart-line"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Lista' => '#'
             ]">
             <p class="text-muted mb-0 small">Central de relatórios e analytics do sistema</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -142,7 +142,7 @@
                                             </div>
                                             <h5 class="card-title">Financeiro</h5>
                                             <p class="card-text text-muted small">Receitas, despesas e análises</p>
-                                            <x-button type="link" :href="route('reports.financial')" variant="primary" size="sm" icon="graph-up" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.financial')" variant="primary" size="sm" icon="graph-up" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -156,7 +156,7 @@
                                             </div>
                                             <h5 class="card-title">Clientes</h5>
                                             <p class="card-text text-muted small">Base de clientes e CRM</p>
-                                            <x-button type="link" :href="route('reports.customers')" variant="info" size="sm" icon="people" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.customers')" variant="info" size="sm" icon="people" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -170,7 +170,7 @@
                                             </div>
                                             <h5 class="card-title">Produtos</h5>
                                             <p class="card-text text-muted small">Catálogo e inventário</p>
-                                            <x-button type="link" :href="route('reports.products')" variant="success" size="sm" icon="box" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.products')" variant="success" size="sm" icon="box" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -184,7 +184,7 @@
                                             </div>
                                             <h5 class="card-title">Serviços</h5>
                                             <p class="card-text text-muted small">Prestação de serviços</p>
-                                            <x-button type="link" :href="route('reports.services')" variant="warning" size="sm" icon="gear" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.services')" variant="warning" size="sm" icon="gear" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -198,7 +198,7 @@
                                             </div>
                                             <h5 class="card-title">Orçamentos</h5>
                                             <p class="card-text text-muted small">Propostas e vendas</p>
-                                            <x-button type="link" :href="route('reports.budgets')" variant="danger" size="sm" icon="receipt" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.budgets')" variant="danger" size="sm" icon="receipt" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -212,7 +212,7 @@
                                             </div>
                                             <h5 class="card-title">Analytics</h5>
                                             <p class="card-text text-muted small">Métricas avançadas</p>
-                                            <x-button type="link" :href="route('reports.analytics')" variant="secondary" size="sm" icon="pie-chart" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.analytics')" variant="secondary" size="sm" icon="pie-chart" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -226,7 +226,7 @@
                                             </div>
                                             <h5 class="card-title">Estoque</h5>
                                             <p class="card-text text-muted small">Controle de inventário</p>
-                                            <x-button type="link" :href="route('provider.inventory.report')" variant="info" size="sm" icon="boxes" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.report')" variant="info" size="sm" icon="boxes" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -287,10 +287,10 @@
                                                 </div>
                                                 <div class="d-flex gap-1">
                                                         @if (isset($report->download_url))
-                                                            <x-button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" />
+                                                            <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" />
                                                         @endif
                                                         @if (isset($report->view_url))
-                                                            <x-button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" />
+                                                            <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" />
                                                         @endif
                                                     </div>
                                             </div>
@@ -354,10 +354,10 @@
                                                     <td>
                                                         <div class="d-flex justify-content-center gap-1">
                                                             @if (isset($report->download_url))
-                                                                <x-button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
+                                                                <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                             @endif
                                                             @if (isset($report->view_url))
-                                                                <x-button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                                <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                             @endif
                                                         </div>
                                                     </td>

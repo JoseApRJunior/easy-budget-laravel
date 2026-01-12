@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Criar Fatura a partir do Orçamento"
             icon="receipt"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Gerar Fatura' => '#'
             ]">
             <p class="text-muted mb-0">Selecione os itens do orçamento para gerar a fatura</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="card mb-4">
             <div class="card-body">

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard"
             icon="speedometer2"
             :breadcrumb-items="[

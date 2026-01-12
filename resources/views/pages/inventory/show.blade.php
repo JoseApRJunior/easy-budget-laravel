@@ -7,7 +7,7 @@
         $inventory = $inventory ?? $product->inventory;
     @endphp
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Detalhes do Inventário"
             icon="box-seam"
             :breadcrumb-items="[
@@ -17,7 +17,7 @@
                 'Detalhes' => '#'
             ]">
             <p class="text-muted mb-0">Visualize o saldo e histórico de movimentações do produto</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row g-4 mb-4">
             <div class="col-lg-6">
@@ -206,7 +206,7 @@
                 <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Histórico de Movimentações</h6>
                 <div class="d-flex gap-2">
                     <div class="dropdown">
-                        <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHistoryDropdown" />
+                        <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHistoryDropdown" />
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportHistoryDropdown">
                             <li>
                                 <a class="dropdown-item"
@@ -222,13 +222,13 @@
                             </li>
                         </ul>
                     </div>
-                    <x-button 
+                    <x-ui.button 
                 href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}" 
                 variant="primary" 
                 size="sm"
                 icon="bi bi-list-ul">
                 Ver Tudo
-            </x-button>
+            </x-ui.button>
                 </div>
             </div>
             <div class="card-body">
@@ -334,7 +334,7 @@
         <div class="mt-4 pb-2">
             <div class="row align-items-center g-3">
                 <div class="col-12 col-md-auto order-2 order-md-1">
-                    <x-back-button index-route="provider.inventory.index" class="w-100 w-md-auto px-md-3" />
+                    <x-ui.back-button index-route="provider.inventory.index" class="w-100 w-md-auto px-md-3" />
                 </div>
 
                 <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -345,9 +345,9 @@
 
                 <div class="col-12 col-md-auto order-1 order-md-3">
                     <div class="d-grid d-md-flex gap-2">
-                        <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" />
-                        <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" />
-                        <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" />
+                        <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" />
+                        <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" />
+                        <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" />
                     </div>
                 </div>
             </div>
@@ -394,7 +394,7 @@
                     </div>
                     <div class="modal-footer bg-light border-0 p-3">
                         <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                        <x-button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
+                        <x-ui.button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
                     </div>
                 </form>
             </div>

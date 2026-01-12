@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard de Faturas"
             icon="receipt"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Faturas' => '#'
             ]">
             <p class="text-muted mb-0 small">Acompanhe suas faturas, recebimentos e pendências.</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         @php
             $total = $stats['total_invoices'] ?? 0;
@@ -169,11 +169,11 @@
                                             <tr>
                                                 <td><code class="text-code">{{ $inv->code }}</code></td>
                                                 <td>{{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</td>
-                                                <td><x-status-badge :item="$inv" /></td>
+                                                <td><x-ui.status-badge :item="$inv" /></td>
                                                 <td>{{ \App\Helpers\CurrencyHelper::format($inv->total) }}</td>
                                                 <td>{{ optional($inv->due_date)->format('d/m/Y') }}</td>
                                                 <td class="text-end">
-                                                    <x-button type="link" :href="route('provider.invoices.show', $inv->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-ui.button type="link" :href="route('provider.invoices.show', $inv->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -242,8 +242,8 @@
                         <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Atalhos</h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <x-button type="link" :href="route('provider.invoices.create')" variant="success" size="sm" icon="plus-circle" label="Nova Fatura" />
-                        <x-button type="link" :href="route('provider.invoices.index')" variant="primary" outline size="sm" icon="receipt" label="Listar Faturas" />
+                        <x-ui.button type="link" :href="route('provider.invoices.create')" variant="success" size="sm" icon="plus-circle" label="Nova Fatura" />
+                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" outline size="sm" icon="receipt" label="Listar Faturas" />
                     </div>
                 </div>
             </div>

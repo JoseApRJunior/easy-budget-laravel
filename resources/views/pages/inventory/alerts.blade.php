@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid py-4">
     <!-- Page Header -->
-    <x-page-header
+    <x-layout.page-header
         title="Alertas de Estoque"
         icon="bell"
         icon-color="danger"
@@ -15,7 +15,7 @@
             'Alertas' => '#'
         ]">
         <p class="text-muted small mb-0">Produtos com estoque baixo ou excessivo que requerem atenção imediata</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Resumo dos Alertas -->
     <div class="row g-3 mb-4">
@@ -77,7 +77,7 @@
                 <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                     <div class="d-flex justify-content-start justify-content-lg-end gap-2">
                         <div class="dropdown">
-                            <x-button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportLowStock" />
+                            <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportLowStock" />
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportLowStock">
                                 <li>
                                     <a class="dropdown-item" href="{{ route('provider.inventory.export', ['type' => 'xlsx', 'status' => 'low']) }}">
@@ -160,9 +160,9 @@
                                         </td>
                                         <td>
                                             <div class="action-btn-group justify-content-center">
-                                                <x-button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" title="Ver Detalhes" />
-                                                <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" title="Movimentações" />
-                                                <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" title="Ajustar" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" title="Ver Detalhes" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" title="Movimentações" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" title="Ajustar" />
                                             </div>
                                         </td>
                                     </tr>
@@ -216,9 +216,9 @@
                                         </div>
 
                                         <div class="d-flex justify-content-end gap-2">
-                                            <x-button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" size="sm" title="Ver" />
-                                            <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" size="sm" title="Hist." />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajuste" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" size="sm" title="Ver" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" size="sm" title="Hist." />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajuste" />
                                         </div>
                                     </div>
                                 </div>
@@ -268,7 +268,7 @@
                 <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                     <div class="d-flex justify-content-start justify-content-lg-end gap-2">
                         <div class="dropdown">
-                            <x-button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHighStock" />
+                            <x-ui.button variant="outline-secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHighStock" />
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportHighStock">
                                 <li>
                                     <a class="dropdown-item" href="{{ route('provider.inventory.export', ['type' => 'xlsx', 'status' => 'sufficient']) }}">
@@ -351,9 +351,9 @@
                                         </td>
                                         <td>
                                             <div class="action-btn-group justify-content-center">
-                                                <x-button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" title="Ver Detalhes" />
-                                                <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" title="Movimentações" />
-                                                <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" title="Ajustar" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" title="Ver Detalhes" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" title="Movimentações" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" title="Ajustar" />
                                             </div>
                                         </td>
                                     </tr>
@@ -407,9 +407,9 @@
                                         </div>
 
                                         <div class="d-flex justify-content-end gap-2">
-                                            <x-button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" size="sm" title="Ver" />
-                                            <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" size="sm" title="Hist." />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajuste" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.show', $item->product->sku)" variant="info" icon="eye" size="sm" title="Ver" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->product->sku])" variant="primary" icon="clock-history" size="sm" title="Hist." />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajuste" />
                                         </div>
                                     </div>
                                 </div>
@@ -444,7 +444,7 @@
     <div class="mt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto">
-                <x-back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
+                <x-ui.back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
             </div>
             <div class="col-12 col-md text-center d-none d-md-block">
                 <small class="text-muted">

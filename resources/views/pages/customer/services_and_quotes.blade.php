@@ -3,7 +3,7 @@
 
 @section( 'content' )
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Serviços e Orçamentos"
             icon="clipboard-data"
             :breadcrumb-items="[
@@ -68,9 +68,9 @@
                                     </td>
                                     <td class="text-end px-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <x-button type="link" :href="route( 'provider.services.show', $servico->id )" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                            <x-button type="link" :href="route( 'provider.services.edit', $servico->id )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                            <x-ui.button type="link" :href="route( 'provider.services.show', $servico->id )" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route( 'provider.services.edit', $servico->id )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                 onclick="handleGenericDelete(this)" 
                                                 data-type="servico" 
                                                 data-id="{{ $servico->id }}" />
@@ -147,9 +147,9 @@
                                     </td>
                                     <td class="text-end px-4">
                                         <div class="d-flex justify-content-end gap-1">
-                                            <x-button type="link" :href="route( 'provider.budgets.show', $orcamento->code )" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                            <x-button type="link" :href="route( 'provider.budgets.edit', $orcamento->code )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                            <x-ui.button type="link" :href="route( 'provider.budgets.show', $orcamento->code )" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route( 'provider.budgets.edit', $orcamento->code )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                 onclick="handleGenericDelete(this)"
                                                 data-type="orcamento" 
                                                 data-id="{{ $orcamento->id }}" />

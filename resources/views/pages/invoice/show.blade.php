@@ -3,7 +3,7 @@
 @section('title', 'Detalhes da Fatura')
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Detalhes da Fatura"
             icon="receipt"
             :breadcrumb-items="[
@@ -12,9 +12,9 @@
                 $invoice->code => '#'
             ]">
         <div class="d-flex gap-2">
-            <x-button type="link" :href="route('provider.invoices.print', $invoice)" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
+            <x-ui.button type="link" :href="route('provider.invoices.print', $invoice)" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="row g-4">
         <!-- Informações Principais -->
@@ -29,7 +29,7 @@
                                 Gerada em {{ $invoice->created_at->format('d/m/Y H:i') }}
                             </p>
                         </div>
-                        <x-status-description :item="$invoice" />
+                        <x-ui.status-description :item="$invoice" />
                     </div>
 
                     <!-- Dados do Cliente e Empresa -->
@@ -205,8 +205,8 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <x-status-badge :item="$invoice" class="w-100 py-2 fs-6 mb-1" />
-                        <x-status-description :item="$invoice" class="mt-1" />
+                        <x-ui.status-badge :item="$invoice" class="w-100 py-2 fs-6 mb-1" />
+                        <x-ui.status-description :item="$invoice" class="mt-1" />
                     </div>
 
                     @if ($invoice->due_date)

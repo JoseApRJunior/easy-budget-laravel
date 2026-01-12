@@ -15,7 +15,7 @@ class ServicePdfService
     {
         $html = View::make('pages.service.public.print', array_merge(compact('service'), $extras))->render();
 
-        $margins = config('pdf_theme.margins');
+        $margins = config('theme.pdf.margins');
 
         $mpdf = new Mpdf([
             'mode' => 'utf-8',

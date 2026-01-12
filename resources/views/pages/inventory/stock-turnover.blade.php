@@ -10,7 +10,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Giro de Estoque"
         icon="graph-up"
         icon-color="warning"
@@ -20,7 +20,7 @@
             'Giro de Estoque' => '#'
         ]">
         <p class="text-muted small mb-0">Análise de movimentação e giro de produtos</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Filtros -->
     <div class="card mb-4 border-0 shadow-sm">
@@ -33,7 +33,7 @@
             <form method="GET" action="{{ route('provider.inventory.stock-turnover') }}">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <x-filter-field
+                        <x-form.filter-field
                             type="date"
                             name="start_date"
                             id="start_date"
@@ -42,7 +42,7 @@
                         />
                     </div>
                     <div class="col-md-3">
-                        <x-filter-field
+                        <x-form.filter-field
                             type="date"
                             name="end_date"
                             id="end_date"
@@ -71,8 +71,8 @@
                     </div>
                     <div class="col-12">
                         <div class="d-flex gap-2">
-                            <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                            <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
+                            <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x" label="Limpar" />
                         </div>
                     </div>
                 </div>
@@ -164,8 +164,8 @@
                 <div class="col-12 col-lg-4 text-start text-lg-end">
                     @if($hasResults)
                     <div class="d-flex justify-content-start justify-content-lg-end gap-1">
-                        <x-button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                        <x-button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                        <x-ui.button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                        <x-ui.button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                     </div>
                     @endif
                 </div>
@@ -253,8 +253,8 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="action-btn-group justify-content-center">
-                                            <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Ver Movimentações" />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajustar" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Ver Movimentações" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajustar" />
                                         </div>
                                     </td>
                                 </tr>
@@ -329,8 +329,8 @@
                                 </div>
 
                                 <div class="d-flex justify-content-end gap-2">
-                                    <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Histórico" />
-                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajuste" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Histórico" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajuste" />
                                 </div>
                             </div>
                         @endforeach
@@ -416,7 +416,7 @@
                             Não foram encontradas movimentações para os filtros selecionados. Tente ajustar o período ou a busca.
                         </p>
                     @endif
-                    <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="outline-primary" icon="arrow-left" label="Limpar Filtros" />
+                    <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="outline-primary" icon="arrow-left" label="Limpar Filtros" />
                 </div>
             @endif
         </div>

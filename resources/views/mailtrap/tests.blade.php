@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             :title="$title ?? 'Testes de E-mail'"
             icon="play-circle"
             :breadcrumb-items="[
@@ -11,11 +11,11 @@
                 'Testes' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshTests()" />
-                <x-button type="button" variant="primary" icon="plus-circle" label="Novo Teste" onclick="showTestModal()" />
-                <x-button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshTests()" />
+                <x-ui.button type="button" variant="primary" icon="plus-circle" label="Novo Teste" onclick="showTestModal()" />
+                <x-ui.button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">

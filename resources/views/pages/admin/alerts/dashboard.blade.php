@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Sistema de Alertas"
             icon="exclamation-triangle"
             :breadcrumb-items="[
@@ -12,10 +12,10 @@
                 'Alertas' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" />
-                <x-button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" />
+                <x-ui.button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" />
+                <x-ui.button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">
@@ -138,7 +138,7 @@
                                                 <td>{{ \Carbon\Carbon::parse($alert['created_at'])->format('d/m/Y H:i') }}
                                                 </td>
                                                 <td>
-                                                    <x-button variant="success" size="sm" icon="check" label="Resolver"
+                                                    <x-ui.button variant="success" size="sm" icon="check" label="Resolver"
                                                         onclick="resolveAlert({{ $alert['id'] }})" />
                                                 </td>
                                             </tr>

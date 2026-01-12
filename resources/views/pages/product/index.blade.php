@@ -17,8 +17,8 @@
 @endpush
 
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Produtos"
         icon="box-seam"
         :breadcrumb-items="[
@@ -27,10 +27,10 @@
             'Lista' => '#'
         ]">
         <p class="text-muted mb-0">Lista de todos os produtos registrados no sistema</p>
-    </x-page-header>
+    </x-layout.page-header>
 
-    <x-filter-form :route="route('provider.products.index')" id="filtersFormProducts" :filters="$filters">
-                <x-filter-field
+    <x-form.filter-form :route="route('provider.products.index')" id="filtersFormProducts" :filters="$filters">
+                <x-form.filter-field
                             col="col-md-4"
                             name="search"
                             label="Buscar"
@@ -38,7 +38,7 @@
                             :filters="$filters"
                         />
 
-                        <x-filter-field
+                        <x-form.filter-field
                             type="select"
                             col="col-md-2"
                             name="category"
@@ -69,9 +69,9 @@
                                     @endif
                                 @endif
                             @endforeach
-                        </x-filter-field>
+                        </x-form.filter-field>
 
-                        <x-filter-field
+                        <x-form.filter-field
                             type="select"
                             col="col-md-2"
                             name="active"
@@ -82,9 +82,9 @@
                             <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>Ativo</option>
                             <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>Inativo</option>
                             <option value="all" {{ $selectedActive === 'all' ? 'selected' : '' }}>Todos</option>
-                        </x-filter-field>
+                        </x-form.filter-field>
 
-                        <x-filter-field
+                        <x-form.filter-field
                             type="select"
                             col="col-md-2"
                             name="per_page"
@@ -95,9 +95,9 @@
                             <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
                             <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
                             <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
-                        </x-filter-field>
+                        </x-form.filter-field>
 
-                        <x-filter-field
+                        <x-form.filter-field
                             type="select"
                             col="col-md-2"
                             name="deleted"
@@ -108,9 +108,9 @@
                             <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>Atuais</option>
                             <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>Deletados</option>
                             <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>Todos</option>
-                        </x-filter-field>
+                        </x-form.filter-field>
 
-                        <x-filter-field
+                        <x-form.filter-field
                             col="col-md-2"
                             name="min_price"
                             label="Preço Mínimo"
@@ -121,7 +121,7 @@
                             :filters="$filters"
                         />
 
-                        <x-filter-field
+                        <x-form.filter-field
                             col="col-md-2"
                             name="max_price"
                             label="Preço Máximo"
@@ -132,7 +132,7 @@
                             :filters="$filters"
                         />
 
-                        <x-filter-field
+                        <x-form.filter-field
                             type="date"
                             col="col-md-2"
                             name="start_date"
@@ -140,23 +140,23 @@
                             :filters="$filters"
                         />
 
-                        <x-filter-field
+                        <x-form.filter-field
                             type="date"
                             col="col-md-2"
                             name="end_date"
                             label="Cadastro Final"
                             :filters="$filters"
                         />
-                    </x-filter-form>
+                    </x-form.filter-form>
 
-            <x-resource-list-card
+            <x-resource.resource-list-card
                 title="Lista de Produtos"
                 mobileTitle="Produtos"
                 icon="list-ul"
                 :total="$products instanceof \Illuminate\Pagination\LengthAwarePaginator ? $products->total() : count($products)"
             >
                 <x-slot:headerActions>
-                    <x-table-header-actions
+                    <x-resource.table-header-actions
                         resource="products"
                         :filters="$filters"
                         createLabel="Nova"
@@ -164,7 +164,7 @@
                 </x-slot:headerActions>
 
                 <x-slot:desktop>
-                    <x-resource-table>
+                    <x-resource.resource-table>
                         <x-slot:thead>
                             <tr>
                                 <th>Imagem</th>
@@ -200,26 +200,26 @@
                                         @endif
                                     </td>
                                     <td class="text-nowrap">
-                                        <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
+                                        <x-ui.status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
                                     </td>
-                                    <x-table-actions>
+                                    <x-resource.table-actions>
                                         @if ($product->deleted_at)
                                         {{-- Produto deletado: visualizar e restaurar --}}
-                                        <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
-                                        <x-button variant="success" icon="arrow-counterclockwise"
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
+                                        <x-ui.button variant="success" icon="arrow-counterclockwise"
                                             data-bs-toggle="modal" data-bs-target="#restoreModal"
                                             data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
                                             data-product-name="{{ $product->name }}" title="Restaurar" />
                                         @else
                                         {{-- Produto ativo: show, edit, delete --}}
-                                        <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
-                                        <x-button type="link" :href="route('provider.products.edit', $product->sku)" icon="pencil-square" title="Editar" />
-                                        <x-button variant="danger" icon="trash"
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" title="Visualizar" />
+                                        <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" icon="pencil-square" title="Editar" />
+                                        <x-ui.button variant="danger" icon="trash"
                                             data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
                                             data-product-name="{{ $product->name }}" title="Excluir" />
                                         @endif
-                                    </x-table-actions>
+                                    </x-resource.table-actions>
                                 </tr>
                             @empty
                                 <tr>
@@ -239,12 +239,12 @@
                                 </tr>
                             @endforelse
                         </x-slot:tbody>
-                    </x-resource-table>
+                    </x-resource.resource-table>
                 </x-slot:desktop>
 
                 <x-slot:mobile>
                     @forelse($products as $product)
-                            <x-resource-mobile-item>
+                            <x-resource.resource-mobile-item>
                                 <x-slot:avatar>
                                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                         class="rounded"
@@ -256,7 +256,7 @@
                                 <x-slot:description>
                                     <div class="d-flex gap-2 flex-wrap mb-1">
                                         <span class="badge bg-secondary">{{ $product->sku }}</span>
-                                        <x-status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
+                                        <x-ui.status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
                                     </div>
                                     <small class="text-muted d-block">Venda: {{ $product->formatted_price }}</small>
                                     @if($product->cost_price > 0)
@@ -267,23 +267,23 @@
                                 </x-slot:description>
 
                                 <x-slot:actions>
-                                    <x-table-actions mobile>
-                                        <x-button type="link" :href="route('provider.products.show', $product->sku)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                    <x-resource.table-actions mobile>
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                         @if ($product->deleted_at)
-                                            <x-button variant="success" size="sm" icon="arrow-counterclockwise"
+                                            <x-ui.button variant="success" size="sm" icon="arrow-counterclockwise"
                                                 data-bs-toggle="modal" data-bs-target="#restoreModal"
                                                 data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
                                                 data-product-name="{{ $product->name }}" title="Restaurar" />
                                         @else
-                                            <x-button type="link" :href="route('provider.products.edit', $product->sku)" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-button variant="danger" size="sm" icon="trash"
+                                            <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash"
                                                 data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                 data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
                                                 data-product-name="{{ $product->name }}" title="Excluir" />
                                         @endif
-                                    </x-table-actions>
+                                    </x-resource.table-actions>
                                 </x-slot:actions>
-                            </x-resource-mobile-item>
+                            </x-resource.resource-mobile-item>
                         @empty
                             <div class="p-4 text-center text-muted">
                                 <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
@@ -304,8 +304,8 @@
                         ])
                     @endif
                 </x-slot:footer>
-            </x-resource-list-card>
-</x-page-container>
+            </x-resource.resource-list-card>
+</x-layout.page-container>
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -318,11 +318,11 @@
                 <br><small class="text-muted">Esta ação pode ser desfeita.</small>
             </div>
             <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="deleteForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <x-button type="submit" variant="danger" label="Excluir" />
+                    <x-ui.button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>
@@ -340,10 +340,10 @@
                 <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
             </div>
             <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="restoreForm" action="#" method="POST" class="d-inline">
                     @csrf
-                    <x-button type="submit" variant="success" label="Restaurar" />
+                    <x-ui.button type="submit" variant="success" label="Restaurar" />
                 </form>
             </div>
         </div>
@@ -360,8 +360,8 @@
                 <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
             </div>
             <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-button type="button" class="btn-confirm-all-products" label="Listar todos" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button type="button" class="btn-confirm-all-products" label="Listar todos" />
             </div>
         </div>
     </div>

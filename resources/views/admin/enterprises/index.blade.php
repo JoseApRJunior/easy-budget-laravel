@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Gestão de Empresas"
             icon="building"
             :breadcrumb-items="[
@@ -10,10 +10,10 @@
                 'Gestão de Empresas' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
-                <x-button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
+                <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
+                <x-ui.button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">
@@ -249,13 +249,13 @@
                                         <td>{{ $enterprise->created_at->format('d/m/Y') }}</td>
                                         <td>
                                             <div class="d-flex gap-1">
-                                                <x-button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" title="Ver" />
-                                                <x-button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" title="Ver" />
+                                                <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 @if ($enterprise->status === 'active')
-                                                    <x-button variant="danger" size="sm" icon="pause" title="Suspender"
+                                                    <x-ui.button variant="danger" size="sm" icon="pause" title="Suspender"
                                                         onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                                 @else
-                                                    <x-button variant="success" size="sm" icon="play" title="Reativar"
+                                                    <x-ui.button variant="success" size="sm" icon="play" title="Reativar"
                                                         onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                                 @endif
                                             </div>
@@ -303,13 +303,13 @@
                                         <strong>Criado em:</strong> {{ $enterprise->created_at->format('d/m/Y') }}
                                     </p>
                                     <div class="d-flex gap-2 mt-3">
-                                        <x-button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
-                                        <x-button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
+                                        <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                                        <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
                                         @if ($enterprise->status === 'active')
-                                            <x-button variant="danger" size="sm" icon="pause" label="Suspender" class="flex-grow-1"
+                                            <x-ui.button variant="danger" size="sm" icon="pause" label="Suspender" class="flex-grow-1"
                                                 onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                         @else
-                                            <x-button variant="success" size="sm" icon="play" label="Reativar" class="flex-grow-1"
+                                            <x-ui.button variant="success" size="sm" icon="play" label="Reativar" class="flex-grow-1"
                                                 onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                         @endif
                                     </div>
@@ -348,7 +348,7 @@
                         <i class="bi bi-building fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nenhuma empresa encontrada</h5>
                         <p class="text-muted">Não há empresas para exibir com os filtros aplicados.</p>
-                        <x-button type="link" :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Criar Primeira Empresa" />
+                        <x-ui.button type="link" :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Criar Primeira Empresa" />
                     </div>
                 @endif
             </div>
@@ -367,8 +367,8 @@
 
                 </div>
                 <div class="modal-footer">
-                    <x-button variant="secondary" data-bs-dismiss="modal">Cancelar</x-button>
-                    <x-button variant="primary" id="confirmModalAction">Confirmar</x-button>
+                    <x-ui.button variant="secondary" data-bs-dismiss="modal">Cancelar</x-ui.button>
+                    <x-ui.button variant="primary" id="confirmModalAction">Confirmar</x-ui.button>
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             :title="$title ?? 'Logs de E-mail'"
             icon="journal-text"
             :breadcrumb-items="[
@@ -11,12 +11,12 @@
                 'Logs' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshLogs()" />
-                <x-button type="button" variant="success" icon="download" label="Exportar CSV" onclick="exportLogs()" />
-                <x-button type="button" variant="danger" icon="trash" label="Limpar Logs" onclick="clearLogs()" />
-                <x-button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshLogs()" />
+                <x-ui.button type="button" variant="success" icon="download" label="Exportar CSV" onclick="exportLogs()" />
+                <x-ui.button type="button" variant="danger" icon="trash" label="Limpar Logs" onclick="clearLogs()" />
+                <x-ui.button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Filtros e Controles -->
         <div class="row mb-4">
@@ -51,7 +51,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-grid">
-                                    <x-button type="button" variant="primary" icon="funnel" onclick="applyFilters()" label="Aplicar Filtros" />
+                                    <x-ui.button type="button" variant="primary" icon="funnel" onclick="applyFilters()" label="Aplicar Filtros" />
                                 </div>
                             </div>
                         </div>
@@ -165,7 +165,7 @@
                                                         @endif
                                                     </div>
                                                     <div class="log-actions">
-                                                        <x-button type="button" variant="info" size="sm" icon="eye"
+                                                        <x-ui.button type="button" variant="info" size="sm" icon="eye"
                                                     onclick="showLogDetails({{ json_encode($log) }})"
                                                     title="Ver detalhes" />
                                                     </div>

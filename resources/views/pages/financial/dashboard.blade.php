@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard Financeiro"
             icon="currency-dollar"
             :breadcrumb-items="[
@@ -19,7 +19,7 @@
                     @endforeach
                 </select>
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- KPI Cards -->
         <div class="row mb-4">

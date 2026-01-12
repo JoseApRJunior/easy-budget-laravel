@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Detalhes do Compartilhamento"
         icon="share"
         :breadcrumb-items="[
@@ -14,11 +14,11 @@
             'Detalhes' => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-button :href="route('provider.budgets.shares.edit', $share->id)" variant="primary" icon="pencil" label="Editar" />
-            <x-button type="button" variant="danger" outline icon="trash" label="Revogar" onclick="confirmRevoke({{ $share->id }})" />
-            <x-button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-ui.button :href="route('provider.budgets.shares.edit', $share->id)" variant="primary" icon="pencil" label="Editar" />
+            <x-ui.button type="button" variant="danger" outline icon="trash" label="Revogar" onclick="confirmRevoke({{ $share->id }})" />
+            <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="row">
         <div class="col-12">
@@ -112,9 +112,9 @@
                                 <label class="form-label fw-bold">Status do Orçamento</label>
                                 <div class="d-flex flex-column">
                                     <div class="mb-1">
-                                        <x-status-badge :item="$share->budget" statusField="status" />
+                                        <x-ui.status-badge :item="$share->budget" statusField="status" />
                                     </div>
-                                    <x-status-description :item="$share->budget" statusField="status" />
+                                    <x-ui.status-description :item="$share->budget" statusField="status" />
                                 </div>
                             </div>
                         </div>

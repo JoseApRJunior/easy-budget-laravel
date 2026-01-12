@@ -3,7 +3,7 @@
 @section('title', 'Nova Fatura')
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Nova Fatura"
             icon="plus-circle"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Nova' => '#'
             ]">
             <p class="text-muted mb-0">Preencha os dados para criar uma nova fatura</p>
-        </x-page-header>
+        </x-layout.page-header>
 
     <form action="{{ route('provider.invoices.store') }}" method="POST" id="invoiceForm">
         @csrf
@@ -179,7 +179,7 @@
                                 </div>
                             </div>
 
-                            <x-button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
+                            <x-ui.button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
                         </div>
                     </div>
                 </div>
@@ -214,8 +214,8 @@
 
             {{-- Botões de Ação (Footer) --}}
             <div class="d-flex justify-content-between mt-4">
-                <x-button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
-                <x-button type="submit" variant="primary" icon="check-circle" label="Criar Fatura" />
+                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Fatura" />
             </div>
         </form>
     </div>

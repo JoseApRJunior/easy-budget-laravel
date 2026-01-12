@@ -9,8 +9,8 @@
                     <i class="bi bi-pencil me-2"></i>Editar Alerta
                 </h1>
                 <div class="btn-group" role="group">
-                    <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" label="Ver" />
-                    <x-button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                    <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" label="Ver" />
+                    <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="arrow-left" label="Voltar" />
                 </div>
             </div>
         </div>
@@ -125,8 +125,8 @@
                         </div>
                         
                         <div class="d-flex justify-content-end gap-2">
-                            <x-button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="secondary" icon="x-circle" label="Cancelar" />
-                            <x-button type="submit" variant="primary" icon="save" label="Atualizar Alerta" />
+                            <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="secondary" icon="x-circle" label="Cancelar" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Atualizar Alerta" />
                         </div>
                     </form>
                 </div>

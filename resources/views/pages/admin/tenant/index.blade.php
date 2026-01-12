@@ -2,14 +2,14 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Gerenciar Tenants"
             icon="building-gear"
             :breadcrumb-items="[
                 'Admin' => url('/admin'),
                 'Tenants' => '#'
             ]">
-        </x-page-header>
+        </x-layout.page-header>
                     <div class="card-body">
                         <p>Lista de tenants do sistema</p>
                     </div>

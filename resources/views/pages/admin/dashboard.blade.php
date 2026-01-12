@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             :title="$page_title"
             icon="speedometer2"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
             <span class="badge bg-{{ $system_status['health'] == 'healthy' ? 'success' : ($system_status['health'] == 'warning' ? 'warning' : 'danger') }} ms-2">
                 {{ $system_status['health'] == 'healthy' ? 'Saudável' : ($system_status['health'] == 'warning' ? 'Atenção' : 'Crítico') }}
             </span>
-        </x-page-header>
+        </x-layout.page-header>
 
                 <!-- Alertas Críticos -->
                 @if (count($alerts) > 0)
@@ -146,9 +146,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <x-button type="link" href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" />
-                                    <x-button type="link" href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" />
-                                    <x-button variant="secondary" outline icon="arrow-clockwise" label="Atualizar Dados" onclick="refreshData()" />
+                                    <x-ui.button type="link" href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" />
+                                    <x-ui.button type="link" href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" />
+                                    <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar Dados" onclick="refreshData()" />
                                 </div>
                             </div>
                         </div>

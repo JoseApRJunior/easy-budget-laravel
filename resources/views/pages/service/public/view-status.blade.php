@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <x-page-container>
+    <x-layout.page-container>
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
@@ -12,18 +12,18 @@
                                 <small class="text-muted">Código: {{ $service->code }}</small>
                             </div>
                             <div>
-                                <x-status-badge :item="$service" />
+                                <x-ui.status-badge :item="$service" />
                             </div>
                         </div>
                     </div>
 
                     <div class="card-body">
                         @if (session('success'))
-                            <x-alert type="success" :message="session('success')" />
+                            <x-ui.alert type="success" :message="session('success')" />
                         @endif
 
                         @if (session('error'))
-                            <x-alert type="error" :message="session('error')" />
+                            <x-ui.alert type="error" :message="session('error')" />
                         @endif
 
                         <div class="row mb-4">
@@ -139,7 +139,7 @@
                                                         @enderror
                                                     </div>
                                                     <div class="col-md-6 d-flex align-items-end">
-                                                        <x-button type="submit" variant="primary" icon="check-circle" label="Atualizar Status" />
+                                                        <x-ui.button type="submit" variant="primary" icon="check-circle" label="Atualizar Status" />
                                                     </div>
                                                 </div>
                                             </form>
@@ -152,7 +152,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <x-button type="link" :href="route('services.public.print', ['code' => $service->code, 'token' => $token])" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
+                                    <x-ui.button type="link" :href="route('services.public.print', ['code' => $service->code, 'token' => $token])" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
 
                                     <div class="text-muted small">
                                         <i class="bi bi-info-circle me-1"></i>
@@ -166,7 +166,7 @@
                 </div>
             </div>
         </div>
-    </x-page-container>
+    </x-layout.page-container>
 @endsection
 
 @push('styles')

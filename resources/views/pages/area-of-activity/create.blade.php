@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Nova Área de Atividade"
             icon="plus-circle"
             :breadcrumb-items="[
@@ -10,8 +10,8 @@
                 'Áreas de Atividade' => url('/admin/area-of-activities'),
                 'Nova' => '#'
             ]">
-            <x-button :href="url('/admin/area-of-activities')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button :href="url('/admin/area-of-activities')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Formulário -->
         <div class="card border-0 shadow-sm">

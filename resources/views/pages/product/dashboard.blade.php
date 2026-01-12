@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Dashboard de Produtos"
         icon="box-seam"
         :breadcrumb-items="[
@@ -12,7 +12,7 @@
             'Produtos' => '#'
         ]">
         <p class="text-muted mb-0 small">Visão geral do seu catálogo de produtos com atalhos de gestão.</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     @php
     $total = $stats['total_products'] ?? 0;
@@ -213,7 +213,7 @@
                                         </td>
                                         <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
                                         <td class="text-center">
-                                            <x-button type="link" :href="route('provider.products.show', $product->sku)"
+                                            <x-ui.button type="link" :href="route('provider.products.show', $product->sku)"
                                                     variant="info" size="sm" icon="eye" />
                                         </td>
                                     </tr>
@@ -249,7 +249,7 @@
                                         </div>
                                     </div>
                                     <div class="ms-2">
-                                        <x-button type="link" :href="route('provider.products.show', $product->sku)"
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)"
                                             variant="info" size="sm" icon="eye" />
                                     </div>
                                 </div>
@@ -301,9 +301,9 @@
                     </h6>
                 </div>
                 <div class="card-body d-grid gap-2">
-                    <x-button type="link" :href="route('provider.products.create')" variant="success" size="sm" icon="plus-circle" label="Novo Produto" />
-                    <x-button type="link" :href="route('provider.products.index')" variant="primary" outline size="sm" icon="box-seam" label="Listar Produtos" />
-                    <x-button type="link" :href="route('provider.products.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletados" />
+                    <x-ui.button type="link" :href="route('provider.products.create')" variant="success" size="sm" icon="plus-circle" label="Novo Produto" />
+                    <x-ui.button type="link" :href="route('provider.products.index')" variant="primary" outline size="sm" icon="box-seam" label="Listar Produtos" />
+                    <x-ui.button type="link" :href="route('provider.products.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletados" />
                 </div>
             </div>
         </div>

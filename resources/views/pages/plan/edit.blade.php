@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Editar Plano"
             icon="gem"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Editar' => '#'
             ]">
             <p class="text-muted mb-0">Atualize as informações do plano "{{ $plan->name }}"</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Formulário -->
         <div class="row justify-content-center">
@@ -169,11 +169,11 @@
 
                         <!-- Footer com botões -->
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <x-button type="link" :href="route('plans.show', $plan->slug)" variant="info" icon="eye" label="Visualizar" />
+                            <x-ui.button type="link" :href="route('plans.show', $plan->slug)" variant="info" icon="eye" label="Visualizar" />
 
                             <div class="d-flex gap-2">
-                                <x-button type="link" :href="route('plans.index')" variant="secondary" icon="arrow-left" label="Voltar" />
-                                <x-button type="submit" variant="warning" size="lg" icon="check-lg" label="Salvar Alterações" />
+                                <x-ui.button type="link" :href="route('plans.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                                <x-ui.button type="submit" variant="warning" size="lg" icon="check-lg" label="Salvar Alterações" />
                             </div>
                         </div>
                     </form>

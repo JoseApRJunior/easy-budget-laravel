@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Unidades"
             icon="rulers"
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
                 'Unidades' => '#'
             ]">
-            <x-button :href="route('admin.units.create')" variant="primary" icon="plus-circle" label="Nova Unidade" />
-        </x-page-header>
+            <x-ui.button :href="route('admin.units.create')" variant="primary" icon="plus-circle" label="Nova Unidade" />
+        </x-layout.page-header>
 
         <!-- Tabela de Unidades -->
         <div class="card border-0 shadow-sm">

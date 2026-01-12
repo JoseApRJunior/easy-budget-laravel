@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         :title="'Histórico do Plano: ' . $plan->name"
         icon="clock-history"
         :breadcrumb-items="[
@@ -12,10 +12,10 @@
             'Histórico' => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
-            <x-button type="link" :href="route('admin.plans.export', ['format' => 'json'])" variant="primary" icon="download" label="Exportar Dados" />
+            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'json'])" variant="primary" icon="download" label="Exportar Dados" />
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Plan Statistics -->
     <div class="row mb-4">
@@ -115,7 +115,7 @@
                                     <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                            <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                         </div>
                                     </td>
                                 </tr>

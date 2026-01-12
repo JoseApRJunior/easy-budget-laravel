@@ -16,7 +16,7 @@ class BudgetPdfService
         $viewData = array_merge(compact('budget'), $extras);
         $html = View::make('pages.budget.pdf_budget', $viewData)->render();
 
-        $margins = config('pdf_theme.margins');
+        $margins = config('theme.pdf.margins');
 
         $mpdf = new Mpdf([
             'mode' => 'utf-8',

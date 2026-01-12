@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Gerar Fatura para o Serviço #{{ $serviceCode }}"
             icon="receipt"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Gerar Fatura' => '#'
             ]">
             <p class="text-muted mb-0">Confirme os dados para gerar a fatura do serviço</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">

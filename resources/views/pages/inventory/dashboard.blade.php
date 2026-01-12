@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid py-4">
     <!-- Cabeçalho -->
-    <x-page-header
+    <x-layout.page-header
         title="Dashboard de Inventário"
         icon="archive"
         :breadcrumb-items="[
@@ -13,7 +13,7 @@
             'Inventário' => '#'
         ]">
         <p class="text-muted mb-0">Visão geral do seu estoque e movimentações com atalhos de gestão.</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Cards de Métricas -->
     <div class="row g-3 mb-4">
@@ -28,7 +28,7 @@
                     </div>
                     <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($totalProducts, 0, false) }}</h5>
                     <div class="mt-2">
-                        <x-button type="link" :href="route('provider.inventory.index')" variant="link" size="sm" label="Ver todos" icon="chevron-right" icon-right class="p-0 text-decoration-none" />
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="link" size="sm" label="Ver todos" icon="chevron-right" icon-right class="p-0 text-decoration-none" />
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                     </div>
                     <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($sufficientStockProducts, 0, false) }}</h5>
                     <div class="mt-2">
-                        <x-button type="link" :href="route('provider.inventory.index', ['status' => 'sufficient'])" variant="link" size="sm" label="Ver produtos" icon="chevron-right" icon-right class="text-success p-0 text-decoration-none" />
+                        <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'sufficient'])" variant="link" size="sm" label="Ver produtos" icon="chevron-right" icon-right class="text-success p-0 text-decoration-none" />
                     </div>
                 </div>
             </div>
@@ -133,12 +133,12 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
-                        <x-button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" size="sm" />
-                        <x-button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" size="sm" />
-                        <x-button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" size="sm" />
-                        <x-button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" size="sm" />
-                        <x-button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" size="sm" />
-                        <x-button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" size="sm" />
                     </div>
                 </div>
             </div>
@@ -157,7 +157,7 @@
                         </div>
                         Estoque Baixo
                     </h5>
-                    <x-button type="link" :href="route('provider.inventory.index', ['status' => 'low'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
+                    <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'low'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
                 <div class="card-body p-0">
                     <!-- Desktop View -->
@@ -192,8 +192,8 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -227,8 +227,8 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">Mín: {{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</small>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
                                         </div>
                                     </div>
                                 </div>
@@ -256,7 +256,7 @@
                         </div>
                         Estoque Alto
                     </h5>
-                    <x-button type="link" :href="route('provider.inventory.index', ['status' => 'high'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
+                    <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'high'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
                 <div class="card-body p-0">
                     <!-- Desktop View -->
@@ -291,8 +291,8 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -326,8 +326,8 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <small class="text-muted">Máx: {{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</small>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" />
-                                            <x-button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
                                         </div>
                                     </div>
                                 </div>

@@ -2,14 +2,14 @@
 
 @section( 'content' )
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Detalhes do Orçamento #{{ $budget->code }}"
             icon="file-earmark-text"
             :breadcrumb-items="[
                 'Início' => url('/'),
                 $budget->code => '#'
             ]">
-        </x-page-header>
+        </x-layout.page-header>
 
         @if(isset($info) && $info)
             <div class="alert alert-warning alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">

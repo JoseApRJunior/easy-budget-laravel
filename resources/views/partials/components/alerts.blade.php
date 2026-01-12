@@ -70,7 +70,7 @@
         </script>
 
         {{-- Mantém o componente visual original como fallback apenas para erros de validação --}}
-        {{-- <x-alert :type="$type" :message="session( $type )" class="mb-4" /> --}}
+        {{-- <x-ui.alert :type="$type" :message="session( $type )" class="mb-4" /> --}}
     @else
             {{-- DEBUG: Log quando não encontra mensagem --}}
             @php

@@ -1,8 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Detalhes do Serviço')
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Detalhes do Serviço"
         icon="tools"
         :breadcrumb-items="[
@@ -11,17 +11,17 @@
             $service->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     {{-- Alerta de Faturas Existentes --}}
     @if ($service->invoices && $service->invoices->count() > 0)
-        <x-alert type="message" :message="'Este serviço já possui ' . $service->invoices->count() . ' fatura(s). <a href=\"' . route('provider.invoices.index', ['search' => $service->code]) . '\" class=\"alert-link\">Ver faturas</a>'" />
+        <x-ui.alert type="message" :message="'Este serviço já possui ' . $service->invoices->count() . ' fatura(s). <a href=\"' . route('provider.invoices.index', ['search' => $service->code]) . '\" class=\"alert-link\">Ver faturas</a>'" />
     @endif
 
-    <x-grid-row>
-        <x-grid-col size="col-lg-8">
+    <x-layout.grid-row>
+        <x-layout.grid-col size="col-lg-8">
             {{-- Informações Básicas do Serviço --}}
-            <x-resource-list-card
+            <x-resource.resource-list-card
                 title="Serviço {{ $service->code }}"
                 icon="tools"
                 padding="p-4"
@@ -29,41 +29,41 @@
                 <x-slot name="headerActions">
                     <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
                     <div class="ms-2">
-                        <x-status-description :item="$service" statusField="status" />
+                        <x-ui.status-description :item="$service" statusField="status" />
                     </div>
                 </x-slot>
 
-                <x-grid-row class="mb-4">
-                    <x-grid-col size="col-12 col-md-6">
+                <x-layout.grid-row class="mb-4">
+                    <x-layout.grid-col size="col-12 col-md-6">
                         <h6 class="text-muted mb-3">
                             <i class="bi bi-tag me-2"></i>
                             Informações Gerais
                         </h6>
-                        <x-resource-mobile-field label="Categoria" :value="$service->category?->name ?? 'Não definida'" />
-                        <x-resource-mobile-field label="Orçamento">
+                        <x-resource.resource-mobile-field label="Categoria" :value="$service->category?->name ?? 'Não definida'" />
+                        <x-resource.resource-mobile-field label="Orçamento">
                             <a href="{{ route('provider.budgets.show', $service->budget?->code) }}"
                                 class="text-decoration-none fw-bold">
                                 {{ $service->budget?->code ?? 'N/A' }}
                             </a>
-                        </x-resource-mobile-field>
+                        </x-resource.resource-mobile-field>
                         @if ($service->due_date)
-                            <x-resource-mobile-field label="Prazo" :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')" />
+                            <x-resource.resource-mobile-field label="Prazo" :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')" />
                         @endif
-                    </x-grid-col>
-                    <x-grid-col size="col-12 col-md-6">
+                    </x-layout.grid-col>
+                    <x-layout.grid-col size="col-12 col-md-6">
                         <h6 class="text-muted mb-3">
                             <i class="bi bi-currency-dollar me-2"></i>
                             Valores
                         </h6>
-                        <x-resource-mobile-field label="Total">
+                        <x-resource.resource-mobile-field label="Total">
                             <span class="text-success fw-bold fs-5">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                        </x-resource-mobile-field>
-                        <x-resource-mobile-field label="Desconto">
+                        </x-resource.resource-mobile-field>
+                        <x-resource.resource-mobile-field label="Desconto">
                             <span class="text-danger fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
-                        </x-resource-mobile-field>
-                        <x-resource-mobile-field label="Subtotal" :value="\App\Helpers\CurrencyHelper::format($service->total + $service->discount)" />
-                    </x-grid-col>
-                </x-grid-row>
+                        </x-resource.resource-mobile-field>
+                        <x-resource.resource-mobile-field label="Subtotal" :value="\App\Helpers\CurrencyHelper::format($service->total + $service->discount)" />
+                    </x-layout.grid-col>
+                </x-layout.grid-row>
 
                 @if ($service->description)
                     <div class="mb-0">
@@ -74,162 +74,162 @@
                         <p class="text-muted mb-0">{{ $service->description }}</p>
                     </div>
                 @endif
-            </x-resource-list-card>
+            </x-resource.resource-list-card>
 
                 {{-- Itens do Serviço --}}
                 @if ($service->serviceItems && $service->serviceItems->count() > 0)
-                    <x-resource-list-card
+                    <x-resource.resource-list-card
                         title="Itens do Serviço"
                         icon="list-ul"
                         :total="$service->serviceItems->count()">
 
                         <x-slot name="desktop">
-                            <x-resource-table>
+                            <x-resource.resource-table>
                                 <x-slot name="thead">
-                                    <x-table-row>
-                                        <x-table-cell header>Produto</x-table-cell>
-                                        <x-table-cell header>Quantidade</x-table-cell>
-                                        <x-table-cell header>Valor Unitário</x-table-cell>
-                                        <x-table-cell header>Total</x-table-cell>
-                                    </x-table-row>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Produto</x-resource.table-cell>
+                                        <x-resource.table-cell header>Quantidade</x-resource.table-cell>
+                                        <x-resource.table-cell header>Valor Unitário</x-resource.table-cell>
+                                        <x-resource.table-cell header>Total</x-resource.table-cell>
+                                    </x-resource.table-row>
                                 </x-slot>
 
                                 @foreach ($service->serviceItems as $item)
-                                    <x-table-row>
-                                        <x-table-cell>
-                                            <x-resource-info
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell>
+                                            <x-resource.resource-info
                                                 :title="$item->product?->name ?? 'Produto não encontrado'"
                                                 :subtitle="$item->product?->description ?? ''"
                                                 icon="box-seam"
                                                 titleClass="fw-bold"
                                                 subtitleClass="text-muted small"
                                             />
-                                        </x-table-cell>
-                                        <x-table-cell>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</x-table-cell>
-                                        <x-table-cell>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</x-table-cell>
-                                        <x-table-cell><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></x-table-cell>
-                                    </x-table-row>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</x-resource.table-cell>
+                                        <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</x-resource.table-cell>
+                                        <x-resource.table-cell><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></x-resource.table-cell>
+                                    </x-resource.table-row>
                                 @endforeach
 
                                 <x-slot name="tfoot">
-                                    <x-table-row class="table-secondary">
-                                        <x-table-cell colspan="3" header>Total dos Itens:</x-table-cell>
-                                        <x-table-cell header>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</x-table-cell>
-                                    </x-table-row>
+                                    <x-resource.table-row class="table-secondary">
+                                        <x-resource.table-cell colspan="3" header>Total dos Itens:</x-resource.table-cell>
+                                        <x-resource.table-cell header>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</x-resource.table-cell>
+                                    </x-resource.table-row>
                                 </x-slot>
-                            </x-resource-table>
+                            </x-resource.resource-table>
                         </x-slot>
 
                         <x-slot name="mobile">
                             @foreach ($service->serviceItems as $item)
-                                <x-resource-mobile-item icon="box-seam">
-                                    <x-resource-mobile-header
+                                <x-resource.resource-mobile-item icon="box-seam">
+                                    <x-resource.resource-mobile-header
                                         :title="$item->product?->name ?? 'Produto não encontrado'"
                                     />
 
-                        <x-grid-row g="2" class="mb-2">
-                                        <x-resource-mobile-field
+                        <x-layout.grid-row g="2" class="mb-2">
+                                        <x-resource.resource-mobile-field
                                             label="Qtd"
                                             :value="\App\Helpers\CurrencyHelper::format($item->quantity, false)"
                                             col="col-6"
                                         />
-                                        <x-resource-mobile-field
+                                        <x-resource.resource-mobile-field
                                             label="Unit"
                                             :value="\App\Helpers\CurrencyHelper::format($item->unit_value)"
                                             col="col-6"
                                             align="end"
                                         />
-                                    </x-grid-row>
+                                    </x-layout.grid-row>
 
-                                    <x-resource-mobile-field
+                                    <x-resource.resource-mobile-field
                                         label="Total"
                                         col="col-12"
                                     >
                                         <span class="text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</span>
-                                    </x-resource-mobile-field>
-                                </x-resource-mobile-item>
+                                    </x-resource.resource-mobile-field>
+                                </x-resource.resource-mobile-item>
                             @endforeach
 
-                            <x-resource-mobile-field label="Total dos Itens" class="bg-body-secondary p-3">
+                            <x-resource.resource-mobile-field label="Total dos Itens" class="bg-body-secondary p-3">
                                 <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
-                            </x-resource-mobile-field>
+                            </x-resource.resource-mobile-field>
                         </x-slot>
-                    </x-resource-list-card>
+                    </x-resource.resource-list-card>
                 @endif
 
                 {{-- Agendamentos --}}
                 @if ($service->schedules && $service->schedules->count() > 0)
-                    <x-resource-list-card
+                    <x-resource.resource-list-card
                         title="Agendamentos"
                         icon="calendar"
                         :total="$service->schedules->count()"
                         class="mb-4">
 
                         <x-slot name="desktop">
-                            <x-resource-table>
+                            <x-resource.resource-table>
                                 <x-slot name="thead">
-                                    <x-table-row>
-                                        <x-table-cell header>Data</x-table-cell>
-                                        <x-table-cell header>Horário</x-table-cell>
-                                        <x-table-cell header>Localização</x-table-cell>
-                                    </x-table-row>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Data</x-resource.table-cell>
+                                        <x-resource.table-cell header>Horário</x-resource.table-cell>
+                                        <x-resource.table-cell header>Localização</x-resource.table-cell>
+                                    </x-resource.table-row>
                                 </x-slot>
 
                                 @foreach ($service->schedules as $schedule)
-                                    <x-table-row>
-                                        <x-table-cell class="fw-bold">
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell class="fw-bold">
                                             {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
-                                        </x-table-cell>
-                                        <x-table-cell class="text-muted">
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="text-muted">
                                             {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
                                             -
                                             {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
-                                        </x-table-cell>
-                                        <x-table-cell>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>
                                             @if ($schedule->location)
                                                 <i class="bi bi-geo-alt me-1 text-muted"></i>
                                                 {{ $schedule->location }}
                                             @else
                                                 <span class="text-muted small">Não informada</span>
                                             @endif
-                                        </x-table-cell>
-                                    </x-table-row>
+                                        </x-resource.table-cell>
+                                    </x-resource.table-row>
                                 @endforeach
-                            </x-resource-table>
+                            </x-resource.resource-table>
                         </x-slot>
 
                         <x-slot name="mobile">
                             @foreach ($service->schedules as $schedule)
-                                <x-resource-mobile-item icon="calendar-event">
-                                    <x-resource-mobile-header
+                                <x-resource.resource-mobile-item icon="calendar-event">
+                                    <x-resource.resource-mobile-header
                                         :title="\Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y')"
                                         :subtitle="\Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i')"
                                     />
                                     @if ($schedule->location)
-                                        <x-resource-mobile-field
+                                        <x-resource.resource-mobile-field
                                             label="Local"
                                             :value="$schedule->location"
                                             icon="geo-alt"
                                         />
                                     @endif
-                                </x-resource-mobile-item>
+                                </x-resource.resource-mobile-item>
                             @endforeach
                         </x-slot>
-                    </x-resource-list-card>
+                    </x-resource.resource-list-card>
                 @endif
-        </x-grid-col>
+        </x-layout.grid-col>
 
-        <x-grid-col size="col-lg-4">
-            <x-v-stack>
+        <x-layout.grid-col size="col-lg-4">
+            <x-layout.v-stack>
                 {{-- Informações do Cliente --}}
-                <x-resource-list-card
+                <x-resource.resource-list-card
                     title="Cliente"
                     icon="person-circle"
                     padding="p-4"
                 >
                     @if ($service->budget?->customer)
                         <div class="mb-4">
-                            <x-resource-info
+                            <x-resource.resource-info
                                  :title="$service->budget->customer->commonData?->full_name"
                                  :subtitle="$service->budget->customer->commonData?->company_name"
                                  icon="person"
@@ -239,9 +239,9 @@
                             />
                         </div>
 
-                        <x-v-stack gap="3" class="mb-4">
+                        <x-layout.v-stack gap="3" class="mb-4">
                             @if ($service->budget->customer->contact?->email)
-                                <x-resource-mobile-field
+                                <x-resource.resource-mobile-field
                                     label="E-mail"
                                     :value="$service->budget->customer->contact->email"
                                     icon="envelope"
@@ -249,7 +249,7 @@
                             @endif
 
                             @if ($service->budget->customer->contact?->phone)
-                                <x-resource-mobile-field
+                                <x-resource.resource-mobile-field
                                     label="Telefone"
                                     :value="$service->budget->customer->contact->phone"
                                     icon="telephone"
@@ -257,24 +257,24 @@
                             @endif
 
                             @if ($service->budget->customer->contact?->phone_business)
-                                <x-resource-mobile-field
+                                <x-resource.resource-mobile-field
                                     label="WhatsApp"
                                     icon="whatsapp"
                                 >
                                     <a href="https://wa.me/{{ preg_replace('/\D/', '', $service->budget->customer->contact->phone_business) }}" target="_blank" class="text-decoration-none fw-bold">
                                         {{ $service->budget->customer->contact->phone_business }}
                                     </a>
-                                </x-resource-mobile-field>
+                                </x-resource.resource-mobile-field>
                             @endif
-                        </x-v-stack>
+                        </x-layout.v-stack>
 
                         <div class="d-grid">
-                            <x-button type="link" href="{{ route('provider.customers.show', $service->budget->customer) }}" variant="outline-primary" size="sm" icon="eye" label="Ver Perfil Completo" />
+                            <x-ui.button type="link" href="{{ route('provider.customers.show', $service->budget->customer) }}" variant="outline-primary" size="sm" icon="eye" label="Ver Perfil Completo" />
                         </div>
                     @else
-                        <x-empty-state title="Cliente não vinculado" description="Este serviço não possui um cliente vinculado via orçamento." icon="person-x" />
+                        <x-resource.empty-state title="Cliente não vinculado" description="Este serviço não possui um cliente vinculado via orçamento." icon="person-x" />
                     @endif
-                </x-resource-list-card>
+                </x-resource.resource-list-card>
 
                 @php
                     $statusValue = $service->status->value;
@@ -282,19 +282,19 @@
                     $isApproved = $budgetStatus === 'approved';
                 @endphp
 
-                <x-quick-actions title="Ações do Serviço" icon="lightning-charge" variant="secondary">
+                <x-resource.quick-actions title="Ações do Serviço" icon="lightning-charge" variant="secondary">
                     @if ($isApproved)
                         {{-- Status PENDING --}}
                         @if ($statusValue === 'pending')
-                            <x-button type="button" variant="info" icon="calendar-check" label="Agendar"
+                            <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
                                 data-bs-toggle="modal" data-bs-target="#scheduleModal" />
 
-                            <x-button type="button" variant="warning" icon="tools" label="Preparar"
+                            <x-ui.button type="button" variant="warning" icon="tools" label="Preparar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="preparing"
                                 data-title="Preparar Serviço"
                                 data-message="Deseja marcar o serviço {{ $service->code }} como em preparação?" />
 
-                            <x-button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
                                 data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
@@ -302,17 +302,17 @@
 
                         {{-- Status SCHEDULED --}}
                         @if ($statusValue === 'scheduled')
-                            <x-button type="button" variant="warning" icon="tools" label="Preparar"
+                            <x-ui.button type="button" variant="warning" icon="tools" label="Preparar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="preparing"
                                 data-title="Preparar Serviço"
                                 data-message="Deseja preparar o serviço {{ $service->code }}?" />
 
-                            <x-button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
                                 data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
 
-                            <x-button type="button" variant="danger" icon="x-circle" label="Não Realizar"
+                            <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
                                 data-title="Não Realizado"
                                 data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
@@ -320,17 +320,17 @@
 
                         {{-- Status PREPARING --}}
                         @if ($statusValue === 'preparing')
-                            <x-button type="button" variant="success" icon="play-circle" label="Iniciar"
+                            <x-ui.button type="button" variant="success" icon="play-circle" label="Iniciar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="in_progress"
                                 data-title="Iniciar Serviço"
                                 data-message="Deseja iniciar a execução do serviço {{ $service->code }}?" />
 
-                            <x-button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
                                 data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
 
-                            <x-button type="button" variant="danger" icon="x-circle" label="Não Realizar"
+                            <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
                                 data-title="Não Realizado"
                                 data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
@@ -338,17 +338,17 @@
 
                         {{-- Status IN_PROGRESS --}}
                         @if ($statusValue === 'in_progress')
-                            <x-button type="button" variant="success" icon="check-circle" label="Concluir"
+                            <x-ui.button type="button" variant="success" icon="check-circle" label="Concluir"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="completed"
                                 data-title="Concluir Serviço"
                                 data-message="Deseja concluir o serviço {{ $service->code }}?" />
 
-                            <x-button type="button" variant="success" icon="check-circle" label="Parcial"
+                            <x-ui.button type="button" variant="success" icon="check-circle" label="Parcial"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="partial"
                                 data-title="Concluir Parcialmente"
                                 data-message="Deseja concluir o serviço {{ $service->code }} parcialmente?" />
 
-                            <x-button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
                                 data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
@@ -356,10 +356,10 @@
 
                         {{-- Status SCHEDULING ou ON_HOLD --}}
                         @if ($statusValue === 'scheduling' || $statusValue === 'on_hold')
-                            <x-button type="button" variant="info" icon="calendar-check" label="Agendar"
+                            <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
                                 data-bs-toggle="modal" data-bs-target="#scheduleModal" />
 
-                            <x-button type="button" variant="danger" icon="x-circle" label="Não Realizar"
+                            <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
                                 data-title="Não Realizado"
                                 data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
@@ -367,94 +367,94 @@
 
                         {{-- Botão Cancelar - Sempre disponível para status não finais --}}
                         @if (!in_array($statusValue, ['completed', 'partial', 'cancelled', 'not_performed', 'expired']))
-                            <x-button type="button" variant="outline-danger" icon="x-circle" label="Cancelar"
+                            <x-ui.button type="button" variant="outline-danger" icon="x-circle" label="Cancelar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="cancelled"
                                 data-title="Cancelar Serviço"
                                 data-message="Deseja cancelar definitivamente o serviço {{ $service->code }}?" />
                         @endif
                     @else
-                        <x-alert type="warning" message="Aguardando aprovação do orçamento para prosseguir com o serviço." icon="exclamation-triangle" />
+                        <x-ui.alert type="warning" message="Aguardando aprovação do orçamento para prosseguir com o serviço." icon="exclamation-triangle" />
                     @endif
 
                     <hr class="my-3">
 
                     @if ($service->canBeEdited())
-                        <x-button type="link" href="{{ route('provider.services.edit', $service->code) }}"
+                        <x-ui.button type="link" href="{{ route('provider.services.edit', $service->code) }}"
                             variant="outline-primary" icon="pencil" label="Editar Serviço" />
                     @endif
 
                     @if ($service->budget)
-                        <x-button type="link" href="{{ route('provider.budgets.show', $service->budget->code) }}"
+                        <x-ui.button type="link" href="{{ route('provider.budgets.show', $service->budget->code) }}"
                             variant="outline-info" icon="receipt" label="Ver Orçamento" />
                     @endif
 
                     {{-- Botões de Fatura --}}
                     @if ($service->status->isFinished() || $statusValue === 'completed')
-                        <x-button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
+                        <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
                             variant="outline-success" icon="receipt" label="Criar Fatura" />
                     @else
                         @if($service->serviceItems && $service->serviceItems->count() > 0)
-                            <x-button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
+                            <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
                                 variant="outline-warning" icon="receipt" label="Criar Fatura Parcial" />
                         @endif
                     @endif
 
-                    <x-button type="button" variant="outline-secondary" onclick="window.print()" icon="printer" label="Imprimir" />
-                </x-quick-actions>
-            </x-v-stack>
-        </x-grid-col>
-    </x-grid-row>
+                    <x-ui.button type="button" variant="outline-secondary" onclick="window.print()" icon="printer" label="Imprimir" />
+                </x-resource.quick-actions>
+            </x-layout.v-stack>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 
         {{-- Botões de Ação (Footer) --}}
         <div class="d-flex justify-content-between align-items-center mt-4">
             <div class="d-flex gap-2">
-                <x-button
+                <x-ui.button
                     href="{{ url()->previous(route('provider.services.index')) }}"
                     variant="outline-secondary"
                     icon="bi bi-arrow-left">
                     Voltar
-                </x-button>
+                </x-ui.button>
             </div>
             <small class="text-muted d-none d-md-block">
                 Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
             </small>
             <div class="d-flex gap-2">
                 @if ($service->canBeEdited())
-                    <x-button
+                    <x-ui.button
                         href="{{ route('provider.services.edit', $service->code) }}"
                         variant="primary"
                         icon="bi bi-pencil-fill">
                         Editar
-                    </x-button>
+                    </x-ui.button>
                 @endif
-                <x-button
+                <x-ui.button
                     type="button"
                     variant="outline-danger"
                     data-bs-toggle="modal"
                     data-bs-target="#deleteModal"
                     icon="bi bi-trash-fill">
                     Excluir
-                </x-button>
+                </x-ui.button>
             </div>
         </div>
 
         {{-- Modal de Confirmação de Exclusão --}}
-        <x-modal id="deleteModal" title="Confirmar Exclusão">
+        <x-ui.modal id="deleteModal" title="Confirmar Exclusão">
             Tem certeza de que deseja excluir o serviço <strong>{{ $service->code }}</strong>?
             <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
 
             <x-slot name="footer">
-                <x-button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form action="{{ route('provider.services.destroy', $service->code) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <x-button type="submit" variant="danger" label="Excluir" />
+                    <x-ui.button type="submit" variant="danger" label="Excluir" />
                 </form>
             </x-slot>
-        </x-modal>
+        </x-ui.modal>
 
         {{-- Modal Reutilizável para Ações de Status --}}
-        <x-modal id="actionModal" title="Ação de Status">
+        <x-ui.modal id="actionModal" title="Ação de Status">
             <form id="actionForm" action="{{ route('provider.services.change-status', $service->code) }}" method="POST">
                 @csrf
                 <input type="hidden" name="status" id="actionStatusInput">
@@ -464,13 +464,13 @@
                 </p>
             </form>
             <x-slot name="footer">
-                <x-button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-button type="submit" form="actionForm" variant="primary" id="actionConfirmButton" label="Confirmar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button type="submit" form="actionForm" variant="primary" id="actionConfirmButton" label="Confirmar" />
             </x-slot>
-        </x-modal>
+        </x-ui.modal>
 
         {{-- Modal para Agendamento --}}
-        <x-modal id="scheduleModal" title="Agendar Serviço">
+        <x-ui.modal id="scheduleModal" title="Agendar Serviço">
             <form id="scheduleForm" action="{{ route('provider.schedules.store', $service->code) }}" method="POST">
                 @csrf
                 <input type="hidden" name="service_id" value="{{ $service->id }}">
@@ -501,11 +501,11 @@
                 </div>
             </form>
             <x-slot name="footer">
-                <x-button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-button type="submit" form="scheduleForm" variant="info" label="Agendar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button type="submit" form="scheduleForm" variant="info" label="Agendar" />
             </x-slot>
-        </x-modal>
-    </x-page-container>
+        </x-ui.modal>
+    </x-layout.page-container>
 @endsection
 
 @push('scripts')

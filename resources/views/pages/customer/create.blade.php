@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Novo Cliente"
             icon="person-plus"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Novo' => '#'
             ]">
             <p class="text-muted mb-0 small">Cadastre um novo cliente no sistema</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <form action="{{ route('provider.customers.store') }}" method="POST" id="customerForm">
             @csrf

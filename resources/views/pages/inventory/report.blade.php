@@ -10,7 +10,7 @@
 
     <div class="container-fluid py-4">
         <!-- Cabeçalho -->
-        <x-page-header
+        <x-layout.page-header
             title="Relatório de Inventário"
             icon="clipboard-data"
             :breadcrumb-items="[
@@ -19,7 +19,7 @@
                 'Relatório' => '#'
             ]">
             <p class="text-muted mb-0">Resumo e detalhes conforme filtros aplicados</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Card de Filtros -->
         <div class="card mb-4">
@@ -45,7 +45,7 @@
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 name="start_date"
                                 id="start_date"
@@ -54,7 +54,7 @@
                             />
                         </div>
                         <div class="col-md-3">
-                            <x-filter-field
+                            <x-form.filter-field
                                 type="date"
                                 name="end_date"
                                 id="end_date"
@@ -75,8 +75,8 @@
                         </div>
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <x-button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
-                                <x-button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="x" label="Limpar" />
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
+                                <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -107,8 +107,8 @@
                     <div class="col-12 col-lg-4 text-start text-lg-end">
                         <div class="d-flex justify-content-start justify-content-lg-end">
                             <div class="d-flex gap-1" role="group">
-                                <x-button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                <x-button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                             </div>
                         </div>
                     </div>
@@ -206,7 +206,7 @@
         <div class="mt-4 pb-2">
             <div class="row align-items-center g-3">
                 <div class="col-12 col-md-auto">
-                    <x-back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
+                    <x-ui.back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
                 </div>
                 <div class="col-12 col-md text-center d-none d-md-block">
                     <small class="text-muted">

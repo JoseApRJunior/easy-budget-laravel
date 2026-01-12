@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Status do Pagamento"
             icon="credit-card"
             :breadcrumb-items="[
@@ -11,7 +11,7 @@
                 'Status do Pagamento' => '#'
             ]">
             <p class="text-muted mb-0">Acompanhe o processamento do seu pagamento</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">

@@ -3,8 +3,8 @@
 @section('title', 'Categorias')
 
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Categorias"
         icon="tags"
         :breadcrumb-items="[
@@ -13,15 +13,15 @@
             'Lista' => '#'
         ]">
         <p class="text-muted mb-0">Lista de suas categorias</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Filtros de Busca -->
-    <x-filter-form
+    <x-form.filter-form
                 id="filtersFormCategories"
                 :route="route('provider.categories.index')"
                 :filters="$filters"
             >
-                <x-filter-field
+                <x-form.filter-field
                     type="text"
                     name="search"
                     label="Buscar"
@@ -29,7 +29,7 @@
                     :filters="$filters"
                 />
 
-                <x-filter-field
+                <x-form.filter-field
                     type="select"
                     name="active"
                     label="Status"
@@ -42,7 +42,7 @@
                     :filters="$filters"
                 />
 
-                <x-filter-field
+                <x-form.filter-field
                     type="select"
                     name="per_page"
                     label="Por página"
@@ -55,7 +55,7 @@
                     :filters="$filters"
                 />
 
-                <x-filter-field
+                <x-form.filter-field
                     type="select"
                     name="deleted"
                     label="Registros"
@@ -68,7 +68,7 @@
                     :filters="$filters"
                 />
 
-                <x-filter-field
+                <x-form.filter-field
                     type="date"
                     name="start_date"
                     label="Cadastro Inicial"
@@ -76,16 +76,16 @@
                     :filters="$filters"
                 />
 
-                <x-filter-field
+                <x-form.filter-field
                     type="date"
                     name="end_date"
                     label="Cadastro Final"
                     col="col-md-2"
                     :filters="$filters"
                 />
-            </x-filter-form>
+            </x-form.filter-form>
 
-            <x-resource-list-card
+            <x-resource.resource-list-card
                 class="mt-3 mt-md-0"
                 title="Lista de Categorias"
                 mobileTitle="Categorias"
@@ -93,7 +93,7 @@
                 :total="$categories instanceof \Illuminate\Pagination\LengthAwarePaginator ? $categories->total() : $categories->count()"
             >
                 <x-slot:headerActions>
-                    <x-table-header-actions
+                    <x-resource.table-header-actions
                         resource="categories"
                         :filters="$filters"
                         createLabel="Nova"
@@ -101,7 +101,7 @@
                 </x-slot:headerActions>
 
                 <x-slot:desktop>
-                    <x-resource-table>
+                    <x-resource.resource-table>
                         <x-slot:thead>
                             <tr>
                                 <th>Nome</th>
@@ -116,14 +116,14 @@
                             @forelse($categories as $category)
                                 <tr>
                                     <td>
-                                        <x-resource-info
+                                        <x-resource.resource-info
                                             :title="$category->name"
                                             icon="tag"
                                         />
                                     </td>
                                     <td>
                                         @if ($category->parent_id && $category->parent)
-                                            <x-resource-info
+                                            <x-resource.resource-info
                                                 :title="$category->parent->name"
                                                 icon="folder2-open"
                                             />
@@ -132,16 +132,16 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <x-status-badge :item="$category" />
+                                        <x-ui.status-badge :item="$category" />
                                     </td>
                                     <td>
                                         <small class="text-muted">
                                             {{ $category->created_at?->format('d/m/Y H:i') ?? '—' }}
                                         </small>
                                     </td>
-                                    <x-table-actions>
+                                    <x-resource.table-actions>
                                         @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
-                                        <x-action-buttons
+                                        <x-resource.action-buttons
                                             :item="$category"
                                             resource="categories"
                                             identifier="slug"
@@ -149,12 +149,12 @@
                                             :restoreBlocked="$parentIsTrashed"
                                             restoreBlockedMessage="<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro."
                                         />
-                                    </x-table-actions>
+                                    </x-resource.table-actions>
                                 </tr>
                             @empty
                                 <tr>
                                     <td colspan="5">
-                                        <x-empty-state
+                                        <x-resource.empty-state
                                             resource="categorias"
                                             :isTrashView="($filters['deleted'] ?? '') === 'only'"
                                         />
@@ -162,23 +162,23 @@
                                 </tr>
                             @endforelse
                         </x-slot:tbody>
-                    </x-resource-table>
+                    </x-resource.resource-table>
                 </x-slot:desktop>
 
                 <x-slot:mobile>
                     @forelse($categories as $category)
-                            <x-resource-mobile-item>
-                                <x-resource-info
+                            <x-resource.resource-mobile-item>
+                                <x-resource.resource-info
                                     :title="$category->name"
                                     icon="tag"
                                 />
 
                                 <x-slot:description>
                                     <div class="d-flex gap-2 flex-wrap mb-1">
-                                        <x-status-badge :item="$category" />
+                                        <x-ui.status-badge :item="$category" />
                                     </div>
                                     @if ($category->parent_id && $category->parent)
-                                        <x-resource-info
+                                        <x-resource.resource-info
                                             :title="'Pai: ' . $category->parent->name"
                                             icon="arrow-return-right"
                                             class="mt-1"
@@ -193,19 +193,19 @@
                                 </x-slot:footer>
 
                                 <x-slot:actions>
-                                    <x-table-actions mobile>
-                                        <x-action-buttons
+                                    <x-resource.table-actions mobile>
+                                        <x-resource.action-buttons
                                             :item="$category"
                                             resource="categories"
                                             identifier="slug"
                                             :canDelete="$category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0"
                                             size="sm"
                                         />
-                                    </x-table-actions>
+                                    </x-resource.table-actions>
                                 </x-slot:actions>
-                            </x-resource-mobile-item>
+                            </x-resource.resource-mobile-item>
                         @empty
-                            <x-empty-state
+                            <x-resource.empty-state
                                 resource="categorias"
                                 :isTrashView="($filters['deleted'] ?? '') === 'only'"
                             />
@@ -220,35 +220,35 @@
                         ])
                     @endif
                 </x-slot:footer>
-            </x-resource-list-card>
+            </x-resource.resource-list-card>
             {{-- Modais de Confirmação --}}
-            <x-confirm-modal
+            <x-ui.confirm-modal
                 id="deleteModal"
                 type="delete"
                 resource="categoria"
                 method="DELETE"
             />
 
-            <x-confirm-modal
+            <x-ui.confirm-modal
                 id="restoreModal"
                 type="restore"
                 resource="categoria"
                 method="POST"
             />
-    </x-page-container>
+    </x-layout.page-container>
 
     {{-- Modal de Confirmação para Listar Tudo --}}
-    <x-modal
+    <x-ui.modal
         id="confirmAllCategoriesModal"
         title="Listar todas as categorias?"
     >
         <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
 
         <x-slot:footer>
-            <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-            <x-button type="button" class="btn-confirm-all-categories" label="Listar todos" />
+            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+            <x-ui.button type="button" class="btn-confirm-all-categories" label="Listar todos" />
         </x-slot:footer>
-    </x-modal>
+    </x-ui.modal>
 @endsection
 
 @push('scripts')

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Admin Dashboard"
             icon="speedometer2"
             :breadcrumb-items="[
@@ -17,13 +17,13 @@
                     <option value="quarter" {{ $currentPeriod === 'quarter' ? 'selected' : '' }}>Último Trimestre</option>
                     <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
                 </select>
-                <x-button 
+                <x-ui.button 
                     variant="primary" 
                     onclick="refreshDashboard()"
                     icon="arrow-clockwise"
                     label="Atualizar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- System Alerts -->
         @if (count($alerts) > 0)
@@ -274,10 +274,10 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <x-button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" />
-                            <x-button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" />
-                            <x-button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" />
-                            <x-button type="link" :href="route('admin.reports.index')" variant="warning" size="sm" icon="file-earmark-text" label="Ver Relatórios" />
+                            <x-ui.button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" />
+                            <x-ui.button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" />
+                            <x-ui.button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" />
+                            <x-ui.button type="link" :href="route('admin.reports.index')" variant="warning" size="sm" icon="file-earmark-text" label="Ver Relatórios" />
                         </div>
                     </div>
                 </div>
@@ -290,7 +290,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Atividades Recentes do Sistema</h6>
-                        <x-button type="link" :href="route('admin.audit.logs')" variant="primary" size="sm" label="Ver todas" />
+                        <x-ui.button type="link" :href="route('admin.audit.logs')" variant="primary" size="sm" label="Ver todas" />
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">

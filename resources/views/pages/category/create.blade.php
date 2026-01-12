@@ -3,8 +3,8 @@
 @section('title', 'Nova Categoria')
 
 @section('content')
-<x-page-container>
-    <x-page-header
+<x-layout.page-container>
+    <x-layout.page-header
         title="Nova Categoria"
         icon="plus-circle"
         :breadcrumb-items="[
@@ -13,7 +13,7 @@
             'Nova' => '#'
         ]">
         <p class="text-muted mb-0">Preencha os dados para criar uma nova categoria</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
@@ -70,11 +70,11 @@
                 <hr class="my-4 opacity-25">
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <x-back-button index-route="provider.categories.index" label="Voltar para Lista" />
-                    <x-button type="submit" icon="check-circle" label="Criar Categoria" variant="primary" />
+                    <x-ui.back-button index-route="provider.categories.index" label="Voltar para Lista" />
+                    <x-ui.button type="submit" icon="check-circle" label="Criar Categoria" variant="primary" />
                 </div>
             </form>
         </div>
     </div>
-</x-page-container>
+</x-layout.page-container>
 @endsection

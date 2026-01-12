@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         :title="'Análises do Plano: ' . $plan->name"
         icon="graph-up"
         :breadcrumb-items="[
@@ -19,7 +19,7 @@
                 <i class="bi bi-download me-1"></i>Exportar Dados
             </a>
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Key Metrics -->
     <div class="row mb-4">

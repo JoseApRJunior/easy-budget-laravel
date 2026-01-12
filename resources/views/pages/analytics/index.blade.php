@@ -10,22 +10,22 @@
                         IA Analytics
                     </h1>
                     <div class="d-flex gap-2">
-                        <x-button 
+                        <x-ui.button 
                             type="button" 
                             variant="primary" 
                             id="refreshAnalytics"
                             outline
                             icon="bi bi-arrow-clockwise">
                             Atualizar
-                        </x-button>
-                        <x-button 
+                        </x-ui.button>
+                        <x-ui.button 
                             type="button" 
                             variant="secondary" 
                             id="exportReport"
                             outline
                             icon="bi bi-download">
                             Exportar
-                        </x-button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>

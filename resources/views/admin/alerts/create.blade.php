@@ -125,8 +125,8 @@
                         </div>
                         
                         <div class="d-flex justify-content-end gap-2">
-                            <x-button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Cancelar" />
-                            <x-button type="submit" variant="primary" icon="save" label="Criar Alerta" />
+                            <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Cancelar" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Criar Alerta" />
                         </div>
                     </form>
                 </div>

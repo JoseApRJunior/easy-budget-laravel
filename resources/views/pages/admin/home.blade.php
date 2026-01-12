@@ -4,13 +4,13 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard Administrativo"
             icon="shield-lock"
             :breadcrumb-items="[
                 'Admin' => '#'
             ]">
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Ação -->
         <div class="row g-4">

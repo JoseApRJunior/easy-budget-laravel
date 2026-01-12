@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Detalhes do Agendamento #{{ $schedule->id }}"
             icon="calendar-check"
             :breadcrumb-items="[
@@ -13,10 +13,10 @@
                 'Detalhes' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
-                <x-button type="link" :href="route('provider.schedules.edit', $schedule)" variant="primary" icon="pencil" label="Editar" />
+                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="link" :href="route('provider.schedules.edit', $schedule)" variant="primary" icon="pencil" label="Editar" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -109,14 +109,14 @@
                                         <tr>
                                             <th>Link Público:</th>
                                             <td>
-                                                <x-button 
+                                                <x-ui.button 
                                                     href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}" 
                                                     target="_blank" 
                                                     variant="outline-info" 
                                                     size="sm"
                                                     icon="fas fa-external-link-alt">
                                                     Ver Status
-                                                </x-button>
+                                                </x-ui.button>
                                             </td>
                                         </tr>
                                     </table>
@@ -126,36 +126,36 @@
 
                         <!-- Footer -->
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            <x-button 
+                            <x-ui.button 
                                 href="{{ url()->previous() }}" 
                                 variant="secondary"
                                 icon="bi bi-arrow-left">
                                 Voltar
-                            </x-button>
+                            </x-ui.button>
                             <small class="text-muted d-none d-md-block">
                                 Criado em: {{ $schedule->created_at->format('d/m/Y H:i') }}
                             </small>
                             <div class="d-flex gap-2">
                                 @can('update', $schedule)
-                                    <x-button 
+                                    <x-ui.button 
                                         href="{{ route('schedules.edit', $schedule) }}" 
                                         variant="warning"
                                         icon="bi bi-pencil">
                                         Editar
-                                    </x-button>
+                                    </x-ui.button>
                                 @endcan
                                 @can('delete', $schedule)
                                     <form action="{{ route('schedules.destroy', $schedule) }}" method="POST"
                                         class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <x-button 
+                                        <x-ui.button 
                                             type="submit"
                                             variant="danger"
                                             icon="bi bi-trash"
                                             onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
                                             Excluir
-                                        </x-button>
+                                        </x-ui.button>
                                     </form>
                                 @endcan
                             </div>

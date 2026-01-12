@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard de Relatórios"
             icon="bar-chart-line"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
                 'Relatórios' => '#'
             ]">
             <p class="text-muted mb-0 small">Visão geral dos relatórios gerados e métricas de uso do sistema.</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         @php
             $totalReports = $stats['total_reports'] ?? 0;
@@ -148,10 +148,10 @@
                                                     <td class="text-center">
                                                         <div class="d-flex justify-content-center gap-1">
                                                             @if (isset($report->download_url))
-                                                                <x-button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
+                                                                <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                             @endif
                                                             @if (isset($report->view_url))
-                                                                <x-button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                                <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                             @endif
                                                         </div>
                                                     </td>
@@ -187,10 +187,10 @@
                                                 </div>
                                                 <div class="d-flex gap-1">
                                                     @if (isset($report->download_url))
-                                                        <x-button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
+                                                        <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                     @endif
                                                     @if (isset($report->view_url))
-                                                        <x-button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                        <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                     @endif
                                                 </div>
                                             </div>
@@ -246,10 +246,10 @@
                         </h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <x-button type="link" :href="route('provider.reports.financial')" variant="primary" size="sm" icon="graph-up" label="Financeiro" />
-                        <x-button type="link" :href="route('provider.reports.customers')" variant="info" size="sm" icon="people" label="Clientes" />
-                        <x-button type="link" :href="route('provider.reports.products')" variant="success" size="sm" icon="box" label="Produtos" />
-                        <x-button type="link" :href="route('provider.reports.index')" variant="secondary" outline size="sm" icon="list-ul" label="Ver Todos" />
+                        <x-ui.button type="link" :href="route('provider.reports.financial')" variant="primary" size="sm" icon="graph-up" label="Financeiro" />
+                        <x-ui.button type="link" :href="route('provider.reports.customers')" variant="info" size="sm" icon="people" label="Clientes" />
+                        <x-ui.button type="link" :href="route('provider.reports.products')" variant="success" size="sm" icon="box" label="Produtos" />
+                        <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" outline size="sm" icon="list-ul" label="Ver Todos" />
                     </div>
                 </div>
             </div>

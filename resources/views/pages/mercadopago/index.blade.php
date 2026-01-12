@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Integração Mercado Pago"
             icon="credit-card-2-front-fill"
             :breadcrumb-items="[
@@ -10,8 +10,8 @@
                 'Configurações' => url('/settings'),
                 'Mercado Pago' => '#'
             ]">
-            <x-button :href="url('/settings')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button :href="url('/settings')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-light border-0">

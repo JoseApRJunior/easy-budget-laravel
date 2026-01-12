@@ -4,7 +4,7 @@
 
 @section( 'content' )
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Compartilhamentos de Orçamentos"
             icon="share"
             :breadcrumb-items="[
@@ -12,8 +12,8 @@
                 'Orçamentos' => route('provider.budgets.index'),
                 'Compartilhamentos' => '#'
             ]">
-            <x-button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" />
-        </x-page-header>
+            <x-ui.button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" />
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -63,14 +63,14 @@
                                             <td>{{ $share->budget->customer->name ?? 'N/A' }}</td>
                                             <td>{{ $share->email }}</td>
                                             <td>
-                                                <x-share-token :token="substr($share->share_token, 0, 8) . '...'" :show-copy="false" />
+                                                <x-resource.share-token :token="substr($share->share_token, 0, 8) . '...'" :show-copy="false" />
                                                 <button class="btn btn-sm btn-outline-secondary copy-token" data-token="{{ $share->share_token }}" title="Copiar token completo">
                                                     <i class="fas fa-copy"></i>
                                                 </button>
                                             </td>
                                             <td>{{ $share->expires_at ? $share->expires_at->format('d/m/Y H:i') : 'Nunca' }}</td>
                                             <td>
-                                                <x-share-status-badge :share="$share" />
+                                                <x-ui.share-status-badge :share="$share" />
                                             </td>
                                             <td>{{ $share->created_at->format('d/m/Y H:i') }}</td>
                                             <td>

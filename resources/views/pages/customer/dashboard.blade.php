@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid py-4">
     <!-- Cabeçalho -->
-    <x-page-header
+    <x-layout.page-header
         title="Dashboard de Clientes"
         icon="people"
         :breadcrumb-items="[
@@ -13,7 +13,7 @@
             'Clientes' => '#'
         ]">
         <p class="text-muted mb-0 small">Visão geral dos clientes do seu negócio</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     @php
     $total = $stats['total_customers'] ?? 0;
@@ -158,7 +158,7 @@
                                         <td class="text-muted">{{ $phone ? \App\Helpers\MaskHelper::formatPhone($phone) : '—' }}</td>
                                         <td class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</td>
                                         <td class="text-center">
-                                            <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                            <x-ui.button type="link" :href="route('provider.customers.show', $customer)"
                                                     variant="info" size="sm" icon="eye" />
                                         </td>
                                     </tr>
@@ -188,7 +188,7 @@
                                                 class="text-muted">{{ optional($customer->created_at)->format('d/m/Y') }}</small>
                                         </div>
                                         <div class="ms-2">
-                                            <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                            <x-ui.button type="link" :href="route('provider.customers.show', $customer)"
                                                 variant="info" size="sm" icon="eye" />
                                         </div>
                                     </div>
@@ -240,9 +240,9 @@
                     </h6>
                 </div>
                 <div class="card-body d-grid gap-2">
-                    <x-button type="link" :href="route('provider.customers.create')" variant="success" size="sm" icon="person-plus" label="Novo Cliente" />
-                    <x-button type="link" :href="route('provider.customers.index')" variant="primary" outline size="sm" icon="people" label="Listar Clientes" />
-                    <x-button type="link" :href="route('provider.customers.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletados" />
+                    <x-ui.button type="link" :href="route('provider.customers.create')" variant="success" size="sm" icon="person-plus" label="Novo Cliente" />
+                    <x-ui.button type="link" :href="route('provider.customers.index')" variant="primary" outline size="sm" icon="people" label="Listar Clientes" />
+                    <x-ui.button type="link" :href="route('provider.customers.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletados" />
                 </div>
             </div>
         </div>
@@ -310,7 +310,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-end pe-4">
-                                                <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                                <x-ui.button type="link" :href="route('provider.customers.show', $customer)"
                                                     variant="info" size="sm" icon="eye" />
                                             </td>
                                         </tr>
@@ -336,7 +336,7 @@
                                 <div class="list-group-item py-3">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="fw-bold text-dark">{{ $name }}</div>
-                                        <x-button type="link" :href="route('provider.customers.show', $customer)"
+                                        <x-ui.button type="link" :href="route('provider.customers.show', $customer)"
                                             variant="info" size="sm" icon="eye" />
                                     </div>
                                     <div class="d-flex gap-2 mb-2">

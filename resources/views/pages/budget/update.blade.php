@@ -2,7 +2,7 @@
 
 @section( 'content' )
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Editar Orçamento #{{ $budget->code }}"
             icon="file-earmark-text"
             :breadcrumb-items="[
@@ -11,8 +11,8 @@
                 $budget->code => route('budget.show', $budget->code),
                 'Editar' => '#'
             ]">
-            <x-button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Budget Edit Form -->
         <div class="card border-0 shadow-sm">
@@ -96,14 +96,14 @@
 
                 <!-- Form Actions -->
                 <div class="d-flex justify-content-between mt-4 pt-4 border-top">
-                    <x-button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="x-circle">
+                    <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="x-circle">
                         Cancelar
-                    </x-button>
+                    </x-ui.button>
                     <div>
                         @if ( StatusHelper::status_allows_edit( $budget->status->value ) )
-                            <x-button type="submit" form="update-budget-form" variant="primary" icon="check-lg" class="px-4">
+                            <x-ui.button type="submit" form="update-budget-form" variant="primary" icon="check-lg" class="px-4">
                                 Salvar Alterações
-                            </x-button>
+                            </x-ui.button>
                         @else
                             <div class="alert alert-info mb-0 py-2 px-3">
                                 <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $budget->status->getDescription() }})
@@ -142,7 +142,7 @@
                                         </td>
                                         <td>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                         <td class="text-end">
-                                            <x-button type="link" :href="route('provider.services.show', $service->code)"
+                                            <x-ui.button type="link" :href="route('provider.services.show', $service->code)"
                                                     variant="info" size="sm" icon="eye" title="Visualizar" />
                                         </td>
                                     </tr>

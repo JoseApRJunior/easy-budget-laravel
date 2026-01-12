@@ -3,7 +3,7 @@
 @section('title', 'Editar Fatura')
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Editar Fatura"
             icon="pencil-square"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Editar' => '#'
             ]">
             <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
-        </x-page-header>
+        </x-layout.page-header>
 
     <form action="{{ route('provider.invoices.update', $invoice->code) }}" method="POST" id="invoiceEditForm">
         @csrf
@@ -167,7 +167,7 @@
                                 @endforeach
                             </div>
 
-                            <x-button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
+                            <x-ui.button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
                         </div>
                     </div>
                 </div>
@@ -202,8 +202,8 @@
 
             {{-- Botões de Ação (Footer) --}}
             <div class="d-flex justify-content-between mt-4">
-                <x-button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
-                <x-button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
+                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
             </div>
         </form>
     </div>

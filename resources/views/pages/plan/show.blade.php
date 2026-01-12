@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             :title="$plan->name"
             icon="gem"
             :breadcrumb-items="[
@@ -11,7 +11,7 @@
                 $plan->name => '#'
             ]">
             <p class="text-muted mb-0">{{ $plan->description }}</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <!-- Informações Principais -->
@@ -167,12 +167,12 @@
 
                 <!-- Botão voltar -->
                 <div class="text-center mt-3">
-                    <x-button 
+                    <x-ui.button 
                         href="{{ route('plans.index') }}" 
                         variant="outline-primary"
                         icon="bi bi-arrow-left">
                         Voltar para Lista
-                    </x-button>
+                    </x-ui.button>
                 </div>
             </div>
         </div>

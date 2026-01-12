@@ -3,14 +3,14 @@
 @section( 'title', 'Métricas de Middlewares' )
 
 @section( 'admin_content' )
-    <x-page-header
+    <x-layout.page-header
         title="Métricas de Middlewares"
         icon="graph-up"
         :breadcrumb-items="[
             'Admin' => url('/admin'),
             'Métricas' => '#'
         ]">
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Estatísticas Gerais -->
     <div class="row">

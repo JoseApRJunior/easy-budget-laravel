@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard de Monitoramento"
             icon="graph-up"
             :breadcrumb-items="[
@@ -12,10 +12,10 @@
                 'Monitoramento' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
-                <x-button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" size="sm" icon="graph-up" label="Métricas Detalhadas" />
+                <x-ui.button variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
+                <x-ui.button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" size="sm" icon="graph-up" label="Métricas Detalhadas" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Cards de Resumo -->
         <div class="row g-4 mb-4">

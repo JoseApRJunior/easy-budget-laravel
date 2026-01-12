@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dados Empresariais"
             icon="building"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@
                 'Dados Empresariais' => '#'
             ]">
             <p class="text-muted mb-0 small">Gerencie as informações da sua empresa</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <form action="{{ route('provider.business.update') }}" method="POST" enctype="multipart/form-data"
             id="businessForm">
@@ -446,26 +446,26 @@
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div class="d-flex gap-2">
-                    <x-button 
+                    <x-ui.button 
                         type="submit" 
                         variant="primary"
                         id="submitBtn"
                         icon="bi bi-check-circle">
                         Atualizar Dados
-                    </x-button>
-                    <x-button 
+                    </x-ui.button>
+                    <x-ui.button 
                         href="{{ route('settings.index') }}" 
                         variant="outline-secondary"
                         icon="bi bi-x-circle">
                         Cancelar
-                    </x-button>
+                    </x-ui.button>
                 </div>
-                <x-button 
+                <x-ui.button 
                     href="{{ route('settings.profile.edit') }}" 
                     variant="outline-info"
                     icon="bi bi-person">
                     Perfil Pessoal
-                </x-button>
+                </x-ui.button>
             </div>
         </form>
     </div>

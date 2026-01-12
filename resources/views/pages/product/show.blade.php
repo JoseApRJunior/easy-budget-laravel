@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid py-4 d-flex flex-column" style="min-height: calc(100vh - 200px);">
     <div class="flex-grow-1">
-        <x-page-header
+        <x-layout.page-header
             title="Detalhes do Produto"
             icon="box-seam"
             :breadcrumb-items="[
@@ -14,7 +14,7 @@
                 $product->name => '#'
             ]">
             <p class="text-muted mb-0">Visualize as informações completas do produto</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <!-- Coluna Esquerda: Imagem e Status -->
@@ -179,9 +179,9 @@
                                             </div>
                                             <div class="col-12">
                                                 <div class="d-flex gap-2 mt-2">
-                                                    <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" />
-                                                    <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" />
-                                                    <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" />
                                                 </div>
                                             </div>
                                         </div>
@@ -205,7 +205,7 @@
     <div class="mt-auto pt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto order-2 order-md-1">
-                <x-back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-3" />
+                <x-ui.back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-3" />
             </div>
 
             <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -217,13 +217,13 @@
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @if ($product->deleted_at)
-                    <x-button variant="success" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#restoreModal"
+                    <x-ui.button variant="success" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#restoreModal"
                         data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
                         data-product-name="{{ $product->name }}" icon="arrow-counterclockwise" label="Restaurar" />
                     @else
-                    <x-button type="link" :href="route('provider.products.edit', $product->sku)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+                    <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
 
-                    <x-button :variant="$product->active ? 'warning' : 'success'" style="min-width: 120px;"
+                    <x-ui.button :variant="$product->active ? 'warning' : 'success'" style="min-width: 120px;"
                         data-bs-toggle="modal" data-bs-target="#toggleModal"
                         data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
                         data-product-name="{{ $product->name }}"
@@ -231,7 +231,7 @@
                         :icon="$product->active ? 'slash-circle' : 'check-lg'"
                         :label="$product->active ? 'Desativar' : 'Ativar'" />
 
-                    <x-button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                    <x-ui.button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
                         data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
                         data-product-name="{{ $product->name }}" icon="trash-fill" label="Excluir" />
                     @endif
@@ -257,11 +257,11 @@
                 <br><small class="text-muted">Esta ação pode afetar a disponibilidade do produto.</small>
             </div>
             <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="toggleForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('PATCH')
-                    <x-button type="submit" :variant="$product->active ? 'warning' : 'success'"
+                    <x-ui.button type="submit" :variant="$product->active ? 'warning' : 'success'"
                         :icon="$product->active ? 'slash-circle' : 'check-lg'"
                         :label="$product->active ? 'Desativar' : 'Ativar'" />
                 </form>
@@ -283,11 +283,11 @@
                 <br><small class="text-muted">Esta ação pode ser desfeita.</small>
             </div>
             <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="deleteForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <x-button type="submit" variant="danger" label="Excluir" />
+                    <x-ui.button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>
@@ -307,10 +307,10 @@
                 <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
             </div>
             <div class="modal-footer">
-                <x-button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="restoreForm" action="#" method="POST" class="d-inline">
                     @csrf
-                    <x-button type="submit" variant="success" label="Restaurar" />
+                    <x-ui.button type="submit" variant="success" label="Restaurar" />
                 </form>
             </div>
         </div>
@@ -355,7 +355,7 @@
                 </div>
                 <div class="modal-footer bg-light border-0 p-3">
                     <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                    <x-button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
+                    <x-ui.button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
                 </div>
             </form>
         </div>

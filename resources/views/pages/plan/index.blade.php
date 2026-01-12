@@ -5,7 +5,7 @@ use App\Helpers\BladeHelper;
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Escolha seu Plano"
             icon="gem"
             :breadcrumb-items="[
@@ -13,7 +13,7 @@ use App\Helpers\BladeHelper;
                 'Planos' => '#'
             ]">
             <p class="text-muted mb-0">Selecione o plano ideal para o seu negócio</p>
-        </x-page-header>
+        </x-layout.page-header>
 
             <!-- Cards de Planos -->
             <div class="row g-4 justify-content-center">

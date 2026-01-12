@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Detalhes da Movimentação"
         icon="arrow-left-right"
         :breadcrumb-items="[
@@ -15,7 +15,7 @@
         ]"
     >
         <p class="text-muted small">Informações detalhadas da movimentação #{{ $movement->id }}</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="row mt-4">
         <!-- Resumo da Movimentação -->
@@ -110,7 +110,7 @@
     <div class="mt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto order-2 order-md-1">
-                <x-back-button index-route="provider.inventory.movements" class="w-100 w-md-auto px-md-3" />
+                <x-ui.back-button index-route="provider.inventory.movements" class="w-100 w-md-auto px-md-3" />
             </div>
 
             <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -121,10 +121,10 @@
 
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
-                    <x-button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" label="Ver Inventário" style="min-width: 120px;" />
-                    <x-button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" />
-                    <x-button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" />
-                    <x-button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" />
+                    <x-ui.button type="link" :href="route('provider.inventory.show', $product->sku)" variant="info" icon="eye" label="Ver Inventário" style="min-width: 120px;" />
+                    <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" />
+                    <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" />
+                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" />
                 </div>
             </div>
         </div>

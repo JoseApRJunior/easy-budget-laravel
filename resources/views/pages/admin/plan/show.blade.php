@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         :title="'Detalhes do Plano: ' . $plan->name"
         icon="box-seam"
         :breadcrumb-items="[
@@ -11,11 +11,11 @@
             $plan->name => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-back-button index-route="admin.plans.index" />
-            <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
-            <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
+            <x-ui.back-button index-route="admin.plans.index" />
+            <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
+            <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="row">
         <!-- Plan Information -->
@@ -158,7 +158,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Assinaturas Recentes</h5>
-                    <x-button type="link" :href="route('admin.plans.subscribers', $plan)" variant="primary" size="sm" label="Ver Todas" />
+                    <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="primary" size="sm" label="Ver Todas" />
                 </div>
                 <div class="card-body">
                     @if($subscriptions->count() > 0)
@@ -198,7 +198,7 @@
                                             <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
                                             <td>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</td>
                                             <td>
-                                                <x-button type="link" :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                                <x-ui.button type="link" :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                             </td>
                                         </tr>
                                     @endforeach
@@ -225,15 +225,15 @@
                         <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" id="deleteForm-{{ $plan->id }}">
                             @csrf
                             @method('DELETE')
-                            <x-button variant="danger" icon="trash" label="Excluir Plano" 
+                            <x-ui.button variant="danger" icon="trash" label="Excluir Plano" 
                                 onclick="if(confirm('Tem certeza que deseja excluir este plano?')) document.getElementById('deleteForm-{{ $plan->id }}').submit();" />
                         </form>
                     @endif
                 </div>
                 <div class="d-flex gap-2">
-                    <x-button type="link" :href="route('admin.plans.duplicate', $plan)" variant="secondary" icon="copy" label="Duplicar" />
-                    <x-button type="link" :href="route('admin.plans.analytics', $plan)" variant="primary" icon="graph-up" label="Análises" />
-                    <x-button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
+                    <x-ui.button type="link" :href="route('admin.plans.duplicate', $plan)" variant="secondary" icon="copy" label="Duplicar" />
+                    <x-ui.button type="link" :href="route('admin.plans.analytics', $plan)" variant="primary" icon="graph-up" label="Análises" />
+                    <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
                 </div>
             </div>
         </div>

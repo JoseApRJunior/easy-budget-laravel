@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Gerenciar Usuários"
             icon="people"
             :breadcrumb-items="[
@@ -12,7 +12,7 @@
             <a href="{{ url('/admin/users/create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i>Novo Usuário
             </a>
-        </x-page-header>
+        </x-layout.page-header>
                     <div class="card-body">
                         <p>Lista de usuários do sistema</p>
                     </div>

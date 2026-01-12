@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Editar Compartilhamento"
         icon="pencil"
         :breadcrumb-items="[
@@ -13,8 +13,8 @@
             'Compartilhamentos' => route('provider.budgets.shares.index'),
             'Editar' => '#'
         ]">
-        <x-button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-    </x-page-header>
+        <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+    </x-layout.page-header>
 
     <div class="row">
         <div class="col-12">

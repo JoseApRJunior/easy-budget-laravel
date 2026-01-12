@@ -3,7 +3,7 @@
 @section('title', 'Orçamento: ' . $budget->code)
 
 @section('content')
-<x-page-container :fluid="false" padding="py-4">
+<x-layout.page-container :fluid="false" padding="py-4">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
             <div class="d-flex align-items-center">
@@ -41,7 +41,7 @@
                         <i class="bi bi-shield-check me-1 text-success"></i>
                         Acesso seguro via link oficial •  {{ $budget->code }}
                     </span>
-                    <x-status-description :item="$budget" class="ms-md-2" />
+                    <x-ui.status-description :item="$budget" class="ms-md-2" />
                 </div>
             </div>
         </div>
@@ -88,7 +88,7 @@
                     <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Dados do Cliente</h6>
                     <div class="row g-3">
                         <div class="col-12">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 :title="$budget->customer?->company_name ?? $budget->customer?->name ?? 'Cliente não identificado'"
                                 :subtitle="$budget->customer?->email ?? 'E-mail não informado'"
                                 icon="person-circle"
@@ -96,7 +96,7 @@
                             />
                         </div>
                         <div class="col-sm-6">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 :title="$budget->customer?->phone ? \App\Helpers\MaskHelper::formatPhone($budget->customer->phone) : 'Não informado'"
                                 subtitle="Telefone de Contato"
                                 icon="telephone"
@@ -104,7 +104,7 @@
                         </div>
                         @if($budget->customer?->address)
                             <div class="col-12">
-                                <x-resource-info
+                                <x-resource.resource-info
                                     :title="\App\Helpers\AddressHelper::format($budget->customer->address)"
                                     subtitle="Endereço de Entrega/Serviço"
                                     icon="geo-alt"
@@ -119,14 +119,14 @@
                     <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Datas e Prazos</h6>
                     <div class="row g-3">
                         <div class="col-6">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 :title="\Carbon\Carbon::parse($budget->budget_date)->format('d/m/Y')"
                                 subtitle="Data de Emissão"
                                 icon="calendar-check"
                             />
                         </div>
                         <div class="col-6">
-                            <x-resource-info
+                            <x-resource.resource-info
                                 :title="\Carbon\Carbon::parse($budget->validity_date)->format('d/m/Y')"
                                 subtitle="Validade"
                                 icon="calendar-x"
@@ -135,7 +135,7 @@
                         </div>
                         @if($budgetShare->created_at)
                             <div class="col-12">
-                                <x-resource-info
+                                <x-resource.resource-info
                                     :title="$budgetShare->created_at->diffForHumans()"
                                     subtitle="Compartilhado em"
                                     icon="share"
@@ -150,7 +150,7 @@
 
     {{-- Listagem de Serviços --}}
     <div class="mb-4">
-        <x-resource-list-card
+        <x-resource.resource-list-card
             title="Serviços e Itens"
             mobileTitle="Serviços"
             icon="tools"
@@ -167,7 +167,7 @@
                         </div>
                         <div class="d-flex flex-wrap align-items-center justify-content-start justify-content-md-end gap-2 gap-md-1">
                             <span class="text-muted small fw-semibold">#{{ $service->code }}</span>
-                            <x-status-description :item="$service" />
+                            <x-ui.status-description :item="$service" />
                         </div>
                     </div>
 
@@ -240,14 +240,14 @@
                 </div>
             @empty
                 <div class="py-5 text-center">
-                    <x-empty-state
+                    <x-resource.empty-state
                         resource="serviços"
                         icon="tools"
                         message="Nenhum serviço encontrado neste orçamento"
                     />
                 </div>
             @endforelse
-        </x-resource-list-card>
+        </x-resource.resource-list-card>
     </div>
 
     <div class="row g-4 mb-5">
@@ -300,7 +300,7 @@
             </small>
         </div>
     </div>
-</x-page-container>
+</x-layout.page-container>
 
 <!-- Modal de Detalhes do Item -->
 <div class="modal fade" id="itemDetailsModal" tabindex="-1">

@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Dashboard Executivo"
             icon="graph-up-arrow"
             :breadcrumb-items="[
@@ -10,20 +10,20 @@
                 'Executivo' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button 
+                <x-ui.button 
                     variant="outline-primary" 
                     onclick="refreshCharts()"
                     icon="bi bi-arrow-clockwise">
                     Atualizar
-                </x-button>
-                <x-button 
+                </x-ui.button>
+                <x-ui.button 
                     href="/admin/executive-dashboard/export-pdf" 
                     variant="success"
                     icon="bi bi-file-earmark-pdf">
                     Exportar PDF
-                </x-button>
+                </x-ui.button>
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- KPIs Cards -->
         <div class="row mb-4">

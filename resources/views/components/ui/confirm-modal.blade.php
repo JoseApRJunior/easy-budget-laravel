@@ -67,7 +67,7 @@
                 @endif
             </div>
             <div class="modal-footer">
-                <x-button
+                <x-ui.button
                     variant="secondary"
                     data-bs-dismiss="modal"
                     :label="$cancelLabel"
@@ -75,7 +75,7 @@
                 <form id="{{ $formId }}" action="#" method="POST" class="d-inline">
                     @csrf
                     @method($method)
-                    <x-button
+                    <x-ui.button
                         type="submit"
                         :variant="$currentConfig['variant']"
                         :label="$confirmButtonLabel"

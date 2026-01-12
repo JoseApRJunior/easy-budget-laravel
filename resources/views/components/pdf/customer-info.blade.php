@@ -2,18 +2,14 @@
     'customer' => null,
 ])
 
-@php
-    $colors = config('pdf_theme.colors');
-@endphp
-
 @if($customer)
     <div style="margin-bottom: 20px;">
         <x-pdf.section-header title="DADOS DO CLIENTE" />
         <div style="padding-left: 0;">
-            <p style="font-weight: bold; margin: 0 0 4px 0; color: {{ $colors['dark'] }}; font-size: 12px;">
+            <p style="font-weight: bold; margin: 0 0 4px 0; color: {{ $pdfColors['dark'] }}; font-size: 12px;">
                 {{ $customer->company_name ?: $customer->full_name }}
             </p>
-            <div style="color: {{ $colors['secondary'] }}; line-height: 1.3; font-size: 10px;">
+            <div style="color: {{ $pdfColors['secondary'] }}; line-height: 1.3; font-size: 10px;">
                 <p style="margin: 0;">
                     @if($customer->cnpj)
                         CNPJ: {{ \App\Helpers\DocumentHelper::formatCnpj($customer->cnpj) }}

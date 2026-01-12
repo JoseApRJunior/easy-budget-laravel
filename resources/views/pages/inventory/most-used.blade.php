@@ -10,7 +10,7 @@
     $isFirstAccess = empty(request()->query());
 @endphp
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Produtos Mais Utilizados"
         icon="star"
         :breadcrumb-items="[
@@ -19,7 +19,7 @@
             'Produtos Mais Utilizados' => '#'
         ]">
         <p class="text-muted small">Análise de produtos com maior frequência de saída no período</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Filtros -->
     <div class="row">
@@ -32,7 +32,7 @@
                     <form method="GET" action="{{ route('provider.inventory.most-used') }}">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <x-filter-field
+                                <x-form.filter-field
                                     type="date"
                                     name="start_date"
                                     id="start_date"
@@ -42,7 +42,7 @@
                                 />
                             </div>
                             <div class="col-md-3">
-                                <x-filter-field
+                                <x-form.filter-field
                                     type="date"
                                     name="end_date"
                                     id="end_date"
@@ -64,8 +64,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2">
-                                    <x-button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                                    <x-button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x" label="Limpar" />
+                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -163,8 +163,8 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0 text-lg-end">
                             <div class="d-flex justify-content-start justify-content-lg-end gap-1">
-                                <x-button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                <x-button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                             </div>
                         </div>
                     </div>
@@ -232,8 +232,8 @@
                                                 </td>
                                                 <td class="text-center pe-4">
                                                     <div class="action-btn-group justify-content-center">
-                                                        <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" />
-                                                        <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" />
+                                                        <x-ui.button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" />
+                                                        <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" />
                                                     </div>
                                                 </td>
                                             </tr>
@@ -286,8 +286,8 @@
                                                 <span class="fw-bold small">{{ \App\Helpers\CurrencyHelper::format($product['total_value']) }}</span>
                                             </div>
                                             <div class="action-btn-group d-flex gap-1">
-                                                <x-button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" size="sm" title="Ver Produto" />
-                                                <x-button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" size="sm" title="Ver Movimentações" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" size="sm" title="Ver Produto" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" size="sm" title="Ver Movimentações" />
                                             </div>
                                         </div>
                                     </div>
@@ -392,7 +392,7 @@
     <div class="mt-4 pb-2">
         <div class="row align-items-center g-3">
             <div class="col-12 col-md-auto">
-                <x-back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
+                <x-ui.back-button index-route="provider.inventory.dashboard" class="w-100 w-md-auto px-md-3" />
             </div>
             <div class="col-12 col-md text-center d-none d-md-block">
                 <small class="text-muted">

@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         :title="'Assinantes do Plano: ' . $plan->name"
         icon="people"
         :breadcrumb-items="[
@@ -12,10 +12,10 @@
             'Assinantes' => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
-            <x-button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="primary" icon="download" label="Exportar" />
+            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="primary" icon="download" label="Exportar" />
         </div>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Plan Statistics -->
     <div class="row mb-4">
@@ -75,7 +75,7 @@
                     <div class="col-md-3">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-grid">
-                            <x-button type="submit" variant="primary" icon="search" label="Filtrar" />
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
                         </div>
                     </div>
                 </div>
@@ -140,7 +140,7 @@
                                     <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <x-button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                            <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                         </div>
                                     </td>
                                 </tr>

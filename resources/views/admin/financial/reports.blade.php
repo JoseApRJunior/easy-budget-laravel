@@ -41,8 +41,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <x-button type="submit" variant="primary" label="Filtrar" icon="filter" class="mr-2" />
-                        <x-button type="link" :href="route('admin.financial.reports')" variant="secondary" label="Limpar" icon="times" />
+                        <x-ui.button type="submit" variant="primary" label="Filtrar" icon="filter" class="mr-2" />
+                        <x-ui.button type="link" :href="route('admin.financial.reports')" variant="secondary" label="Limpar" icon="times" />
                     </form>
                 </div>
             </div>
@@ -244,10 +244,10 @@
             <div class="card shadow">
                 <div class="card-footer bg-white border-top-0">
                     <div class="d-flex flex-wrap gap-2">
-                        <x-button variant="success" label="Exportar Relatório" icon="download" class="flex-grow-1" onclick="exportReports()" />
-                        <x-button variant="info" label="Imprimir" icon="printer" class="flex-grow-1" onclick="printReports()" />
-                        <x-back-button index-route="admin.financial.index" class="flex-grow-1" label="Voltar" />
-                        <x-button variant="warning" label="Atualizar" icon="arrow-clockwise" class="flex-grow-1" onclick="refreshData()" />
+                        <x-ui.button variant="success" label="Exportar Relatório" icon="download" class="flex-grow-1" onclick="exportReports()" />
+                        <x-ui.button variant="info" label="Imprimir" icon="printer" class="flex-grow-1" onclick="printReports()" />
+                        <x-ui.back-button index-route="admin.financial.index" class="flex-grow-1" label="Voltar" />
+                        <x-ui.button variant="warning" label="Atualizar" icon="arrow-clockwise" class="flex-grow-1" onclick="refreshData()" />
                     </div>
                 </div>
             </div>

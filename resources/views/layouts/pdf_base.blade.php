@@ -7,13 +7,13 @@
   <title>@yield( 'title', 'Documento' )</title>
 
   @php
-      $pdfColors = config('pdf_theme.colors');
+      $pdfColors = config('theme.colors');
   @endphp
 
   <style>
       body {
           color: {{ $pdfColors['text'] }};
-          font-family: {{ config('pdf_theme.fonts.primary') }};
+          font-family: {{ config('theme.fonts.primary') }};
       }
   </style>
 

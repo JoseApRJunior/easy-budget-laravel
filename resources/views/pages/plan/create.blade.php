@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Criar Novo Plano"
             icon="gem"
             :breadcrumb-items="[
@@ -11,7 +11,7 @@
                 'Novo' => '#'
             ]">
             <p class="text-muted mb-0">Configure um novo plano de assinatura para seus clientes</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <!-- Formulário -->
         <div class="row justify-content-center">

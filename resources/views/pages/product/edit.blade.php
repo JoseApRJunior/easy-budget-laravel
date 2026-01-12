@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header 
+        <x-layout.page-header 
             title="Editar Produto" 
             icon="pencil-square" 
             :breadcrumb-items="[
@@ -15,7 +15,7 @@
             ]"
         >
             <p class="text-muted mb-0">Atualize as informações do produto</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <form action="{{ route('provider.products.update', $product->sku) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -222,9 +222,9 @@
 
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <x-back-button index-route="provider.products.index" label="Cancelar" />
+                    <x-ui.back-button index-route="provider.products.index" label="Cancelar" />
                 </div>
-                <x-button type="submit" icon="check-circle" label="Salvar" />
+                <x-ui.button type="submit" icon="check-circle" label="Salvar" />
             </div>
         </form>
     </div>

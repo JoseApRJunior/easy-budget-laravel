@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Configurações de Notificação"
             icon="bell"
             :breadcrumb-items="[
                 'Admin' => route('admin.dashboard'),
                 'Notificações' => '#'
             ]">
-            <x-button :href="route('admin.dashboard')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-        </x-page-header>
+            <x-ui.button :href="route('admin.dashboard')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <div class="row">
 

@@ -18,7 +18,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Lista de Orçamentos"
         icon="file-earmark-text"
         :breadcrumb-items="[
@@ -27,15 +27,15 @@
             'Lista' => '#'
         ]">
         <p class="text-muted mb-0 small">Consulte e gerencie todos os orçamentos registrados no sistema.</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <!-- Card de Filtros -->
-    <x-filter-form
+    <x-form.filter-form
         id="budgetFilterForm"
         :route="route('provider.budgets.index')"
         :filters="$filters"
     >
-        <x-filter-field
+        <x-form.filter-field
             col="col-md-2"
             name="code"
             label="Código"
@@ -43,7 +43,7 @@
             :filters="$filters"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="date"
             col="col-md-2"
             name="start_date"
@@ -51,7 +51,7 @@
             :filters="$filters"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="date"
             col="col-md-2"
             name="end_date"
@@ -59,7 +59,7 @@
             :filters="$filters"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             col="col-md-3"
             name="customer_name"
             label="Cliente"
@@ -67,7 +67,7 @@
             :filters="$filters"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="select"
             col="col-md-2"
             name="status"
@@ -76,7 +76,7 @@
             :options="['all' => 'Todos'] + collect(\App\Enums\BudgetStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->getDescription()])->toArray()"
         />
 
-        <x-filter-field
+        <x-form.filter-field
             type="select"
             col="col-md-1"
             name="per_page"
@@ -84,7 +84,7 @@
             :filters="$filters"
             :options="[10 => '10', 20 => '20', 50 => '50']"
         />
-    </x-filter-form>
+    </x-form.filter-form>
 
     <!-- Card de Tabela -->
     <div class="card border-0 shadow-sm">
@@ -100,7 +100,7 @@
                         ({{ $budgets->total() }})
                     </span>
                 </h5>
-                <x-table-header-actions
+                <x-resource.table-header-actions
                     resource="budgets"
                     :filters="$filters"
                     createLabel="Novo"
@@ -154,10 +154,10 @@
                                 </td>
                                 <td class="fw-bold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</td>
                                 <td>
-                                    <x-status-badge :item="$budget" statusField="status" />
+                                    <x-ui.status-badge :item="$budget" statusField="status" />
                                 </td>
                                 <td class="text-center">
-                                    <x-action-buttons
+                                    <x-resource.action-buttons
                                         :item="$budget"
                                         resource="budgets"
                                         identifier="code"
@@ -168,7 +168,7 @@
                             @empty
                             <tr>
                                 <td colspan="7">
-                                    <x-empty-state
+                                    <x-resource.empty-state
                                         title="Nenhum orçamento encontrado"
                                         description="Não encontramos orçamentos com os filtros aplicados."
                                         icon="file-earmark-text"
@@ -221,12 +221,12 @@
                                 </div>
                                 <div class="col-6 text-end">
                                     <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
-                                    <x-status-badge :item="$budget" />
+                                    <x-ui.status-badge :item="$budget" />
                                 </div>
                             </div>
                         </a>
                         <div class="d-flex justify-content-end">
-                            <x-action-buttons
+                            <x-resource.action-buttons
                                 :item="$budget"
                                 resource="budgets"
                                 identifier="code"
@@ -236,7 +236,7 @@
                     </div>
                     @empty
                     <div class="py-5">
-                        <x-empty-state
+                        <x-resource.empty-state
                             title="Nenhum orçamento encontrado"
                             description="Não encontramos orçamentos com os filtros aplicados."
                             icon="file-earmark-text"
@@ -253,7 +253,7 @@
 </div>
 
 {{-- Modal de Exclusão --}}
-<x-confirm-modal
+<x-ui.confirm-modal
     id="deleteBudgetModal"
     title="Excluir Orçamento"
     message="Tem certeza que deseja excluir este orçamento? Esta ação não poderá ser desfeita."

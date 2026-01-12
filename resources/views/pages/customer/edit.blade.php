@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Editar Cliente"
             icon="pencil-square"
             :breadcrumb-items="[
@@ -14,7 +14,7 @@
                 'Editar' => '#'
             ]">
             <p class="text-muted mb-0 small">Atualize as informações do cliente</p>
-        </x-page-header>
+        </x-layout.page-header>
 
         <form action="{{ route('provider.customers.update', $customer) }}" method="POST" id="customerForm">
             @csrf

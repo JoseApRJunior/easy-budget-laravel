@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Agendamentos"
             icon="calendar-check"
             :breadcrumb-items="[
@@ -12,10 +12,10 @@
                 'Agendamentos' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-button type="link" :href="route('provider.schedules.calendar')" variant="secondary" icon="calendar3" label="Ver Calendário" />
-                <x-button type="link" :href="route('provider.schedules.create')" variant="primary" icon="plus-circle" label="Novo Agendamento" />
+                <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="secondary" icon="calendar3" label="Ver Calendário" />
+                <x-ui.button type="link" :href="route('provider.schedules.create')" variant="primary" icon="plus-circle" label="Novo Agendamento" />
             </div>
-        </x-page-header>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -203,14 +203,14 @@
                                                 </td>
                                                 <td>
                                                     <div class="d-flex justify-content-center gap-1">
-                                                        <x-button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                         @php($canEdit = true)
                                                         @php($canDelete = true)
                                                         @if ($canEdit)
-                                                            <x-button type="link" :href="route('provider.schedules.edit', $schedule->id)" variant="primary" size="sm" icon="pencil" title="Editar" />
+                                                            <x-ui.button type="link" :href="route('provider.schedules.edit', $schedule->id)" variant="primary" size="sm" icon="pencil" title="Editar" />
                                                         @endif
                                                         @if ($canDelete)
-                                                            <x-button type="button" variant="danger" size="sm" icon="trash"
+                                                            <x-ui.button type="button" variant="danger" size="sm" icon="trash"
                                                                 data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                                 data-delete-url="{{ route('provider.schedules.destroy', $schedule->id) }}"
                                                                 data-schedule-name="{{ $schedule->service->description ?? $schedule->service->code }}"

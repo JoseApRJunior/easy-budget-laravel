@@ -2,15 +2,15 @@
 
 @section('content')
     <div class="container-fluid py-4">
-        <x-page-header
+        <x-layout.page-header
             title="Profissões"
             icon="briefcase"
             :breadcrumb-items="[
                 'Admin' => url('/admin'),
                 'Profissões' => '#'
             ]">
-            <x-button type="link" :href="url('/admin/professions/create')" variant="primary" icon="plus-circle" label="Adicionar Profissão" />
-        </x-page-header>
+            <x-ui.button type="link" :href="url('/admin/professions/create')" variant="primary" icon="plus-circle" label="Adicionar Profissão" />
+        </x-layout.page-header>
 
         <!-- Tabela de Profissões -->
         <div class="card border-0 shadow-sm">
@@ -45,9 +45,9 @@
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <x-button type="link" :href="url('/admin/professions/' . $profession->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                <x-button type="link" :href="url('/admin/professions/' . $profession->id . '/edit')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                                <x-button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                <x-ui.button type="link" :href="url('/admin/professions/' . $profession->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-ui.button type="link" :href="url('/admin/professions/' . $profession->id . '/edit')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                     onclick="confirmDelete('{{ $profession->id }}', '{{ $profession->name }}')" />
                                             </div>
                                         </td>

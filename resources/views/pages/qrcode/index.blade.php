@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <x-page-header
+    <x-layout.page-header
         title="Gerador de QR Code"
         icon="qr-code"
         :breadcrumb-items="[
@@ -12,7 +12,7 @@
             'QR Code' => '#'
         ]">
         <p class="text-muted mb-0">Gere QR Codes para compartilhamento e verificação de documentos</p>
-    </x-page-header>
+    </x-layout.page-header>
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-transparent border-0 pt-3">
@@ -44,8 +44,8 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <x-button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" class="flex-grow-1" />
-                            <x-button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" class="flex-grow-1" />
+                            <x-ui.button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" />
                         </div>
                     </form>
                 </div>
@@ -83,7 +83,7 @@
                     </div>
                     <h5 class="card-title">{{ $action['title'] }}</h5>
                     <p class="card-text text-muted small">Gerar QR Code para verificação rápida de {{ strtolower($action['title']) }}</p>
-                    <x-button variant="{{ $action['color'] }}" size="sm" icon="qr-code" label="Gerar QR {{ Str::singular($action['title']) }}"
+                    <x-ui.button variant="{{ $action['color'] }}" size="sm" icon="qr-code" label="Gerar QR {{ Str::singular($action['title']) }}"
                         data-bs-toggle="modal" data-bs-target="{{ $action['target'] }}" />
                 </div>
             </div>

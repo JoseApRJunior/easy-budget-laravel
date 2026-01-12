@@ -93,8 +93,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        // Share PDF theme colors globally
-        view()->share('pdfColors', config('pdf_theme.colors'));
+        // Share theme colors globally
+        view()->share('pdfColors', config('theme.colors'));
 
         // Register model observers for automatic audit logging
         User::observe(UserObserver::class);
