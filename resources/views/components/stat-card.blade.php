@@ -11,7 +11,7 @@
 
 @php
     // Define se o texto deve ser escuro ou claro baseado na variante quando em modo gradient
-    $isLightVariant = in_array($variant, ['warning', 'info', 'light']);
+    $isLightVariant = in_array($variant, ['primary', 'success', 'info', 'warning', 'danger', 'secondary', 'light']);
     $textColor = $gradient ? ($isLightVariant ? 'dark' : 'white') : 'dark';
 @endphp
 
@@ -40,7 +40,7 @@
                 @endif
                 <h6 @class([
                     'mb-0 small fw-bold text-uppercase',
-                    'text-white text-opacity-90' => $gradient && !$isLightVariant,
+                    'text-white text-opacity-80' => $gradient && !$isLightVariant,
                     'text-dark text-opacity-80' => $gradient && $isLightVariant,
                     'text-muted' => !$gradient
                 ])>{{ $title }}</h6>
@@ -54,8 +54,8 @@
             @if($description)
                 <p @class([
                     'small-text mb-0',
-                    'text-white text-opacity-85' => $gradient && !$isLightVariant,
-                    'text-dark text-opacity-75' => $gradient && $isLightVariant,
+                    'text-white text-opacity-80' => $gradient && !$isLightVariant,
+                    'text-dark text-opacity-80' => $gradient && $isLightVariant,
                     'text-muted' => !$gradient
                 ]) style="font-size: 0.75rem; font-weight: 500;">{{ $description }}</p>
             @endif

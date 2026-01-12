@@ -18,83 +18,63 @@
         <x-alert type="message" :message="'Este serviço já possui ' . $service->invoices->count() . ' fatura(s). <a href=\"' . route('provider.invoices.index', ['search' => $service->code]) . '\" class=\"alert-link\">Ver faturas</a>'" />
     @endif
 
-        <div class="row">
-            <div class="col-lg-8">
-                {{-- Informações Básicas do Serviço --}}
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-0 py-3">
-                        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
-                            <div class="flex-grow-1">
-                                <h5 class="mb-1">Serviço {{ $service->code }}</h5>
-                                <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
-                            </div>
-                            <div class="text-end">
-                                <x-status-description :item="$service" statusField="status" />
-                            </div>
-                        </div>
+    <x-grid-row>
+        <x-grid-col size="col-lg-8">
+            {{-- Informações Básicas do Serviço --}}
+            <x-resource-list-card
+                title="Serviço {{ $service->code }}"
+                icon="tools"
+                padding="p-4"
+            >
+                <x-slot name="headerActions">
+                    <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
+                    <div class="ms-2">
+                        <x-status-description :item="$service" statusField="status" />
                     </div>
+                </x-slot>
 
-                    <div class="card-body">
-                        <div class="row g-4 mb-4">
-                            <div class="col-12 col-md-6">
-                                <h6 class="text-muted mb-3">
-                                    <i class="bi bi-tag me-2"></i>
-                                    Informações Gerais
-                                </h6>
-                                <div class="mb-3">
-                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Categoria</small>
-                                    <span class="text-dark fw-bold">{{ $service->category?->name ?? 'Não definida' }}</span>
-                                </div>
-                                <div class="mb-3">
-                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Orçamento</small>
-                                    <a href="{{ route('provider.budgets.show', $service->budget?->code) }}"
-                                        class="text-decoration-none fw-bold">
-                                        {{ $service->budget?->code ?? 'N/A' }}
-                                    </a>
-                                </div>
-                                @if ($service->due_date)
-                                    <div class="mb-3">
-                                        <small class="small fw-bold text-muted text-uppercase d-block mb-1">Prazo</small>
-                                        <span class="text-dark fw-bold">
-                                            {{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}
-                                        </span>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <h6 class="text-muted mb-3">
-                                    <i class="bi bi-currency-dollar me-2"></i>
-                                    Valores
-                                </h6>
-                                <div class="mb-3">
-                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Total</small>
-                                    <span class="text-success fw-bold fs-5">
-                                        {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                                </div>
-                                <div class="mb-3">
-                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Desconto</small>
-                                    <span class="text-danger fw-bold">
-                                        {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
-                                </div>
-                                <div class="mb-3">
-                                    <small class="small fw-bold text-muted text-uppercase d-block mb-1">Subtotal</small>
-                                    <span class="text-dark fw-bold">
-                                        {{ \App\Helpers\CurrencyHelper::format($service->total + $service->discount) }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if ($service->description)
-                            <div class="mb-4">
-                                <h6 class="text-muted mb-3">
-                                    <i class="bi bi-card-text me-2"></i>
-                                    Descrição
-                                </h6>
-                                <p class="text-muted">{{ $service->description }}</p>
-                            </div>
+                <x-grid-row class="mb-4">
+                    <x-grid-col size="col-12 col-md-6">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-tag me-2"></i>
+                            Informações Gerais
+                        </h6>
+                        <x-resource-mobile-field label="Categoria" :value="$service->category?->name ?? 'Não definida'" />
+                        <x-resource-mobile-field label="Orçamento">
+                            <a href="{{ route('provider.budgets.show', $service->budget?->code) }}"
+                                class="text-decoration-none fw-bold">
+                                {{ $service->budget?->code ?? 'N/A' }}
+                            </a>
+                        </x-resource-mobile-field>
+                        @if ($service->due_date)
+                            <x-resource-mobile-field label="Prazo" :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')" />
                         @endif
+                    </x-grid-col>
+                    <x-grid-col size="col-12 col-md-6">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-currency-dollar me-2"></i>
+                            Valores
+                        </h6>
+                        <x-resource-mobile-field label="Total">
+                            <span class="text-success fw-bold fs-5">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                        </x-resource-mobile-field>
+                        <x-resource-mobile-field label="Desconto">
+                            <span class="text-danger fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
+                        </x-resource-mobile-field>
+                        <x-resource-mobile-field label="Subtotal" :value="\App\Helpers\CurrencyHelper::format($service->total + $service->discount)" />
+                    </x-grid-col>
+                </x-grid-row>
+
+                @if ($service->description)
+                    <div class="mb-0">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-card-text me-2"></i>
+                            Descrição
+                        </h6>
+                        <p class="text-muted mb-0">{{ $service->description }}</p>
                     </div>
-                </div>
+                @endif
+            </x-resource-list-card>
 
                 {{-- Itens do Serviço --}}
                 @if ($service->serviceItems && $service->serviceItems->count() > 0)
@@ -106,17 +86,17 @@
                         <x-slot name="desktop">
                             <x-resource-table>
                                 <x-slot name="thead">
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th>Quantidade</th>
-                                        <th>Valor Unitário</th>
-                                        <th>Total</th>
-                                    </tr>
+                                    <x-table-row>
+                                        <x-table-cell header>Produto</x-table-cell>
+                                        <x-table-cell header>Quantidade</x-table-cell>
+                                        <x-table-cell header>Valor Unitário</x-table-cell>
+                                        <x-table-cell header>Total</x-table-cell>
+                                    </x-table-row>
                                 </x-slot>
 
                                 @foreach ($service->serviceItems as $item)
-                                    <tr>
-                                        <td>
+                                    <x-table-row>
+                                        <x-table-cell>
                                             <x-resource-info
                                                 :title="$item->product?->name ?? 'Produto não encontrado'"
                                                 :subtitle="$item->product?->description ?? ''"
@@ -124,18 +104,18 @@
                                                 titleClass="fw-bold"
                                                 subtitleClass="text-muted small"
                                             />
-                                        </td>
-                                        <td>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</td>
-                                        <td>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
-                                        <td><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></td>
-                                    </tr>
+                                        </x-table-cell>
+                                        <x-table-cell>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</x-table-cell>
+                                        <x-table-cell>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</x-table-cell>
+                                        <x-table-cell><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></x-table-cell>
+                                    </x-table-row>
                                 @endforeach
 
                                 <x-slot name="tfoot">
-                                    <tr class="table-secondary">
-                                        <th colspan="3">Total dos Itens:</th>
-                                        <th>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</th>
-                                    </tr>
+                                    <x-table-row class="table-secondary">
+                                        <x-table-cell colspan="3" header>Total dos Itens:</x-table-cell>
+                                        <x-table-cell header>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</x-table-cell>
+                                    </x-table-row>
                                 </x-slot>
                             </x-resource-table>
                         </x-slot>
@@ -143,25 +123,36 @@
                         <x-slot name="mobile">
                             @foreach ($service->serviceItems as $item)
                                 <x-resource-mobile-item icon="box-seam">
-                                    <div class="fw-semibold mb-2">{{ $item->product?->name ?? 'Produto não encontrado' }}</div>
-                                    <div class="small text-muted mb-2">
-                                        <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
-                                        <span><strong>Unit:</strong> {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span>
-                                    </div>
-                                    <div class="text-success fw-semibold">Total: {{ \App\Helpers\CurrencyHelper::format($item->total) }}</div>
+                                    <x-resource-mobile-header
+                                        :title="$item->product?->name ?? 'Produto não encontrado'"
+                                    />
 
-                                    <x-slot name="footer">
-                                        Total: {{ \App\Helpers\CurrencyHelper::format($item->total) }}
-                                    </x-slot>
+                        <x-grid-row g="2" class="mb-2">
+                                        <x-resource-mobile-field
+                                            label="Qtd"
+                                            :value="\App\Helpers\CurrencyHelper::format($item->quantity, false)"
+                                            col="col-6"
+                                        />
+                                        <x-resource-mobile-field
+                                            label="Unit"
+                                            :value="\App\Helpers\CurrencyHelper::format($item->unit_value)"
+                                            col="col-6"
+                                            align="end"
+                                        />
+                                    </x-grid-row>
+
+                                    <x-resource-mobile-field
+                                        label="Total"
+                                        col="col-12"
+                                    >
+                                        <span class="text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</span>
+                                    </x-resource-mobile-field>
                                 </x-resource-mobile-item>
                             @endforeach
 
-                            <div class="list-group-item bg-body-secondary">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <strong>Total dos Itens:</strong>
-                                    <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
-                                </div>
-                            </div>
+                            <x-resource-mobile-field label="Total dos Itens" class="bg-body-secondary p-3">
+                                <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
+                            </x-resource-mobile-field>
                         </x-slot>
                     </x-resource-list-card>
                 @endif
@@ -177,36 +168,32 @@
                         <x-slot name="desktop">
                             <x-resource-table>
                                 <x-slot name="thead">
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Horário</th>
-                                        <th>Localização</th>
-                                    </tr>
+                                    <x-table-row>
+                                        <x-table-cell header>Data</x-table-cell>
+                                        <x-table-cell header>Horário</x-table-cell>
+                                        <x-table-cell header>Localização</x-table-cell>
+                                    </x-table-row>
                                 </x-slot>
 
                                 @foreach ($service->schedules as $schedule)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold">
-                                                {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="text-muted">
-                                                {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
-                                                -
-                                                {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
-                                            </span>
-                                        </td>
-                                        <td>
+                                    <x-table-row>
+                                        <x-table-cell class="fw-bold">
+                                            {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
+                                        </x-table-cell>
+                                        <x-table-cell class="text-muted">
+                                            {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
+                                            -
+                                            {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
+                                        </x-table-cell>
+                                        <x-table-cell>
                                             @if ($schedule->location)
                                                 <i class="bi bi-geo-alt me-1 text-muted"></i>
                                                 {{ $schedule->location }}
                                             @else
                                                 <span class="text-muted small">Não informada</span>
                                             @endif
-                                        </td>
-                                    </tr>
+                                        </x-table-cell>
+                                    </x-table-row>
                                 @endforeach
                             </x-resource-table>
                         </x-slot>
@@ -214,100 +201,80 @@
                         <x-slot name="mobile">
                             @foreach ($service->schedules as $schedule)
                                 <x-resource-mobile-item icon="calendar-event">
-                                    <div class="fw-bold mb-1">
-                                        {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
-                                    </div>
-                                    <div class="text-muted small mb-2">
-                                        {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
-                                        -
-                                        {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
-                                    </div>
+                                    <x-resource-mobile-header
+                                        :title="\Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y')"
+                                        :subtitle="\Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i')"
+                                    />
                                     @if ($schedule->location)
-                                        <div class="small">
-                                            <i class="bi bi-geo-alt me-1"></i>
-                                            {{ $schedule->location }}
-                                        </div>
+                                        <x-resource-mobile-field
+                                            label="Local"
+                                            :value="$schedule->location"
+                                            icon="geo-alt"
+                                        />
                                     @endif
                                 </x-resource-mobile-item>
                             @endforeach
                         </x-slot>
                     </x-resource-list-card>
                 @endif
-            </div>
+        </x-grid-col>
 
-            <div class="col-lg-4">
+        <x-grid-col size="col-lg-4">
+            <x-v-stack>
                 {{-- Informações do Cliente --}}
-                <div class="card border-0 shadow-sm hover-card mb-4">
-                    <div class="card-header bg-white border-0 py-3">
-                        <h6 class="card-title mb-0">
-                            <i class="bi bi-person-circle me-2"></i>
-                            Cliente
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        @if ($service->budget?->customer)
-                            <div class="d-flex align-items-center mb-4">
-                                <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
-                                    <i class="bi bi-person fs-4"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 fw-bold">
-                                        <a href="{{ route('provider.customers.show', $service->budget->customer) }}" class="text-dark text-decoration-none">
-                                            {{ $service->budget->customer->commonData?->first_name }}
-                                            {{ $service->budget->customer->commonData?->last_name }}
-                                        </a>
-                                    </h6>
-                                    @if ($service->budget->customer->commonData?->company_name)
-                                        <small class="text-muted">{{ $service->budget->customer->commonData->company_name }}</small>
-                                    @endif
-                                </div>
-                            </div>
+                <x-resource-list-card
+                    title="Cliente"
+                    icon="person-circle"
+                    padding="p-4"
+                >
+                    @if ($service->budget?->customer)
+                        <div class="mb-4">
+                            <x-resource-info
+                                 :title="$service->budget->customer->commonData?->full_name"
+                                 :subtitle="$service->budget->customer->commonData?->company_name"
+                                 icon="person"
+                                titleClass="fw-bold text-dark"
+                                subtitleClass="text-muted small"
+                                :href="route('provider.customers.show', $service->budget->customer)"
+                            />
+                        </div>
 
-                            <div class="vstack gap-3">
-                                @if ($service->budget->customer->contact?->email)
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle p-2 me-3">
-                                            <i class="bi bi-envelope text-muted"></i>
-                                        </div>
-                                        <a href="mailto:{{ $service->budget->customer->contact->email }}" class="text-decoration-none text-muted small">
-                                            {{ $service->budget->customer->contact->email }}
-                                        </a>
-                                    </div>
-                                @endif
+                        <x-v-stack gap="3" class="mb-4">
+                            @if ($service->budget->customer->contact?->email)
+                                <x-resource-mobile-field
+                                    label="E-mail"
+                                    :value="$service->budget->customer->contact->email"
+                                    icon="envelope"
+                                />
+                            @endif
 
-                                @if ($service->budget->customer->contact?->phone)
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle p-2 me-3">
-                                            <i class="bi bi-telephone text-muted"></i>
-                                        </div>
-                                        <a href="tel:{{ $service->budget->customer->contact->phone }}" class="text-decoration-none text-muted small">
-                                            {{ $service->budget->customer->contact->phone }}
-                                        </a>
-                                    </div>
-                                @endif
+                            @if ($service->budget->customer->contact?->phone)
+                                <x-resource-mobile-field
+                                    label="Telefone"
+                                    :value="$service->budget->customer->contact->phone"
+                                    icon="telephone"
+                                />
+                            @endif
 
-                                @if ($service->budget->customer->contact?->phone_business)
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-light rounded-circle p-2 me-3">
-                                            <i class="bi bi-whatsapp text-success"></i>
-                                        </div>
-                                        <a href="https://wa.me/{{ preg_replace('/\D/', '', $service->budget->customer->contact->phone_business) }}" target="_blank" class="text-decoration-none text-muted small">
-                                            {{ $service->budget->customer->contact->phone_business }}
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
+                            @if ($service->budget->customer->contact?->phone_business)
+                                <x-resource-mobile-field
+                                    label="WhatsApp"
+                                    icon="whatsapp"
+                                >
+                                    <a href="https://wa.me/{{ preg_replace('/\D/', '', $service->budget->customer->contact->phone_business) }}" target="_blank" class="text-decoration-none fw-bold">
+                                        {{ $service->budget->customer->contact->phone_business }}
+                                    </a>
+                                </x-resource-mobile-field>
+                            @endif
+                        </x-v-stack>
 
-                            <hr class="my-4">
-
-                            <div class="d-grid">
-                                <x-button type="link" href="{{ route('provider.customers.show', $service->budget->customer) }}" variant="outline-primary" size="sm" icon="eye" label="Ver Perfil Completo" />
-                            </div>
-                        @else
-                            <x-empty-state title="Cliente não vinculado" description="Este serviço não possui um cliente vinculado via orçamento." icon="person-x" />
-                        @endif
-                    </div>
-                </div>
+                        <div class="d-grid">
+                            <x-button type="link" href="{{ route('provider.customers.show', $service->budget->customer) }}" variant="outline-primary" size="sm" icon="eye" label="Ver Perfil Completo" />
+                        </div>
+                    @else
+                        <x-empty-state title="Cliente não vinculado" description="Este serviço não possui um cliente vinculado via orçamento." icon="person-x" />
+                    @endif
+                </x-resource-list-card>
 
                 @php
                     $statusValue = $service->status->value;
@@ -434,8 +401,9 @@
 
                     <x-button type="button" variant="outline-secondary" onclick="window.print()" icon="printer" label="Imprimir" />
                 </x-quick-actions>
-            </div>
-        </div>
+            </x-v-stack>
+        </x-grid-col>
+    </x-grid-row>
 
         {{-- Botões de Ação (Footer) --}}
         <div class="d-flex justify-content-between align-items-center mt-4">

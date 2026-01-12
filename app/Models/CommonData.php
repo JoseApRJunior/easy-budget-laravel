@@ -78,6 +78,18 @@ class CommonData extends Model
     ];
 
     /**
+     * Get the full name or company name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        if ($this->type === self::TYPE_COMPANY) {
+            return $this->company_name ?? '';
+        }
+
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+    }
+
+    /**
      * Regras de validação para o modelo CommonData.
      */
     public static function businessRules(string $type): array

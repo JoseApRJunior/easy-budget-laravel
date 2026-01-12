@@ -1,8 +1,13 @@
 @props([
     'title' => 'Ações Rápidas',
     'icon' => 'lightning-charge',
-    'variant' => 'none' // primary, secondary, success, info, warning, danger, none
+    'variant' => 'none', // primary, secondary, success, info, warning, danger, none
+    'col' => null, // Nova prop para gerenciar wrapper de grid
 ])
+
+@if($col)
+    <div class="{{ $col }}">
+@endif
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm']) }}>
     <div @class([
@@ -21,3 +26,7 @@
         </div>
     </div>
 </div>
+
+@if($col)
+    </div>
+@endif

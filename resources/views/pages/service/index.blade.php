@@ -30,11 +30,10 @@
             <p class="text-muted mb-0">Lista de todos os serviços registrados no sistema</p>
         </x-page-header>
 
-        <div class="row">
-            <div class="col-12">
+        <x-grid-row>
+            <x-grid-col size="col-12">
                 <!-- Filtros de Busca -->
-                    <div class="card-body">
-                        <x-filter-form :route="route('provider.services.index')" id="filtersFormServices" :filters="$filters">
+                <x-filter-form :route="route('provider.services.index')" id="filtersFormServices" :filters="$filters">
                             <x-filter-field
                                 col="col-md-2"
                                 name="search"
@@ -116,47 +115,43 @@
                         <x-slot name="desktop">
                             <x-resource-table>
                                 <x-slot name="thead">
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Cliente</th>
-                                        <th>Categoria</th>
-                                        <th>Prazo</th>
-                                        <th>Valor</th>
-                                        <th>Status</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
+                                    <x-table-row>
+                                        <x-table-cell header>Código</x-table-cell>
+                                        <x-table-cell header>Cliente</x-table-cell>
+                                        <x-table-cell header>Categoria</x-table-cell>
+                                        <x-table-cell header>Prazo</x-table-cell>
+                                        <x-table-cell header>Valor</x-table-cell>
+                                        <x-table-cell header>Status</x-table-cell>
+                                        <x-table-cell header align="center">Ações</x-table-cell>
+                                    </x-table-row>
                                 </x-slot>
 
                                 @foreach($services as $service)
-                                    <tr>
-                                        <td class="fw-bold text-dark">{{ $service->code }}</td>
-                                        <td>
-                                            @php
-                                                $customerName = 'N/A';
-                                                if ($service->budget && $service->budget->customer && $service->budget->customer->commonData) {
-                                                    $commonData = $service->budget->customer->commonData;
-                                                    $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
-                                                }
-                                            @endphp
-                                            {{ $customerName }}
-                                        </td>
-                                        <td>{{ $service->category->name ?? 'N/A' }}</td>
-                                        <td class="text-muted small">
+                                    @php
+                                        $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
+                                    @endphp
+                                    <x-table-row>
+                                        <x-table-cell class="fw-bold text-dark">{{ $service->code }}</x-table-cell>
+                                        <x-table-cell>
+                                            <x-table-cell-truncate :text="$customerName" />
+                                        </x-table-cell>
+                                        <x-table-cell>{{ $service->category->name ?? 'N/A' }}</x-table-cell>
+                                        <x-table-cell class="text-muted small">
                                             {{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}
-                                        </td>
-                                        <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
-                                        <td>
+                                        </x-table-cell>
+                                        <x-table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-table-cell>
+                                        <x-table-cell>
                                             <x-status-badge :item="$service" statusField="status" />
-                                        </td>
-                                        <td class="text-center">
+                                        </x-table-cell>
+                                        <x-table-cell align="center">
                                             <x-action-buttons
                                                 :item="$service"
                                                 resource="services"
                                                 identifier="code"
                                                 size="sm"
                                             />
-                                        </td>
-                                    </tr>
+                                        </x-table-cell>
+                                    </x-table-row>
                                 @endforeach
                             </x-resource-table>
                         </x-slot>
@@ -164,34 +159,36 @@
                         <x-slot name="mobile">
                             @foreach($services as $service)
                                 @php
-                                    $customerName = 'N/A';
-                                    if ($service->budget && $service->budget->customer && $service->budget->customer->commonData) {
-                                        $commonData = $service->budget->customer->commonData;
-                                        $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
-                                    }
+                                    $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                 @endphp
                                 <x-resource-mobile-item
                                     icon="tools"
                                     :href="route('provider.services.show', $service->code)"
                                 >
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="fw-bold text-dark">{{ $service->code }}</span>
-                                        <span class="text-muted small">{{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
-                                        <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
-                                    </div>
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
-                                            <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                    <x-resource-mobile-header
+                                        :title="$service->code"
+                                        :subtitle="$service->due_date ? $service->due_date->format('d/m/Y') : '-'"
+                                    />
+
+                                    <x-resource-mobile-field
+                                        label="Cliente"
+                                        :value="$customerName"
+                                    />
+
+                                    <x-grid-row g="2">
+                                        <x-resource-mobile-field
+                                            label="Valor"
+                                            :value="\App\Helpers\CurrencyHelper::format($service->total)"
+                                            col="col-6"
+                                        />
+                                        <x-resource-mobile-field
+                                            label="Status"
+                                            col="col-6"
+                                            align="end"
+                                        >
                                             <x-status-badge :item="$service" statusField="status" />
-                                        </div>
-                                    </div>
+                                        </x-resource-mobile-field>
+                                    </x-grid-row>
                                 </x-resource-mobile-item>
                             @endforeach
                         </x-slot>
@@ -209,8 +206,8 @@
                         </x-slot>
                     @endif
                 </x-resource-list-card>
-            </div>
-        </div>
+            </x-grid-col>
+        </x-grid-row>
     </x-page-container>
 
 @push('scripts')

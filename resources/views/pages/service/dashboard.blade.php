@@ -28,7 +28,7 @@
         @endphp
 
         <!-- Cards de Métricas -->
-        <div class="row g-4 mb-4">
+        <x-grid-row>
             <x-stat-card
                 title="Total de Serviços"
                 :value="$total"
@@ -60,10 +60,10 @@
                 icon="graph-up-arrow"
                 variant="info"
             />
-        </div>
+        </x-grid-row>
 
         <!-- Cards de Valores Financeiros -->
-        <div class="row g-4 mb-4">
+        <x-grid-row>
             <x-stat-card
                 title="Valor Total em Serviços"
                 :value="\App\Helpers\CurrencyHelper::format($totalValue)"
@@ -73,66 +73,61 @@
                 col="col-md-6"
             />
 
-            <div class="col-md-6">
-                <x-resource-list-card
-                    title="Distribuição por Status"
-                    icon="pie-chart"
-                    padding="p-3"
-                >
-                    <x-chart-doughnut
-                        id="statusChart"
-                        :data="$stats['status_breakdown'] ?? []"
-                        empty-text="Nenhum serviço cadastrado"
-                    />
-                    <p class="text-muted small mb-0 mt-3 text-center">
-                        Acompanhe o fluxo de trabalho por status atual.
-                    </p>
-                </x-resource-list-card>
-            </div>
-        </div>
+            <x-resource-list-card
+                title="Distribuição por Status"
+                icon="pie-chart"
+                padding="p-3"
+                col="col-md-6"
+            >
+                <x-chart-doughnut
+                    id="statusChart"
+                    :data="$stats['status_breakdown'] ?? []"
+                    empty-text="Nenhum serviço cadastrado"
+                />
+                <p class="text-muted small mb-0 mt-3 text-center">
+                    Acompanhe o fluxo de trabalho por status atual.
+                </p>
+            </x-resource-list-card>
+        </x-grid-row>
 
         <!-- Serviços Recentes e Atalhos -->
-        <div class="row g-4">
+        <x-grid-row class="mb-0">
             <!-- Serviços Recentes -->
-            <div class="col-lg-8">
-                <x-resource-list-card
-                    title="Serviços Recentes"
-                    icon="clock-history"
-                    :total="$recent->count()"
-                >
+            <x-resource-list-card
+                title="Serviços Recentes"
+                icon="clock-history"
+                :total="$recent->count()"
+                col="col-lg-8"
+            >
                     @if ($recent->isNotEmpty())
                         <x-slot name="desktop">
                             <x-resource-table>
                                 <x-slot name="thead">
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Cliente</th>
-                                        <th>Valor</th>
-                                        <th>Status</th>
-                                        <th>Data</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
+                                    <x-table-row>
+                                        <x-table-cell header>Código</x-table-cell>
+                                        <x-table-cell header>Cliente</x-table-cell>
+                                        <x-table-cell header>Valor</x-table-cell>
+                                        <x-table-cell header>Status</x-table-cell>
+                                        <x-table-cell header>Data</x-table-cell>
+                                        <x-table-cell header align="center">Ações</x-table-cell>
+                                    </x-table-row>
                                 </x-slot>
 
                                 @foreach ($recent as $service)
                                     @php
-                                        $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
+                                        $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                     @endphp
-                                    <tr>
-                                        <td class="fw-bold text-dark">{{ $service->code }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
-                                                    {{ $customerName }}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
-                                        <td>
+                                    <x-table-row>
+                                        <x-table-cell class="fw-bold text-dark">{{ $service->code }}</x-table-cell>
+                                        <x-table-cell>
+                                            <x-table-cell-truncate :text="$customerName" />
+                                        </x-table-cell>
+                                        <x-table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-table-cell>
+                                        <x-table-cell>
                                             <x-status-badge :item="$service" />
-                                        </td>
-                                        <td class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</td>
-                                        <td class="text-center">
+                                        </x-table-cell>
+                                        <x-table-cell class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</x-table-cell>
+                                        <x-table-cell align="center">
                                             <x-action-buttons
                                                 :item="$service"
                                                 resource="services"
@@ -140,8 +135,8 @@
                                                 :can-delete="false"
                                                 size="sm"
                                             />
-                                        </td>
-                                    </tr>
+                                        </x-table-cell>
+                                    </x-table-row>
                                 @endforeach
                             </x-resource-table>
                         </x-slot>
@@ -149,30 +144,36 @@
                         <x-slot name="mobile">
                             @foreach ($recent as $service)
                                 @php
-                                    $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
+                                    $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                 @endphp
                                 <x-resource-mobile-item
                                     icon="tools"
                                     :href="route('provider.services.show', $service->code)"
                                 >
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="fw-bold text-dark">{{ $service->code }}</span>
-                                        <span class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
-                                        <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
-                                    </div>
-                                    <div class="row g-2">
-                                        <div class="col-6">
-                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
-                                            <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                                        </div>
-                                        <div class="col-6 text-end">
-                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                    <x-resource-mobile-header
+                                        :title="$service->code"
+                                        :subtitle="$service->created_at->format('d/m/Y')"
+                                    />
+
+                                    <x-resource-mobile-field
+                                        label="Cliente"
+                                        :value="$customerName"
+                                    />
+
+                                    <x-grid-row g="2">
+                                        <x-resource-mobile-field
+                                            label="Valor"
+                                            :value="\App\Helpers\CurrencyHelper::format($service->total)"
+                                            col="col-6"
+                                        />
+                                        <x-resource-mobile-field
+                                            label="Status"
+                                            col="col-6"
+                                            align="end"
+                                        >
                                             <x-status-badge :item="$service" />
-                                        </div>
-                                    </div>
+                                        </x-resource-mobile-field>
+                                    </x-grid-row>
                                 </x-resource-mobile-item>
                             @endforeach
                         </x-slot>
@@ -184,46 +185,46 @@
                         />
                     @endif
                 </x-resource-list-card>
-            </div>
 
             <!-- Insights e Atalhos -->
-            <div class="col-lg-4">
-                <!-- Insights -->
-                <x-resource-list-card
-                    title="Insights Rápidos"
-                    icon="lightbulb"
-                    class="mb-4"
-                    padding="p-3"
-                    gap="3"
-                >
-                    <x-insight-item
-                        icon="check-circle-fill"
-                        variant="success"
-                        description="Serviços concluídos geram receita garantida para seu negócio."
-                    />
-                    <x-insight-item
-                        icon="clock-fill"
-                        variant="warning"
-                        description="Acompanhe serviços em andamento para manter prazos."
-                    />
-                    <x-insight-item
-                        icon="graph-up-arrow"
-                        variant="primary"
-                        description="Monitore a taxa de conclusão para otimizar processos."
-                    />
-                </x-resource-list-card>
+            <x-grid-col size="col-lg-4">
+                <x-v-stack gap="4">
+                    <!-- Insights -->
+                    <x-resource-list-card
+                        title="Insights Rápidos"
+                        icon="lightbulb"
+                        padding="p-3"
+                        gap="3"
+                    >
+                        <x-insight-item
+                            icon="check-circle-fill"
+                            variant="success"
+                            description="Serviços concluídos geram receita garantida para seu negócio."
+                        />
+                        <x-insight-item
+                            icon="clock-fill"
+                            variant="warning"
+                            description="Acompanhe serviços em andamento para manter prazos."
+                        />
+                        <x-insight-item
+                            icon="graph-up-arrow"
+                            variant="primary"
+                            description="Monitore a taxa de conclusão para otimizar processos."
+                        />
+                    </x-resource-list-card>
 
-                <!-- Atalhos -->
-                <x-quick-actions
-                    title="Atalhos Rápidos"
-                    icon="link-45deg"
-                >
-                    <x-button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
-                    <x-button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
-                    <x-button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
-                </x-quick-actions>
-            </div>
-        </div>
+                    <!-- Atalhos -->
+                    <x-quick-actions
+                        title="Atalhos Rápidos"
+                        icon="link-45deg"
+                    >
+                        <x-button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
+                        <x-button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
+                        <x-button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
+                    </x-quick-actions>
+                </x-v-stack>
+            </x-grid-col>
+        </x-grid-row>
     </x-page-container>
 @endsection
 

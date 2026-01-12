@@ -15,269 +15,271 @@
         <p class="text-muted mb-0">Preencha os dados para criar um novo serviço</p>
     </x-page-header>
 
-    <div class="card border-0 shadow-sm">
+    <x-resource-list-card
+        title="Dados do Serviço"
+        icon="tools"
+        padding="p-4"
+    >
+        @if ($errors->any())
+            <x-alert type="error">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </x-alert>
+        @endif
 
-        <div class="card-body p-4">
-            @if ($errors->any())
-                <x-alert type="error">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </x-alert>
-            @endif
+        @if ($budget)
+            <x-alert type="info">
+                <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
+                {{ Str::limit($budget->description, 50) }}
+                <x-button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" />
+            </x-alert>
+        @endif
 
-            @if ($budget)
-                <x-alert type="info">
-                    <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
-                    {{ Str::limit($budget->description, 50) }}
-                    <x-button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" />
-                </x-alert>
-            @endif
-            <form id="serviceForm" method="POST" action="{{ route('provider.services.store') }}">
-                @csrf
+        <form id="serviceForm" method="POST" action="{{ route('provider.services.store') }}">
+            @csrf
 
-                <!-- Informações Básicas -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="budget_id" class="form-label small fw-bold text-muted text-uppercase">
-                                Orçamento <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select tom-select @error('budget_id') is-invalid @enderror" id="budget_id"
-                                name="budget_id" required>
-                                <option value="">Selecione um orçamento</option>
-                                @if($budgets && is_iterable($budgets))
+            <!-- Informações Básicas -->
+            <x-grid-row>
+                <x-grid-col size="col-md-6">
+                    <div class="mb-3">
+                        <label for="budget_id" class="form-label small fw-bold text-muted text-uppercase">
+                            Orçamento <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select tom-select @error('budget_id') is-invalid @enderror" id="budget_id"
+                            name="budget_id" required>
+                            <option value="">Selecione um orçamento</option>
+                            @if($budgets && is_iterable($budgets))
                                 @foreach ($budgets as $budgetOption)
-                                @if($budgetOption && isset($budgetOption->id))
-                                <option value="{{ $budgetOption->id }}"
-                                    {{ old('budget_id') == $budgetOption->id || ($budget && $budget->id == $budgetOption->id) ? 'selected' : '' }}>
-                                    {{ $budgetOption->code }} - {{ \App\Helpers\CurrencyHelper::format($budgetOption->total) }}
-                                </option>
-                                @endif
-                                @endforeach
-                                @endif
-                            </select>
-                            @error('budget_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">
-                                Categoria <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select tom-select @error('category_id') is-invalid @enderror"
-                                id="category_id" name="category_id" required>
-                                <option value="">Selecione uma categoria</option>
-                                @if($categories && is_iterable($categories))
-                                @foreach ($categories as $category)
-                                @if($category && isset($category->id))
-                                @if ($category->children->isEmpty())
-                                <option value="{{ $category->id }}"
-                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                                @else
-                                <optgroup label="{{ $category->name }}">
-                                    <option value="{{ $category->id }}"
-                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }} (Geral)
-                                    </option>
-                                    @foreach ($category->children as $subcategory)
-                                    @if($subcategory && isset($subcategory->id))
-                                    <option value="{{ $subcategory->id }}"
-                                        {{ old('category_id') == $subcategory->id ? 'selected' : '' }}>
-                                        {{ $subcategory->name }}
-                                    </option>
+                                    @if($budgetOption && isset($budgetOption->id))
+                                        <option value="{{ $budgetOption->id }}"
+                                            {{ old('budget_id') == $budgetOption->id || ($budget && $budget->id == $budgetOption->id) ? 'selected' : '' }}>
+                                            {{ $budgetOption->code }} - {{ \App\Helpers\CurrencyHelper::format($budgetOption->total) }}
+                                        </option>
                                     @endif
-                                    @endforeach
-                                </optgroup>
-                                @endif
-                                @endif
                                 @endforeach
-                                @endif
-                            </select>
-                            @error('category_id')
+                            @endif
+                        </select>
+                        @error('budget_id')
                             <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @enderror
                     </div>
-                </div>
+                </x-grid-col>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="code" class="form-label small fw-bold text-muted text-uppercase">
-                                Código do Serviço <span class="text-muted">(gerado automaticamente)</span>
-                            </label>
-                            <input type="text" class="form-control" id="code" name="code"
-                                value="{{ old('code', $nextCode) }}" readonly placeholder="Será gerado automaticamente">
-                            <div class="form-text">Código pré-visualizado. Será confirmado ao salvar.</div>
-                        </div>
+                <x-grid-col size="col-md-6">
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">
+                            Categoria <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select tom-select @error('category_id') is-invalid @enderror"
+                            id="category_id" name="category_id" required>
+                            <option value="">Selecione uma categoria</option>
+                            @if($categories && is_iterable($categories))
+                                @foreach ($categories as $category)
+                                    @if($category && isset($category->id))
+                                        @if ($category->children->isEmpty())
+                                            <option value="{{ $category->id }}"
+                                                {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @else
+                                            <optgroup label="{{ $category->name }}">
+                                                <option value="{{ $category->id }}"
+                                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                                    {{ $category->name }} (Geral)
+                                                </option>
+                                                @foreach ($category->children as $subcategory)
+                                                    @if($subcategory && isset($subcategory->id))
+                                                        <option value="{{ $subcategory->id }}"
+                                                            {{ old('category_id') == $subcategory->id ? 'selected' : '' }}>
+                                                            {{ $subcategory->name }}
+                                                        </option>
+                                                    @endif
+                                                @endforeach
+                                            </optgroup>
+                                        @endif
+                                    @endif
+                                @endforeach
+                            @endif
+                        </select>
+                        @error('category_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
+                </x-grid-col>
+            </x-grid-row>
 
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="service_statuses_id" class="form-label small fw-bold text-muted text-uppercase">
-                                Status <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select tom-select @error('service_statuses_id') is-invalid @enderror"
-                                id="service_statuses_id" name="service_statuses_id" required disabled>
-                                @foreach ($statusOptions as $status)
+            <x-grid-row>
+                <x-grid-col size="col-md-6">
+                    <div class="mb-3">
+                        <label for="code" class="form-label small fw-bold text-muted text-uppercase">
+                            Código do Serviço <span class="text-muted">(gerado automaticamente)</span>
+                        </label>
+                        <input type="text" class="form-control" id="code" name="code"
+                            value="{{ old('code', $nextCode) }}" readonly placeholder="Será gerado automaticamente">
+                        <div class="form-text">Código pré-visualizado. Será confirmado ao salvar.</div>
+                    </div>
+                </x-grid-col>
+
+                <x-grid-col size="col-md-6">
+                    <div class="mb-3">
+                        <label for="service_statuses_id" class="form-label small fw-bold text-muted text-uppercase">
+                            Status <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select tom-select @error('service_statuses_id') is-invalid @enderror"
+                            id="service_statuses_id" name="service_statuses_id" required disabled>
+                            @foreach ($statusOptions as $status)
                                 <option value="{{ $status->value }}" selected>
                                     {{ $status->label() }}
                                 </option>
-                                @endforeach
-                            </select>
-                            <input type="hidden" name="service_statuses_id" value="{{ \App\Enums\ServiceStatus::DRAFT->value }}">
-                            <div class="form-text">Novos serviços são criados como Rascunho por padrão.</div>
-                            @error('service_statuses_id')
+                            @endforeach
+                        </select>
+                        <input type="hidden" name="service_statuses_id" value="{{ \App\Enums\ServiceStatus::DRAFT->value }}">
+                        <div class="form-text">Novos serviços são criados como Rascunho por padrão.</div>
+                        @error('service_statuses_id')
                             <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @enderror
                     </div>
-                </div>
+                </x-grid-col>
+            </x-grid-row>
 
-                <!-- Descrição e Detalhes -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
-                                rows="3" placeholder="Descreva o serviço a ser realizado...">{{ old('description') }}</textarea>
-                            @error('description')
+            <!-- Descrição e Detalhes -->
+            <x-grid-row>
+                <x-grid-col size="col-12">
+                    <div class="mb-3">
+                        <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
+                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
+                            rows="3" placeholder="Descreva o serviço a ser realizado...">{{ old('description') }}</textarea>
+                        @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @enderror
                     </div>
-                </div>
+                </x-grid-col>
+            </x-grid-row>
 
-                <!-- Valores e Datas -->
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
-                            <input type="text" class="form-control @error('discount') is-invalid @enderror"
-                                id="discount" name="discount"
-                                value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('discount', '0')), 2, false) }}"
-                                inputmode="numeric" placeholder="0,00"
-                                data-mask="currency">
-                            @error('discount')
+            <!-- Valores e Datas -->
+            <x-grid-row>
+                <x-grid-col size="col-md-4">
+                    <div class="mb-3">
+                        <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
+                        <input type="text" class="form-control @error('discount') is-invalid @enderror"
+                            id="discount" name="discount"
+                            value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('discount', '0')), 2, false) }}"
+                            inputmode="numeric" placeholder="0,00"
+                            data-mask="currency">
+                        @error('discount')
                             <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @enderror
                     </div>
+                </x-grid-col>
 
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="total" class="form-label small fw-bold text-muted text-uppercase">Total (R$)</label>
-                            <input type="text" class="form-control @error('total') is-invalid @enderror"
-                                id="total" name="total"
-                                value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('total', '0')), 2, false) }}"
-                                inputmode="numeric" placeholder="0,00" readonly
-                                data-mask="currency">
-                            @error('total')
+                <x-grid-col size="col-md-4">
+                    <div class="mb-3">
+                        <label for="total" class="form-label small fw-bold text-muted text-uppercase">Total (R$)</label>
+                        <input type="text" class="form-control @error('total') is-invalid @enderror"
+                            id="total" name="total"
+                            value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('total', '0')), 2, false) }}"
+                            inputmode="numeric" placeholder="0,00" readonly
+                            data-mask="currency">
+                        @error('total')
                             <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @enderror
                     </div>
+                </x-grid-col>
 
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
-                            <input type="date" class="form-control @error('due_date') is-invalid @enderror"
-                                id="due_date" name="due_date"
-                                min="{{ date('Y-m-d') }}"
-                                value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', now()->format('Y-m-d')), 'Y-m-d', now()->format('Y-m-d')) }}"
-                                required>
-                            @error('due_date')
+                <x-grid-col size="col-md-4">
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
+                        <input type="date" class="form-control @error('due_date') is-invalid @enderror"
+                            id="due_date" name="due_date"
+                            min="{{ date('Y-m-d') }}"
+                            value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', now()->format('Y-m-d')), 'Y-m-d', now()->format('Y-m-d')) }}"
+                            required>
+                        @error('due_date')
                             <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @enderror
                     </div>
-                </div>
+                </x-grid-col>
+            </x-grid-row>
 
-                <!-- Produtos/Serviços -->
-                <div class="row">
-                    <div class="col-12">
-                        <h5 class="mb-3">
-                            <i class="bi bi-box-seam me-2"></i>
-                            Produtos/Serviços
-                        </h5>
+            <!-- Produtos/Serviços -->
+            <x-grid-row>
+                <x-grid-col size="col-12">
+                    <h5 class="mb-3">
+                        <i class="bi bi-box-seam me-2"></i>
+                        Produtos/Serviços
+                    </h5>
 
-                        <div class="mb-3">
-                            <x-button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" disabled />
-                        </div>
-
-                        <div id="itemsContainer">
-                            <!-- Itens serão adicionados dinamicamente -->
-                            @if(old('items'))
-                                @foreach(old('items') as $index => $item)
-                                    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
-                                        <div class="row align-items-end">
-                                            <div class="col-md-4">
-                                                <label class="form-label">Produto/Serviço</label>
-                                                <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
-                                                    <option value="">Selecione um produto</option>
-                                                    @foreach ($products as $product)
-                                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}"
-                                                        {{ $item['product_id'] == $product->id ? 'selected' : '' }}>
-                                                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
-                                                    </option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label">Quantidade</label>
-                                                <div class="input-group">
-                                                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement">-</button>
-                                                    <input type="number" class="form-control quantity-input" name="items[{{ $index }}][quantity]"
-                                                        value="{{ $item['quantity'] ?? 1 }}" min="0" step="1" inputmode="numeric" required>
-                                                    <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment">+</button>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label">Valor Unit.</label>
-                                                <input type="text" inputmode="numeric" class="form-control unit-value currency-brl" name="items[{{ $index }}][unit_value]"
-                                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($item['unit_value'] ?? 0), 2, false) }}" placeholder="0,00" required readonly data-mask="currency">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label">Total</label>
-                                                <input type="text" inputmode="numeric" class="form-control item-total currency-brl" name="items[{{ $index }}][total]"
-                                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($item['total'] ?? 0), 2, false) }}" placeholder="0,00" readonly data-mask="currency">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <input type="hidden" name="items[{{ $index }}][action]" value="create">
-                                                <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @endif
-                        </div>
-                        <div id="emptyState" style="{{ old('items') ? 'display: none;' : '' }}">
-                            <x-empty-state
-                                title="Nenhum item adicionado"
-                                description="Clique em 'Adicionar Item' para começar"
-                                icon="inbox"
-                            />
-                        </div>
+                    <div class="mb-3">
+                        <x-button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" disabled />
                     </div>
-                </div>
 
-                <div class="d-flex justify-content-between mt-4">
-                    <div>
-                        <x-back-button index-route="provider.services.index" label="Cancelar" />
+                    <div id="itemsContainer">
+                        <!-- Itens serão adicionados dinamicamente -->
+                        @if(old('items'))
+                            @foreach(old('items') as $index => $item)
+                                <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
+                                    <x-grid-row class="align-items-end">
+                                        <x-grid-col size="col-md-4">
+                                            <label class="form-label">Produto/Serviço</label>
+                                            <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
+                                                <option value="">Selecione um produto</option>
+                                                @foreach ($products as $product)
+                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}"
+                                                    {{ $item['product_id'] == $product->id ? 'selected' : '' }}>
+                                                    {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </x-grid-col>
+                                        <x-grid-col size="col-md-2">
+                                            <label class="form-label">Quantidade</label>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement">-</button>
+                                                <input type="number" class="form-control quantity-input" name="items[{{ $index }}][quantity]"
+                                                    value="{{ $item['quantity'] ?? 1 }}" min="0" step="1" inputmode="numeric" required>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment">+</button>
+                                            </div>
+                                        </x-grid-col>
+                                        <x-grid-col size="col-md-2">
+                                            <label class="form-label">Valor Unit.</label>
+                                            <input type="text" inputmode="numeric" class="form-control unit-value currency-brl" name="items[{{ $index }}][unit_value]"
+                                                value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($item['unit_value'] ?? 0), 2, false) }}" placeholder="0,00" required readonly data-mask="currency">
+                                        </x-grid-col>
+                                        <x-grid-col size="col-md-2">
+                                            <label class="form-label">Total</label>
+                                            <input type="text" inputmode="numeric" class="form-control item-total currency-brl" name="items[{{ $index }}][total]"
+                                                value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($item['total'] ?? 0), 2, false) }}" placeholder="0,00" readonly data-mask="currency">
+                                        </x-grid-col>
+                                        <x-grid-col size="col-md-2">
+                                            <input type="hidden" name="items[{{ $index }}][action]" value="create">
+                                            <x-button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                        </x-grid-col>
+                                    </x-grid-row>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
-                    <x-button type="submit" icon="check-circle" label="Criar" />
+                    <div id="emptyState" style="{{ old('items') ? 'display: none;' : '' }}">
+                        <x-empty-state
+                            title="Nenhum item adicionado"
+                            description="Clique em 'Adicionar Item' para começar"
+                            icon="inbox"
+                        />
+                    </div>
+                </x-grid-col>
+            </x-grid-row>
+
+            <div class="d-flex justify-content-between mt-4">
+                <div>
+                    <x-back-button index-route="provider.services.index" label="Cancelar" />
                 </div>
-            </form>
-        </div>
-    </div>
+                <x-button type="submit" icon="check-circle" label="Criar" />
+            </div>
+        </form>
+    </x-resource-list-card>
 </x-page-container>
 
 

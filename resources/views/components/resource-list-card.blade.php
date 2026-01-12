@@ -5,9 +5,14 @@
     'total' => null,
     'padding' => 'p-0',
     'gap' => null,
+    'col' => null, // Nova prop para gerenciar wrapper de grid
 ])
 
-<div {{ $attributes->merge(['class' => 'card border-0 shadow-sm']) }}>
+@if($col)
+    <div class="{{ $col }}">
+@endif
+
+<div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100']) }}>
     <div class="card-header">
         <div class="row align-items-center">
             <div class="col-12 col-lg-8 mb-2 mb-lg-0">
@@ -63,3 +68,7 @@
         </div>
     @endif
 </div>
+
+@if($col)
+    </div>
+@endif
