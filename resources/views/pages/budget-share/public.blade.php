@@ -4,6 +4,30 @@
 
 @section('content')
 <x-page-container :fluid="false" padding="py-4">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>Sucesso!</strong> {{ session('success') }}
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>Erro!</strong> {{ session('error') }}
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Cabeçalho da Visualização Pública --}}
     <div class="row align-items-center mb-4 g-3">
         <div class="col-12 col-md">
@@ -378,6 +402,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify(data)
@@ -385,119 +410,275 @@
                 .then(response => response.json())
                 .then(result => {
                     if (result.success) {
-                        alert('Comentário enviado com sucesso!');
-                        bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
-                        commentForm.reset();
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Comentário enviado com sucesso!',
+                            icon: 'success',
+                            confirmButtonColor: '#0d6efd'
+                        }).then(() => {
+                            bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
+                            commentForm.reset();
+                        });
                     } else {
-                        alert('Erro ao enviar comentário: ' + (result.message || 'Erro desconhecido'));
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao enviar comentário.',
+                            icon: 'error'
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Erro ao processar solicitação');
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
                 });
             });
         }
     });
 
     function approveBudget() {
-        if (confirm('Deseja realmente aprovar este orçamento? Esta ação não pode ser desfeita.')) {
-            fetch("{{ route('budgets.public.shared.accept', ['token' => $budgetShare->share_token]) }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Orçamento aprovado com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro ao aprovar orçamento: ' + (result.message || 'Erro desconhecido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Erro ao processar solicitação');
-            });
-        }
+        Swal.fire({
+            title: 'Aprovar Orçamento?',
+            text: "Esta ação não pode ser desfeita e confirmará seu pedido.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Sim, Aprovar!',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Feedback visual de processamento
+                Swal.fire({
+                    title: 'Processando...',
+                    text: 'Aguarde enquanto confirmamos sua aprovação.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch("{{ route('budgets.public.shared.accept', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Orçamento aprovado com sucesso!',
+                            icon: 'success',
+                            confirmButtonColor: '#198754'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao aprovar orçamento.',
+                            icon: 'error',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação. Tente novamente.',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                });
+            }
+        });
     }
 
     function rejectBudget() {
-        if (confirm('Deseja realmente rejeitar este orçamento? Esta ação não pode ser desfeita.')) {
-            fetch("{{ route('budgets.public.shared.reject', ['token' => $budgetShare->share_token]) }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Orçamento rejeitado com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro ao rejeitar orçamento: ' + (result.message || 'Erro desconhecido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Erro ao processar solicitação');
-            });
-        }
+        Swal.fire({
+            title: 'Rejeitar Orçamento?',
+            text: "Deseja realmente rejeitar este orçamento?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sim, Rejeitar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch("{{ route('budgets.public.shared.reject', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Rejeitado',
+                            text: 'Orçamento rejeitado com sucesso.',
+                            icon: 'info',
+                            confirmButtonColor: '#0d6efd'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao rejeitar orçamento.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
     }
 
     function cancelBudget() {
-        if (confirm('Deseja realmente cancelar este orçamento? Esta ação não pode ser desfeita.')) {
-            fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Orçamento cancelado com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro ao cancelar orçamento: ' + (result.message || 'Erro desconhecido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Erro ao processar solicitação');
-            });
-        }
+        Swal.fire({
+            title: 'Cancelar Orçamento?',
+            text: "Deseja realmente cancelar este orçamento?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6c757d',
+            cancelButtonColor: '#f8f9fa',
+            confirmButtonText: 'Sim, Cancelar',
+            cancelButtonText: 'Voltar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Cancelando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Cancelado',
+                            text: 'Orçamento cancelado com sucesso.',
+                            icon: 'success'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao cancelar orçamento.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
     }
 
     function cancelApprovedBudget() {
-        if (confirm('Atenção: Este orçamento já foi aprovado. Cancelá-lo agora pode incorrer em custos pelo trabalho já realizado. Serviços em andamento serão faturados como \'Parcialmente Concluídos\'. Deseja continuar?')) {
-            fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    alert('Orçamento aprovado foi cancelado com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro ao cancelar orçamento aprovado: ' + (result.message || 'Erro desconhecido'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Erro ao processar solicitação');
-            });
-        }
+        Swal.fire({
+            title: 'Cancelar Orçamento Aprovado?',
+            text: "Este orçamento já foi aprovado. Deseja realmente cancelá-lo?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sim, Cancelar Aprovado',
+            cancelButtonText: 'Manter Aprovado',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Orçamento aprovado foi cancelado.',
+                            icon: 'success'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao cancelar orçamento.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
     }
 
     function showCommentModal() {

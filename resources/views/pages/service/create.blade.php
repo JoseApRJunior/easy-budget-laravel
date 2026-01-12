@@ -3,7 +3,7 @@
 @section('title', 'Novo Serviço')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-page-container>
     <x-page-header
         title="Novo Serviço"
         icon="tools"
@@ -19,21 +19,21 @@
 
         <div class="card-body p-4">
             @if ($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+                <x-alert type="error">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-alert>
             @endif
+
             @if ($budget)
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
-                {{ Str::limit($budget->description, 50) }}
-                <x-button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" />
-            </div>
+                <x-alert type="info">
+                    <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
+                    {{ Str::limit($budget->description, 50) }}
+                    <x-button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" />
+                </x-alert>
             @endif
             <form id="serviceForm" method="POST" action="{{ route('provider.services.store') }}">
                 @csrf
@@ -259,10 +259,12 @@
                                 @endforeach
                             @endif
                         </div>
-                        <div id="emptyState" class="text-center py-4 text-muted" style="{{ old('items') ? 'display: none;' : '' }}">
-                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                            <p class="mb-0 mt-2">Nenhum item adicionado</p>
-                            <small>Clique em "Adicionar Item" para começar</small>
+                        <div id="emptyState" style="{{ old('items') ? 'display: none;' : '' }}">
+                            <x-empty-state
+                                title="Nenhum item adicionado"
+                                description="Clique em 'Adicionar Item' para começar"
+                                icon="inbox"
+                            />
                         </div>
                     </div>
                 </div>
@@ -276,7 +278,7 @@
             </form>
         </div>
     </div>
-</div>
+</x-page-container>
 
 
 <!-- Template para novos itens -->

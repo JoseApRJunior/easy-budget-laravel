@@ -55,7 +55,7 @@ class BudgetObserver
         try {
             AuditLog::withoutTenant()->create([
                 'tenant_id' => $budget->tenant_id,
-                'user_id' => auth()->id(),
+                'user_id' => auth()->check() ? auth()->id() : null,
                 'action' => $action,
                 'model_type' => Budget::class,
                 'model_id' => $budget->id,

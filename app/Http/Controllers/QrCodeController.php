@@ -8,7 +8,6 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Infrastructure\QrCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class QrCodeController extends Controller
 {
@@ -38,7 +37,7 @@ class QrCodeController extends Controller
         ]);
 
         $text = $request->input('text');
-        $size = $request->input('size', 300);
+        $size = (int) $request->input('size', 300);
         $margin = $request->input('margin', 10);
 
         // Use the existing QrCodeService to generate data URI

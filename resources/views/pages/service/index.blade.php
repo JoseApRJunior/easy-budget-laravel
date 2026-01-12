@@ -17,7 +17,7 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-page-container>
         <x-page-header
             title="Lista de Serviços"
             icon="tools"
@@ -94,19 +94,15 @@
                     </div>
 
                 <!-- Card de Tabela -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0 py-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <h5 class="mb-0 d-flex align-items-center flex-wrap fw-bold text-dark">
-                                <span class="me-2">
-                                    <i class="bi bi-list-ul me-1"></i>
-                                    <span class="d-none d-sm-inline">Lista de Serviços</span>
-                                    <span class="d-sm-none">Serviços</span>
-                                </span>
-                                <span class="text-muted small fw-normal">
-                            ({{ count($services) }})
-                        </span>
-                            </h5>
+                <x-resource-list-card
+                    title="Lista de Serviços"
+                    mobileTitle="Serviços"
+                    icon="list-ul"
+                    :total="$services->total()"
+                    class="border-0 shadow-sm"
+                >
+                    <x-slot name="headerActions">
+                        <div class="col-12 col-lg-4 text-lg-end">
                             <x-table-header-actions
                                 resource="services"
                                 :filters="$filters"
@@ -114,11 +110,12 @@
                                 :showExport="false"
                             />
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
+                    </x-slot>
+
+                    @if($services->isNotEmpty())
+                        <x-slot name="desktop">
+                            <x-resource-table>
+                                <x-slot name="thead">
                                     <tr>
                                         <th>Código</th>
                                         <th>Cliente</th>
@@ -128,63 +125,93 @@
                                         <th>Status</th>
                                         <th class="text-center">Ações</th>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($services as $service)
-                                        <tr>
-                                            <td class="fw-bold text-dark">{{ $service->code }}</td>
-                                            <td>
-                                                @php
-                                                    $customerName = 'N/A';
-                                                    if ($service->budget && $service->budget->customer && $service->budget->customer->commonData) {
-                                                        $commonData = $service->budget->customer->commonData;
-                                                        $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
-                                                    }
-                                                @endphp
-                                                {{ $customerName }}
-                                            </td>
-                                            <td>{{ $service->category->name ?? 'N/A' }}</td>
-                                            <td class="text-muted small">
-                                                {{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}
-                                            </td>
-                                            <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
-                                            <td>
-                                                <x-status-badge :item="$service" statusField="status" />
-                                            </td>
-                                            <td class="text-center">
-                                                <x-action-buttons
-                                                    :item="$service"
-                                                    resource="services"
-                                                    identifier="code"
-                                                    size="sm"
-                                                />
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7">
-                                                <x-empty-state
-                                                    title="Nenhum serviço encontrado"
-                                                    description="Não encontramos serviços com os filtros aplicados."
-                                                    icon="gear"
-                                                />
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                </x-slot>
 
-                        @if($services->hasPages())
-                            <div class="card-footer bg-transparent border-0 py-3">
-                                {{ $services->appends(request()->query())->links() }}
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                                @foreach($services as $service)
+                                    <tr>
+                                        <td class="fw-bold text-dark">{{ $service->code }}</td>
+                                        <td>
+                                            @php
+                                                $customerName = 'N/A';
+                                                if ($service->budget && $service->budget->customer && $service->budget->customer->commonData) {
+                                                    $commonData = $service->budget->customer->commonData;
+                                                    $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                                }
+                                            @endphp
+                                            {{ $customerName }}
+                                        </td>
+                                        <td>{{ $service->category->name ?? 'N/A' }}</td>
+                                        <td class="text-muted small">
+                                            {{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}
+                                        </td>
+                                        <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
+                                        <td>
+                                            <x-status-badge :item="$service" statusField="status" />
+                                        </td>
+                                        <td class="text-center">
+                                            <x-action-buttons
+                                                :item="$service"
+                                                resource="services"
+                                                identifier="code"
+                                                size="sm"
+                                            />
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </x-resource-table>
+                        </x-slot>
+
+                        <x-slot name="mobile">
+                            @foreach($services as $service)
+                                @php
+                                    $customerName = 'N/A';
+                                    if ($service->budget && $service->budget->customer && $service->budget->customer->commonData) {
+                                        $commonData = $service->budget->customer->commonData;
+                                        $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                    }
+                                @endphp
+                                <x-resource-mobile-item
+                                    icon="tools"
+                                    :href="route('provider.services.show', $service->code)"
+                                >
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-dark">{{ $service->code }}</span>
+                                        <span class="text-muted small">{{ $service->due_date ? $service->due_date->format('d/m/Y') : '-' }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
+                                        <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
+                                            <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                            <x-status-badge :item="$service" statusField="status" />
+                                        </div>
+                                    </div>
+                                </x-resource-mobile-item>
+                            @endforeach
+                        </x-slot>
+                    @else
+                        <x-empty-state
+                            title="Nenhum serviço encontrado"
+                            description="Não encontramos serviços com os filtros aplicados."
+                            icon="gear"
+                        />
+                    @endif
+
+                    @if($services->hasPages())
+                        <x-slot name="footer">
+                            {{ $services->appends(request()->query())->links() }}
+                        </x-slot>
+                    @endif
+                </x-resource-list-card>
             </div>
         </div>
-    </div>
+    </x-page-container>
 
 @push('scripts')
     <script>

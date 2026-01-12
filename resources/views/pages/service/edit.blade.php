@@ -3,7 +3,7 @@
 @section('title', 'Editar Serviço')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-page-container>
     <x-page-header
         title="Editar Serviço"
         icon="tools"
@@ -19,13 +19,12 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
+                    <x-alert type="info">
                         <strong>Código do Serviço:</strong> {{ $service->code }}
                         <span class="ms-3"><strong>Status:</strong>
                             <x-status-badge :item="$service" />
                         </span>
-                    </div>
+                    </x-alert>
 
                     <form id="serviceForm" method="POST" action="{{ route('provider.services.update', $service->code) }}">
                         @csrf
@@ -362,7 +361,7 @@
             </div>
         </div>
     </div>
-</div>
+</x-page-container>
 
 <!-- Template para novos itens -->
 <template id="itemTemplate">

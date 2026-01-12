@@ -109,6 +109,23 @@ class BudgetShareService extends AbstractBaseService
                     }
                 }
 
+                // Registra no histórico de ações do orçamento
+                \App\Models\BudgetActionHistory::create([
+                    'tenant_id' => $budget->tenant_id,
+                    'budget_id' => $budget->id,
+                    'action' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'approved' : ($newStatus === \App\Enums\BudgetStatus::REJECTED ? 'rejected' : 'cancelled'),
+                    'old_status' => $budget->getOriginal('status'),
+                    'new_status' => $newStatus->value,
+                    'description' => $comment ?? ($newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado pelo cliente via link público.' : 'Orçamento rejeitado pelo cliente via link público.'),
+                    'metadata' => [
+                        'via' => 'public_share',
+                        'share_token' => $token,
+                        'customer_comment' => $comment,
+                    ],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+
                 $message = $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado com sucesso.' : 'Orçamento rejeitado com sucesso.';
 
                 return $this->success($budget, $message);
@@ -165,7 +182,7 @@ class BudgetShareService extends AbstractBaseService
 
             // Fallback: Se não encontrar em budget_shares, procura no public_token da tabela budgets
             if (! $share) {
-                $budget = Budget::where('public_token', $token)->first();
+                $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
 
                 if ($budget) {
                     // Verifica expiração do public_token
@@ -187,9 +204,12 @@ class BudgetShareService extends AbstractBaseService
                 }
             }
 
-            if (! $share || ! $share->is_active) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Token de compartilhamento inválido ou inativo.');
+            if (! $share) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Link de compartilhamento inválido ou expirado.');
             }
+
+            // Garante que o orçamento está carregado sem escopo global para acesso público
+            $budget = $share->budget ?? Budget::withoutGlobalScopes()->find($share->budget_id);
 
             // Verifica expiração para BudgetShare real
             if ($share->id && $share->expires_at && now()->gt($share->expires_at)) {
@@ -336,7 +356,7 @@ class BudgetShareService extends AbstractBaseService
 
             if (! $share) {
                 // Fallback para public_token na tabela budgets
-                $budget = Budget::where('public_token', $token)->first();
+                $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
                 if (! $budget || ($budget->public_expires_at && now()->gt($budget->public_expires_at))) {
                     return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
                 }
@@ -344,7 +364,7 @@ class BudgetShareService extends AbstractBaseService
                 if (! $share->is_active) {
                     return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
                 }
-                $budget = $this->budgetRepository->find($share->budget_id);
+                $budget = Budget::withoutGlobalScopes()->find($share->budget_id);
             }
 
             if (! $budget) {

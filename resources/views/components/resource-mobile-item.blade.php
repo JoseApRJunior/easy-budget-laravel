@@ -2,9 +2,14 @@
     'icon' => null,
     'avatarColor' => 'var(--primary-color)',
     'avatarTextColor' => 'white',
+    'href' => null
 ])
 
-<div class="list-group-item py-3">
+@if($href)
+    <a href="{{ $href }}" class="list-group-item list-group-item-action py-3">
+@else
+    <div class="list-group-item py-3">
+@endif
     <div class="d-flex align-items-start">
         @if(isset($avatar) || $icon)
             <div class="me-3 mt-1">
@@ -54,5 +59,13 @@
                 </div>
             @endif
         </div>
+
+        @if($href)
+            <i class="bi bi-chevron-right text-muted ms-2 mt-1"></i>
+        @endif
     </div>
-</div>
+@if($href)
+    </a>
+@else
+    </div>
+@endif

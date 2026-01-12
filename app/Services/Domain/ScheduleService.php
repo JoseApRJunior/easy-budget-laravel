@@ -47,6 +47,9 @@ class ScheduleService extends AbstractBaseService
             // Cria o agendamento
             $schedule = $this->scheduleRepository->createFromDTO($dto);
 
+            // Atualiza o status do serviço para agendado
+            $this->serviceRepository->update($service->id, ['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
+
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
     }

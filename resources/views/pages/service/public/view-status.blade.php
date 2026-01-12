@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-page-container>
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
@@ -12,29 +12,18 @@
                                 <small class="text-muted">Código: {{ $service->code }}</small>
                             </div>
                             <div>
-                                <span class="badge bg-{{ $service->status->color() }} fs-6 px-3 py-2">
-                                    <i class="bi bi-{{ $service->status->icon() }} me-1"></i>
-                                    {{ $service->status->label() }}
-                                </span>
+                                <x-status-badge :item="$service" />
                             </div>
                         </div>
                     </div>
 
                     <div class="card-body">
                         @if (session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+                            <x-alert type="success" :message="session('success')" />
                         @endif
 
                         @if (session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                {{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+                            <x-alert type="error" :message="session('error')" />
                         @endif
 
                         <div class="row mb-4">
@@ -150,10 +139,7 @@
                                                         @enderror
                                                     </div>
                                                     <div class="col-md-6 d-flex align-items-end">
-                                                        <button type="submit" class="btn btn-primary">
-                                                            <i class="bi bi-check-circle me-2"></i>
-                                                            Atualizar Status
-                                                        </button>
+                                                        <x-button type="submit" variant="primary" icon="check-circle" label="Atualizar Status" />
                                                     </div>
                                                 </div>
                                             </form>
@@ -166,11 +152,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route('services.public.print', ['code' => $service->code, 'token' => $token]) }}"
-                                        class="btn btn-outline-secondary" target="_blank">
-                                        <i class="bi bi-printer me-2"></i>
-                                        Imprimir
-                                    </a>
+                                    <x-button type="link" :href="route('services.public.print', ['code' => $service->code, 'token' => $token])" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
 
                                     <div class="text-muted small">
                                         <i class="bi bi-info-circle me-1"></i>
@@ -184,7 +166,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </x-page-container>
 @endsection
 
 @push('styles')

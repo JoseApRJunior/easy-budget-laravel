@@ -72,7 +72,14 @@
       @if( !$isAdmin )
         <div class="row g-4 mt-2">
           <div class="col-12">
-            <x-quick-actions />
+            <x-quick-actions>
+                <div class="d-flex flex-wrap gap-2">
+                    <x-button type="link" :href="route('provider.budgets.create')" variant="primary" icon="file-earmark-plus" label="Criar Novo Orçamento" />
+                    <x-button type="link" :href="route('provider.reports.index')" variant="info" icon="graph-up" label="Ver Relatórios" />
+                    <x-button type="link" :href="route('provider.services.index')" variant="success" outline icon="tools" label="Gerenciar Serviços" />
+                    <x-button type="link" :href="route('provider.customers.index')" variant="dark" outline icon="people" label="Clientes" />
+                </div>
+            </x-quick-actions>
           </div>
         </div>
       @else
@@ -120,10 +127,9 @@
             </div>
             <div class="card-body">
               <div class="alert alert-info">
-                <h6>Informações do Sistema</h6>
+                <h6>Informações da Conta</h6>
                 <p>Usuário: {{ $user->email }}</p>
                 <p>Tipo: {{ $isAdmin ? 'Administrador' : 'Prestador de Serviços' }}</p>
-                <p>Tenant ID: {{ $user->tenant_id }}</p>
               </div>
             </div>
           </div>

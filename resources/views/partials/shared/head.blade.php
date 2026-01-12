@@ -40,6 +40,11 @@
 
     <!-- Tom Select -->
     <link rel="stylesheet" href="{{ asset('assets/css/tom-select/bootstrap5.min.css') }}?v={{ filemtime(public_path('assets/css/tom-select/bootstrap5.min.css')) }}">
+    
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link rel="preload" href="{{ asset('assets/img/logo.png') }}" as="image" type="image/png">
 
     @stack('styles')

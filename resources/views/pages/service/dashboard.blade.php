@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Serviços')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-page-container>
         <x-page-header
             title="Dashboard de Serviços"
             icon="tools"
@@ -29,123 +29,65 @@
 
         <!-- Cards de Métricas -->
         <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-tools text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Total de Serviços</h6>
-                                <h3 class="mb-0">{{ $total }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Quantidade total de serviços cadastrados para este tenant.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-stat-card
+                title="Total de Serviços"
+                :value="$total"
+                description="Quantidade total de serviços cadastrados para o seu negócio."
+                icon="tools"
+                variant="primary"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-check-circle-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Serviços Concluídos</h6>
-                                <h3 class="mb-0">{{ $completed }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Serviços finalizados com sucesso e aprovados pelos clientes.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-stat-card
+                title="Serviços Concluídos"
+                :value="$completed"
+                description="Serviços finalizados com sucesso e aprovados pelos clientes."
+                icon="check-circle-fill"
+                variant="success"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-warning bg-gradient me-3">
-                                <i class="bi bi-clock-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Em Andamento</h6>
-                                <h3 class="mb-0">{{ $inProgress }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Serviços atualmente em execução pela equipe.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-stat-card
+                title="Em Andamento"
+                :value="$inProgress"
+                description="Serviços atualmente em execução pela equipe."
+                icon="clock-fill"
+                variant="warning"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-info bg-gradient me-3">
-                                <i class="bi bi-graph-up-arrow text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Taxa de Conclusão</h6>
-                                <h3 class="mb-0">{{ $completionRate }}%</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Percentual de serviços concluídos em relação ao total.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-stat-card
+                title="Taxa de Conclusão"
+                :value="$completionRate . '%'"
+                description="Percentual de serviços concluídos em relação ao total."
+                icon="graph-up-arrow"
+                variant="info"
+            />
         </div>
 
         <!-- Cards de Valores Financeiros -->
         <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-currency-dollar text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Valor Total em Serviços</h6>
-                                <h3 class="mb-0">{{ \App\Helpers\CurrencyHelper::format($totalValue) }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Valor total de todos os serviços cadastrados no sistema.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-stat-card
+                title="Valor Total em Serviços"
+                :value="\App\Helpers\CurrencyHelper::format($totalValue)"
+                description="Valor total de todos os serviços cadastrados no sistema."
+                icon="currency-dollar"
+                variant="success"
+                col="col-md-6"
+            />
 
             <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="mb-3">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="avatar-circle bg-primary bg-gradient me-3">
-                                    <i class="bi bi-bar-chart-line-fill text-white"></i>
-                                </div>
-                                <h6 class="text-muted mb-0">Distribuição por Status</h6>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="statusChart" style="max-height: 120px;"></canvas>
-                            </div>
+                <x-resource-list-card
+                    title="Distribuição por Status"
+                    icon="pie-chart-fill"
+                    class="h-100 border-0 shadow-sm"
+                >
+                    <div class="p-3">
+                        <div class="chart-container" style="position: relative; height: 160px;">
+                            <canvas id="statusChart"></canvas>
                         </div>
-                        <p class="text-muted small mb-0">
-                            Visualização da distribuição dos serviços por status atual.
+                        <p class="text-muted small mb-0 mt-3 text-center">
+                            Acompanhe o fluxo de trabalho por status atual.
                         </p>
                     </div>
-                </div>
+                </x-resource-list-card>
             </div>
         </div>
 
@@ -153,123 +95,107 @@
         <div class="row g-4">
             <!-- Serviços Recentes -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>
-                            <span class="d-none d-sm-inline">Serviços Recentes</span>
-                            <span class="d-sm-none">Recentes</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        @if ($recent->isNotEmpty())
-                            <!-- Desktop View -->
-                            <div class="desktop-view">
-                                <div class="table-responsive">
-                                    <table class="modern-table table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Cliente</th>
-                                            <th>Valor</th>
-                                            <th>Status</th>
-                                            <th>Data</th>
-                                            <th class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recent as $service)
-                                            @php
-                                                $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
-                                            @endphp
-                                            <tr>
-                                                <td class="fw-bold text-dark">{{ $service->code }}</td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
-                                                            {{ $customerName }}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
-                                                <td>
-                                                    <x-status-badge :item="$service" />
-                                                </td>
-                                                <td class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</td>
-                                                <td class="text-center">
-                                                    <x-action-buttons
-                                                        :item="$service"
-                                                        resource="services"
-                                                        identifier="code"
-                                                        :can-delete="false"
-                                                        size="sm"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                <x-resource-list-card
+                    title="Serviços Recentes"
+                    icon="clock-history"
+                    :total="$recent->count()"
+                    class="border-0 shadow-sm"
+                >
+                    @if ($recent->isNotEmpty())
+                        <x-slot name="desktop">
+                            <x-resource-table>
+                                <x-slot name="thead">
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Cliente</th>
+                                        <th>Valor</th>
+                                        <th>Status</th>
+                                        <th>Data</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </x-slot>
 
-                        <!-- Mobile View -->
-                        <div class="mobile-view">
-                            <div class="list-group list-group-flush">
                                 @foreach ($recent as $service)
                                     @php
                                         $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
                                     @endphp
-                                    <a href="{{ route('provider.services.show', $service->code) }}" class="list-group-item list-group-item-action py-3">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span class="fw-bold text-dark">{{ $service->code }}</span>
-                                                    <span class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</span>
+                                    <tr>
+                                        <td class="fw-bold text-dark">{{ $service->code }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="text-truncate" style="max-width: 150px;" title="{{ $customerName }}">
+                                                    {{ $customerName }}
                                                 </div>
                                             </div>
-                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
-                                        </div>
-                                        <div class="mb-2">
-                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
-                                            <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
-                                        </div>
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
-                                                <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                                            </div>
-                                            <div class="col-6 text-end">
-                                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
-                                                <x-status-badge :item="$service" />
-                                            </div>
-                                        </div>
-                                    </a>
+                                        </td>
+                                        <td class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
+                                        <td>
+                                            <x-status-badge :item="$service" />
+                                        </td>
+                                        <td class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</td>
+                                        <td class="text-center">
+                                            <x-action-buttons
+                                                :item="$service"
+                                                resource="services"
+                                                identifier="code"
+                                                :can-delete="false"
+                                                size="sm"
+                                            />
+                                        </td>
+                                    </tr>
                                 @endforeach
-                            </div>
-                        </div>
+                            </x-resource-table>
+                        </x-slot>
+
+                        <x-slot name="mobile">
+                            @foreach ($recent as $service)
+                                @php
+                                    $customerName = $service->budget->customer->commonData->first_name ?? 'N/A';
+                                @endphp
+                                <x-resource-mobile-item
+                                    icon="tools"
+                                    :href="route('provider.services.show', $service->code)"
+                                >
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-bold text-dark">{{ $service->code }}</span>
+                                        <span class="text-muted small">{{ $service->created_at->format('d/m/Y') }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
+                                        <div class="text-dark fw-semibold text-truncate">{{ $customerName }}</div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor</small>
+                                            <span class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                            <x-status-badge :item="$service" />
+                                        </div>
+                                    </div>
+                                </x-resource-mobile-item>
+                            @endforeach
+                        </x-slot>
                     @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                            <br>
-                            Nenhum serviço recente encontrado.
-                            <br>
-                            <small>Crie novos serviços para visualizar aqui.</small>
-                        </div>
+                        <x-empty-state
+                            title="Nenhum serviço recente encontrado"
+                            description="Crie novos serviços para visualizar aqui."
+                            icon="inbox"
+                        />
                     @endif
-                    </div>
-                </div>
+                </x-resource-list-card>
             </div>
 
             <!-- Insights e Atalhos -->
             <div class="col-lg-4">
                 <!-- Insights -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-transparent border-0 py-3">
-                        <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
-                            <i class="bi bi-lightbulb me-2 text-warning"></i>Insights Rápidos
-                        </h6>
-                    </div>
-                    <div class="card-body pt-0">
+                <x-resource-list-card
+                    title="Insights Rápidos"
+                    icon="lightbulb"
+                    class="border-0 shadow-sm mb-4"
+                >
+                    <div class="p-3">
                         <div class="d-flex flex-column gap-3">
                             <div class="d-flex align-items-start">
                                 <div class="avatar-circle-xs bg-success bg-opacity-10 p-2 rounded me-3">
@@ -297,27 +223,17 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </x-resource-list-card>
 
                 <!-- Atalhos -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0 py-3">
-                        <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
-                            <i class="bi bi-link-45deg me-2 text-primary"></i>Atalhos Rápidos
-                        </h6>
-                    </div>
-                    <div class="card-body pt-0 d-grid gap-2">
-                        <a href="{{ route('provider.services.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-tools me-2"></i>Listar Serviços
-                        </a>
-                        <a href="{{ route('provider.reports.services') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Serviços
-                        </a>
-                    </div>
-                </div>
+                <x-quick-actions title="Atalhos Rápidos" icon="link-45deg" variant="none">
+                    <x-button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
+                    <x-button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
+                    <x-button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
+                </x-quick-actions>
             </div>
         </div>
-    </div>
+    </x-page-container>
 @endsection
 
 @push('styles')
@@ -355,13 +271,15 @@
             const statusValues = [];
             const statusColors = [];
 
-            // Preparar dados para o gráfico usando cores do backend
+            // Preparar dados para o gráfico usando cores e labels do backend
             Object.keys(statusData).forEach(status => {
                 const statusInfo = statusData[status];
                 if (statusInfo && typeof statusInfo === 'object' && statusInfo.count > 0) {
-                    // Formatar label para melhor legibilidade
-                    let label = status.charAt(0).toUpperCase() + status.slice(1);
-                    label = label.replace(/_/g, ' ').replace('-', ' ');
+                    // Garantir que a label esteja traduzida ou formatada
+                    let label = statusInfo.label;
+                    if (!label) {
+                        label = status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+                    }
                     statusLabels.push(label);
                     statusValues.push(statusInfo.count);
                     statusColors.push(statusInfo.color || '#6c757d');

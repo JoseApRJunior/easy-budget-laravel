@@ -82,11 +82,7 @@
                 icon="clock-history"
                 class="h-100"
             >
-                <x-slot:headerActions>
-                    <x-button type="link" :href="route('provider.categories.index')" variant="link" label="Ver Todas" size="sm" />
-                </x-slot:headerActions>
-
-                @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
+                               @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
                     <x-slot:desktop>
                         <x-resource-table>
                             <x-slot:thead>
