@@ -429,7 +429,6 @@ class SettingsService extends AbstractBaseService
             'user' => $user,
             'settings' => $userSettings,
             'preferences' => [
-                'theme' => $userSettings->theme,
                 'primary_color' => $userSettings->primary_color,
                 'layout_density' => $userSettings->layout_density,
                 'sidebar_position' => $userSettings->sidebar_position,
@@ -520,7 +519,6 @@ class SettingsService extends AbstractBaseService
 
         // Configurações padrão
         $defaultSettings = [
-            'theme' => 'auto',
             'primary_color' => '#3B82F6',
             'layout_density' => 'normal',
             'sidebar_position' => 'left',
@@ -662,11 +660,6 @@ class SettingsService extends AbstractBaseService
         return [
             'user_settings' => [
                 'total_users_with_settings' => UserSettings::where('tenant_id', $tenantId)->count(),
-                'themes_distribution' => UserSettings::where('tenant_id', $tenantId)
-                    ->selectRaw('theme, COUNT(*) as count')
-                    ->groupBy('theme')
-                    ->pluck('count', 'theme')
-                    ->toArray(),
                 'notifications_enabled' => UserSettings::where('tenant_id', $tenantId)
                     ->where('email_notifications', true)
                     ->count(),

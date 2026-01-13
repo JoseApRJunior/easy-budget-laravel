@@ -151,7 +151,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-transparent border-0">
                         <h5 class="mb-0">
-                            <i class="bi bi-bar-chart-line me-2"></i>Distribuição de Orçamentos por Status
+                            <i class="bi bi-bar-chart-line me-2"></i>{{ __('Distribuição de Orçamentos por Status') }}
                         </h5>
                     </div>
                     <div class="card-body">
@@ -351,6 +351,17 @@
             const statusValues = [];
             const statusColors = [];
 
+            // Mapeamento de labels traduzidos para cada status
+            const statusLabelMap = {
+                'draft': 'Rascunho',
+                'pending': 'Pendente',
+                'approved': 'Aprovado',
+                'rejected': 'Rejeitado',
+                'in_progress': 'Em Andamento',
+                'cancelled': 'Cancelado',
+                'completed': 'Concluído'
+            };
+
             // Mapeamento de cores para cada status
             const statusColorMap = {
                 'draft': '#6c757d',
@@ -364,7 +375,7 @@
             // Preparar dados para o gráfico
             Object.keys(statusData).forEach(status => {
                 if (statusData[status] > 0) {
-                    statusLabels.push(status.charAt(0).toUpperCase() + status.slice(1));
+                    statusLabels.push(statusLabelMap[status] || status.charAt(0).toUpperCase() + status.slice(1));
                     statusValues.push(statusData[status]);
                     statusColors.push(statusColorMap[status] || '#6c757d');
                 }

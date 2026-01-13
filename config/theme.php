@@ -14,11 +14,11 @@ return [
     */
 
     'colors' => [
-        'primary' => '#093172', // --light-primary
-        'text' => '#1e293b',    // --light-text
-        'secondary' => '#94a3b8', // --light-secondary
-        'background' => '#c3d0dd', // --light-background
-        'surface' => '#9facb9',    // --light-surface
+        'primary' => '#093172',
+        'text' => '#1e293b',
+        'secondary' => '#94a3b8',
+        'background' => '#c3d0dd',
+        'surface' => '#9facb9',
         'border' => '#e2e8f0',
         'dark' => '#1a1a1a',
         'white' => '#ffffff',

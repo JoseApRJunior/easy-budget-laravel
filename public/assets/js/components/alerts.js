@@ -18,7 +18,6 @@ class EasyAlert {
          maxAlerts: 5, // Número máximo de alertas visíveis ao mesmo tempo
          container: document.body, // Container onde os alertas serão adicionados
          zIndex: 9999, // z-index dos alertas
-         theme: "light", // Tema: light ou dark
          icons: {
             success: '<i class="bi bi-check-circle-fill"></i>',
             error: '<i class="bi bi-x-circle-fill"></i>',

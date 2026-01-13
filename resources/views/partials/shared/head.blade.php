@@ -10,14 +10,6 @@
 
     <title>Easy Budget - @yield('title', 'Página Inicial')</title>
 
-    <!-- Script Inline para Inicialização do Tema (Evita FOUC) -->
-    <script>
-        (function() {
-            // Apenas aplica tema light como padrão
-            document.documentElement.setAttribute('data-bs-theme', 'light');
-        })();
-    </script>
-
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}" />
 
@@ -32,6 +24,8 @@
             --secondary-color: {{ config('theme.colors.secondary') }};
 
             /* Status e Alertas */
+            --text-primary: {{ config('theme.colors.primary') }};
+            --text-secondary: {{ config('theme.colors.secondary') }};
             --text-success: {{ config('theme.colors.success') }};
             --text-error: {{ config('theme.colors.danger') }};
             --text-warning: {{ config('theme.colors.warning') }};
