@@ -25,7 +25,7 @@
     @endphp
 
     <!-- Cards de Métricas -->
-    <div class="row g-3 mb-4">
+    <x-layout.grid-row class="mb-4">
         <x-dashboard.stat-card
             title="Total"
             :value="$total"
@@ -70,12 +70,12 @@
             variant="info"
             isCustom
         />
-    </div>
+    </x-layout.grid-row>
 
     <!-- Conteúdo Principal -->
-    <div class="row g-4">
+    <x-layout.grid-row>
         <!-- Categorias Recentes -->
-        <div class="col-lg-8">
+        <x-layout.grid-col lg="8">
             <x-resource.resource-list-card
                 title="Categorias Recentes"
                 mobileTitle="Recentes"
@@ -158,47 +158,52 @@
                     <x-resource.empty-state resource="categorias recentes" />
                 @endif
             </x-resource.resource-list-card>
-        </div>
+        </x-layout.grid-col>
 
         <!-- Insights e Atalhos -->
-        <div class="col-lg-4">
+        <x-layout.grid-col lg="4">
             <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-transparent border-0">
-                    <h6 class="mb-0">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
                         <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
                     </h6>
                 </div>
                 <div class="card-body">
-                    <ul class="list-unstyled mb-0 small text-muted">
-                        <li class="mb-2">
-                            <i class="bi bi-diagram-3-fill text-primary me-2"></i>
-                            Mantenha a estrutura hierárquica organizada para facilitar a navegação.
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-tag-fill text-success me-2"></i>
-                            Use nomes descritivos para suas categorias.
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                            Revise categorias inativas que ainda podem ser úteis para o negócio.
-                        </li>
-                    </ul>
+                    <x-layout.v-stack gap="3">
+                        <x-dashboard.insight-item
+                            icon="diagram-3-fill"
+                            variant="primary"
+                            description="Mantenha a estrutura hierárquica organizada para facilitar a navegação."
+                        />
+                        <x-dashboard.insight-item
+                            icon="tag-fill"
+                            variant="success"
+                            description="Use nomes descritivos para suas categorias."
+                        />
+                        <x-dashboard.insight-item
+                            icon="exclamation-triangle-fill"
+                            variant="warning"
+                            description="Revise categorias inativas que ainda podem ser úteis para o negócio."
+                        />
+                    </x-layout.v-stack>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0">
-                    <h6 class="mb-0">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
                         <i class="bi bi-link-45deg me-2"></i>Atalhos
                     </h6>
                 </div>
-                <div class="card-body d-grid gap-2">
-                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="sm" icon="plus-circle" label="Nova Categoria" />
-                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" outline size="sm" icon="tags" label="Listar Categorias" />
-                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletadas" />
+                <div class="card-body">
+                    <x-resource.quick-actions>
+                        <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="sm" icon="plus-circle" label="Nova Categoria" />
+                        <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" outline size="sm" icon="tags" label="Listar Categorias" />
+                        <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletadas" />
+                    </x-resource.quick-actions>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 </x-layout.page-container>
 @endsection

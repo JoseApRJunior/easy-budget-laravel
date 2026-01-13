@@ -215,12 +215,12 @@
 
                     <!-- Atalhos -->
                     <x-resource.quick-actions
-                        title="Atalhos Rápidos"
-                        icon="link-45deg"
+                        title="Ações de Serviço"
+                        icon="lightning-charge"
                     >
-                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="sm" icon="plus-circle" label="Criar Serviço" />
-                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="primary" size="sm" icon="tools" label="Listar Serviços" />
-                        <x-ui.button type="link" href="{{ route('provider.reports.services') }}" variant="secondary" size="sm" icon="file-earmark-text" label="Relatório de Serviços" />
+                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="md" icon="plus-lg" label="Cadastrar Novo Serviço" />
+                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="outline-primary" size="md" icon="search" label="Consultar Serviços" />
+                        <x-ui.button type="link" href="{{ route('provider.reports.services') }}" variant="outline-secondary" size="md" icon="file-earmark-bar-graph" label="Relatórios de Performance" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

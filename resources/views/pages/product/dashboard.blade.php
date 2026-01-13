@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Produtos')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-layout.page-container>
     <x-layout.page-header
         title="Dashboard de Produtos"
         icon="box-seam"
@@ -30,168 +30,115 @@
     @endphp
 
     <!-- Cards de Métricas de Estoque e Lucro -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100 bg-primary bg-gradient text-white">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-cash-stack text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">VALOR EM ESTOQUE (VENDA)</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold">R$ {{ number_format($inventorySale, 2, ',', '.') }}</h3>
-                    <p class="text-white text-opacity-75 small-text mb-0">Preço total de venda.</p>
-                </div>
-            </div>
-        </div>
+    <x-layout.grid-row class="mb-4">
+        <x-dashboard.stat-card
+            title="VALOR EM ESTOQUE (VENDA)"
+            :value="'R$ ' . number_format($inventorySale, 2, ',', '.')"
+            description="Preço total de venda."
+            icon="cash-stack"
+            variant="primary"
+            col="col-12 col-md-4"
+        />
 
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100 bg-success bg-gradient text-white">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-graph-up-arrow text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">LUCRO POTENCIAL</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold">R$ {{ number_format($potentialProfit, 2, ',', '.') }}</h3>
-                    <p class="text-white text-opacity-75 small-text mb-0">Diferença venda vs custo.</p>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="LUCRO POTENCIAL"
+            :value="'R$ ' . number_format($potentialProfit, 2, ',', '.')"
+            description="Diferença venda vs custo."
+            icon="graph-up-arrow"
+            variant="success"
+            col="col-12 col-md-4"
+        />
 
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm h-100 bg-info bg-gradient text-white">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-white bg-opacity-25 me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-white text-opacity-75 mb-0 small fw-bold">MARGEM MÉDIA</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold">{{ number_format($avgMargin, 1, ',', '.') }}%</h3>
-                    <p class="text-white text-opacity-75 small-text mb-0">Média de todos os produtos.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+        <x-dashboard.stat-card
+            title="MARGEM MÉDIA"
+            :value="number_format($avgMargin, 1, ',', '.') . '%'"
+            description="Média de todos os produtos."
+            icon="percent"
+            variant="info"
+            col="col-12 col-md-4"
+        />
+    </x-layout.grid-row>
 
     <!-- Cards de Métricas de Quantidade -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-box-seam text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">TOTAL</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold">{{ $total }}</h3>
-                    <p class="text-muted small-text mb-0">Ativos e inativos.</p>
-                </div>
-            </div>
-        </div>
+    <x-layout.grid-row class="mb-4">
+        <x-dashboard.stat-card
+            title="Total"
+            :value="$total"
+            description="Ativos e inativas."
+            icon="box-seam"
+            variant="primary"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-check-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">ATIVOS</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-success">{{ $active }}</h3>
-                    <p class="text-muted small-text mb-0">Disponíveis para uso.</p>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Ativas"
+            :value="$active"
+            description="Disponíveis para uso."
+            icon="check-circle-fill"
+            variant="success"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-secondary bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-pause-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">INATIVOS</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-secondary">{{ $inactive }}</h3>
-                    <p class="text-muted small-text mb-0">Suspensos temporariamente.</p>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Inativas"
+            :value="$inactive"
+            description="Suspensas temporariamente."
+            icon="pause-circle-fill"
+            variant="secondary"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-trash3-fill text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">DELETADOS</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-danger">{{ $deleted }}</h3>
-                    <p class="text-muted small-text mb-0">Na lixeira.</p>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Deletadas"
+            :value="$deleted"
+            description="Na lixeira."
+            icon="trash3-fill"
+            variant="danger"
+            isCustom
+        />
 
-        <div class="col-12 col-md-6 col-xl-5-custom">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3 d-flex flex-column justify-content-between">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold">TAXA USO</h6>
-                    </div>
-                    <h3 class="mb-1 fw-bold text-info">{{ $activityRate }}%</h3>
-                    <p class="text-muted small-text mb-0">Percentual de ativos.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+        <x-dashboard.stat-card
+            title="Taxa Uso"
+            :value="$activityRate . '%'"
+            description="Percentual de ativas."
+            icon="percent"
+            variant="info"
+            isCustom
+        />
+    </x-layout.grid-row>
 
     <!-- Conteúdo Principal -->
-    <div class="row g-4">
+    <x-layout.grid-row>
         <!-- Produtos Recentes -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0">
-                    <h5 class="mb-0">
-                        <i class="bi bi-clock-history me-2"></i>
-                        <span class="d-none d-sm-inline">Produtos Recentes</span>
-                        <span class="d-sm-none">Recentes</span>
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                    <!-- Desktop View -->
-                    <div class="desktop-view">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th>Categoria</th>
-                                        <th class="text-nowrap">Venda</th>
-                                        <th class="text-nowrap">Margem</th>
-                                        <th>Status</th>
-                                        <th>Criado em</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($recent as $product)
+        <x-layout.grid-col lg="8">
+            <x-resource.resource-list-card
+                title="Produtos Recentes"
+                mobileTitle="Recentes"
+                icon="clock-history"
+                class="h-100"
+            >
+                @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
+                    <x-slot:desktop>
+                        <x-resource.resource-table>
+                            <x-slot:thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Categoria</th>
+                                    <th class="text-nowrap">Venda</th>
+                                    <th class="text-nowrap">Margem</th>
+                                    <th>Status</th>
+                                    <th>Criado em</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </x-slot:thead>
+                            <x-slot:tbody>
+                                @foreach ($recent as $product)
                                     <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-box-seam me-2 text-muted"></i>
-                                                <span>{{ $product->name }}</span>
-                                            </div>
+                                            <x-resource.resource-info
+                                                :title="$product->name"
+                                                icon="box-seam"
+                                            />
                                         </td>
                                         <td>{{ $product->category->name ?? '—' }}</td>
                                         <td class="text-nowrap">{{ $product->formatted_price }}</td>
@@ -201,114 +148,107 @@
                                                     {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
                                                 </span>
                                             @else
-                                                <span class="text-muted small">N/A</span>
+                                                <span class="text-muted small">—</span>
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($product->active)
-                                            <span class="badge bg-success-subtle text-success">Ativo</span>
-                                            @else
-                                            <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                            @endif
+                                            <x-ui.status-badge :item="$product" />
                                         </td>
-                                        <td>{{ optional($product->created_at)->format('d/m/Y') }}</td>
-                                        <td class="text-center">
-                                            <x-ui.button type="link" :href="route('provider.products.show', $product->sku)"
-                                                    variant="info" size="sm" icon="eye" />
+                                        <td>
+                                            <small class="text-muted">{{ optional($product->created_at)->format('d/m/Y') }}</small>
                                         </td>
+                                        <x-resource.table-actions>
+                                            <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" size="sm" title="Visualizar" />
+                                        </x-resource.table-actions>
                                     </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                @endforeach
+                            </x-slot:tbody>
+                        </x-resource.resource-table>
+                    </x-slot:desktop>
 
-                    <!-- Mobile View -->
-                    <div class="mobile-view">
-                        <div class="list-group ">
-                            @foreach ($recent as $product)
-                            <div class="list-group-item py-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-box-seam text-muted me-2 mt-1"></i>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-1">{{ $product->name }}</div>
-                                        <div class="d-flex gap-2 flex-wrap mb-2">
-                                            @if ($product->active)
-                                            <span class="badge bg-success-subtle text-success">Ativo</span>
-                                            @else
-                                            <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                            @endif
-                                            @if($product->cost_price > 0)
+                    <x-slot:mobile>
+                        @foreach ($recent as $product)
+                            <x-resource.resource-mobile-item>
+                                <x-resource.resource-info
+                                    :title="$product->name"
+                                    icon="box-seam"
+                                />
+                                <x-slot:description>
+                                    <div class="d-flex gap-2 flex-wrap mb-2">
+                                        <x-ui.status-badge :item="$product" />
+                                        @if($product->cost_price > 0)
                                             <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}-subtle text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
                                                 {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
                                             </span>
-                                            @endif
-                                        </div>
-                                        <div class="small text-muted">
-                                            Venda: {{ $product->formatted_price }}
-                                        </div>
+                                        @endif
                                     </div>
-                                    <div class="ms-2">
-                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)"
-                                            variant="info" size="sm" icon="eye" />
+                                    <div class="small text-muted">
+                                        Venda: {{ $product->formatted_price }}
                                     </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @else
-                    <div class="p-4">
-                        <p class="text-muted mb-0">
-                            Nenhum produto recente encontrado. Cadastre novos produtos para visualizar aqui.
-                        </p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
+                                </x-slot:description>
+                                <x-slot:footer>
+                                    <small class="text-muted">{{ optional($product->created_at)->format('d/m/Y') }}</small>
+                                </x-slot:footer>
+                                <x-slot:actions>
+                                    <x-resource.table-actions mobile>
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="info" icon="eye" size="sm" />
+                                    </x-resource.table-actions>
+                                </x-slot:actions>
+                            </x-resource.resource-mobile-item>
+                        @endforeach
+                    </x-slot:mobile>
+                @else
+                    <x-resource.empty-state resource="produtos recentes" />
+                @endif
+            </x-resource.resource-list-card>
+        </x-layout.grid-col>
 
         <!-- Insights e Atalhos -->
-        <div class="col-lg-4">
+        <x-layout.grid-col lg="4">
             <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-transparent border-0">
-                    <h6 class="mb-0">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
                         <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
                     </h6>
                 </div>
                 <div class="card-body">
-                    <ul class="list-unstyled mb-0 small text-muted">
-                        <li class="mb-2">
-                            <i class="bi bi-box-arrow-in-up-right text-primary me-2"></i>
-                            Mantenha os produtos mais usados sempre ativos para agilizar orçamentos.
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-tag-fill text-success me-2"></i>
-                            Use categorias e unidades para padronizar seu catálogo.
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                            Revise produtos inativos que ainda são utilizados em serviços.
-                        </li>
-                    </ul>
+                    <x-layout.v-stack gap="3">
+                        <x-dashboard.insight-item
+                            icon="graph-up-arrow"
+                            variant="success"
+                            description="Produtos com margem acima de 30% são seus maiores geradores de lucro."
+                        />
+                        <x-dashboard.insight-item
+                            icon="exclamation-triangle"
+                            variant="warning"
+                            description="Revise produtos com margem abaixo de 15% para garantir a sustentabilidade."
+                        />
+                        <x-dashboard.insight-item
+                            icon="box-seam"
+                            variant="primary"
+                            description="Mantenha seu catálogo atualizado para orçamentos mais precisos."
+                        />
+                    </x-layout.v-stack>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0">
-                    <h6 class="mb-0">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
                         <i class="bi bi-link-45deg me-2"></i>Atalhos
                     </h6>
                 </div>
-                <div class="card-body d-grid gap-2">
-                    <x-ui.button type="link" :href="route('provider.products.create')" variant="success" size="sm" icon="plus-circle" label="Novo Produto" />
-                    <x-ui.button type="link" :href="route('provider.products.index')" variant="primary" outline size="sm" icon="box-seam" label="Listar Produtos" />
-                    <x-ui.button type="link" :href="route('provider.products.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletados" />
+                <div class="card-body">
+                    <x-resource.quick-actions>
+                        <x-ui.button type="link" :href="route('provider.products.create')" variant="success" size="sm" icon="plus-circle" label="Novo Produto" />
+                        <x-ui.button type="link" :href="route('provider.products.index')" variant="primary" outline size="sm" icon="box-seam" label="Listar Produtos" />
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="info" outline size="sm" icon="inventory" label="Gerir Estoque" />
+                    </x-resource.quick-actions>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
+</x-layout.page-container>
 @endsection
 
 @push('styles')

@@ -3,126 +3,166 @@
 @section('title', 'Detalhes do Produto: ' . $product->name)
 
 @section('content')
-<div class="container-fluid py-4 d-flex flex-column" style="min-height: calc(100vh - 200px);">
-    <div class="flex-grow-1">
-        <x-layout.page-header
-            title="Detalhes do Produto"
-            icon="box-seam"
-            :breadcrumb-items="[
-                'Dashboard' => route('provider.dashboard'),
-                'Produtos' => route('provider.products.dashboard'),
-                $product->name => '#'
-            ]">
-            <p class="text-muted mb-0">Visualize as informações completas do produto</p>
-        </x-layout.page-header>
+<x-layout.page-container>
+    <x-layout.page-header
+        title="Detalhes do Produto"
+        icon="box-seam"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Produtos' => route('provider.products.dashboard'),
+            $product->name => '#'
+        ]">
+        <p class="text-muted mb-0">Visualize as informações completas do produto</p>
+    </x-layout.page-header>
 
-        <div class="row">
-            <!-- Coluna Esquerda: Imagem e Status -->
-            <div class="col-md-4 mb-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                            class="img-fluid rounded shadow-sm mb-3" style="max-height: 300px; object-fit: cover;">
-
-                        <div class="d-grid gap-2">
-                            @if ($product->deleted_at)
-                            <div class="alert alert-danger py-2 mb-0">
+    <x-layout.grid-row>
+        <!-- Coluna Esquerda: Imagem e Status -->
+        <x-layout.grid-col md="4" class="mb-4">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="position-relative">
+                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
+                        class="img-fluid w-100" style="max-height: 400px; object-fit: cover;">
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <x-ui.status-badge :item="$product" />
+                    </div>
+                </div>
+                <div class="card-body bg-light bg-opacity-50 border-top">
+                    <div class="d-grid gap-2">
+                        @if ($product->deleted_at)
+                            <div class="alert alert-danger py-2 mb-0 text-center border-0 shadow-sm">
                                 <i class="bi bi-trash-fill me-1"></i> Produto Deletado
                             </div>
-                            @elseif ($product->active)
-                            <div class="alert alert-success py-2 mb-0">
+                        @elseif ($product->active)
+                            <div class="alert alert-success py-2 mb-0 text-center border-0 shadow-sm">
                                 <i class="bi bi-check-circle-fill me-1"></i> Produto Ativo
                             </div>
-                            @else
-                            <div class="alert alert-warning py-2 mb-0">
+                        @else
+                            <div class="alert alert-warning py-2 mb-0 text-center border-0 shadow-sm">
                                 <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
                             </div>
-                            @endif
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
+        </x-layout.grid-col>
 
-            <!-- Coluna Direita: Detalhes e Abas -->
-            <div class="col-md-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header p-0 border-bottom-0">
-                        <ul class="nav nav-tabs" id="productTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="details-tab" data-bs-toggle="tab"
-                                    data-bs-target="#details" type="button" role="tab" aria-selected="true">
-                                    <i class="bi bi-info-circle me-1"></i> Detalhes
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory"
-                                    type="button" role="tab" aria-selected="false">
-                                    <i class="bi bi-boxes me-1"></i> Inventário
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        <div class="tab-content" id="productTabsContent">
-                            <!-- Aba Detalhes -->
-                            <div class="tab-pane fade show active" id="details" role="tabpanel">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="text-muted small text-uppercase fw-bold">Preço de Venda</label>
-                                        <p class="h4 text-success">{{ $product->formatted_price }}</p>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="text-muted small text-uppercase fw-bold">Preço de Custo</label>
-                                        <p class="h4 text-muted">{{ $product->formatted_cost_price }}</p>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="text-muted small text-uppercase fw-bold">Margem de Lucro</label>
-                                        <p class="h4">
-                                            @if($product->cost_price > 0)
-                                                <span class="text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}">
-                                                    {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
+        <!-- Coluna Direita: Detalhes e Abas -->
+        <x-layout.grid-col md="8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-3 px-4 border-0 fw-semibold" id="details-tab" data-bs-toggle="tab"
+                                data-bs-target="#details" type="button" role="tab" aria-selected="true">
+                                <i class="bi bi-info-circle me-1"></i> Detalhes
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-3 px-4 border-0 fw-semibold" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory"
+                                type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-boxes me-1"></i> Inventário
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-4">
+                    <div class="tab-content" id="productTabsContent">
+                        <!-- Aba Detalhes -->
+                        <div class="tab-pane fade show active" id="details" role="tabpanel">
+                            <x-layout.grid-row class="g-4">
+                                <x-layout.grid-col md="4">
+                                    <x-resource.resource-info
+                                        title="Preço de Venda"
+                                        :subtitle="$product->formatted_price"
+                                        icon="cash-stack"
+                                        iconClass="text-success"
+                                        titleClass="text-uppercase small fw-bold"
+                                        subtitleClass="h4 text-success mb-0"
+                                    />
+                                </x-layout.grid-col>
+                                <x-layout.grid-col md="4">
+                                    <x-resource.resource-info
+                                        title="Preço de Custo"
+                                        :subtitle="$product->formatted_cost_price"
+                                        icon="receipt"
+                                        iconClass="text-muted"
+                                        titleClass="text-uppercase small fw-bold"
+                                        subtitleClass="h4 text-muted mb-0"
+                                    />
+                                </x-layout.grid-col>
+                                <x-layout.grid-col md="4">
+                                    @php
+                                        $marginColor = $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger');
+                                        $marginValue = $product->cost_price > 0 ? number_format($product->profit_margin_percentage, 1, ',', '.') . '%' : 'N/A';
+                                    @endphp
+                                    <x-resource.resource-info
+                                        title="Margem de Lucro"
+                                        :subtitle="$marginValue"
+                                        icon="percent"
+                                        iconClass="text-{{ $marginColor }}"
+                                        titleClass="text-uppercase small fw-bold"
+                                        subtitleClass="h4 text-{{ $marginColor }} mb-0"
+                                    />
+                                </x-layout.grid-col>
+
+                                <x-layout.grid-col md="6">
+                                    <x-resource.resource-info
+                                        title="Categoria"
+                                        icon="folder2-open"
+                                        iconClass="text-primary"
+                                        titleClass="text-uppercase small fw-bold"
+                                    >
+                                        <x-slot:subtitle>
+                                            @if ($product->category)
+                                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 border border-primary border-opacity-10">
+                                                    {{ $product->category->parent_id ? $product->category->getFormattedHierarchy() : $product->category->name }}
                                                 </span>
                                             @else
-                                                <span class="text-muted">N/A</span>
+                                                <span class="text-muted">Sem categoria</span>
                                             @endif
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Categoria</label>
-                                        <p class="h5">
-                                            @if ($product->category)
-                                            <span class="badge bg-primary">
-                                                @if ($product->category->parent_id)
-                                                {{ $product->category->getFormattedHierarchy() }}
-                                                @else
-                                                {{ $product->category->name }}
-                                                @endif
-                                            </span>
-                                            @else
-                                            <span class="text-muted">Sem categoria</span>
-                                            @endif
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Unidade</label>
-                                        <p class="h5">{{ $product->unit ?? 'N/A' }}</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="text-muted small text-uppercase fw-bold">Criado em</label>
-                                        <p>{{ $product->created_at->format('d/m/Y H:i') }}</p>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="text-muted small text-uppercase fw-bold">Descrição</label>
-                                        <div class="p-3 rounded border">
-                                            {{ $product->description ?? 'Nenhuma descrição informada.' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                        </x-slot:subtitle>
+                                    </x-resource.resource-info>
+                                </x-layout.grid-col>
 
-                            <!-- Aba Inventário -->
-                            <div class="tab-pane fade" id="inventory" role="tabpanel">
-                                @php
+                                <x-layout.grid-col md="6">
+                                    <x-resource.resource-info
+                                        title="Unidade"
+                                        :subtitle="$product->unit ?? 'N/A'"
+                                        icon="rulers"
+                                        iconClass="text-info"
+                                        titleClass="text-uppercase small fw-bold"
+                                        subtitleClass="h5 mb-0"
+                                    />
+                                </x-layout.grid-col>
+
+                                <x-layout.grid-col md="6">
+                                    <x-resource.resource-info
+                                        title="Criado em"
+                                        :subtitle="$product->created_at->format('d/m/Y H:i')"
+                                        icon="calendar-plus"
+                                        titleClass="text-uppercase small fw-bold"
+                                    />
+                                </x-layout.grid-col>
+
+                                <x-layout.grid-col cols="12">
+                                    <x-resource.resource-info
+                                        title="Descrição"
+                                        icon="card-text"
+                                        titleClass="text-uppercase small fw-bold"
+                                    >
+                                        <x-slot:subtitle>
+                                            <div class="mt-2 p-3 rounded bg-light border border-light-subtle">
+                                                {{ $product->description ?? 'Nenhuma descrição informada.' }}
+                                            </div>
+                                        </x-slot:subtitle>
+                                    </x-resource.resource-info>
+                                </x-layout.grid-col>
+                            </x-layout.grid-row>
+                        </div>
+
+                        <!-- Aba Inventário -->
+                        <div class="tab-pane fade" id="inventory" role="tabpanel">
+                            @php
                                 $inventory = $product->inventory->first();
                                 $quantity = $inventory ? $inventory->quantity : 0;
                                 $minQuantity = $inventory ? $inventory->min_quantity : 0;
@@ -132,114 +172,115 @@
                                 $statusLabel = 'Estoque OK';
 
                                 if ($quantity <= 0) {
-                                    $statusClass='danger' ;
-                                    $statusLabel='Sem Estoque' ;
-                                    } elseif ($quantity <=$minQuantity) {
-                                    $statusClass='warning' ;
-                                    $statusLabel='Estoque Baixo' ;
-                                    }
-                                    @endphp
+                                    $statusClass = 'danger';
+                                    $statusLabel = 'Sem Estoque';
+                                } elseif ($quantity <= $minQuantity) {
+                                    $statusClass = 'warning';
+                                    $statusLabel = 'Estoque Baixo';
+                                }
+                            @endphp
 
-                                    <div class="row mb-4 ">
-                                    <div class="col-md-4 text-center">
-                                        <div class="p-3 border rounded">
-                                            <small class="text-muted text-uppercase">Quantidade Atual</small>
-                                            <h2 class="display-4 fw-bold text-{{ $statusClass }} mb-0">
-                                                {{ $quantity }}
-                                            </h2>
-                                            <span
-                                                class="modern-badge {{ $statusClass === 'success' ? 'badge-active' : ($statusClass === 'danger' ? 'badge-inactive' : 'badge-warning') }}">
-                                                {{ $statusLabel }}
-                                            </span>
-                                        </div>
+                            <x-layout.grid-row class="mb-4 g-4 align-items-center">
+                                <x-layout.grid-col md="4" class="text-center">
+                                    <div class="p-4 bg-{{ $statusClass }} bg-opacity-10 rounded-4 border border-{{ $statusClass }} border-opacity-10">
+                                        <small class="text-muted text-uppercase fw-bold letter-spacing-1 d-block mb-2">Quantidade Atual</small>
+                                        <h2 class="display-4 fw-bold text-{{ $statusClass }} mb-2">
+                                            {{ $quantity }}
+                                        </h2>
+                                        <span class="badge bg-{{ $statusClass }} px-3 py-2 rounded-pill">
+                                            {{ $statusLabel }}
+                                        </span>
                                     </div>
-                                    <div class="col-md-8 mt-2">
-                                        <div class="row g-3">
-                                            <div class="col-6">
-                                                <div class="p-3 border rounded position-relative">
-                                                    <small class="text-muted">Mínimo</small>
-                                                    <p class="h4 mb-0">{{ $minQuantity }}</p>
-                                                    @can('adjustInventory', $product)
-                                                        <button type="button" class="btn btn-sm btn-outline-primary border-0 position-absolute top-0 end-0 m-1" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
-                                                            <i class="bi bi-pencil-square"></i>
-                                                        </button>
-                                                    @endcan
-                                                </div>
+                                </x-layout.grid-col>
+                                <x-layout.grid-col md="8">
+                                    <x-layout.grid-row class="g-3">
+                                        <x-layout.grid-col sm="6">
+                                            <div class="p-3 bg-light rounded border border-light-subtle position-relative">
+                                                <small class="text-muted text-uppercase fw-bold x-small d-block mb-1">Limite Mínimo</small>
+                                                <p class="h4 mb-0 fw-bold text-dark">{{ $minQuantity }}</p>
+                                                @can('adjustInventory', $product)
+                                                    <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 end-0 m-1 p-1" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                @endcan
                                             </div>
-                                            <div class="col-6">
-                                                <div class="p-3 border rounded position-relative">
-                                                    <small class="text-muted">Máximo</small>
-                                                    <p class="h4 mb-0">{{ $maxQuantity ?? '∞' }}</p>
-                                                    @can('adjustInventory', $product)
-                                                        <button type="button" class="btn btn-sm btn-outline-primary border-0 position-absolute top-0 end-0 m-1" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
-                                                            <i class="bi bi-pencil-square"></i>
-                                                        </button>
-                                                    @endcan
-                                                </div>
+                                        </x-layout.grid-col>
+                                        <x-layout.grid-col sm="6">
+                                            <div class="p-3 bg-light rounded border border-light-subtle position-relative">
+                                                <small class="text-muted text-uppercase fw-bold x-small d-block mb-1">Limite Máximo</small>
+                                                <p class="h4 mb-0 fw-bold text-dark">{{ $maxQuantity ?? '∞' }}</p>
+                                                @can('adjustInventory', $product)
+                                                    <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 end-0 m-1 p-1" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                @endcan
                                             </div>
-                                            <div class="col-12">
-                                                <div class="d-flex gap-2 mt-2">
-                                                    <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" />
-                                                    <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" />
-                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" />
-                                                </div>
+                                        </x-layout.grid-col>
+                                        <x-layout.grid-col cols="12">
+                                            <div class="d-flex gap-2 mt-2">
+                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" />
                                             </div>
-                                        </div>
-                                    </div>
-                            </div>
+                                        </x-layout.grid-col>
+                                    </x-layout.grid-row>
+                                </x-layout.grid-col>
+                            </x-layout.grid-row>
 
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Para ver o histórico completo de movimentações, acesse o <a
-                                    href="{{ route('provider.inventory.show', $product->sku) }}"
-                                    class="alert-link">Painel de Inventário</a> deste produto.
+                            <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-10 d-flex align-items-center mb-0">
+                                <i class="bi bi-info-circle-fill fs-5 me-3 text-info"></i>
+                                <div>
+                                    Para ver o histórico completo de movimentações, acesse o 
+                                    <a href="{{ route('provider.inventory.show', $product->sku) }}" class="alert-link fw-bold">Painel de Inventário</a> deste produto.
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 
     <!-- Footer com Ações -->
-    <div class="mt-auto pt-4 pb-2">
-        <div class="row align-items-center g-3">
-            <div class="col-12 col-md-auto order-2 order-md-1">
-                <x-ui.back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-3" />
-            </div>
+    <div class="mt-4 pt-3 border-top">
+        <x-layout.grid-row class="align-items-center g-3">
+            <x-layout.grid-col cols="12" md="auto" class="order-2 order-md-1">
+                <x-ui.back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-4" />
+            </x-layout.grid-col>
 
-            <div class="col-12 col-md text-center d-none d-md-block order-md-2">
-                <small class="text-muted">
+            <x-layout.grid-col cols="12" md="true" class="text-center d-none d-md-block order-md-2">
+                <small class="text-muted fst-italic">
                     Última atualização: {{ $product->updated_at?->format('d/m/Y H:i') }}
                 </small>
-            </div>
+            </x-layout.grid-col>
 
-            <div class="col-12 col-md-auto order-1 order-md-3">
+            <x-layout.grid-col cols="12" md="auto" class="order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @if ($product->deleted_at)
-                    <x-ui.button variant="success" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#restoreModal"
-                        data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                        data-product-name="{{ $product->name }}" icon="arrow-counterclockwise" label="Restaurar" />
+                        <x-ui.button variant="success" class="px-4" data-bs-toggle="modal" data-bs-target="#restoreModal"
+                            data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
+                            data-product-name="{{ $product->name }}" icon="arrow-counterclockwise" label="Restaurar" />
                     @else
-                    <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+                        <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" class="px-4" icon="pencil-fill" label="Editar" />
 
-                    <x-ui.button :variant="$product->active ? 'warning' : 'success'" style="min-width: 120px;"
-                        data-bs-toggle="modal" data-bs-target="#toggleModal"
-                        data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
-                        data-product-name="{{ $product->name }}"
-                        data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}"
-                        :icon="$product->active ? 'slash-circle' : 'check-lg'"
-                        :label="$product->active ? 'Desativar' : 'Ativar'" />
+                        <x-ui.button :variant="$product->active ? 'warning' : 'success'" class="px-4"
+                            data-bs-toggle="modal" data-bs-target="#toggleModal"
+                            data-toggle-url="{{ route('provider.products.toggle-status', $product->sku) }}"
+                            data-product-name="{{ $product->name }}"
+                            data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}"
+                            :icon="$product->active ? 'slash-circle' : 'check-lg'"
+                            :label="$product->active ? 'Desativar' : 'Ativar'" />
 
-                    <x-ui.button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                        data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                        data-product-name="{{ $product->name }}" icon="trash-fill" label="Excluir" />
+                        <x-ui.button variant="danger" class="px-4" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
+                            data-product-name="{{ $product->name }}" icon="trash-fill" label="Excluir" />
                     @endif
                 </div>
-            </div>
-        </div>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
     </div>
-</div>
+</x-layout.page-container>
+@endsection
 
 <!-- Modal de Confirmação de Ativação/Desativação -->
 <div class="modal fade" id="toggleModal" tabindex="-1" aria-labelledby="toggleModalLabel" aria-hidden="true">

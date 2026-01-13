@@ -50,7 +50,7 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 - [ ] Cadastro (`pages.invoice.create`)
 - [ ] Visualização (`pages.invoice.show`)
 
-### � Agenda (Schedule)
+### 📅 Agenda (Schedule)
 - [ ] Calendário (`pages.schedule.calendar`)
 - [ ] Listagem (`pages.schedule.index`)
 - [ ] Cadastro/Edição (`pages.schedule.create/edit`)

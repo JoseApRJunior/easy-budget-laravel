@@ -42,28 +42,28 @@
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
-            <div class="row g-4">
-                {{-- Primeira Linha: Informações Principais --}}
-                <div class="col-md-5">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="item-icon">
-                            <i class="bi bi-tag"></i>
+            <x-layout.grid-row class="g-4">
+                {{-- Informações Principais --}}
+                <x-layout.grid-col md="5">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-primary bg-opacity-10 me-3" style="width: 48px; height: 48px; min-width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                            <i class="bi bi-tag text-primary" style="font-size: 1.5rem;"></i>
                         </div>
                         <div>
-                            <label class="text-muted small d-block mb-1">Nome da Categoria</label>
-                            <h5 class="mb-0 fw-bold">{{ $category->name }}</h5>
+                            <label class="text-muted small d-block mb-0 text-uppercase fw-bold letter-spacing-1">Nome da Categoria</label>
+                            <h5 class="mb-0 fw-bold text-dark">{{ $category->name }}</h5>
                         </div>
                     </div>
-                </div>
+                </x-layout.grid-col>
 
                 @if ($category->parent)
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="item-icon">
-                            <i class="bi bi-folder2-open"></i>
+                <x-layout.grid-col md="4">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-info bg-opacity-10 me-3" style="width: 48px; height: 48px; min-width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                            <i class="bi bi-folder2-open text-info" style="font-size: 1.5rem;"></i>
                         </div>
                         <div>
-                            <label class="text-muted small d-block mb-1">Categoria Pai</label>
+                            <label class="text-muted small d-block mb-0 text-uppercase fw-bold letter-spacing-1">Categoria Pai</label>
                             <h5 class="mb-0">
                                 <a href="{{ route('provider.categories.show', $category->parent->slug) }}"
                                     class="text-decoration-none text-primary fw-semibold">
@@ -72,46 +72,45 @@
                             </h5>
                         </div>
                     </div>
-                </div>
+                </x-layout.grid-col>
                 @endif
 
-                <div class="col-md-3">
-                    <div class="d-flex align-items-center gap-3 {{ !$category->parent ? 'offset-md-4' : '' }}">
-                        <div class="item-icon">
-                            <i class="bi bi-shield-check"></i>
+                <x-layout.grid-col md="3" class="{{ !$category->parent ? 'offset-md-4' : '' }}">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-success bg-opacity-10 me-3" style="width: 48px; height: 48px; min-width: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                            <i class="bi bi-shield-check text-success" style="font-size: 1.5rem;"></i>
                         </div>
                         <div>
-                            <label class="text-muted small d-block mb-1">Status Atual</label>
+                            <label class="text-muted small d-block mb-0 text-uppercase fw-bold letter-spacing-1">Status Atual</label>
                             <x-ui.status-badge :item="$category" />
                         </div>
                     </div>
+                </x-layout.grid-col>
+
+                <div class="col-12 mt-2">
+                    <hr class="opacity-10">
                 </div>
 
-                {{-- Segunda Linha: Datas e Auditoria --}}
-                <div class="col-12 mt-0">
-                    <hr class="text-muted opacity-25">
-                </div>
-
-                <div class="col-md-4 mt-2">
+                <x-layout.grid-col md="4" class="mt-0">
                     <x-resource.resource-info
                         title="Criado em"
                         :subtitle="$category->created_at?->format('d/m/Y H:i')"
                         icon="calendar-plus"
                         class="small"
                     />
-                </div>
+                </x-layout.grid-col>
 
-                <div class="col-md-4 mt-2">
+                <x-layout.grid-col md="4" class="mt-0">
                     <x-resource.resource-info
                         title="Atualizado em"
                         :subtitle="$category->updated_at?->format('d/m/Y H:i')"
                         icon="calendar-check"
                         class="small"
                     />
-                </div>
+                </x-layout.grid-col>
 
                 @if($category->deleted_at)
-                <div class="col-md-4 mt-2">
+                <x-layout.grid-col md="4" class="mt-0">
                     <x-resource.resource-info
                         title="Deletado em"
                         :subtitle="$category->deleted_at->format('d/m/Y H:i')"
@@ -120,9 +119,11 @@
                         iconClass="text-danger"
                         titleClass="text-danger"
                     />
-                </div>
+                </x-layout.grid-col>
                 @endif
-            </div>
+            </x-layout.grid-row>
+        </div>
+    </div>
 
             @if (!$category->parent_id)
                 @php

@@ -13,19 +13,17 @@
 @endif
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100']) }}>
-    <div class="card-header">
-        <div class="row align-items-center">
-            <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                <h5 class=" card-title mb-0 d-flex align-items-center flex-wrap">
-                    <span class="me-2">
-                        <i class="bi bi-{{ $icon }} me-1"></i>
-                        <span class="{{ $mobileTitle ? 'd-none d-sm-inline' : '' }}">{{ $title }}</span>
-                        @if($mobileTitle)
-                            <span class="d-sm-none">{{ $mobileTitle }}</span>
-                        @endif
-                    </span>
+    <div class="card-header border-0 bg-transparent py-3">
+        <div class="row align-items-center g-2">
+            <div class="col-12 col-md-auto">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="bi bi-{{ $icon }} me-2 text-primary"></i>
+                    <span class="{{ $mobileTitle ? 'd-none d-sm-inline' : '' }} text-truncate" style="max-width: 250px;">{{ $title }}</span>
+                    @if($mobileTitle)
+                        <span class="d-sm-none text-truncate" style="max-width: 150px;">{{ $mobileTitle }}</span>
+                    @endif
                     @if(isset($total))
-                        <span class="text-muted" style="font-size: 0.875rem;">
+                        <span class="ms-2 text-muted fw-normal" style="font-size: 0.85rem;">
                             ({{ $total }})
                         </span>
                     @endif
@@ -33,7 +31,9 @@
             </div>
 
             @if(isset($headerActions))
-                {{ $headerActions }}
+                <div class="col-12 col-md text-md-end">
+                    {{ $headerActions }}
+                </div>
             @endif
         </div>
     </div>
