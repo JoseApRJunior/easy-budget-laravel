@@ -156,14 +156,6 @@
             @endif
         @endauth
 
-        {{-- Botão de tema - sempre visível --}}
-        <li class="nav-item">
-            <button class="nav-link theme-toggle d-flex align-items-center justify-content-center"
-                onclick="toggleTheme()" title="Alternar Tema" aria-label="Alternar Tema">
-                <i class="bi bi-sun theme-light-icon"></i>
-                <i class="bi bi-moon theme-dark-icon"></i>
-            </button>
-        </li>
 
         {{-- Menu do usuário - sempre incluído --}}
         @include('partials.shared.user-menu')

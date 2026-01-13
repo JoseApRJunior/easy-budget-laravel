@@ -2,9 +2,6 @@
 document.addEventListener("DOMContentLoaded", function () {
    // Inicializar elementos básicos
    initializeElements();
-
-   // Inicializar tema básico
-   initBasicTheme();
 });
 
 function initializeElements() {
@@ -28,10 +25,6 @@ function initializeElements() {
    });
 }
 
-function initBasicTheme() {
-   // Tema básico - apenas aplica tema dark por padrão
-   document.body.classList.add("theme-dark");
-}
 
 function scrollToElement(elementId) {
    const element = document.getElementById(elementId);

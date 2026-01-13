@@ -63,16 +63,16 @@ enum ScheduleStatus: string implements StatusEnumInterface
     }
 
     /**
-     * Retorna a cor Hexadecimal
+     * Retorna a cor Hexadecimal (Sincronizado com theme.php)
      */
     public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => '#ffc107',
-            self::CONFIRMED => '#007bff',
-            self::COMPLETED => '#28a745',
-            self::CANCELLED => '#dc3545',
-            self::NO_SHOW => '#6c757d',
+            self::PENDING => config('theme.colors.warning'),
+            self::CONFIRMED => config('theme.colors.primary'),
+            self::COMPLETED => config('theme.colors.success'),
+            self::CANCELLED => config('theme.colors.error'),
+            self::NO_SHOW => config('theme.colors.secondary'),
         };
     }
 

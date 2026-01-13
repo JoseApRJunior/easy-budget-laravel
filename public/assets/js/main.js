@@ -1,5 +1,4 @@
 // main.js - Funcionalidades globais do header/footer
-import { initTheme, toggleTheme } from "./modules/utils.js";
 
 /**
  * Inicializa o Tom Select em um elemento ou grupo de elementos
@@ -13,7 +12,7 @@ export function initTomSelect(selector, options = {}) {
    }
 
    const elements = typeof selector === 'string' ? document.querySelectorAll(selector) : [selector];
-   
+
    elements.forEach(el => {
       if (el.tomselect) return; // Evita inicializar múltiplas vezes
 
@@ -45,25 +44,15 @@ export function initTomSelect(selector, options = {}) {
 window.initTomSelect = initTomSelect;
 
 document.addEventListener("DOMContentLoaded", function () {
-   // Inicializar tema
-   initTheme();
-
    // Inicializar Tom Select em elementos com a classe .tom-select
    initTomSelect(".tom-select");
-
-   // Event listener para tema no header
-   const themeButton = document.querySelector('[onclick="toggleTheme()"]');
-   if (themeButton) {
-      themeButton.removeAttribute("onclick");
-      themeButton.addEventListener("click", toggleTheme);
-   }
 
    // Submenu dropdown
    document.querySelectorAll('.dropdown-submenu .dropdown-toggle').forEach(function(element) {
       element.addEventListener('click', function(e) {
          e.preventDefault();
          e.stopPropagation();
-         
+
          const submenu = this.nextElementSibling;
          if (submenu) {
             submenu.classList.toggle('show');

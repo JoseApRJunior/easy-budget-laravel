@@ -60,15 +60,15 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     }
 
     /**
-     * Retorna a cor Hexadecimal (legado)
+     * Retorna a cor Hexadecimal (Sincronizado com theme.php)
      */
     public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => '#ffc107',
-            self::PAID => '#198754',
-            self::CANCELLED => '#dc3545',
-            self::OVERDUE => '#6f42c1',
+            self::PENDING => config('theme.colors.warning'),
+            self::PAID => config('theme.colors.success'),
+            self::CANCELLED => config('theme.colors.error'),
+            self::OVERDUE => config('theme.colors.dark'),
         };
     }
 

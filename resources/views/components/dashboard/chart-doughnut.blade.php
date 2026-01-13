@@ -28,7 +28,7 @@
 
             if (values.length === 0) {
                 const container = document.getElementById('{{ $id }}').parentElement;
-                container.innerHTML = `<p class="text-muted text-center mb-0 small mt-4">{{ $emptyText }}</p>`;
+                container.innerHTML = `<p class="text-center mb-0 small mt-4" style="color: {{ config('theme.colors.secondary', '#94a3b8') }};">{{ $emptyText }}</p>`;
                 return;
             }
 

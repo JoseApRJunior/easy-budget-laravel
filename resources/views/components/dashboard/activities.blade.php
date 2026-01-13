@@ -1,16 +1,13 @@
-@php
-    $colors = config('theme.colors');
-    $textPrimary = $colors['text'] ?? '#1e293b';
-    $textSecondary = $colors['secondary'] ?? '#94a3b8';
-@endphp
-
-<div class="card h-100 border-0 shadow-sm" style="--text-primary: {{ $textPrimary }}; --text-secondary: {{ $textSecondary }};">
+<div class="card h-100 border-0 shadow-sm" @style([
+    "--text-primary: " . config('theme.colors.text', '#1e293b') . ";",
+    "--text-secondary: " . config('theme.colors.secondary', '#94a3b8') . ";",
+])>
     <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">
-            <i class="bi bi-activity me-2" style="color: {{ $colors['primary'] }};"></i>
+            <i class="bi bi-activity me-2" style="color: {{ config('theme.colors.primary') }};"></i>
             {{ $translations['activities_title'] ?? 'Atividades Recentes' }}
         </h5>
-        <span class="badge" style="background-color: {{ $colors['primary'] }}; color: #fff;">{{ $total }}</span>
+        <span class="badge" style="background-color: {{ config('theme.colors.primary') }}; color: #fff;">{{ $total }}</span>
     </div>
     <div class="card-body">
         @if (empty($activities))
@@ -23,7 +20,7 @@
                 @foreach ($activities as $activity)
                     @php
                         $activityColor = $activity['color'] ?? 'primary';
-                        $themeColor = $colors[$activityColor] ?? $colors['primary'];
+                        $themeColor = config("theme.colors.$activityColor", config('theme.colors.primary'));
                     @endphp
                     <div class="list-group-item px-0 border-light">
                         <div class="d-flex align-items-center">
@@ -53,7 +50,7 @@
     </div>
     @if ($total > 0)
         <div class="card-footer bg-white border-top-0 pb-4 text-center">
-            <a href="#" class="text-decoration-none" style="color: {{ $colors['primary'] }};">
+            <a href="#" class="text-decoration-none" style="color: {{ config('theme.colors.primary') }};">
                 <small>{{ $translations['view_all_activities'] ?? 'Ver todas as atividades' }}</small>
                 <i class="bi bi-chevron-right ms-1"></i>
             </a>

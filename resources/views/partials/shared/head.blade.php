@@ -13,24 +13,45 @@
     <!-- Script Inline para Inicialização do Tema (Evita FOUC) -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('theme') ||
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-            document.documentElement.setAttribute('data-bs-theme', savedTheme);
-
-            // Adiciona classe de tema ao body o mais cedo possível
-            const observer = new MutationObserver(() => {
-                if (document.body) {
-                    document.body.classList.add('theme-' + savedTheme);
-                    observer.disconnect();
-                }
-            });
-            observer.observe(document.documentElement, { childList: true });
+            // Apenas aplica tema light como padrão
+            document.documentElement.setAttribute('data-bs-theme', 'light');
         })();
     </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}" />
+
+    <!-- Variáveis de Tema Dinâmicas (Sincronizadas com config/theme.php) -->
+    <style>
+        :root {
+            /* Cores Base */
+            --primary-color: {{ config('theme.colors.primary') }};
+            --text-color: {{ config('theme.colors.text') }};
+            --bg-color: {{ config('theme.colors.background') }};
+            --surface-color: {{ config('theme.colors.surface') }};
+            --secondary-color: {{ config('theme.colors.secondary') }};
+
+            /* Status e Alertas */
+            --text-success: {{ config('theme.colors.success') }};
+            --text-error: {{ config('theme.colors.danger') }};
+            --text-warning: {{ config('theme.colors.warning') }};
+            --text-info: {{ config('theme.colors.info') }};
+
+            /* Formulários e UI */
+            --form-bg: {{ config('theme.colors.form_bg') }};
+            --form-text: {{ config('theme.colors.form_text') }};
+            --form-border: {{ config('theme.colors.form_border') }};
+            --form-input-bg: {{ config('theme.colors.form_input_bg') }};
+            --form-input-border: {{ config('theme.colors.form_input_border') }};
+            --small-text-color: {{ config('theme.colors.small_text') }};
+
+            /* Contraste */
+            --contrast-text: {{ config('theme.colors.contrast_text') }};
+            --contrast-text-secondary: {{ config('theme.colors.contrast_text_secondary') }};
+            --contrast-overlay: {{ config('theme.colors.contrast_overlay') }};
+        }
+    </style>
+
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/bootstrap-icons.css') }}" rel="stylesheet">
     <link rel="stylesheet"
@@ -40,11 +61,11 @@
 
     <!-- Tom Select -->
     <link rel="stylesheet" href="{{ asset('assets/css/tom-select/bootstrap5.min.css') }}?v={{ filemtime(public_path('assets/css/tom-select/bootstrap5.min.css')) }}">
-    
+
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <link rel="preload" href="{{ asset('assets/img/logo.png') }}" as="image" type="image/png">
 
     @stack('styles')

@@ -120,25 +120,25 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     }
 
     /**
-     * Retorna a cor Hexadecimal (legado)
+     * Retorna a cor Hexadecimal (Sincronizado com theme.php)
      */
     public function getColor(): string
     {
         return match ($this) {
-            self::DRAFT => '#6c757d',
-            self::PENDING => '#ffc107',
-            self::SCHEDULING => '#007bff',
-            self::PREPARING => '#ffc107',
-            self::IN_PROGRESS => '#007bff',
-            self::ON_HOLD => '#6c757d',
-            self::SCHEDULED => '#007bff',
-            self::COMPLETED => '#28a745',
-            self::PARTIAL => '#28a745',
-            self::CANCELLED => '#dc3545',
-            self::NOT_PERFORMED => '#dc3545',
-            self::EXPIRED => '#dc3545',
-            self::APPROVED => '#10B981',
-            self::REJECTED => '#DC2626',
+            self::DRAFT => config('theme.colors.secondary'),
+            self::PENDING => config('theme.colors.warning'),
+            self::SCHEDULING => config('theme.colors.info'),
+            self::PREPARING => config('theme.colors.warning'),
+            self::IN_PROGRESS => config('theme.colors.primary'),
+            self::ON_HOLD => config('theme.colors.secondary'),
+            self::SCHEDULED => config('theme.colors.info'),
+            self::COMPLETED => config('theme.colors.success'),
+            self::PARTIAL => config('theme.colors.success'),
+            self::CANCELLED => config('theme.colors.error'),
+            self::NOT_PERFORMED => config('theme.colors.error'),
+            self::EXPIRED => config('theme.colors.error'),
+            self::APPROVED => config('theme.colors.success'),
+            self::REJECTED => config('theme.colors.error'),
         };
     }
 

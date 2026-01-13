@@ -1,13 +1,10 @@
-@php
-    $colors = config('theme.colors');
-    $textPrimary = $colors['text'] ?? '#1e293b';
-    $textSecondary = $colors['secondary'] ?? '#94a3b8';
-@endphp
-
-<div class="card border-0 shadow-sm mb-4" style="--text-primary: {{ $textPrimary }}; --text-secondary: {{ $textSecondary }};">
+<div class="card border-0 shadow-sm mb-4" @style([
+    "--text-primary: " . config('theme.colors.text', '#1e293b') . ";",
+    "--text-secondary: " . config('theme.colors.secondary', '#94a3b8') . ";",
+])>
     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
         <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">
-            <i class="bi bi-file-earmark-text me-2" style="color: {{ $colors['success'] }};"></i>Orçamentos Recentes
+            <i class="bi bi-file-earmark-text me-2" style="color: {{ config('theme.colors.success') }};"></i>Orçamentos Recentes
         </h5>
     </div>
     <div class="card-body">
@@ -22,7 +19,7 @@
                                 <div class="d-flex align-items-center flex-wrap gap-2">
                                         <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
                                         <span class="fw-bold" style="color: var(--text-primary);">{{ $budget->first_name }} {{ $budget->last_name }}</span>
-                                    <span class="badge" style="background-color: {{ $colors['secondary'] }}33; color: {{ $colors['text'] }};">{{ $budget->code }}</span>
+                                    <span class="badge" style="background-color: {{ config('theme.colors.secondary') }}33; color: {{ config('theme.colors.text') }};">{{ $budget->code }}</span>
                                     <x-ui.status-badge :item="$budget" statusField="status" />
                                 </div>
                             </div>
@@ -66,7 +63,7 @@
                                                     </small>
                                                 @endif
                                             </div>
-                                            <small class="fw-bold d-block mt-1" style="color: {{ $colors['success'] }};">
+                                            <small class="fw-bold d-block mt-1" style="color: {{ config('theme.colors.success') }};">
                                                 Subtotal: R$ {{ number_format( $budget->service_total, 2, ',', '.' ) }}
                                             </small>
                                         </div>
@@ -75,7 +72,7 @@
 
                                 {{-- Total --}}
                                 <div class="ms-3 text-end">
-                                    <span class="badge rounded-pill px-3 py-1" style="background-color: {{ $colors['success'] }}; color: #fff;">
+                                    <span class="badge rounded-pill px-3 py-1" style="background-color: {{ config('theme.colors.success') }}; color: #fff;">
                                         R$ {{ number_format( $budget->total, 2, ',', '.' ) }}
                                     </span>
                                 </div>

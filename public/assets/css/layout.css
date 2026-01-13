@@ -50,14 +50,6 @@ header {
    transition: transform var(--transition-speed) var(--transition-timing);
 }
 
-/* Ajustes específicos para diferentes temas */
-.logo-img[data-theme="dark"] {
-   filter: brightness(1.2) contrast(1.1);
-}
-
-.logo-img[data-theme="light"] {
-   filter: brightness(0.9) contrast(1.05);
-}
 
 /* Container do Logo */
 .logo-container {
@@ -347,14 +339,8 @@ header {
    width: 100%;
    padding-right: 25px !important;
 }
-.invalid-feedback::after,
-.theme-dark .theme-light-icon,
-.theme-light .theme-dark-icon {
-   display: none !important;
-}
-.theme-dark .theme-dark-icon,
-.theme-light .theme-light-icon {
-   display: inline-block !important;
+.invalid-feedback::after {
+    display: none !important;
 }
 
 /* Ocultar ícones baseados no atributo aria-hidden */
@@ -386,9 +372,6 @@ header {
       width: 20%;
    }
 }
-.theme-dark .password-toggle {
-   color: var(--form-text);
-}
 .password-toggle:hover {
    opacity: 1;
 }
@@ -405,16 +388,6 @@ select {
    border-radius: var(--border-radius-md);
 }
 
-.theme-dark .form-control,
-.theme-dark input[type="password"],
-.theme-dark input[type="text"],
-.theme-dark input[type="number"],
-.theme-dark select,
-.theme-dark select option,
-input[type="password"] {
-   background-color: var(--form-input-bg) !important;
-   color: var(--form-text) !important;
-}
 
 .error-icon,
 .invalid-feedback,
@@ -428,12 +401,6 @@ input:-webkit-autofill:hover {
    -webkit-box-shadow: 0 0 0 1000px var(--form-input-bg) inset !important;
    -webkit-text-fill-color: var(--form-text) !important;
    transition: background-color 5000s ease-in-out;
-}
-.theme-dark input:focus,
-.theme-dark select:focus {
-   background-color: var(--form-input-bg) !important;
-   color: var(--form-text) !important;
-   border-color: var(--primary-color);
 }
 
 .password-container .invalid-feedback {
@@ -1181,10 +1148,6 @@ main .main-container {
    box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.25);
 }
 
-/* Ajuste para tema escuro */
-.theme-dark .form-floating.password-container label {
-   color: var(--form-text);
-}
 
 /* Ajuste para quando o input está focado */
 .form-floating.password-container .form-control:focus ~ label {
@@ -1505,43 +1468,43 @@ main .main-container {
 
 /* Status specific styles */
 .status-PENDING {
-   background-color: var(--status-pending-color);
+   background-color: var(--text-warning);
 }
 
 .status-SCHEDULING {
-   background-color: var(--status-scheduling-color);
+   background-color: var(--text-info);
 }
 
 .status-PREPARING {
-   background-color: var(--status-preparing-color);
+   background-color: var(--text-warning);
 }
 
 .status-IN_PROGRESS {
-   background-color: var(--status-in-progress-color);
+   background-color: var(--text-primary);
 }
 
 .status-ON_HOLD {
-   background-color: var(--status-on-hold-color);
+   background-color: var(--text-secondary);
 }
 
 .status-SCHEDULED {
-   background-color: var(--status-scheduled-color);
+   background-color: var(--text-info);
 }
 
 .status-COMPLETED {
-   background-color: var(--status-completed-color);
+   background-color: var(--text-success);
 }
 
 .status-PARTIAL {
-   background-color: var(--status-partial-color);
+   background-color: var(--text-success);
 }
 
 .status-CANCELLED {
-   background-color: var(--status-cancelled-color);
+   background-color: var(--text-error);
 }
 
 .status-NOT_PERFORMED {
-   background-color: var(--status-not-performed-color);
+   background-color: var(--text-error);
 }
 
 /* Progress bar styles */
@@ -1559,83 +1522,79 @@ main .main-container {
 
 .service-progress-bar.status-PENDING {
    width: 25%;
-   background-color: var(--status-pending-color);
+   background-color: var(--text-warning);
 }
 
 .service-progress-bar.status-SCHEDULING,
 .service-progress-bar.status-SCHEDULED {
    width: 50%;
-   background-color: var(--status-scheduling-color);
+   background-color: var(--text-info);
 }
 
 .service-progress-bar.status-ON_HOLD {
    width: 60%;
-   background-color: var(--status-on-hold-color);
+   background-color: var(--text-secondary);
 }
 
 .service-progress-bar.status-PREPARING,
 .service-progress-bar.status-IN_PROGRESS {
    width: 75%;
-   background-color: var(--status-in-progress-color);
+   background-color: var(--text-primary);
 }
 
 .service-progress-bar.status-COMPLETED,
 .service-progress-bar.status-PARTIAL {
    width: 100%;
-   background-color: var(--status-completed-color);
+   background-color: var(--text-success);
 }
 
 .service-progress-bar.status-CANCELLED,
 .service-progress-bar.status-NOT_PERFORMED {
    width: 100%;
-   background-color: var(--status-cancelled-color);
+   background-color: var(--text-error);
 }
 
 /* Timeline status markers */
 .timeline-item.status-service-created .timeline-marker {
-   border-color: var(--status-pending-color);
+   border-color: var(--text-warning);
 }
 
 .timeline-item.status-service-created .timeline-marker i {
-   color: var(--status-pending-color);
+   color: var(--text-warning);
 }
 
 .timeline-item.status-service-scheduled .timeline-marker {
-   border-color: var(--status-scheduled-color);
+   border-color: var(--text-info);
 }
 
 .timeline-item.status-service-scheduled .timeline-marker i {
-   color: var(--status-scheduled-color);
+   color: var(--text-info);
 }
 
 .timeline-item.status-service-updated .timeline-marker {
-   border-color: var(--status-in-progress-color);
+   border-color: var(--text-primary);
 }
 
 .timeline-item.status-service-updated .timeline-marker i {
-   color: var(--status-in-progress-color);
+   color: var(--text-primary);
 }
 
 .timeline-item.status-service-completed .timeline-marker {
-   border-color: var(--status-completed-color);
+   border-color: var(--text-success);
 }
 
 .timeline-item.status-service-completed .timeline-marker i {
-   color: var(--status-completed-color);
+   color: var(--text-success);
 }
 
 .timeline-item.status-service-cancelled .timeline-marker {
-   border-color: var(--status-cancelled-color);
+   border-color: var(--text-error);
 }
 
 .timeline-item.status-service-cancelled .timeline-marker i {
-   color: var(--status-cancelled-color);
+   color: var(--text-error);
 }
 
-/* Dark theme support */
-.theme-dark .service-progress {
-   background-color: var(--dark-surface);
-}
 
 .sidebar {
    width: 250px;
@@ -1780,21 +1739,6 @@ input[type="number"] {
    opacity: 0.8;
 }
 
-/* Ajustes para tema escuro */
-.theme-dark .pagination .page-link {
-   background-color: var(--dark-surface);
-   border-color: var(--form-border);
-   color: var(--dark-text);
-}
-
-.theme-dark .pagination .page-item.active .page-link {
-   background-color: var(--dark-primary);
-   color: var(--light-surface);
-}
-
-.theme-dark .empty-table-message {
-   color: var(--small-text);
-}
 
 /* Ajustes para tema claro */
 .theme-light .pagination .page-link {
@@ -1815,13 +1759,6 @@ input[type="number"] {
    --light-primary-rgb: 9, 49, 114;
 }
 
-.theme-dark {
-   --primary-color-rgb: var(--dark-primary-rgb);
-}
-
-.theme-light {
-   --primary-color-rgb: var(--light-primary-rgb);
-}
 
 /* ===========================================
    INDEX VIEWS - Estilos Reutilizáveis
@@ -1895,10 +1832,6 @@ input[type="number"] {
    color: var(--small-text);
 }
 
-/* Ajustes para tema escuro */
-.theme-dark .empty-table-message {
-   color: var(--small-text);
-}
 
 /* Ajustes para tema claro */
 .theme-light .empty-table-message {

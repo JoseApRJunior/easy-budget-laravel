@@ -1,7 +1,5 @@
 @php
-    $colors = config('theme.colors');
-    $themeColor = $colors[$variant] ?? $colors['primary'];
-    $textSecondary = $colors['secondary'] ?? '#94a3b8';
+    $themeColor = config("theme.colors.$variant", config('theme.colors.primary'));
 @endphp
 
 <div {{ $attributes->merge(['class' => 'd-flex align-items-start']) }}>
@@ -10,7 +8,7 @@
     </div>
     <div>
         @if($description)
-            <p class="small mb-0" style="color: {{ $textSecondary }};">{{ $description }}</p>
+            <p class="small mb-0" style="color: {{ config('theme.colors.secondary', '#94a3b8') }};">{{ $description }}</p>
         @else
             {{ $slot }}
         @endif

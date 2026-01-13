@@ -41,14 +41,17 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         };
     }
 
+    /**
+     * Retorna a cor Hexadecimal (Sincronizado com theme.php)
+     */
     public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => '#ffc107',
-            self::PROCESSING => '#17a2b8',
-            self::COMPLETED => '#28a745',
-            self::FAILED => '#dc3545',
-            self::REFUNDED => '#6c757d',
+            self::PENDING => config('theme.colors.warning'),
+            self::PROCESSING => config('theme.colors.info'),
+            self::COMPLETED => config('theme.colors.success'),
+            self::FAILED => config('theme.colors.error'),
+            self::REFUNDED => config('theme.colors.secondary'),
         };
     }
 

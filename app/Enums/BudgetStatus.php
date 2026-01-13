@@ -65,18 +65,18 @@ enum BudgetStatus: string implements \App\Contracts\Interfaces\StatusEnumInterfa
     }
 
     /**
-     * Retorna a cor Hexadecimal (legado)
+     * Retorna a cor Hexadecimal (Sincronizado com theme.php)
      */
     public function getColor(): string
     {
         return match ($this) {
-            self::DRAFT => '#6c757d',
-            self::PENDING => '#ffc107',
-            self::APPROVED => '#10B981',
-            self::REJECTED => '#DC2626',
-            self::IN_PROGRESS => '#007bff',
-            self::CANCELLED => '#6c757d',
-            self::COMPLETED => '#10B981',
+            self::DRAFT => config('theme.colors.secondary'),
+            self::PENDING => config('theme.colors.warning'),
+            self::APPROVED => config('theme.colors.success'),
+            self::REJECTED => config('theme.colors.error'),
+            self::IN_PROGRESS => config('theme.colors.primary'),
+            self::CANCELLED => config('theme.colors.secondary'),
+            self::COMPLETED => config('theme.colors.success'),
         };
     }
 

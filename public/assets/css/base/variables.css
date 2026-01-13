@@ -1,32 +1,29 @@
 :root {
-   /* Sistema de cores */
-   --dark-primary: #093172; /* Azul mais moderno e vibrante */
-   --primary-rgb: 9, 49, 114;
-   --dark-secondary: #1e293b; /* Fundo escuro mais suave */
-   --dark-background: #58667a; /* Cinza azulado mais sofisticado */
-   --dark-surface: #334155; /* Superfície escura mais agradável */
-   --dark-text: #f8fafc; /* Texto claro mais suave */
+   /* Sistema de cores - Mapeado para o theme.php */
+   --primary-color-raw: var(--primary-color);
+   --primary-rgb: 9, 49, 114; /* Mantido para transparências se necessário */
 
-   --light-primary: #093172; /* Azul principal mais profundo */
-   --light-secondary: #94a3b8; /* Cinza mais neutro */
-   --light-background: #c3d0dd; /* Sua escolha - Excelente tom suave */
-   --light-surface: #9facb9; /* Sua escolha - Complemento perfeito */
-   --light-text: #1e293b; /* Texto escuro ajustado */
+   /* Aliases para compatibilidade */
+   --light-primary: var(--primary-color);
+   --light-secondary: var(--text-secondary);
+   --light-background: var(--background-color);
+   --light-surface: var(--surface-color);
+   --light-text: var(--text-primary);
 
-   /* Status - Cores mais modernas */
-   --text-primary: #2968f0; /* Azul escuro ajustado */
-   --text-success: #059669; /* Verde ajustado para harmonizar */
-   --text-error: #dc2626; /* Vermelho ajustado */
-   --text-info: #163881; /* Azul informativo ajustado */
-   --text-warning: #d97706; /* Amarelo ajustado */
+   /* Status - Sincronizado com theme.php */
+   --text-primary-color: var(--text-primary);
+   --text-success-color: var(--text-success);
+   --text-error-color: var(--text-error);
+   --text-info-color: var(--text-info);
+   --text-warning-color: var(--text-warning);
 
-   /* Sistema - Sombras ajustadas para as novas cores */
+   /* Sistema - Sombras e estados */
    --form-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08),
       0 2px 4px -2px rgb(0 0 0 / 0.06);
-   --form-focus-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-   --bs-form-invalid-color: #ef4444;
-   --bs-form-invalid-border-color: #ef4444;
-   --bs-primary-darker: #0043a8;
+   --form-focus-shadow: 0 0 0 3px rgba(9, 49, 114, 0.2);
+   --bs-form-invalid-color: var(--text-error);
+   --bs-form-invalid-border-color: var(--text-error);
+   --bs-primary-darker: var(--primary-color);
 
    /* Tipografia */
    --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -76,74 +73,25 @@
    --breakpoint-lg: 1024px;
    --breakpoint-xl: 1280px;
 
-   --primary-hover: #1d4ed8;
-   --secondary-hover: #475569;
+   --primary-hover: var(--primary-color);
+   --secondary-hover: var(--text-secondary);
 
    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-.theme-dark {
-   --bg-color: var(--dark-background);
-   --surface-color: var(--dark-surface);
-   --text-color: var(--dark-text);
-   --primary-color: var(--dark-primary);
-   --secondary-color: var(--dark-secondary);
-   --form-bg: #1e293b; /* Mais escuro e profissional */
-   --form-text: #f8fafc;
-   --form-input-bg: #2a374b; /* Ligeiramente mais claro */
-   --form-border: #4b5563; /* Mais visível */
-   --small-text: #cbd5e1;
-   --bs-form-invalid-color: #f87171;
-   --bs-form-invalid-border-color: #f87171;
-   --card-bg: var(--dark-surface);
-}
-
-.theme-light {
-   --bg-color: var(--light-background);
-   --surface-color: var(--light-surface);
-   --text-color: var(--light-text);
-   --primary-color: var(--light-primary);
-   --secondary-color: var(--light-secondary);
-   --form-bg: var(--light-surface); /* Usando a superfície como base */
-   --form-text: #1e293b;
-   --form-border: #b4c2d3; /* Borda mais suave */
-   --form-input-bg: #e2e8f0; /* Input levemente mais claro */
-   --form-input-border: #9fb3c8; /* Borda de input mais definida */
-   --small-text: #475569;
-   --bs-form-invalid-color: #dc2626;
-   --bs-form-invalid-border-color: #dc2626;
+/* Tema Light - Gerenciado pelo PHP */
+:root {
+   --form-bg: var(--form-bg);
+   --form-text: var(--form-text);
+   --form-border: var(--form-border);
+   --form-input-bg: var(--form-input-bg);
+   --form-input-border: var(--form-input-border);
+   --small-text: var(--small-text-color);
 
    /* Hover states */
-   --hover-bg: #e2e8f0; /* Hover mais suave */
-   --active-bg: #c9d5e2; /* Estado ativo mais definido */
+   --hover-bg: var(--border-color);
+   --active-bg: var(--surface-color);
 
    /* Cards e elementos */
-   --card-bg: var(--light-surface);
-   --card-border: #b4c2d3;
-   --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-
-   /* Status colors - using system variables */
-   --status-pending-color: var(--text-warning);
-   --status-scheduling-color: var(--text-info);
-   --status-preparing-color: var(--text-primary);
-   --status-in-progress-color: var(--text-primary);
-   --status-on-hold-color: var(--text-warning);
-   --status-scheduled-color: var(--text-info);
-   --status-completed-color: var(--text-success);
-   --status-partial-color: var(--text-success);
-   --status-cancelled-color: var(--text-error);
-   --status-not-performed-color: var(--text-error);
-
-   /* Status icons */
-   --status-pending-icon: "bi-hourglass-split";
-   --status-scheduling-icon: "bi-calendar-check";
-   --status-preparing-icon: "bi-tools";
-   --status-in-progress-icon: "bi-play-circle";
-   --status-on-hold-icon: "bi-pause-circle";
-   --status-scheduled-icon: "bi-calendar-plus";
-   --status-completed-icon: "bi-check-circle";
-   --status-partial-icon: "bi-check-circle-fill";
-   --status-cancelled-icon: "bi-x-circle";
-   --status-not-performed-icon: "bi-slash-circle";
 }

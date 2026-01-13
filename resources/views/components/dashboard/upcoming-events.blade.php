@@ -1,15 +1,12 @@
-@php
-    $colors = config('theme.colors');
-    $textPrimary = $colors['text'] ?? '#1e293b';
-    $textSecondary = $colors['secondary'] ?? '#94a3b8';
-@endphp
-
-<div class="card border-0 shadow-sm mb-4" style="--text-primary: {{ $textPrimary }}; --text-secondary: {{ $textSecondary }};">
+<div class="card border-0 shadow-sm mb-4" @style([
+    "--text-primary: " . config('theme.colors.text', '#1e293b') . ";",
+    "--text-secondary: " . config('theme.colors.secondary', '#94a3b8') . ";",
+])>
     <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">
-            <i class="bi bi-calendar-event me-2" style="color: {{ $colors['warning'] }};"></i>Próximos Compromissos
+            <i class="bi bi-calendar-event me-2" style="color: {{ config('theme.colors.warning') }};"></i>Próximos Compromissos
         </h5>
-        <span class="badge rounded-pill px-3" style="background-color: {{ $colors['warning'] }}1a; color: {{ $colors['warning'] }};">{{ count($events) }}</span>
+        <span class="badge rounded-pill px-3" style="background-color: {{ config('theme.colors.warning') }}1a; color: {{ config('theme.colors.warning') }};">{{ count($events) }}</span>
     </div>
 
     <div class="card-body p-0">
@@ -30,7 +27,7 @@
                                 {{ \Carbon\Carbon::parse($event->start_date_time)->format('d/m/Y H:i') }}
                             </small>
                         </div>
-                        <span class="badge" style="background-color: {{ $colors['primary'] }}1a; color: {{ $colors['primary'] }};">Agendado</span>
+                        <span class="badge" style="background-color: {{ config('theme.colors.primary') }}1a; color: {{ config('theme.colors.primary') }};">Agendado</span>
                     </li>
                 @endforeach
             </ul>
