@@ -4,7 +4,7 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 
 ## 📊 Dashboards (Provider)
 - [x] **Dashboard de Serviços** (`pages.service.dashboard`) - *Totalmente aprovado e revisado*
-- [ ] **Dashboard de Orçamentos** (`pages.budget.dashboard`)
+- [x] **Dashboard de Orçamentos** (`pages.budget.dashboard`) - *Revisado*
 - [ ] **Dashboard Principal** (`provider.dashboard` / `home.dashboard.index`)
 - [ ] **Dashboard de Clientes** (`pages.customer.dashboard`)
 - [ ] **Dashboard de Produtos** (`pages.product.dashboard`)
