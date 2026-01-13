@@ -20,7 +20,6 @@ return [
         'background' => '#c3d0dd',
         'surface' => '#9facb9',
         'border' => '#e2e8f0',
-        'dark' => '#1a1a1a',
         'white' => '#ffffff',
 
         // Cores vindas do variables.css

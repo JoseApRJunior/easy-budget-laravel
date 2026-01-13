@@ -26,140 +26,73 @@
         @endphp
 
         <!-- Cards de Métricas -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-file-earmark-text text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Total de Orçamentos</h6>
-                                <h3 class="mb-0 fw-bold">{{ $total }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0 lh-sm">
-                            Quantidade total de orçamentos cadastrados.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
+                title="Total de Orçamentos"
+                :value="$total"
+                description="Quantidade total de orçamentos cadastrados."
+                icon="file-earmark-text"
+                variant="primary"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-check-circle text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Orçamentos Aprovados</h6>
-                                <h3 class="mb-0 fw-bold">{{ $approved }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0 lh-sm">
-                            Propostas aprovadas prontas para execução.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Orçamentos Aprovados"
+                :value="$approved"
+                description="Orçamentos que foram aceitos pelos clientes."
+                icon="check-circle"
+                variant="success"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-warning bg-gradient me-3">
-                                <i class="bi bi-clock-history text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Orçamentos Pendentes</h6>
-                                <h3 class="mb-0 fw-bold">{{ $pending }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0 lh-sm">
-                            Propostas aguardando aprovação do cliente.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Orçamentos Pendentes"
+                :value="$pending"
+                description="Aguardando resposta ou revisão do cliente."
+                icon="clock"
+                variant="warning"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-info bg-gradient me-3">
-                                <i class="bi bi-graph-up-arrow text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Taxa de Aprovação</h6>
-                                <h3 class="mb-0 fw-bold">{{ $approvedRate }}%</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0 lh-sm">
-                            Percentual de orçamentos aprovados.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-dashboard.stat-card
+                title="Taxa de Aprovação"
+                :value="$approvedRate . '%'"
+                description="Percentual de orçamentos aprovados."
+                icon="graph-up-arrow"
+                variant="info"
+            />
+        </x-layout.grid-row>
 
-        <!-- Cards de Valores Financeiros -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-cash-stack text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Valor Total em Orçamentos</h6>
-                                <h3 class="mb-0 fw-bold">{{ \App\Helpers\CurrencyHelper::format($totalValue) }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0 lh-sm">
-                            Soma do valor de todos os orçamentos cadastrados.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <!-- Cards de Valores Financeiros e Gráfico -->
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
+                title="Valor Total em Orçamentos"
+                :value="\App\Helpers\CurrencyHelper::format($totalValue)"
+                description="Soma total de todos os orçamentos gerados."
+                icon="cash-stack"
+                variant="success"
+                col="col-md-4"
+            />
 
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-calculator text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1 small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Ticket Médio</h6>
-                                <h3 class="mb-0 fw-bold">{{ $total > 0 ? \App\Helpers\CurrencyHelper::format($totalValue / $total) : '0,00' }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0 lh-sm">
-                            Valor médio por orçamento gerado no sistema.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-dashboard.stat-card
+                title="Ticket Médio"
+                :value="\App\Helpers\CurrencyHelper::format($total > 0 ? $totalValue / $total : 0)"
+                description="Valor médio por orçamento gerado no sistema."
+                icon="calculator"
+                variant="primary"
+                col="col-md-4"
+            />
 
-        <!-- Gráfico de Distribuição de Status -->
-        <div class="row g-4 mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-bar-chart-line me-2"></i>{{ __('Distribuição de Orçamentos por Status') }}
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="statusChart" width="400" height="100"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-resource.resource-list-card
+                title="Distribuição por Status"
+                icon="bar-chart-line"
+                padding="p-3"
+                col="col-md-4"
+            >
+                <x-dashboard.chart-doughnut
+                    id="statusChart"
+                    :data="$stats['status_breakdown_detailed'] ?? []"
+                    empty-text="Nenhum orçamento cadastrado"
+                />
+            </x-resource.resource-list-card>
+        </x-layout.grid-row>
 
         <!-- Conteúdo Principal -->
         <div class="row g-4">
@@ -283,7 +216,7 @@
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent border-0 py-3">
                         <h6 class="mb-0 fw-bold d-flex align-items-center text-dark">
-                            <i class="bi bi-lightbulb me-2 text-warning"></i>Insights Rápidos
+                            <i class="bi bi-lightbulb me-2 "></i>Insights Rápidos
                         </h6>
                     </div>
                     <div class="card-body pt-0">
@@ -344,80 +277,8 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Dados para o gráfico de status
-            const statusData = @json($stats['status_breakdown'] ?? []);
-            const statusLabels = [];
-            const statusValues = [];
-            const statusColors = [];
-
-            // Mapeamento de labels traduzidos para cada status
-            const statusLabelMap = {
-                'draft': 'Rascunho',
-                'pending': 'Pendente',
-                'approved': 'Aprovado',
-                'rejected': 'Rejeitado',
-                'in_progress': 'Em Andamento',
-                'cancelled': 'Cancelado',
-                'completed': 'Concluído'
-            };
-
-            // Mapeamento de cores para cada status
-            const statusColorMap = {
-                'draft': '#6c757d',
-                'pending': '#ffc107',
-                'approved': '#28a745',
-                'rejected': '#dc3545',
-                'cancelled': '#6c757d',
-                'completed': '#007bff'
-            };
-
-            // Preparar dados para o gráfico
-            Object.keys(statusData).forEach(status => {
-                if (statusData[status] > 0) {
-                    statusLabels.push(statusLabelMap[status] || status.charAt(0).toUpperCase() + status.slice(1));
-                    statusValues.push(statusData[status]);
-                    statusColors.push(statusColorMap[status] || '#6c757d');
-                }
-            });
-
-            // Criar gráfico de pizza
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues,
-                        backgroundColor: statusColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                    return context.label + ': ' + context.parsed + ' (' + percentage +
-                                        '%)';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        });
+        function refreshData() {
+            window.location.reload();
+        }
     </script>
 @endpush

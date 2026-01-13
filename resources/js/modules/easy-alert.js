@@ -8,7 +8,6 @@ class EasyAlert {
       maxAlerts: 5,
       container: document.body,
       zIndex: 9999,
-      theme: "light",
       icons: {
         success: '<i class="bi bi-check-circle-fill"></i>',
         error: '<i class="bi bi-x-circle-fill"></i>',

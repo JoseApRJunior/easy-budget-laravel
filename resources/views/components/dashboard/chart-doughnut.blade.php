@@ -1,7 +1,7 @@
 @props([
     'id',
     'data' => [],
-    'height' => 160,
+    'height' => 100,
     'emptyText' => 'Nenhum dado disponível',
 ])
 

@@ -91,6 +91,21 @@ class BudgetService extends AbstractBaseService
         return $this->safeExecute(function () {
             $stats = $this->repository->getDashboardStats();
 
+            // Formata a distribuição por status para o componente de gráfico
+            $statusBreakdownDetailed = [];
+            foreach ($stats['status_breakdown'] as $statusValue => $count) {
+                $status = BudgetStatus::tryFrom($statusValue);
+                if ($status) {
+                    $statusBreakdownDetailed[$statusValue] = [
+                        'count' => $count,
+                        'color' => $status->getColor(),
+                        'label' => $status->label()
+                    ];
+                }
+            }
+            
+            $stats['status_breakdown_detailed'] = $statusBreakdownDetailed;
+
             return ServiceResult::success($stats);
         }, 'Erro ao obter estatísticas do dashboard.');
     }
