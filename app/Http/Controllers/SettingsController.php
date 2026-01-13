@@ -213,7 +213,6 @@ class SettingsController extends Controller
     public function updateCustomization(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'theme' => 'required|in:light,dark,auto',
             'primary_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'layout_density' => 'required|in:compact,normal,spacious',
             'sidebar_position' => 'required|in:left,right',

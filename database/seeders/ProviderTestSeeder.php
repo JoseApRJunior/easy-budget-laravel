@@ -169,7 +169,6 @@ class ProviderTestSeeder extends Seeder
                 'social_twitter' => null,
                 'social_linkedin' => null,
                 'social_instagram' => null,
-                'theme' => 'auto',
                 'primary_color' => '#3B82F6',
                 'layout_density' => 'normal',
                 'sidebar_position' => 'left',

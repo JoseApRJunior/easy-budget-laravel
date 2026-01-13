@@ -10,7 +10,6 @@ readonly class UserSettingsDTO extends AbstractDTO
 {
     public function __construct(
         public int $user_id,
-        public string $theme,
         public string $language,
         public bool $notifications_enabled,
         public ?string $timezone = null,
@@ -24,7 +23,6 @@ readonly class UserSettingsDTO extends AbstractDTO
     {
         return new self(
             user_id: (int) $data['user_id'],
-            theme: $data['theme'] ?? 'light',
             language: $data['language'] ?? 'pt-BR',
             notifications_enabled: isset($data['notifications_enabled']) ? (bool) $data['notifications_enabled'] : true,
             timezone: $data['timezone'] ?? 'America/Sao_Paulo',
@@ -39,7 +37,6 @@ readonly class UserSettingsDTO extends AbstractDTO
     {
         return [
             'user_id' => $this->user_id,
-            'theme' => $this->theme,
             'language' => $this->language,
             'notifications_enabled' => $this->notifications_enabled,
             'timezone' => $this->timezone,

@@ -36,7 +36,6 @@ class SettingsService extends AbstractBaseService
                 'tenant_id' => $user->tenant_id,
             ],
             [
-                'theme' => 'auto',
                 'primary_color' => '#3B82F6',
                 'layout_density' => 'normal',
                 'sidebar_position' => 'left',

@@ -33,7 +33,7 @@ return [
 
         // Cores de Contraste (para fundos escuros/gradientes)
         'contrast_text' => '#ffffff',
-        'contrast_text_secondary' => '#242a33ff',
+        'contrast_text_secondary' => 'rgba(255, 255, 255, 0.8)',
         'contrast_overlay' => 'rgba(255, 255, 255, 0.2)',
 
         // Status (Sincronizado com variables.css)

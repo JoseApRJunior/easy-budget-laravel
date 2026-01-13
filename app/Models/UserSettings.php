@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $social_twitter
  * @property string|null $social_linkedin
  * @property string|null $social_instagram
- * @property string $theme
  * @property string $primary_color
  * @property string $layout_density
  * @property string $sidebar_position
@@ -73,7 +72,6 @@ class UserSettings extends Model
         'social_twitter',
         'social_linkedin',
         'social_instagram',
-        'theme',
         'primary_color',
         'layout_density',
         'sidebar_position',
@@ -112,7 +110,6 @@ class UserSettings extends Model
      * Default values for attributes.
      */
     protected $attributes = [
-        'theme' => 'auto',
         'primary_color' => '#3B82F6',
         'layout_density' => 'normal',
         'sidebar_position' => 'left',
@@ -143,7 +140,6 @@ class UserSettings extends Model
             'social_twitter' => 'nullable|url|max:255',
             'social_linkedin' => 'nullable|url|max:255',
             'social_instagram' => 'nullable|url|max:255',
-            'theme' => 'required|in:light,dark,auto',
             'primary_color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'layout_density' => 'required|in:compact,normal,spacious',
             'sidebar_position' => 'required|in:left,right',

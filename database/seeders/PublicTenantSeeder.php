@@ -261,7 +261,6 @@ class PublicTenantSeeder extends Seeder
                 'social_twitter' => 'https://twitter.com/easybudget',
                 'social_linkedin' => 'https://linkedin.com/company/easybudget',
                 'social_instagram' => 'https://instagram.com/easybudget',
-                'theme' => 'light',
                 'primary_color' => '#0D6EFD',
                 'layout_density' => 'normal',
                 'sidebar_position' => 'left',

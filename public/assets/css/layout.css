@@ -290,7 +290,6 @@ header {
 
 .badge.bg-warning {
    background-color: var(--text-warning) !important;
-   color: var(--dark-text);
 }
 
 .badge,
@@ -344,11 +343,8 @@ header {
 }
 
 /* Ocultar ícones baseados no atributo aria-hidden */
-.theme-toggle [aria-hidden="true"] {
+[aria-hidden="true"] {
    display: none !important;
-}
-.theme-toggle [aria-hidden="false"] {
-   display: inline-block !important;
 }
 
 .small-text {
@@ -567,24 +563,8 @@ td .form-control {
    border-radius: var(--border-radius-md);
 }
 
-/* Botão de tema */
-.theme-toggle {
-   padding: 0.5rem;
-   border: none;
-   background: transparent;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   cursor: pointer;
-   color: inherit;
-}
-
 .nav-item .bi {
    font-size: 1rem;
-}
-
-.theme-toggle:hover {
-   transform: rotate(15deg);
 }
 
 /* Adições para os cards */
@@ -1740,23 +1720,9 @@ input[type="number"] {
 }
 
 
-/* Ajustes para tema claro */
-.theme-light .pagination .page-link {
-   background-color: var(--light-surface);
-   border-color: var(--form-border);
-   color: var(--light-text);
-}
-
-.theme-light .pagination .page-item.active .page-link {
-   background-color: var(--light-primary);
-   color: var(--light-surface);
-}
-
 /* Variáveis de cor para temas */
 :root {
    --primary-color-rgb: 37, 99, 235;
-   --dark-primary-rgb: 9, 49, 114;
-   --light-primary-rgb: 9, 49, 114;
 }
 
 

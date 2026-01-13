@@ -48,7 +48,6 @@ class SettingsApiController extends Controller
     public function update(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'theme' => 'sometimes|in:light,dark,auto',
             'primary_color' => 'sometimes|regex:/^#[0-9A-Fa-f]{6}$/',
             'layout_density' => 'sometimes|in:compact,normal,spacious',
             'sidebar_position' => 'sometimes|in:left,right',
@@ -85,7 +84,6 @@ class SettingsApiController extends Controller
     public function partialUpdate(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'theme' => 'sometimes|in:light,dark,auto',
             'primary_color' => 'sometimes|regex:/^#[0-9A-Fa-f]{6}$/',
             'layout_density' => 'sometimes|in:compact,normal,spacious',
             'sidebar_position' => 'sometimes|in:left,right',

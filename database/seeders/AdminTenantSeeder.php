@@ -379,7 +379,6 @@ class AdminTenantSeeder extends Seeder
                 'social_twitter' => null,
                 'social_linkedin' => null,
                 'social_instagram' => null,
-                'theme' => 'dark', // Admin usa tema escuro
                 'primary_color' => '#DC2626', // Vermelho para admin
                 'layout_density' => 'compact', // Layout compacto para admin
                 'sidebar_position' => 'left',
