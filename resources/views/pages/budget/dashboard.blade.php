@@ -162,7 +162,6 @@
                                     $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
                                 @endphp
                                 <x-resource.resource-mobile-item
-                                    icon="file-earmark-text"
                                     :href="route('provider.budgets.show', $budget->code)"
                                 >
                                     <x-resource.resource-mobile-header
@@ -238,7 +237,7 @@
                         <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" icon="person-plus" label="Novo Cliente" />
                         <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-primary" icon="file-earmark-text" label="Listar Orçamentos" />
                         <x-ui.button type="link" :href="route('provider.customers.index')" variant="outline-primary" icon="people" label="Listar Clientes" />
-                        <x-ui.button type="link" :href="route('provider.budgets.index', ['deleted' => 'only']) }}" variant="outline-secondary" icon="trash" label="Ver Deletados" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index', ['deleted' => 'only'])" variant="outline-secondary" icon="trash" label="Ver Deletados" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

@@ -22,6 +22,7 @@
             --bg-color: {{ config('theme.colors.background') }};
             --surface-color: {{ config('theme.colors.surface') }};
             --secondary-color: {{ config('theme.colors.secondary') }};
+            --border-color: {{ config('theme.colors.border') }};
 
             /* Status e Alertas */
             --text-primary: {{ config('theme.colors.primary') }};

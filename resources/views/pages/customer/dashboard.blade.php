@@ -90,11 +90,8 @@
                                     $phone = $contact->phone_personal ?? ($contact->phone_business ?? null);
                                 @endphp
                                 <x-resource.table-row>
-                                    <x-resource.table-cell>
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-person me-2 text-muted"></i>
-                                            <span class="fw-medium text-dark">{{ $name }}</span>
-                                        </div>
+                                    <x-resource.table-cell  class="fw-bold text-dark">
+                                        {{ $name }}
                                     </x-resource.table-cell>
                                     <x-resource.table-cell class="text-muted small">
                                         <x-resource.table-cell-truncate :text="$email ?? '—'" />
@@ -122,10 +119,12 @@
                         @foreach ($recent as $customer)
                             @php
                                 $common = $customer->commonData ?? ($customer->common_data ?? null);
+                                $contact = $customer->contact ?? null;
                                 $name = $common?->company_name ?? trim(($common->first_name ?? '') . ' ' . ($common->last_name ?? '')) ?: 'Cliente';
+                                $email = $contact->email_personal ?? ($contact->email_business ?? null);
+                                $phone = $contact->phone_personal ?? ($contact->phone_business ?? null);
                             @endphp
                             <x-resource.resource-mobile-item
-                                icon="person"
                                 :href="route('provider.customers.show', $customer)"
                             >
                                 <x-resource.resource-mobile-header
@@ -197,7 +196,7 @@
     </x-layout.grid-row>
 
     <!-- Clientes com Maior Atividade -->
-    <x-layout.grid-row class="mt-4">
+    <x-layout.grid-row class="mt-4 mt-lg-5">
         <x-layout.grid-col size="col-12">
             <x-resource.resource-list-card
                 title="Clientes com Maior Atividade"
@@ -213,7 +212,7 @@
                                     <x-resource.table-cell header align="center">Orçamentos</x-resource.table-cell>
                                     <x-resource.table-cell header align="center">Faturas</x-resource.table-cell>
                                     <x-resource.table-cell header align="center">Engajamento</x-resource.table-cell>
-                                    <x-resource.table-cell header align="end" class="pe-4">Ações</x-resource.table-cell>
+                                    <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
                                 </x-resource.table-row>
                             </x-slot:thead>
 
@@ -229,37 +228,25 @@
                                 @endphp
                                 <x-resource.table-row>
                                     <x-resource.table-cell class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar-circle bg-light me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%;">
-                                                <i class="bi bi-person text-muted" style="font-size: 0.8rem;"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark">{{ $name }}</div>
-                                                <small class="text-muted">ID: #{{ $customer->id }}</small>
-                                            </div>
-                                        </div>
+                                        <div class="fw-bold text-dark">{{ $name }}</div>
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="center">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-3 py-1">
-                                            {{ $budgetsCount }}
-                                        </span>
+                                        <span class="fw-bold text-primary h6 mb-0">{{ $budgetsCount }}</span>
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="center">
-                                        <span class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill px-3 py-1">
-                                            {{ $invoicesCount }}
-                                        </span>
+                                        <span class="fw-bold text-success h6 mb-0">{{ $invoicesCount }}</span>
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="center" style="min-width: 150px;">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="progress bg-light flex-grow-1" style="height: 6px;">
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div class="progress bg-light flex-grow-1" style="height: 6px; max-width: 80px;">
                                                 <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: {{ $percent }}%"></div>
                                             </div>
-                                            <small class="text-muted fw-bold">{{ round($percent) }}%</small>
+                                            <small class="text-dark fw-bold">{{ round($percent) }}%</small>
                                         </div>
                                     </x-resource.table-cell>
-                                    <x-resource.table-cell align="end" class="pe-4">
+                                    <x-resource.table-cell align="center">
                                         <x-ui.button type="link" :href="route('provider.customers.show', $customer)"
-                                            variant="light" size="sm" icon="eye" class="btn-icon" />
+                                            variant="light" size="sm" icon="eye" class="btn-icon" title="Ver Detalhes" />
                                     </x-resource.table-cell>
                                 </x-resource.table-row>
                             @endforeach
@@ -278,29 +265,34 @@
                                 $percent = ($totalActivity / $maxActivity) * 100;
                             @endphp
                             <x-resource.resource-mobile-item
-                                icon="graph-up"
                                 :href="route('provider.customers.show', $customer)"
                             >
                                 <x-resource.resource-mobile-header
                                     :title="$name"
-                                    :subtitle="'ID: #' . $customer->id"
                                 />
 
-                                <div class="d-flex gap-2 mb-3 mt-2">
-                                    <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill px-3 py-2 small">
-                                        <i class="bi bi-file-earmark-text me-1"></i>{{ $budgetsCount }} Orçamentos
-                                    </span>
-                                    <span class="badge bg-success bg-opacity-10 text-success border-0 rounded-pill px-3 py-2 small">
-                                        <i class="bi bi-receipt me-1"></i>{{ $invoicesCount }} Faturas
-                                    </span>
-                                </div>
+                                <x-layout.grid-row g="2" class="mb-0">
+                                    <x-resource.resource-mobile-field
+                                        label="Orçamentos"
+                                        :value="$budgetsCount"
+                                        col="col-6"
+                                    />
+                                    <x-resource.resource-mobile-field
+                                        label="Faturas"
+                                        :value="$invoicesCount"
+                                        col="col-6"
+                                        align="end"
+                                    />
+                                </x-layout.grid-row>
 
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="progress bg-light flex-grow-1" style="height: 4px;">
-                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: {{ $percent }}%"></div>
+                                <x-resource.resource-mobile-field label="Engajamento">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress bg-light flex-grow-1" style="height: 4px;">
+                                            <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width: {{ $percent }}%"></div>
+                                        </div>
+                                        <small class="text-dark x-small fw-bold">{{ round($percent) }}%</small>
                                     </div>
-                                    <small class="text-muted x-small fw-bold">{{ round($percent) }}%</small>
-                                </div>
+                                </x-resource.resource-mobile-field>
                             </x-resource.resource-mobile-item>
                         @endforeach
                     </x-slot:mobile>

@@ -89,11 +89,8 @@
 
                             @foreach ($recent as $product)
                                 <x-resource.table-row>
-                                    <x-resource.table-cell>
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-box-seam me-2 text-muted"></i>
-                                            <span class="fw-medium text-dark">{{ $product->name }}</span>
-                                        </div>
+                                    <x-resource.table-cell class="fw-bold text-dark">
+                                        {{ $product->name }}
                                     </x-resource.table-cell>
                                     <x-resource.table-cell class="text-muted small">
                                         {{ $product->category->name ?? '—' }}
@@ -130,7 +127,6 @@
                     <x-slot:mobile>
                         @foreach ($recent as $product)
                             <x-resource.resource-mobile-item
-                                icon="box-seam"
                                 :href="route('provider.products.show', $product->sku)"
                             >
                                 <x-resource.resource-mobile-header

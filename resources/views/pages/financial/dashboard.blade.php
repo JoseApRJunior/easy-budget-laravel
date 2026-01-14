@@ -98,28 +98,29 @@
 
         <!-- Métodos de Pagamento e Orçamentos -->
         <x-layout.grid-row>
-            <!-- Métodos de Pagamento -->
-            <x-layout.grid-col size="col-lg-6">
+            <!-- Métodos de Pagamento (8 colunas) -->
+            <x-layout.grid-col size="col-lg-8">
                 <x-resource.resource-list-card
                     title="Métodos de Pagamento"
                     icon="credit-card"
                     padding="p-4"
                 >
                     @if (!empty($payments['by_method']))
-                        <x-layout.v-stack gap="3">
+                        <div class="row g-4">
                             @foreach ($payments['by_method'] as $method => $data)
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="fw-bold text-dark">{{ \App\Models\Payment::getPaymentMethods()[$method] ?? $method }}</div>
-                                        <small class="text-muted">{{ $data['count'] }} pagamentos</small>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="fw-bold text-success">R$ {{ number_format($data['total'], 2, ',', '.') }}</span>
+                                <div class="col-md-6">
+                                    <div class="p-3 border rounded-3 h-100 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <div class="fw-bold text-dark">{{ \App\Models\Payment::getPaymentMethods()[$method] ?? $method }}</div>
+                                            <small class="text-muted">{{ $data['count'] }} pagamentos</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="fw-bold text-success">R$ {{ number_format($data['total'], 2, ',', '.') }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                @if(!$loop->last) <hr class="my-0 opacity-5"> @endif
                             @endforeach
-                        </x-layout.v-stack>
+                        </div>
                     @else
                         <x-resource.empty-state
                             title="Sem pagamentos"
@@ -130,33 +131,68 @@
                 </x-resource.resource-list-card>
             </x-layout.grid-col>
 
-            <!-- Orçamentos -->
-            <x-layout.grid-col size="col-lg-6">
-                <x-resource.resource-list-card
-                    title="Performance de Orçamentos"
-                    icon="file-earmark-text"
-                    padding="p-4"
-                >
-                    <x-layout.grid-row class="text-center mb-4">
-                        <x-layout.grid-col size="col-6">
-                            <h3 class="fw-bold text-primary mb-1">{{ $budgets['total'] }}</h3>
-                            <p class="text-muted small text-uppercase mb-0">Total Gerado</p>
-                        </x-layout.grid-col>
-                        <x-layout.grid-col size="col-6">
-                            <h3 class="fw-bold text-success mb-1">{{ $budgets['approved'] }}</h3>
-                            <p class="text-muted small text-uppercase mb-0">Aprovados</p>
-                        </x-layout.grid-col>
-                    </x-layout.grid-row>
+            <!-- Sidebar (4 colunas) -->
+            <x-layout.grid-col size="col-lg-4">
+                <x-layout.v-stack gap="4">
+                    <!-- Performance de Orçamentos -->
+                    <x-resource.resource-list-card
+                        title="Performance"
+                        icon="file-earmark-text"
+                        padding="p-3"
+                    >
+                        <x-layout.grid-row class="text-center mb-3 g-2">
+                            <x-layout.grid-col size="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <div class="fw-bold text-primary h5 mb-0">{{ $budgets['total'] }}</div>
+                                    <p class="text-muted x-small text-uppercase mb-0">Total</p>
+                                </div>
+                            </x-layout.grid-col>
+                            <x-layout.grid-col size="col-6">
+                                <div class="p-2 bg-light rounded">
+                                    <div class="fw-bold text-success h5 mb-0">{{ $budgets['approved'] }}</div>
+                                    <p class="text-muted x-small text-uppercase mb-0">Aprovados</p>
+                                </div>
+                            </x-layout.grid-col>
+                        </x-layout.grid-row>
 
-                    <div class="text-center p-3 bg-light rounded-3">
-                        <div class="display-6 fw-bold text-dark mb-1">{{ $budgets['approval_rate'] }}%</div>
-                        <p class="text-muted small text-uppercase mb-0">Taxa de Aprovação</p>
-                    </div>
-                </x-resource.resource-list-card>
+                        <div class="text-center p-2 bg-primary bg-opacity-10 rounded">
+                            <div class="h4 fw-bold text-primary mb-0">{{ $budgets['approval_rate'] }}%</div>
+                            <p class="text-muted x-small text-uppercase mb-0">Taxa de Aprovação</p>
+                        </div>
+                    </x-resource.resource-list-card>
+
+                    <!-- Insights -->
+                    <x-resource.resource-list-card
+                        title="Insights Financeiros"
+                        icon="lightbulb"
+                        padding="p-3"
+                        gap="3"
+                    >
+                        <x-dashboard.insight-item
+                            icon="graph-up-arrow"
+                            variant="success"
+                            description="Sua receita teve uma variação de {{ $revenue['growth'] }}% em relação ao período anterior."
+                        />
+                        <x-dashboard.insight-item
+                            icon="check-circle"
+                            variant="primary"
+                            description="A taxa de liquidez das suas faturas está em {{ $invoices['conversion_rate'] }}%."
+                        />
+                    </x-resource.resource-list-card>
+
+                    <!-- Atalhos -->
+                    <x-resource.quick-actions
+                        title="Ações Financeiras"
+                        icon="lightning-charge"
+                    >
+                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="outline-primary" icon="receipt" label="Gerir Faturas" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-primary" icon="file-earmark-text" label="Ver Orçamentos" />
+                        <x-ui.button type="link" :href="route('provider.reports.financial')" variant="outline-secondary" icon="file-earmark-bar-graph" label="Relatórios" />
+                    </x-resource.quick-actions>
+                </x-layout.v-stack>
             </x-layout.grid-col>
         </x-layout.grid-row>
     </x-layout.page-container>
-@endsection
 @endsection
 
 @push('scripts')

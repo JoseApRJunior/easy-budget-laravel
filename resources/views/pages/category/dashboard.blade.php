@@ -129,7 +129,6 @@
                     <x-slot:mobile>
                         @foreach ($recent as $category)
                             <x-resource.resource-mobile-item
-                                icon="tag"
                                 :href="route('provider.categories.index', ['search' => $category->name])"
                             >
                                 <x-resource.resource-mobile-header
@@ -184,9 +183,9 @@
                     title="Ações de Categoria"
                     icon="lightning-charge"
                 >
-                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="md" icon="plus-lg" label="Nova Categoria" />
-                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" size="md" icon="tags" label="Listar Categorias" />
-                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="outline-secondary" size="md" icon="trash" label="Ver Deletadas" />
+                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="outline-success" icon="plus-lg" label="Nova Categoria" />
+                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" icon="tags" label="Listar Categorias" />
+                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="outline-secondary" icon="trash" label="Ver Deletadas" />
                 </x-resource.quick-actions>
             </x-layout.v-stack>
         </x-layout.grid-col>

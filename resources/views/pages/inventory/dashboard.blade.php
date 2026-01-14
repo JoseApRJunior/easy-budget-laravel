@@ -101,7 +101,6 @@
                         <x-slot:mobile>
                             @foreach($lowStockItems as $item)
                                 <x-resource.resource-mobile-item
-                                    icon="exclamation-triangle"
                                     :href="route('provider.inventory.index', ['search' => $item->product->sku])"
                                 >
                                     <x-resource.resource-mobile-header
@@ -194,7 +193,6 @@
                         <x-slot:mobile>
                             @foreach($recentMovements as $movement)
                                 <x-resource.resource-mobile-item
-                                    icon="clock-history"
                                 >
                                     <x-resource.resource-mobile-header
                                         :title="$movement->product->name"

@@ -19,9 +19,9 @@
             <div class="col-12 col-md-auto ">
                 <h5 class="card-title mb-0 d-flex align-items-center">
                     <i class="bi bi-{{ $icon }} me-2" style="color: {{ config("theme.colors.$variant", config('theme.colors.primary')) }};"></i>
-                    <span class="{{ $mobileTitle ? 'd-none d-sm-inline' : '' }} text-truncate" style="max-width: 250px;">{{ $title }}</span>
+                    <span class="{{ $mobileTitle ? 'd-none d-sm-inline' : '' }}">{{ $title }}</span>
                     @if($mobileTitle)
-                        <span class="d-sm-none text-truncate" style="max-width: 150px;">{{ $mobileTitle }}</span>
+                        <span class="d-sm-none">{{ $mobileTitle }}</span>
                     @endif
                     @if(isset($total))
                         <span class="ms-2 text-muted fw-normal" style="font-size: 0.85rem;">

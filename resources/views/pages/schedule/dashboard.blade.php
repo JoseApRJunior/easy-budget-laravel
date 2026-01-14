@@ -165,7 +165,6 @@
                         <x-slot:mobile>
                             @foreach ($recent as $sc)
                                 <x-resource.resource-mobile-item
-                                    icon="calendar-event"
                                     :href="route('provider.schedules.show', $sc->id)"
                                 >
                                     <x-resource.resource-mobile-header

@@ -146,7 +146,6 @@
                                     $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                 @endphp
                                 <x-resource.resource-mobile-item
-                                    icon="tools"
                                     :href="route('provider.services.show', $service->code)"
                                 >
                                     <x-resource.resource-mobile-header
@@ -218,9 +217,10 @@
                         title="Ações de Serviço"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="md" icon="plus-lg" label="Novo Serviço" />
-                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="outline-primary" size="md" icon="tools" label="Listar Serviços" />
-                        <x-ui.button type="link" href="{{ route('provider.reports.services') }}" variant="outline-secondary" size="md" icon="file-earmark-bar-graph" label="Relatórios de Performance" />
+                        <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-success" icon="plus-lg" label="Novo Serviço" />
+                        <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" icon="tags" label="Categorias" />
+                        <x-ui.button type="link" :href="route('provider.services.index')" variant="outline-primary" icon="tools" label="Listar Serviços" />
+                        <x-ui.button type="link" :href="route('provider.services.index', ['deleted' => 'only'])" variant="outline-secondary" icon="trash" label="Ver Deletados" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

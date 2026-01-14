@@ -164,7 +164,6 @@
                         <x-slot:mobile>
                             @foreach ($recent as $inv)
                                 <x-resource.resource-mobile-item
-                                    icon="receipt"
                                     :href="route('provider.invoices.show', $inv->code)"
                                 >
                                     <x-resource.resource-mobile-header
@@ -187,7 +186,7 @@
                                             align="end"
                                         >
                                             <x-ui.status-badge :item="$inv" />
-                                        </x-resource.table-cell>
+                                        </x-resource.resource-mobile-field>
                                     </x-layout.grid-row>
                                 </x-resource.resource-mobile-item>
                             @endforeach
@@ -237,7 +236,6 @@
             </x-layout.grid-col>
         </x-layout.grid-row>
     </x-layout.page-container>
-@endsection
 @endsection
 
 @push('styles')

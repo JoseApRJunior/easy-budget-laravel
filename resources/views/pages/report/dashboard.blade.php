@@ -81,10 +81,7 @@
                                 @foreach ($recentReports as $report)
                                     <x-resource.table-row>
                                         <x-resource.table-cell>
-                                            <div class="d-flex align-items-center">
-                                                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                <span class="fw-medium text-dark">{{ ucfirst($report->type ?? 'N/A') }}</span>
-                                            </div>
+                                            <span class="fw-medium text-dark">{{ ucfirst($report->type ?? 'N/A') }}</span>
                                         </x-resource.table-cell>
                                         <x-resource.table-cell class="text-muted small">
                                             {{ $report->period ?? 'N/A' }}
@@ -117,7 +114,6 @@
                         <x-slot:mobile>
                             @foreach ($recentReports as $report)
                                 <x-resource.resource-mobile-item
-                                    icon="file-earmark-pdf"
                                     :href="isset($report->view_url) ? $report->view_url : '#'"
                                 >
                                     <x-resource.resource-mobile-header
@@ -187,5 +183,4 @@
             </x-layout.grid-col>
         </x-layout.grid-row>
     </x-layout.page-container>
-@endsection
 @endsection
