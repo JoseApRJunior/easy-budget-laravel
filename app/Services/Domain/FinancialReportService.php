@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\Enums\InvoiceStatus;
-use App\Enums\PaymentStatus;
 use App\Models\Budget;
 use App\Models\Invoice;
-use App\Models\Payment;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
 use Carbon\Carbon;
@@ -20,6 +18,12 @@ use Illuminate\Support\Facades\DB;
  */
 class FinancialReportService extends AbstractBaseService
 {
+    public function __construct(
+        \App\Repositories\InvoiceRepository $invoiceRepository
+    ) {
+        parent::__construct($invoiceRepository);
+    }
+
     /**
      * Retorna dados consolidados para o dashboard financeiro.
      */
@@ -55,15 +59,15 @@ class FinancialReportService extends AbstractBaseService
      */
     private function getRevenueData(int $tenantId, array $dateRange): array
     {
-        $currentPeriod = Payment::where('tenant_id', $tenantId)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->whereBetween('confirmed_at', [$dateRange['start'], $dateRange['end']])
-            ->sum('amount');
+        $currentPeriod = Invoice::where('tenant_id', $tenantId)
+            ->where('status', InvoiceStatus::PAID)
+            ->whereBetween('transaction_date', [$dateRange['start'], $dateRange['end']])
+            ->sum('transaction_amount');
 
-        $previousPeriod = Payment::where('tenant_id', $tenantId)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->whereBetween('confirmed_at', [$dateRange['previous_start'], $dateRange['previous_end']])
-            ->sum('amount');
+        $previousPeriod = Invoice::where('tenant_id', $tenantId)
+            ->where('status', InvoiceStatus::PAID)
+            ->whereBetween('transaction_date', [$dateRange['previous_start'], $dateRange['previous_end']])
+            ->sum('transaction_amount');
 
         $growth = $previousPeriod > 0
             ? (($currentPeriod - $previousPeriod) / $previousPeriod) * 100
@@ -126,19 +130,19 @@ class FinancialReportService extends AbstractBaseService
      */
     private function getPaymentsData(int $tenantId, array $dateRange): array
     {
-        $byMethod = Payment::where('tenant_id', $tenantId)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->whereBetween('confirmed_at', [$dateRange['start'], $dateRange['end']])
-            ->select('method', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
-            ->groupBy('method')
+        $byMethod = Invoice::where('tenant_id', $tenantId)
+            ->where('status', InvoiceStatus::PAID)
+            ->whereBetween('transaction_date', [$dateRange['start'], $dateRange['end']])
+            ->select('payment_method as method', DB::raw('COUNT(*) as count'), DB::raw('SUM(transaction_amount) as total'))
+            ->groupBy('payment_method')
             ->get()
             ->keyBy('method')
             ->toArray();
 
-        $avgTicket = Payment::where('tenant_id', $tenantId)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->whereBetween('confirmed_at', [$dateRange['start'], $dateRange['end']])
-            ->avg('amount');
+        $avgTicket = Invoice::where('tenant_id', $tenantId)
+            ->where('status', InvoiceStatus::PAID)
+            ->whereBetween('transaction_date', [$dateRange['start'], $dateRange['end']])
+            ->avg('transaction_amount');
 
         return [
             'by_method' => $byMethod,
@@ -178,12 +182,12 @@ class FinancialReportService extends AbstractBaseService
     private function getChartsData(int $tenantId, array $dateRange): array
     {
         // Receita por dia nos últimos 30 dias
-        $revenueChart = Payment::where('tenant_id', $tenantId)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->whereBetween('confirmed_at', [now()->subDays(30), now()])
+        $revenueChart = Invoice::where('tenant_id', $tenantId)
+            ->where('status', InvoiceStatus::PAID)
+            ->whereBetween('transaction_date', [now()->subDays(30), now()])
             ->select(
-                DB::raw('DATE(confirmed_at) as date'),
-                DB::raw('SUM(amount) as total')
+                DB::raw('DATE(transaction_date) as date'),
+                DB::raw('SUM(transaction_amount) as total')
             )
             ->groupBy('date')
             ->orderBy('date')
@@ -198,21 +202,21 @@ class FinancialReportService extends AbstractBaseService
             ->groupBy('status')
             ->get()
             ->mapWithKeys(function ($item) {
-                return [$item->status->getDescription() => $item->count];
+                return [$item->status->label() => $item->count];
             })
             ->toArray();
 
         // Métodos de pagamento (pizza)
-        $paymentMethodChart = Payment::where('tenant_id', $tenantId)
-            ->where('status', PaymentStatus::COMPLETED)
-            ->whereBetween('confirmed_at', [$dateRange['start'], $dateRange['end']])
-            ->select('method', DB::raw('COUNT(*) as count'))
-            ->groupBy('method')
+        $paymentMethodChart = Invoice::where('tenant_id', $tenantId)
+            ->where('status', InvoiceStatus::PAID)
+            ->whereBetween('transaction_date', [$dateRange['start'], $dateRange['end']])
+            ->select('payment_method as method', DB::raw('COUNT(*) as count'))
+            ->groupBy('payment_method')
             ->get()
             ->mapWithKeys(function ($item) {
-                $methods = Payment::getPaymentMethods();
+                $label = $item->method ?: 'Não informado';
 
-                return [$methods[$item->method] ?? $item->method => $item->count];
+                return [$label => $item->count];
             })
             ->toArray();
 
@@ -283,7 +287,7 @@ class FinancialReportService extends AbstractBaseService
     {
         try {
             $query = Invoice::where('tenant_id', $tenantId)
-                ->with(['customer.commonData', 'service.category', 'payments']);
+                ->with(['customer.commonData', 'service.category']);
 
             // Aplicar filtros
             if (! empty($filters['date_from'])) {

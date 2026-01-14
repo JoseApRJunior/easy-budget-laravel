@@ -28,6 +28,7 @@ use App\Http\Controllers\DebugTenantController;
 use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\EmailPreviewController;
 use App\Http\Controllers\ErrorController;
+use App\Http\Controllers\FinancialReportController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Integrations\MercadoPagoController;
 use App\Http\Controllers\InventoryController;
@@ -337,6 +338,13 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
 
         Route::get('/budgets/{budget}/create', [InvoiceController::class, 'createFromBudget'])->name('create.from-budget');
         Route::post('/budgets/{budget}', [InvoiceController::class, 'storeFromBudget'])->name('store.from-budget');
+    });
+
+    // Financial
+    Route::prefix('financial')->name('financial.')->group(function () {
+        Route::get('/dashboard', [FinancialReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('/sales', [FinancialReportController::class, 'sales'])->name('sales');
+        Route::get('/dashboard/data', [FinancialReportController::class, 'dashboardData'])->name('dashboard.data');
     });
 
     // QR Code routes - MOVIDO PARA DENTRO DO GRUPO PROVIDER
