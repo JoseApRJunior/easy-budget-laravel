@@ -2,10 +2,11 @@
     "--text-primary: " . config('theme.colors.text', '#1e293b') . ";",
     "--text-secondary: " . config('theme.colors.secondary', '#94a3b8') . ";",
 ])>
-    <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">
-            <i class="bi bi-calendar-event me-2" style="color: {{ config('theme.colors.warning') }};"></i>Próximos Compromissos
-        </h5>
+    <div class="card-header border-1 py-3 bg-transparent d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-calendar-event me-2" style="color: {{ config('theme.colors.warning') }};"></i>
+            <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">Próximos Compromissos</h5>
+        </div>
         <span class="badge rounded-pill px-3" style="background-color: {{ config('theme.colors.warning') }}1a; color: {{ config('theme.colors.warning') }};">{{ count($events) }}</span>
     </div>
 

@@ -99,9 +99,9 @@
                     :total="$recent->count()"
                 >
                     @if ($recent->isNotEmpty())
-                        <x-slot name="desktop">
+                        <x-slot:desktop>
                             <x-resource.resource-table>
-                                <x-slot name="thead">
+                                <x-slot:thead>
                                     <x-resource.table-row>
                                         <x-resource.table-cell header>Código</x-resource.table-cell>
                                         <x-resource.table-cell header>Cliente</x-resource.table-cell>
@@ -110,7 +110,7 @@
                                         <x-resource.table-cell header>Data</x-resource.table-cell>
                                         <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
                                     </x-resource.table-row>
-                                </x-slot>
+                                </x-slot:thead>
 
                                 @foreach ($recent as $service)
                                     @php
@@ -138,9 +138,9 @@
                                     </x-resource.table-row>
                                 @endforeach
                             </x-resource.resource-table>
-                        </x-slot>
+                        </x-slot:desktop>
 
-                        <x-slot name="mobile">
+                        <x-slot:mobile>
                             @foreach ($recent as $service)
                                 @php
                                     $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
@@ -175,7 +175,7 @@
                                     </x-layout.grid-row>
                                 </x-resource.resource-mobile-item>
                             @endforeach
-                        </x-slot>
+                        </x-slot:mobile>
                     @else
                         <x-resource.empty-state
                             title="Nenhum serviço recente encontrado"

@@ -2,10 +2,11 @@
     "--text-primary: " . config('theme.colors.text', '#1e293b') . ";",
     "--text-secondary: " . config('theme.colors.secondary', '#94a3b8') . ";",
 ])>
-    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-        <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">
-            <i class="bi bi-file-earmark-text me-2" style="color: {{ config('theme.colors.success') }};"></i>Orçamentos Recentes
-        </h5>
+    <div class="card-header border-1 py-3 bg-transparent">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-file-earmark-text me-2" style="color: {{ config('theme.colors.success') }};"></i>
+            <h5 class="card-title mb-0 fw-bold" style="color: var(--text-primary);">Orçamentos Recentes</h5>
+        </div>
     </div>
     <div class="card-body">
         <ul class="list-group list-group-flush">

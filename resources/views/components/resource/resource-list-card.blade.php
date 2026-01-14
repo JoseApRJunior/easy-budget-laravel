@@ -6,6 +6,7 @@
     'padding' => 'p-0',
     'gap' => null,
     'col' => null, // Nova prop para gerenciar wrapper de grid
+    'variant' => 'primary',
 ])
 
 @if($col)
@@ -13,11 +14,11 @@
 @endif
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100']) }}>
-    <div class="card-header border-1 py-3">
+    <div class="card-header border-1 py-3 bg-transparent">
         <div class="row align-items-center g-2">
             <div class="col-12 col-md-auto ">
                 <h5 class="card-title mb-0 d-flex align-items-center">
-                    <i class="bi bi-{{ $icon }} me-2 text-primary"></i>
+                    <i class="bi bi-{{ $icon }} me-2" style="color: {{ config("theme.colors.$variant", config('theme.colors.primary')) }};"></i>
                     <span class="{{ $mobileTitle ? 'd-none d-sm-inline' : '' }} text-truncate" style="max-width: 250px;">{{ $title }}</span>
                     @if($mobileTitle)
                         <span class="d-sm-none text-truncate" style="max-width: 150px;">{{ $mobileTitle }}</span>
