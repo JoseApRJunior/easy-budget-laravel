@@ -7,13 +7,12 @@
         <x-layout.page-header
             title="Dashboard de Serviços"
             icon="tools"
+            description="Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance."
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
                 'Serviços' => '#'
             ]"
-        >
-            <p class="text-muted mb-0">Visão geral dos serviços do seu negócio com métricas e acompanhamento de performance.</p>
-        </x-layout.page-header>
+        />
 
         @php
             $total = $stats['total_services'] ?? 0;
@@ -91,14 +90,14 @@
         </x-layout.grid-row>
 
         <!-- Serviços Recentes e Atalhos -->
-        <x-layout.grid-row class="mb-0">
+        <x-layout.grid-row>
             <!-- Serviços Recentes -->
-            <x-resource.resource-list-card
-                title="Serviços Recentes"
-                icon="clock-history"
-                :total="$recent->count()"
-                col="col-lg-8"
-            >
+            <x-layout.grid-col size="col-lg-8">
+                <x-resource.resource-list-card
+                    title="Serviços Recentes"
+                    icon="clock-history"
+                    :total="$recent->count()"
+                >
                     @if ($recent->isNotEmpty())
                         <x-slot name="desktop">
                             <x-resource.resource-table>
@@ -185,6 +184,7 @@
                         />
                     @endif
                 </x-resource.resource-list-card>
+            </x-layout.grid-col>
 
             <!-- Insights e Atalhos -->
             <x-layout.grid-col size="col-lg-4">

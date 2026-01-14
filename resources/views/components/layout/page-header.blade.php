@@ -1,4 +1,9 @@
-@props(['title', 'icon' => null, 'breadcrumbItems' => []])
+@props([
+    'title',
+    'icon' => null,
+    'breadcrumbItems' => [],
+    'description' => null
+])
 
 @php
     $backRoute = null;
@@ -27,7 +32,11 @@
                     @if($icon)<i class="bi bi-{{ $icon }} me-2"></i>@endif{{ $title }}
                 </h1>
                 <div class="d-none d-md-block">
-                    {{ $slot }}
+                    @if($description)
+                        <p class="text-muted mb-0">{{ $description }}</p>
+                    @else
+                        {{ $slot }}
+                    @endif
                 </div>
             </div>
         </div>
@@ -47,6 +56,10 @@
         @endif
     </div>
     <div class="d-md-none mt-2">
-        {{ $slot }}
+        @if($description)
+            <p class="text-muted mb-0 small">{{ $description }}</p>
+        @else
+            {{ $slot }}
+        @endif
     </div>
 </div>

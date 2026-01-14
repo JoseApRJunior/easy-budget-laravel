@@ -11,7 +11,7 @@
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100']) }}>
     <div @class([
-        'card-header py-3 border-0 bg-transparent',
+        'card-header py-3 border-1 ',
         "bg-$variant text-white" => !in_array($variant, ['none', 'light', 'transparent']),
         'text-dark' => in_array($variant, ['none', 'transparent']),
     ])>
@@ -23,7 +23,7 @@
         </h5>
     </div>
 
-    <div class="card-body pt-0">
+    <div class="card-body ">
         <div class="d-grid gap-2">
             {{ $slot }}
         </div>

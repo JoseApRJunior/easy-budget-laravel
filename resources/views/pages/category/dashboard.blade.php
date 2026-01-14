@@ -8,12 +8,12 @@
     <x-layout.page-header
         title="Dashboard de Categorias"
         icon="tags"
+        description="Visão geral das suas categorias."
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
             'Categorias' => '#'
-        ]">
-        <p class="text-muted mb-0 small">Visão geral das suas categorias.</p>
-    </x-layout.page-header>
+        ]"
+    />
 
     @php
     $total = $stats['total_categories'] ?? 0;
@@ -75,82 +75,74 @@
     <!-- Conteúdo Principal -->
     <x-layout.grid-row>
         <!-- Categorias Recentes -->
-        <x-layout.grid-col lg="8">
+        <x-layout.grid-col size="col-lg-8">
             <x-resource.resource-list-card
                 title="Categorias Recentes"
                 mobileTitle="Recentes"
                 icon="clock-history"
+                :total="$recent->count()"
                 class="h-100"
             >
-                               @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
+                @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
                     <x-slot:desktop>
                         <x-resource.resource-table>
                             <x-slot:thead>
-                                <tr>
-                                    <th>Categoria</th>
-                                    <th>Tipo</th>
-                                    <th>Status</th>
-                                    <th>Criada em</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
+                                <x-resource.table-row>
+                                    <x-resource.table-cell header>Categoria</x-resource.table-cell>
+                                    <x-resource.table-cell header>Tipo</x-resource.table-cell>
+                                    <x-resource.table-cell header>Status</x-resource.table-cell>
+                                    <x-resource.table-cell header>Criada em</x-resource.table-cell>
+                                    <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                </x-resource.table-row>
                             </x-slot:thead>
-                            <x-slot:tbody>
-                                @foreach ($recent as $category)
-                                    <tr>
-                                        <td>
-                                            <x-resource.resource-info
-                                                :title="$category->name"
-                                                icon="tag"
-                                                :subtitle="$category->parent ? 'Subcategoria de ' . $category->parent->name : null"
-                                            />
-                                        </td>
-                                        <td>
-                                            <small class="text-muted">{{ $category->parent_id ? 'Subcategoria' : 'Categoria' }}</small>
-                                        </td>
-                                        <td>
-                                            <x-ui.status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
-                                        </td>
-                                        <td>
-                                            <small class="text-muted">{{ $category->created_at?->format('d/m/Y') }}</small>
-                                        </td>
-                                        <x-resource.table-actions>
-                                            <x-ui.button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" size="sm" title="Visualizar" />
-                                            <x-ui.button type="link" :href="route('provider.categories.edit', $category->slug)" variant="primary" icon="pencil-square" size="sm" title="Editar" />
-                                        </x-resource.table-actions>
-                                    </tr>
-                                @endforeach
-                            </x-slot:tbody>
+
+                            @foreach ($recent as $category)
+                                <x-resource.table-row>
+                                    <x-resource.table-cell>
+                                        <div class="fw-bold text-dark">{{ $category->name }}</div>
+                                        <div class="text-muted small">{{ $category->slug }}</div>
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell>
+                                        <span class="badge bg-light text-dark border fw-normal">
+                                            {{ $category->parent_id ? 'Subcategoria' : 'Principal' }}
+                                        </span>
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell>
+                                        <x-ui.status-badge :item="$category" statusField="active" />
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell class="text-muted small">
+                                        {{ $category->created_at->format('d/m/Y') }}
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell align="center">
+                                        <x-resource.action-buttons
+                                            :item="$category"
+                                            resource="categories"
+                                            identifier="slug"
+                                            :can-delete="false"
+                                        />
+                                    </x-resource.table-cell>
+                                </x-resource.table-row>
+                            @endforeach
                         </x-resource.resource-table>
                     </x-slot:desktop>
 
                     <x-slot:mobile>
                         @foreach ($recent as $category)
-                            <x-resource.resource-mobile-item>
-                                <x-resource.resource-info
+                            <x-resource.resource-mobile-item
+                                icon="tag"
+                                :href="route('provider.categories.index', ['search' => $category->name])"
+                            >
+                                <x-resource.resource-mobile-header
                                     :title="$category->name"
-                                    icon="tag"
+                                    :subtitle="$category->created_at->format('d/m/Y')"
                                 />
-                                <x-slot:description>
-                                    @if($category->parent)
-                                        <x-resource.resource-info
-                                            :title="'Pai: ' . $category->parent->name"
-                                            icon="arrow-return-right"
-                                            class="mt-1"
-                                        />
-                                    @endif
-                                    <div class="mt-2">
-                                        <x-ui.status-badge :item="$category" activeLabel="Ativa" inactiveLabel="Inativa" />
-                                    </div>
-                                </x-slot:description>
-                                <x-slot:footer>
-                                    <small class="text-muted">{{ $category->created_at?->format('d/m/Y') }}</small>
-                                </x-slot:footer>
-                                <x-slot:actions>
-                                    <x-resource.table-actions mobile>
-                                        <x-ui.button type="link" :href="route('provider.categories.show', $category->slug)" variant="info" icon="eye" size="sm" />
-                                        <x-ui.button type="link" :href="route('provider.categories.edit', $category->slug)" variant="primary" icon="pencil-square" size="sm" />
-                                    </x-resource.table-actions>
-                                </x-slot:actions>
+                                <x-resource.resource-mobile-field
+                                    label="Tipo"
+                                    :value="$category->parent_id ? 'Subcategoria' : 'Principal'"
+                                />
+                                <x-resource.resource-mobile-field label="Status">
+                                    <x-ui.status-badge :item="$category" statusField="active" />
+                                </x-resource.resource-mobile-field>
                             </x-resource.resource-mobile-item>
                         @endforeach
                     </x-slot:mobile>
@@ -161,48 +153,42 @@
         </x-layout.grid-col>
 
         <!-- Insights e Atalhos -->
-        <x-layout.grid-col lg="4">
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-transparent border-0 pt-3">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <x-layout.v-stack gap="3">
-                        <x-dashboard.insight-item
-                            icon="diagram-3-fill"
-                            variant="primary"
-                            description="Mantenha a estrutura hierárquica organizada para facilitar a navegação."
-                        />
-                        <x-dashboard.insight-item
-                            icon="tag-fill"
-                            variant="success"
-                            description="Use nomes descritivos para suas categorias."
-                        />
-                        <x-dashboard.insight-item
-                            icon="exclamation-triangle-fill"
-                            variant="warning"
-                            description="Revise categorias inativas que ainda podem ser úteis para o negócio."
-                        />
-                    </x-layout.v-stack>
-                </div>
-            </div>
+        <x-layout.grid-col size="col-lg-4">
+            <x-layout.v-stack gap="4">
+                <!-- Insights -->
+                <x-resource.resource-list-card
+                    title="Insights Rápidos"
+                    icon="lightbulb"
+                    padding="p-3"
+                    gap="3"
+                >
+                    <x-dashboard.insight-item
+                        icon="diagram-3-fill"
+                        variant="primary"
+                        description="Mantenha a estrutura hierárquica organizada para facilitar a navegação."
+                    />
+                    <x-dashboard.insight-item
+                        icon="tag-fill"
+                        variant="success"
+                        description="Use nomes descritivos para suas categorias."
+                    />
+                    <x-dashboard.insight-item
+                        icon="exclamation-triangle-fill"
+                        variant="warning"
+                        description="Revise categorias inativas que ainda podem ser úteis para o negócio."
+                    />
+                </x-resource.resource-list-card>
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-3">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="bi bi-link-45deg me-2"></i>Atalhos
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <x-resource.quick-actions>
-                        <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="sm" icon="plus-circle" label="Nova Categoria" />
-                        <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" outline size="sm" icon="tags" label="Listar Categorias" />
-                        <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="secondary" outline size="sm" icon="archive" label="Ver Deletadas" />
-                    </x-resource.quick-actions>
-                </div>
-            </div>
+                <!-- Atalhos -->
+                <x-resource.quick-actions
+                    title="Ações de Categoria"
+                    icon="lightning-charge"
+                >
+                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="md" icon="plus-lg" label="Nova Categoria" />
+                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" size="md" icon="tags" label="Listar Categorias" />
+                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="outline-secondary" size="md" icon="trash" label="Ver Deletadas" />
+                </x-resource.quick-actions>
+            </x-layout.v-stack>
         </x-layout.grid-col>
     </x-layout.grid-row>
 </x-layout.page-container>

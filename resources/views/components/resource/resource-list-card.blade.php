@@ -13,9 +13,9 @@
 @endif
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100']) }}>
-    <div class="card-header border-0 bg-transparent py-3">
+    <div class="card-header border-1 py-3">
         <div class="row align-items-center g-2">
-            <div class="col-12 col-md-auto">
+            <div class="col-12 col-md-auto ">
                 <h5 class="card-title mb-0 d-flex align-items-center">
                     <i class="bi bi-{{ $icon }} me-2 text-primary"></i>
                     <span class="{{ $mobileTitle ? 'd-none d-sm-inline' : '' }} text-truncate" style="max-width: 250px;">{{ $title }}</span>
