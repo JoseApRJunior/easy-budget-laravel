@@ -1,16 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Dashboard Financeiro"
             icon="currency-dollar"
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
                 'Financeiro' => '#'
-            ]">
-            <div class="d-flex align-items-center gap-3">
-                <p class="text-muted mb-0 small">Visão geral das finanças do seu negócio</p>
+            ]"
+            description="Visão geral das finanças do seu negócio com métricas de receita e faturamento."
+        >
+            <x-slot:actions>
                 <select class="form-select form-select-sm w-auto" id="periodSelect" onchange="changePeriod()">
                     @foreach ($periods as $key => $label)
                         <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>
@@ -18,174 +19,144 @@
                         </option>
                     @endforeach
                 </select>
-            </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- KPI Cards -->
-        <div class="row mb-4">
+        <x-layout.grid-row>
             <!-- Receita -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="text-muted mb-1">Receita</h6>
-                                <h4 class="mb-0">R$ {{ number_format($revenue['current'], 2, ',', '.') }}</h4>
-                                <small class="text-{{ $revenue['growth_positive'] ? 'success' : 'danger' }}">
-                                    <i class="bi bi-arrow-{{ $revenue['growth_positive'] ? 'up' : 'down' }}"></i>
-                                    {{ abs($revenue['growth']) }}% vs período anterior
-                                </small>
-                            </div>
-                            <div class="text-primary">
-                                <i class="bi bi-currency-dollar" style="font-size: 2rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Receita"
+                :value="'R$ ' . number_format($revenue['current'], 2, ',', '.')"
+                icon="currency-dollar"
+                variant="primary"
+            >
+                <x-slot:description>
+                    <small class="text-{{ $revenue['growth_positive'] ? 'success' : 'danger' }}">
+                        <i class="bi bi-arrow-{{ $revenue['growth_positive'] ? 'up' : 'down' }}"></i>
+                        {{ abs($revenue['growth']) }}% vs anterior
+                    </small>
+                </x-slot:description>
+            </x-dashboard.stat-card>
 
             <!-- Faturas Pagas -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="text-muted mb-1">Faturas Pagas</h6>
-                                <h4 class="mb-0">{{ $invoices['paid'] }}</h4>
-                                <small class="text-muted">
-                                    de {{ $invoices['total'] }} faturas ({{ $invoices['conversion_rate'] }}%)
-                                </small>
-                            </div>
-                            <div class="text-success">
-                                <i class="bi bi-check-circle" style="font-size: 2rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Faturas Pagas"
+                :value="$invoices['paid']"
+                icon="check-circle"
+                variant="success"
+                :description="'de ' . $invoices['total'] . ' faturas (' . $invoices['conversion_rate'] . '%)'"
+            />
 
             <!-- Faturas Pendentes -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="text-muted mb-1">Faturas Pendentes</h6>
-                                <h4 class="mb-0">{{ $invoices['pending'] + $invoices['overdue'] }}</h4>
-                                <small class="text-warning">
-                                    R$ {{ number_format($invoices['pending_amount'], 2, ',', '.') }} em aberto
-                                </small>
-                            </div>
-                            <div class="text-warning">
-                                <i class="bi bi-clock" style="font-size: 2rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Faturas Pendentes"
+                :value="$invoices['pending'] + $invoices['overdue']"
+                icon="clock"
+                variant="warning"
+                :description="'R$ ' . number_format($invoices['pending_amount'], 2, ',', '.') . ' em aberto'"
+            />
 
             <!-- Ticket Médio -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <h6 class="text-muted mb-1">Ticket Médio</h6>
-                                <h4 class="mb-0">R$ {{ number_format($payments['average_ticket'], 2, ',', '.') }}</h4>
-                                <small class="text-muted">Por pagamento recebido</small>
-                            </div>
-                            <div class="text-info">
-                                <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-dashboard.stat-card
+                title="Ticket Médio"
+                :value="'R$ ' . number_format($payments['average_ticket'], 2, ',', '.')"
+                icon="graph-up"
+                variant="info"
+                description="Média por pagamento recebido"
+            />
+        </x-layout.grid-row>
 
         <!-- Charts Row -->
-        <div class="row mb-4">
+        <x-layout.grid-row>
             <!-- Receita Timeline -->
-            <div class="col-lg-8 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Receita dos Últimos 30 Dias</h5>
+            <x-layout.grid-col size="col-lg-8">
+                <x-resource.resource-list-card
+                    title="Receita dos Últimos 30 Dias"
+                    icon="graph-up"
+                    padding="p-4"
+                >
+                    <div style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
                     </div>
-                    <div class="card-body">
-                        <canvas id="revenueChart" height="100"></canvas>
-                    </div>
-                </div>
-            </div>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
 
             <!-- Status das Faturas -->
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Status das Faturas</h5>
-                    </div>
-                    <div class="card-body">
+            <x-layout.grid-col size="col-lg-4">
+                <x-resource.resource-list-card
+                    title="Status das Faturas"
+                    icon="pie-chart"
+                    padding="p-4"
+                >
+                    <div style="height: 300px;">
                         <canvas id="invoiceStatusChart"></canvas>
                     </div>
-                </div>
-            </div>
-        </div>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
 
         <!-- Métodos de Pagamento e Orçamentos -->
-        <div class="row">
+        <x-layout.grid-row>
             <!-- Métodos de Pagamento -->
-            <div class="col-lg-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Métodos de Pagamento</h5>
-                    </div>
-                    <div class="card-body">
-                        @if (!empty($payments['by_method']))
+            <x-layout.grid-col size="col-lg-6">
+                <x-resource.resource-list-card
+                    title="Métodos de Pagamento"
+                    icon="credit-card"
+                    padding="p-4"
+                >
+                    @if (!empty($payments['by_method']))
+                        <x-layout.v-stack gap="3">
                             @foreach ($payments['by_method'] as $method => $data)
-                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <strong>{{ \App\Models\Payment::getPaymentMethods()[$method] ?? $method }}</strong>
-                                        <br>
+                                        <div class="fw-bold text-dark">{{ \App\Models\Payment::getPaymentMethods()[$method] ?? $method }}</div>
                                         <small class="text-muted">{{ $data['count'] }} pagamentos</small>
                                     </div>
                                     <div class="text-end">
-                                        <strong>R$ {{ number_format($data['total'], 2, ',', '.') }}</strong>
+                                        <span class="fw-bold text-success">R$ {{ number_format($data['total'], 2, ',', '.') }}</span>
                                     </div>
                                 </div>
+                                @if(!$loop->last) <hr class="my-0 opacity-5"> @endif
                             @endforeach
-                        @else
-                            <p class="text-muted text-center py-1">Nenhum pagamento no período</p>
-                        @endif
-                    </div>
-                </div>
-            </div>
+                        </x-layout.v-stack>
+                    @else
+                        <x-resource.empty-state
+                            title="Sem pagamentos"
+                            description="Nenhum pagamento registrado no período selecionado."
+                            icon="cash-stack"
+                        />
+                    @endif
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
 
             <!-- Orçamentos -->
-            <div class="col-lg-6 mb-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-white border-0">
-                        <h5 class="mb-0">Orçamentos</h5>
+            <x-layout.grid-col size="col-lg-6">
+                <x-resource.resource-list-card
+                    title="Performance de Orçamentos"
+                    icon="file-earmark-text"
+                    padding="p-4"
+                >
+                    <x-layout.grid-row class="text-center mb-4">
+                        <x-layout.grid-col size="col-6">
+                            <h3 class="fw-bold text-primary mb-1">{{ $budgets['total'] }}</h3>
+                            <p class="text-muted small text-uppercase mb-0">Total Gerado</p>
+                        </x-layout.grid-col>
+                        <x-layout.grid-col size="col-6">
+                            <h3 class="fw-bold text-success mb-1">{{ $budgets['approved'] }}</h3>
+                            <p class="text-muted small text-uppercase mb-0">Aprovados</p>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
+
+                    <div class="text-center p-3 bg-light rounded-3">
+                        <div class="display-6 fw-bold text-dark mb-1">{{ $budgets['approval_rate'] }}%</div>
+                        <p class="text-muted small text-uppercase mb-0">Taxa de Aprovação</p>
                     </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h3 class="text-primary">{{ $budgets['total'] }}</h3>
-                                <p class="text-muted mb-0">Total</p>
-                            </div>
-                            <div class="col-6">
-                                <h3 class="text-success">{{ $budgets['approved'] }}</h3>
-                                <p class="text-muted mb-0">Aprovados</p>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="text-center">
-                            <h4>{{ $budgets['approval_rate'] }}%</h4>
-                            <p class="text-muted mb-0">Taxa de Aprovação</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
+@endsection
 @endsection
 
 @push('scripts')

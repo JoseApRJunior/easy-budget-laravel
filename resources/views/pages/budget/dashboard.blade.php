@@ -11,9 +11,8 @@
                 'Dashboard' => route('provider.dashboard'),
                 'Orçamentos' => '#'
             ]"
-        >
-            <p class="text-muted mb-0 small">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
-        </x-layout.page-header>
+            description="Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance."
+        />
 
         @php
             $total = $stats['total_budgets'] ?? 0;
@@ -109,9 +108,9 @@
                     :total="$recent->count()"
                 >
                     @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                        <x-slot name="desktop">
+                        <x-slot:desktop>
                             <x-resource.resource-table>
-                                <x-slot name="thead">
+                                <x-slot:thead>
                                     <x-resource.table-row>
                                         <x-resource.table-cell header>Código</x-resource.table-cell>
                                         <x-resource.table-cell header>Cliente</x-resource.table-cell>
@@ -120,7 +119,7 @@
                                         <x-resource.table-cell header>Data</x-resource.table-cell>
                                         <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
                                     </x-resource.table-row>
-                                </x-slot>
+                                </x-slot:thead>
 
                                 @foreach ($recent as $budget)
                                     @php
@@ -153,9 +152,9 @@
                                     </x-resource.table-row>
                                 @endforeach
                             </x-resource.resource-table>
-                        </x-slot>
+                        </x-slot:desktop>
 
-                        <x-slot name="mobile">
+                        <x-slot:mobile>
                             @foreach ($recent as $budget)
                                 @php
                                     $customer = $budget->customer ?? null;
@@ -192,7 +191,7 @@
                                     </x-layout.grid-row>
                                 </x-resource.resource-mobile-item>
                             @endforeach
-                        </x-slot>
+                        </x-slot:mobile>
                     @else
                         <x-resource.empty-state
                             title="Nenhum orçamento recente"
@@ -235,9 +234,11 @@
                         title="Ações de Orçamento"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" href="{{ route('provider.budgets.create') }}" variant="success" size="md" icon="plus-lg" label="Novo Orçamento" />
-                        <x-ui.button type="link" href="{{ route('provider.budgets.index') }}" variant="outline-primary" size="md" icon="file-earmark-text" label="Listar Orçamentos" />
-                        <x-ui.button type="link" href="{{ route('provider.budgets.index', ['deleted' => 'only']) }}" variant="outline-secondary" size="md" icon="trash" label="Ver Deletados" />
+                        <x-ui.button type="link" :href="route('provider.budgets.create')" variant="outline-success" icon="plus-lg" label="Novo Orçamento" />
+                        <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" icon="person-plus" label="Novo Cliente" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-primary" icon="file-earmark-text" label="Listar Orçamentos" />
+                        <x-ui.button type="link" :href="route('provider.customers.index')" variant="outline-primary" icon="people" label="Listar Clientes" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index', ['deleted' => 'only']) }}" variant="outline-secondary" icon="trash" label="Ver Deletados" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

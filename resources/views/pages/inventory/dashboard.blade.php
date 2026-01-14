@@ -3,479 +3,285 @@
 @section('title', 'Dashboard de Inventário')
 
 @section('content')
-<div class="container-fluid py-4">
-    <!-- Cabeçalho -->
+<x-layout.page-container>
     <x-layout.page-header
         title="Dashboard de Inventário"
         icon="archive"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
             'Inventário' => '#'
-        ]">
-        <p class="text-muted mb-0">Visão geral do seu estoque e movimentações com atalhos de gestão.</p>
-    </x-layout.page-header>
+        ]"
+        description="Visão geral do seu estoque, movimentações e alertas de reposição."
+    />
 
     <!-- Cards de Métricas -->
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-md-4 col-xl">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-primary bg-gradient me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Produtos</h6>
-                    </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($totalProducts, 0, false) }}</h5>
-                    <div class="mt-2">
-                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="link" size="sm" label="Ver todos" icon="chevron-right" icon-right class="p-0 text-decoration-none" />
-                    </div>
-                </div>
-            </div>
-        </div>
+    <x-layout.grid-row>
+        <x-dashboard.stat-card
+            title="Valor Total em Estoque"
+            :value="\App\Helpers\CurrencyHelper::format($totalInventoryValue)"
+            description="Soma do valor de custo de todos os itens."
+            icon="currency-dollar"
+            variant="success"
+        />
 
-        <div class="col-12 col-sm-6 col-md-4 col-xl">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-check-circle text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
-                    </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($sufficientStockProducts, 0, false) }}</h5>
-                    <div class="mt-2">
-                        <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'sufficient'])" variant="link" size="sm" label="Ver produtos" icon="chevron-right" icon-right class="text-success p-0 text-decoration-none" />
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Total de Produtos"
+            :value="$totalProducts"
+            description="Itens cadastrados no inventário."
+            icon="box"
+            variant="primary"
+        />
 
-        <div class="col-12 col-sm-6 col-md-4 col-xl">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-warning bg-gradient me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
-                    </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($lowStockProducts, 0, false) }}</h5>
-                    <div class="mt-2">
-                        <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-warning small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Itens com Estoque Baixo"
+            :value="$lowStockProducts"
+            description="Produtos abaixo da quantidade mínima."
+            icon="exclamation-triangle"
+            variant="warning"
+        />
 
-        <div class="col-12 col-sm-6 col-md-4 col-xl">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-danger bg-gradient me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-x-circle text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
-                    </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($outOfStockProducts, 0, false) }}</h5>
-                    <div class="mt-2">
-                        <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-danger small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Itens Sem Estoque"
+            :value="$outOfStockProducts"
+            description="Produtos com quantidade zerada."
+            icon="x-circle"
+            variant="danger"
+        />
+    </x-layout.grid-row>
 
-        <div class="col-12 col-sm-6 col-md-4 col-xl">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="avatar-circle bg-info bg-gradient me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-bookmark-check text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Reservados</h6>
-                    </div>
-                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($reservedItemsCount, 0, false) }}</h5>
-                    <div class="mt-1 text-muted small">Total: {{ \App\Helpers\CurrencyHelper::format($totalReservedQuantity, 0, false) }} un.</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Conteúdo Principal -->
+    <x-layout.grid-row>
+        <!-- Tabelas de Alerta (8 colunas) -->
+        <x-layout.grid-col size="col-lg-8">
+            <x-layout.v-stack gap="4">
+                <!-- Estoque Baixo -->
+                <x-resource.resource-list-card
+                    title="Alertas de Estoque Baixo"
+                    icon="exclamation-triangle"
+                    :total="count($lowStockItems)"
+                >
+                    @if(count($lowStockItems) > 0)
+                        <x-slot:desktop>
+                            <x-resource.resource-table>
+                                <x-slot:thead>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Produto</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Qtd Atual</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Qtd Mín</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                    </x-resource.table-row>
+                                </x-slot:thead>
 
-    <div class="row g-3 mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
-                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total em Estoque</h6>
-                            <h3 class="mb-0 fw-bold text-success">{{ \App\Helpers\CurrencyHelper::format($totalInventoryValue) }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                                @foreach($lowStockItems as $item)
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell>
+                                            <div class="fw-bold text-dark">{{ $item->product->name }}</div>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <small class="text-muted small">{{ $item->product->sku }}</small>
+                                                <span class="text-muted small">• {{ $item->product->category->name ?? 'Geral' }}</span>
+                                            </div>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            <span class="fw-bold text-danger">{{ number_format($item->available_quantity, 0, ',', '.') }}</span>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            <span class="text-muted small">{{ number_format($item->min_quantity, 0, ',', '.') }}</span>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="outline-success" icon="plus" size="sm" title="Entrada" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" title="Ajustar" />
+                                            </div>
+                                        </x-resource.table-cell>
+                                    </x-resource.table-row>
+                                @endforeach
+                            </x-resource.resource-table>
+                        </x-slot:desktop>
 
-    <!-- Ações Rápidas -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header pt-3 bg-transparent border-0">
-                    <h6 class="mb-0 fw-bold text-body d-flex align-items-center">
-                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-lightning-charge text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        Ações Rápidas
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2">
-                        <x-ui.button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" size="sm" />
-                        <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" size="sm" />
-                        <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" size="sm" />
-                        <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" size="sm" />
-                        <x-ui.button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" size="sm" />
-                        <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" size="sm" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                        <x-slot:mobile>
+                            @foreach($lowStockItems as $item)
+                                <x-resource.resource-mobile-item
+                                    icon="exclamation-triangle"
+                                    :href="route('provider.inventory.index', ['search' => $item->product->sku])"
+                                >
+                                    <x-resource.resource-mobile-header
+                                        :title="$item->product->name"
+                                        :subtitle="$item->product->sku"
+                                    />
+                                    <x-resource.resource-mobile-field
+                                        label="Qtd Atual"
+                                        :value="number_format($item->available_quantity, 0, ',', '.') . ' un'"
+                                        class="text-danger fw-bold"
+                                    />
+                                    <x-resource.resource-mobile-field
+                                        label="Qtd Mínima"
+                                        :value="number_format($item->min_quantity, 0, ',', '.') . ' un'"
+                                    />
+                                </x-resource.resource-mobile-item>
+                            @endforeach
+                        </x-slot:mobile>
+                    @else
+                        <x-resource.empty-state
+                            title="Tudo em dia!"
+                            description="Nenhum item com estoque abaixo do mínimo."
+                            icon="check-circle"
+                        />
+                    @endif
+                </x-resource.resource-list-card>
 
-    <!-- Tabelas de Alerta -->
-    <div class="row g-4 mb-5">
-        <!-- Estoque Baixo -->
-        <div class="col-12 col-xl-6">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold d-flex align-items-center">
-                        <div class="avatar-circle bg-warning bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        Estoque Baixo
-                    </h5>
-                    <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'low'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
-                </div>
-                <div class="card-body p-0">
-                    <!-- Desktop View -->
-                    <div class="desktop-view d-none d-md-block">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th class="text-center">Qtd</th>
-                                        <th class="text-center">Mín</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($lowStockItems as $item)
-                                        <tr>
-                                            <td>
-                                                <div class="item-name-cell">
-                                                    <div class="fw-bold text-dark">{{ $item->product->name }}</div>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <small class="text-muted text-code">{{ $item->product->sku }}</small>
-                                                        <span class="text-muted" style="font-size: 0.75rem;">• {{ $item->product->category->name ?? 'Geral' }}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="fw-bold text-danger">{{ \App\Helpers\CurrencyHelper::format($item->available_quantity, 0, false) }}</div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
-                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted small">
-                                                <div class="avatar-circle bg-success bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
-                                                    <i class="bi bi-check-circle text-white" style="font-size: 1.1rem;"></i>
-                                                </div>
-                                                Nenhum item com estoque baixo.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                <!-- Últimas Movimentações -->
+                <x-resource.resource-list-card
+                    title="Últimas Movimentações"
+                    icon="clock-history"
+                    :total="count($recentMovements)"
+                >
+                    @if(count($recentMovements) > 0)
+                        <x-slot:desktop>
+                            <x-resource.resource-table>
+                                <x-slot:thead>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Data</x-resource.table-cell>
+                                        <x-resource.table-cell header>Produto</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Tipo</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Qtd</x-resource.table-cell>
+                                        <x-resource.table-cell header>Usuário</x-resource.table-cell>
+                                    </x-resource.table-row>
+                                </x-slot:thead>
 
-                    <!-- Mobile View -->
-                    <div class="mobile-view d-md-none">
-                        <div class="list-group list-group-flush">
-                            @forelse($lowStockItems as $item)
-                                <div class="list-group-item py-3 bg-transparent">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <div class="fw-bold text-dark small">{{ $item->product->name }}</div>
-                                            <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $item->product->sku }}</small>
-                                        </div>
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ \App\Helpers\CurrencyHelper::format($item->available_quantity, 0, false) }} un</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Mín: {{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</small>
-                                        <div class="d-flex gap-1">
-                                            <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" />
-                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="p-4 text-center text-muted small">
-                                    <div class="avatar-circle bg-success bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-check-circle text-white" style="font-size: 1.1rem;"></i>
-                                    </div>
-                                    Nenhum item com estoque baixo.
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                @foreach($recentMovements as $movement)
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell class="text-muted small">
+                                            {{ $movement->created_at->format('d/m/Y H:i') }}
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <div class="fw-bold text-dark">{{ $movement->product->name }}</div>
+                                            <small class="text-muted small">{{ $movement->product->sku }}</small>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            @php
+                                                $typeLabel = match($movement->type) {
+                                                    'entry' => 'Entrada',
+                                                    'exit' => 'Saída',
+                                                    'adjustment' => 'Ajuste',
+                                                    'reservation' => 'Reserva',
+                                                    'cancellation' => 'Cancelamento',
+                                                    default => $movement->type
+                                                };
+                                                $typeVariant = match($movement->type) {
+                                                    'entry' => 'success',
+                                                    'exit' => 'danger',
+                                                    'adjustment' => 'primary',
+                                                    'reservation' => 'info',
+                                                    'cancellation' => 'secondary',
+                                                    default => 'secondary'
+                                                };
+                                            @endphp
+                                            <span class="badge bg-{{ $typeVariant }}-subtle text-{{ $typeVariant }} border-0 px-3">
+                                                {{ $typeLabel }}
+                                            </span>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center" class="fw-bold">
+                                            {{ number_format($movement->quantity, 0, ',', '.') }}
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="text-muted small">
+                                            {{ explode(' ', $movement->user->name ?? 'Sistema')[0] }}
+                                        </x-resource.table-cell>
+                                    </x-resource.table-row>
+                                @endforeach
+                            </x-resource.resource-table>
+                        </x-slot:desktop>
 
-        <!-- Estoque Alto -->
-        <div class="col-12 col-xl-6">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold d-flex align-items-center">
-                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
-                            <i class="bi bi-arrow-up-circle text-white" style="font-size: 0.9rem;"></i>
-                        </div>
-                        Estoque Alto
-                    </h5>
-                    <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'high'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
-                </div>
-                <div class="card-body p-0">
-                    <!-- Desktop View -->
-                    <div class="desktop-view d-none d-md-block">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Produto</th>
-                                        <th class="text-center">Qtd</th>
-                                        <th class="text-center">Máx</th>
-                                        <th class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($highStockItems as $item)
-                                        <tr>
-                                            <td>
-                                                <div class="item-name-cell">
-                                                    <div class="fw-bold text-dark">{{ $item->product->name }}</div>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <small class="text-muted text-code">{{ $item->product->sku }}</small>
-                                                        <span class="text-muted" style="font-size: 0.75rem;">• {{ $item->product->category->name ?? 'Geral' }}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <x-ui.button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
-                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted small">
-                                                <div class="avatar-circle bg-info bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
-                                                    <i class="bi bi-info-circle text-white" style="font-size: 1.1rem;"></i>
-                                                </div>
-                                                Nenhum item com estoque alto.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Mobile View -->
-                    <div class="mobile-view d-md-none">
-                        <div class="list-group list-group-flush">
-                            @forelse($highStockItems as $item)
-                                <div class="list-group-item py-3 bg-transparent">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <div class="fw-bold text-dark small">{{ $item->product->name }}</div>
-                                            <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $item->product->sku }}</small>
-                                        </div>
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }} un</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">Máx: {{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</small>
-                                        <div class="d-flex gap-1">
-                                            <x-ui.button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" />
-                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="p-4 text-center text-muted small">
-                                    <div class="avatar-circle bg-info bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-info-circle text-white" style="font-size: 1.1rem;"></i>
-                                    </div>
-                                    Nenhum item com estoque alto.
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Últimas Movimentações -->
-    <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-clock-history me-2"></i>Últimas Movimentações
-                    </h5>
-                    <a href="{{ route('provider.inventory.movements') }}" class="btn btn-sm btn-link p-0 text-decoration-none text-primary">Ver histórico completo</a>
-                </div>
-                <div class="card-body p-0">
-                    <!-- Desktop View -->
-                    <div class="desktop-view d-none d-md-block">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Produto</th>
-                                        <th class="text-center">Tipo</th>
-                                        <th class="text-center">Qtd</th>
-                                        <th>Usuário</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($recentMovements as $movement)
-                                        <tr>
-                                            <td class="small text-muted">
-                                                {{ $movement->created_at->format('d/m/Y H:i') }}
-                                            </td>
-                                            <td>
-                                                <div class="item-name-cell">
-                                                    <div class="fw-bold text-dark">{{ $movement->product->name }}</div>
-                                                    <small class="text-muted text-code">{{ $movement->product->sku }}</small>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                @php
-                                                    $statusClass = match($movement->type) {
-                                                        'entry' => 'badge-active',
-                                                        'exit' => 'badge-deleted',
-                                                        'adjustment' => 'badge-personal',
-                                                        'reservation' => 'badge-system',
-                                                        'cancellation' => 'badge-inactive',
-                                                        default => 'badge-system'
-                                                    };
-                                                    $statusLabel = match($movement->type) {
-                                                        'entry' => 'Entrada',
-                                                        'exit' => 'Saída',
-                                                        'adjustment' => 'Ajuste',
-                                                        'reservation' => 'Reserva',
-                                                        'cancellation' => 'Cancelamento',
-                                                        default => $movement->type
-                                                    };
-                                                @endphp
-                                                <span class="modern-badge {{ $statusClass }}">
-                                                    {{ $statusLabel }}
-                                                </span>
-                                            </td>
-                                            <td class="text-center fw-bold small text-body">
-                                                {{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
-                                            </td>
-                                            <td class="small text-muted">
-                                                {{ $movement->user->name ?? 'Sistema' }}
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted small">
-                                                Nenhuma movimentação recente.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Mobile View -->
-                    <div class="mobile-view d-md-none">
-                        <div class="list-group list-group-flush">
-                            @forelse($recentMovements as $movement)
-                                <div class="list-group-item py-3 bg-transparent">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <div class="fw-bold text-dark small">{{ $movement->product->name }}</div>
-                                            <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $movement->product->sku }}</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-dark small">{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }} un</div>
-                                            <small class="text-muted" style="font-size: 0.65rem;">{{ $movement->created_at->format('d/m/y H:i') }}</small>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        @php
-                                            $statusClass = match($movement->type) {
-                                                'entry' => 'badge-active',
-                                                'exit' => 'badge-deleted',
-                                                'adjustment' => 'badge-personal',
-                                                'reservation' => 'badge-system',
-                                                'cancellation' => 'badge-inactive',
-                                                default => 'badge-system'
-                                            };
-                                            $statusLabel = match($movement->type) {
-                                                'entry' => 'Entrada',
-                                                'exit' => 'Saída',
-                                                'adjustment' => 'Ajuste',
-                                                'reservation' => 'Reserva',
-                                                'cancellation' => 'Cancelamento',
-                                                default => $movement->type
-                                            };
-                                        @endphp
-                                        <span class="modern-badge {{ $statusClass }}">
-                                            {{ $statusLabel }}
+                        <x-slot:mobile>
+                            @foreach($recentMovements as $movement)
+                                <x-resource.resource-mobile-item
+                                    icon="clock-history"
+                                >
+                                    <x-resource.resource-mobile-header
+                                        :title="$movement->product->name"
+                                        :subtitle="$movement->created_at->format('d/m/Y H:i')"
+                                    />
+                                    <x-resource.resource-mobile-field
+                                        label="Quantidade"
+                                        :value="number_format($movement->quantity, 0, ',', '.') . ' un'"
+                                        class="fw-bold"
+                                    />
+                                    <x-resource.resource-mobile-field
+                                        label="Tipo"
+                                    >
+                                        <span class="badge bg-{{ $typeVariant ?? 'secondary' }}-subtle text-{{ $typeVariant ?? 'secondary' }} border-0">
+                                            {{ $typeLabel ?? $movement->type }}
                                         </span>
-                                        <small class="text-muted" style="font-size: 0.7rem;">
-                                            <i class="bi bi-person me-1"></i>{{ explode(' ', $movement->user->name ?? 'Sistema')[0] }}
-                                        </small>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="p-4 text-center text-muted small">
-                                    Nenhuma movimentação recente.
-                                </div>
-                            @endforelse
-                        </div>
+                                    </x-resource.resource-mobile-field>
+                                </x-resource.resource-mobile-item>
+                            @endforeach
+                        </x-slot:mobile>
+                    @else
+                        <x-resource.empty-state
+                            title="Nenhuma movimentação"
+                            description="As movimentações de estoque aparecerão aqui conforme forem realizadas."
+                            icon="clock-history"
+                        />
+                    @endif
+                </x-resource.resource-list-card>
+            </x-layout.v-stack>
+        </x-layout.grid-col>
+
+        <!-- Sidebar (4 colunas) -->
+        <x-layout.grid-col size="col-lg-4">
+            <x-layout.v-stack gap="4">
+                <!-- Insights -->
+                <x-resource.resource-list-card
+                    title="Insights de Estoque"
+                    icon="lightbulb"
+                    padding="p-3"
+                    gap="3"
+                >
+                    <x-dashboard.insight-item
+                        icon="graph-up"
+                        variant="success"
+                        description="Produtos com alto giro de estoque devem ter prioridade na reposição."
+                    />
+                    <x-dashboard.insight-item
+                        icon="shield-check"
+                        variant="primary"
+                        description="Mantenha o estoque mínimo atualizado para evitar rupturas de venda."
+                    />
+                    <x-dashboard.insight-item
+                        icon="calendar-event"
+                        variant="info"
+                        description="Realize inventários periódicos para garantir a acuracidade dos dados."
+                    />
+                </x-resource.resource-list-card>
+
+                <!-- Atalhos -->
+                <x-resource.quick-actions
+                    title="Ações de Estoque"
+                    icon="lightning-charge"
+                >
+                    <x-ui.button type="link" :href="route('provider.inventory.index')" variant="outline-primary" icon="list" label="Ver Inventário" />
+                    <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="outline-primary" icon="arrow-left-right" label="Movimentações" />
+                    <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="outline-primary" icon="graph-up" label="Giro de Estoque" />
+                    <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="outline-primary" icon="star" label="Mais Usados" />
+                    <x-ui.button type="link" :href="route('provider.inventory.report')" variant="outline-secondary" icon="file-earmark-text" label="Relatórios" />
+                </x-resource.quick-actions>
+
+                <!-- Reservados -->
+                <x-resource.resource-list-card
+                    title="Itens Reservados"
+                    icon="bookmark-check"
+                    padding="p-3"
+                >
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Produtos com reserva:</span>
+                        <span class="fw-bold">{{ $reservedItemsCount }}</span>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">Quantidade total:</span>
+                        <span class="fw-bold">{{ number_format($totalReservedQuantity, 0, ',', '.') }} un.</span>
+                    </div>
+                </x-resource.resource-list-card>
+            </x-layout.v-stack>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
+</x-layout.page-container>
 @endsection

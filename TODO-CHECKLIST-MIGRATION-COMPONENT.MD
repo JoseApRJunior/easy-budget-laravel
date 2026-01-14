@@ -4,16 +4,16 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 
 ## 📊 Dashboards (Provider)
 - [x] **Dashboard de Serviços** (`pages.service.dashboard`) - *Totalmente aprovado e revisado*
-- [x] **Dashboard de Orçamentos** (`pages.budget.dashboard`) - *Revisado*
-- [ ] **Dashboard Principal** (`provider.dashboard` / `home.dashboard.index`)
-- [ ] **Dashboard de Clientes** (`pages.customer.dashboard`)
-- [ ] **Dashboard de Produtos** (`pages.product.dashboard`)
-- [ ] **Dashboard de Estoque** (`pages.inventory.dashboard`)
-- [ ] **Dashboard Financeiro** (`pages.financial.dashboard`)
-- [ ] **Dashboard de Faturas** (`pages.invoice.dashboard`)
-- [ ] **Dashboard de Agenda** (`pages.schedule.dashboard`)
-- [ ] **Dashboard de Categorias** (`pages.category.dashboard`)
-- [ ] **Dashboard de Relatórios** (`pages.report.dashboard`)
+- [x] **Dashboard de Orçamentos** (`pages.budget.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard Principal** (`provider.dashboard` / `home.dashboard.index`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Clientes** (`pages.customer.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Produtos** (`pages.product.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Estoque** (`pages.inventory.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard Financeiro** (`pages.financial.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Faturas** (`pages.invoice.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Agenda** (`pages.schedule.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Categorias** (`pages.category.dashboard`) - *Totalmente aprovado e revisado*
+- [x] **Dashboard de Relatórios** (`pages.report.dashboard`) - *Totalmente aprovado e revisado*
 
 ## 📝 Módulos Principais (CRUDs)
 ### 📄 Orçamentos (Budgets)
