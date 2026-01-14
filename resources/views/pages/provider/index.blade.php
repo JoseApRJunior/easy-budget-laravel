@@ -111,68 +111,30 @@
             </x-layout.grid-col>
         </x-layout.grid-row>
 
-        {{-- Linha 2: Ações Rápidas --}}
-        <x-layout.grid-row class="mt-2">
-            <x-layout.grid-col>
-                <x-resource.resource-list-card
-                    title="Ações Rápidas"
-                    icon="lightning-charge"
-                    padding="p-4"
-                >
-                    <x-layout.grid-row>
-                        <x-layout.grid-col size="col-6 col-md-2">
-                            <x-ui.button type="link" :href="route('provider.budgets.create')" variant="outline-primary" class="w-100 py-3 h-100 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="bi bi-file-earmark-plus fs-4"></i>
-                                <span class="small fw-bold">Novo Orçamento</span>
-                            </x-ui.button>
-                        </x-layout.grid-col>
-
-                        <x-layout.grid-col size="col-6 col-md-2">
-                            <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" class="w-100 py-3 h-100 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="bi bi-person-plus fs-4"></i>
-                                <span class="small fw-bold">Novo Cliente</span>
-                            </x-ui.button>
-                        </x-layout.grid-col>
-
-                        <x-layout.grid-col size="col-6 col-md-2">
-                            <x-ui.button type="link" :href="route('provider.services.index')" variant="outline-info" class="w-100 py-3 h-100 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="bi bi-tools fs-4"></i>
-                                <span class="small fw-bold">Serviços</span>
-                            </x-ui.button>
-                        </x-layout.grid-col>
-
-                        <x-layout.grid-col size="col-6 col-md-2">
-                            <x-ui.button type="link" :href="route('provider.invoices.create')" variant="outline-warning" class="w-100 py-3 h-100 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="bi bi-receipt fs-4"></i>
-                                <span class="small fw-bold">Nova Fatura</span>
-                            </x-ui.button>
-                        </x-layout.grid-col>
-
-                        <x-layout.grid-col size="col-6 col-md-2">
-                            <x-ui.button type="link" :href="route('provider.inventory.index')" variant="outline-secondary" class="w-100 py-3 h-100 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="bi bi-box-seam fs-4"></i>
-                                <span class="small fw-bold">Estoque</span>
-                            </x-ui.button>
-                        </x-layout.grid-col>
-
-                        <x-layout.grid-col size="col-6 col-md-2">
-                            <x-ui.button type="link" :href="route('provider.qrcode.index')" variant="outline-dark" class="w-100 py-3 h-100 d-flex flex-column align-items-center justify-content-center gap-2">
-                                <i class="bi bi-qr-code-scan fs-4"></i>
-                                <span class="small fw-bold">QR Code</span>
-                            </x-ui.button>
-                        </x-layout.grid-col>
-                    </x-layout.grid-row>
-                </x-resource.resource-list-card>
-            </x-layout.grid-col>
-        </x-layout.grid-row>
-
-        {{-- Linha 3: Orçamentos + Compromissos --}}
+        {{-- Linha 3: Orçamentos + Sidebar --}}
         <x-layout.grid-row class="mt-2">
             <x-layout.grid-col size="col-12 col-lg-8">
                 <x-dashboard.recent-budgets :budgets="$budgets" />
             </x-layout.grid-col>
+
             <x-layout.grid-col size="col-12 col-lg-4">
-                <x-dashboard.upcoming-events :events="$events ?? []" />
+                <x-layout.v-stack gap="4">
+                    {{-- Ações Rápidas --}}
+                    <x-resource.quick-actions
+                        title="Ações Rápidas"
+                        icon="lightning-charge"
+                    >
+                        <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" icon="person-plus" label="Novo Cliente" />
+                        <x-ui.button type="link" :href="route('provider.budgets.create')" variant="outline-success" icon="plus-lg" label="Novo Orçamento" />
+                        <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-success" icon="plus-lg" label="Novo Serviço" />
+                        <x-ui.button type="link" :href="route('provider.services.index')" variant="outline-primary" icon="tools" label="Listar Serviços" />
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="outline-primary" icon="box-seam" label="Listar Estoque" />
+                        <x-ui.button type="link" :href="route('provider.qrcode.index')" variant="outline-secondary" icon="qr-code-scan" label="QR Code" />
+                    </x-resource.quick-actions>
+
+                    {{-- Próximos Compromissos --}}
+                    <x-dashboard.upcoming-events :events="$events ?? []" />
+                </x-layout.v-stack>
             </x-layout.grid-col>
         </x-layout.grid-row>
 

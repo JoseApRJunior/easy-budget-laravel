@@ -218,8 +218,8 @@
                         title="Ações de Serviço"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="md" icon="plus-lg" label="Cadastrar Novo Serviço" />
-                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="outline-primary" size="md" icon="search" label="Consultar Serviços" />
+                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="md" icon="plus-lg" label="Novo Serviço" />
+                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="outline-primary" size="md" icon="tools" label="Listar Serviços" />
                         <x-ui.button type="link" href="{{ route('provider.reports.services') }}" variant="outline-secondary" size="md" icon="file-earmark-bar-graph" label="Relatórios de Performance" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>

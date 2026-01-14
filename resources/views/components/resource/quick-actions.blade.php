@@ -11,15 +11,10 @@
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100']) }}>
     <div @class([
-        'card-header py-3 border-1',
-        "bg-$variant text-white" => !in_array($variant, ['none', 'light', 'transparent']),
-        'text-dark' => in_array($variant, ['none', 'transparent']),
+        'card-header py-3 border-1 bg-transparent',
     ])>
-        <h5 class="card-title mb-0 d-flex align-items-center">
-            <i @class([
-                "bi bi-$icon me-2",
-                'text-primary' => in_array($variant, ['none', 'transparent'])
-            ])></i>{{ $title }}
+        <h5 class="card-title mb-0 d-flex align-items-center text-dark">
+            <i class="bi bi-{{ $icon }} me-2 text-primary"></i>{{ $title }}
         </h5>
     </div>
 

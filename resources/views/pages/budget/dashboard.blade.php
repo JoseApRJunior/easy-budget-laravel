@@ -235,9 +235,9 @@
                         title="Ações de Orçamento"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" href="{{ route('provider.budgets.create') }}" variant="success" size="md" icon="plus-lg" label="Criar Novo Orçamento" />
-                        <x-ui.button type="link" href="{{ route('provider.budgets.index') }}" variant="outline-primary" size="md" icon="search" label="Consultar Orçamentos" />
-                        <x-ui.button type="link" href="{{ route('provider.budgets.index', ['deleted' => 'only']) }}" variant="outline-secondary" size="md" icon="trash" label="Lixeira de Orçamentos" />
+                        <x-ui.button type="link" href="{{ route('provider.budgets.create') }}" variant="success" size="md" icon="plus-lg" label="Novo Orçamento" />
+                        <x-ui.button type="link" href="{{ route('provider.budgets.index') }}" variant="outline-primary" size="md" icon="file-earmark-text" label="Listar Orçamentos" />
+                        <x-ui.button type="link" href="{{ route('provider.budgets.index', ['deleted' => 'only']) }}" variant="outline-secondary" size="md" icon="trash" label="Ver Deletados" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>
