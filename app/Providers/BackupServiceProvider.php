@@ -9,14 +9,13 @@ class BackupServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton( BackupHelper::class, function ( $app ) {
-            return new BackupHelper();
-        } );
+        $this->app->singleton(BackupHelper::class, function ($app) {
+            return new BackupHelper;
+        });
     }
 
     public function boot(): void
     {
         //
     }
-
 }

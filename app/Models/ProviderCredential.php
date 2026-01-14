@@ -48,10 +48,10 @@ class ProviderCredential extends Model
      */
     protected $casts = [
         'provider_id' => 'integer',
-        'tenant_id'   => 'integer',
-        'expires_in'  => 'integer',
-        'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'datetime',
+        'tenant_id' => 'integer',
+        'expires_in' => 'integer',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -60,14 +60,14 @@ class ProviderCredential extends Model
     public static function businessRules(): array
     {
         return [
-            'provider_id'             => 'required|exists:providers,id',
-            'tenant_id'               => 'required|exists:tenants,id',
-            'payment_gateway'         => 'required|string|max:50|in:mercadopago,pagseguro,stripe',
-            'user_id_gateway'         => 'required|string|max:50',
-            'access_token_encrypted'  => 'required|string',
+            'provider_id' => 'required|exists:providers,id',
+            'tenant_id' => 'required|exists:tenants,id',
+            'payment_gateway' => 'required|string|max:50|in:mercadopago,pagseguro,stripe',
+            'user_id_gateway' => 'required|string|max:50',
+            'access_token_encrypted' => 'required|string',
             'refresh_token_encrypted' => 'required|string',
-            'public_key'              => 'required|string|max:50',
-            'expires_in'              => 'nullable|integer',
+            'public_key' => 'required|string|max:50',
+            'expires_in' => 'nullable|integer',
         ];
     }
 
@@ -76,7 +76,7 @@ class ProviderCredential extends Model
      */
     public function provider(): BelongsTo
     {
-        return $this->belongsTo( Provider::class);
+        return $this->belongsTo(Provider::class);
     }
 
     /**
@@ -84,7 +84,6 @@ class ProviderCredential extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
-
 }

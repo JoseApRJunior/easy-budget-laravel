@@ -9,11 +9,8 @@ use App\Enums\AlertTypeEnum;
 use App\Models\AlertSetting;
 use App\Models\MonitoringAlertsHistory;
 use App\Models\Tenant;
-use App\Models\User;
-use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AlertService
@@ -47,7 +44,7 @@ class AlertService
             // Avaliar cada configuração de alerta
             foreach ($alertSettings as $setting) {
                 $alert = $this->checkThreshold($setting, $metricValue, $additionalData);
-                
+
                 if ($alert) {
                     return $alert;
                 }
@@ -60,9 +57,9 @@ class AlertService
                 'type' => $type->value,
                 'metric_name' => $metricName,
                 'metric_value' => $metricValue,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return null;
         }
     }
@@ -110,7 +107,7 @@ class AlertService
                     break;
             }
 
-            if (!$shouldAlert) {
+            if (! $shouldAlert) {
                 return null;
             }
 
@@ -130,7 +127,7 @@ class AlertService
             ]);
 
             // Enviar notificação se configurado
-            if ($setting->shouldNotify() && !$alert->notification_sent) {
+            if ($setting->shouldNotify() && ! $alert->notification_sent) {
                 $this->sendNotification($alert, $setting);
             }
 
@@ -141,7 +138,7 @@ class AlertService
                 'severity' => $setting->severity,
                 'metric' => $setting->metric_name,
                 'value' => $metricValue,
-                'threshold' => $threshold
+                'threshold' => $threshold,
             ]);
 
             return $alert;
@@ -150,9 +147,9 @@ class AlertService
             Log::error('Erro ao verificar limiar de alerta', [
                 'setting_id' => $setting->id,
                 'metric_value' => $metricValue,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            
+
             return null;
         }
     }
@@ -164,17 +161,17 @@ class AlertService
     {
         try {
             $channels = $setting->notification_channels ?? ['email'];
-            
+
             foreach ($channels as $channel) {
                 switch ($channel) {
                     case 'email':
                         $this->sendEmailNotification($alert, $setting);
                         break;
-                    
+
                     case 'slack':
                         $this->sendSlackNotification($alert, $setting);
                         break;
-                    
+
                     case 'sms':
                         // Implementar SMS se necessário
                         break;
@@ -187,7 +184,7 @@ class AlertService
             Log::error('Erro ao enviar notificação de alerta', [
                 'alert_id' => $alert->id,
                 'channels' => $channels,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -198,7 +195,7 @@ class AlertService
     private function sendEmailNotification(MonitoringAlertsHistory $alert, AlertSetting $setting): void
     {
         $emails = $setting->notification_emails ?? [];
-        
+
         if (empty($emails)) {
             // Buscar emails dos administradores do tenant
             $tenant = Tenant::find($alert->tenant_id);
@@ -212,7 +209,7 @@ class AlertService
             }
         }
 
-        if (!empty($emails)) {
+        if (! empty($emails)) {
             $this->notificationService->sendAlertEmail($alert, $emails);
         }
     }
@@ -223,7 +220,7 @@ class AlertService
     private function sendSlackNotification(MonitoringAlertsHistory $alert, AlertSetting $setting): void
     {
         $webhookUrl = $setting->slack_webhook_url;
-        
+
         if ($webhookUrl) {
             $this->notificationService->sendSlackAlert($alert, $webhookUrl);
         }
@@ -237,19 +234,19 @@ class AlertService
         $query = MonitoringAlertsHistory::where('tenant_id', $tenantId)
             ->where('is_resolved', false);
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('alert_type', $filters['type']);
         }
 
-        if (!empty($filters['severity'])) {
+        if (! empty($filters['severity'])) {
             $query->where('severity', $filters['severity']);
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
@@ -286,7 +283,7 @@ class AlertService
             'error_alerts' => $stats->error_alerts ?? 0,
             'warning_alerts' => $stats->warning_alerts ?? 0,
             'info_alerts' => $stats->info_alerts ?? 0,
-            'resolution_rate' => $stats->total_alerts > 0 
+            'resolution_rate' => $stats->total_alerts > 0
                 ? round((($stats->resolved_alerts ?? 0) / $stats->total_alerts) * 100, 2)
                 : 0,
         ];
@@ -295,7 +292,7 @@ class AlertService
     /**
      * Resolve um alerta
      */
-    public function resolveAlert(MonitoringAlertsHistory $alert, int $resolvedBy, string $resolutionNotes = null): bool
+    public function resolveAlert(MonitoringAlertsHistory $alert, int $resolvedBy, ?string $resolutionNotes = null): bool
     {
         return $alert->markAsResolved($resolvedBy, $resolutionNotes);
     }

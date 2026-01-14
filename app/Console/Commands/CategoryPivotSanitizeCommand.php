@@ -93,7 +93,7 @@ class CategoryPivotSanitizeCommand extends Command
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            $this->error('Falha ao remover anexos inconsistentes: ' . $e->getMessage());
+            $this->error('Falha ao remover anexos inconsistentes: '.$e->getMessage());
 
             return self::FAILURE;
         }

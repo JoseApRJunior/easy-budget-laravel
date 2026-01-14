@@ -468,14 +468,14 @@
                             <br><small>{{ $item->product->description }}</small>
                         @endif
                     </td>
-                    <td class="text-center">{{ number_format($item->quantity, 0, ',', '.') }}</td>
-                    <td class="text-right">R$ {{ number_format($item->unit_price, 2, ',', '.') }}</td>
-                    <td class="text-right">R$ {{ number_format($item->total, 2, ',', '.') }}</td>
+                    <td class="text-center">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</td>
+                        <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->unit_price) }}</td>
+                        <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                 </tr>
                 @endforeach
                 <tr class="invoice-total">
                     <td colspan="3"><strong>Total da Fatura</strong></td>
-                    <td class="text-right"><strong>R$ {{ number_format($invoice->total, 2, ',', '.') }}</strong></td>
+                    <td class="text-right"><strong>{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -494,15 +494,15 @@
         <div class="totals-grid">
             <div class="total-item">
                 <div class="total-label">Subtotal</div>
-                <div class="total-value">R$ {{ number_format($subtotal, 2, ',', '.') }}</div>
+                <div class="total-value">{{ \App\Helpers\CurrencyHelper::format($subtotal) }}</div>
             </div>
             <div class="total-item">
                 <div class="total-label">Desconto</div>
-                <div class="total-value">R$ {{ number_format($discount, 2, ',', '.') }}</div>
+                <div class="total-value">{{ \App\Helpers\CurrencyHelper::format($discount) }}</div>
             </div>
             <div class="total-item grand-total">
                 <div class="total-label">TOTAL A PAGAR</div>
-                <div class="total-value">R$ {{ number_format($total, 2, ',', '.') }}</div>
+                <div class="total-value">{{ \App\Helpers\CurrencyHelper::format($total) }}</div>
             </div>
         </div>
     </div>
@@ -512,7 +512,7 @@
     <div class="payment-info">
         <h4>💳 Informações para Pagamento</h4>
         <p><strong>Vencimento:</strong> {{ $invoice->due_date->format('d/m/Y') }}</p>
-        <p><strong>Valor:</strong> R$ {{ number_format($invoice->total, 2, ',', '.') }}</p>
+        <p><strong>Valor:</strong> {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</p>
         <p><strong>Formas de Pagamento:</strong> PIX, Boleto Bancário, Cartão de Crédito/Débito</p>
     </div>
     

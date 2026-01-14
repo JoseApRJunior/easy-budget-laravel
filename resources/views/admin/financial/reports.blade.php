@@ -41,12 +41,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary mr-2">
-                            <i class="fas fa-filter"></i> Filtrar
-                        </button>
-                        <a href="{{ route('admin.financial.reports') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Limpar
-                        </a>
+                        <x-ui.button type="submit" variant="primary" label="Filtrar" icon="filter" class="mr-2" />
+                        <x-ui.button type="link" :href="route('admin.financial.reports')" variant="secondary" label="Limpar" icon="times" />
                     </form>
                 </div>
             </div>
@@ -246,28 +242,12 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-2">
-                            <button class="btn btn-success btn-block" onclick="exportReports()">
-                                <i class="fas fa-download"></i> Exportar Relatório
-                            </button>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <button class="btn btn-info btn-block" onclick="printReports()">
-                                <i class="fas fa-print"></i> Imprimir
-                            </button>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <a href="{{ route('admin.financial.index') }}" class="btn btn-secondary btn-block">
-                                <i class="fas fa-arrow-left"></i> Voltar
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-2">
-                            <button class="btn btn-warning btn-block" onclick="refreshData()">
-                                <i class="fas fa-sync"></i> Atualizar
-                            </button>
-                        </div>
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-flex flex-wrap gap-2">
+                        <x-ui.button variant="success" label="Exportar Relatório" icon="download" class="flex-grow-1" onclick="exportReports()" />
+                        <x-ui.button variant="info" label="Imprimir" icon="printer" class="flex-grow-1" onclick="printReports()" />
+                        <x-ui.back-button index-route="admin.financial.index" class="flex-grow-1" label="Voltar" />
+                        <x-ui.button variant="warning" label="Atualizar" icon="arrow-clockwise" class="flex-grow-1" onclick="refreshData()" />
                     </div>
                 </div>
             </div>

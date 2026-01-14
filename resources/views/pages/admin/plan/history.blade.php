@@ -1,18 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-clock-history me-2"></i>Histórico do Plano: {{ $plan->name }}</h1>
-        <div>
-            <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Voltar ao Plano
-            </a>
-            <a href="{{ route('admin.plans.export', ['format' => 'json']) }}" class="btn btn-outline-primary">
-                <i class="bi bi-download me-1"></i>Exportar Dados
-            </a>
+<div class="container-fluid py-4">
+    <x-layout.page-header
+        :title="'Histórico do Plano: ' . $plan->name"
+        icon="clock-history"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            $plan->name => route('admin.plans.show', $plan),
+            'Histórico' => '#'
+        ]">
+        <div class="d-flex gap-2">
+            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'json'])" variant="primary" icon="download" label="Exportar Dados" />
         </div>
-    </div>
+    </x-layout.page-header>
 
     <!-- Plan Statistics -->
     <div class="row mb-4">
@@ -44,7 +47,7 @@
             <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5 class="card-title">Receita Total</h5>
-                    <h3>R$ {{ number_format($plan->planSubscriptions()->sum('transaction_amount'), 2, ',', '.') }}</h3>
+                    <h3>{{ \App\Helpers\CurrencyHelper::format($plan->planSubscriptions()->sum('transaction_amount')) }}</h3>
                 </div>
             </div>
         </div>
@@ -105,16 +108,14 @@
                                     </td>
                                     <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
                                     <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
-                                    <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
+                                    <td>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</td>
                                     <td>
                                         <span class="badge bg-secondary">{{ ucfirst($subscription->payment_method ?? 'N/A') }}</span>
                                     </td>
                                     <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.subscriptions.show', $subscription) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                        <div class="d-flex gap-1">
+                                            <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                         </div>
                                     </td>
                                 </tr>

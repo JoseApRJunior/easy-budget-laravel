@@ -36,11 +36,12 @@ class BudgetTestSeeder extends Seeder
 
         if ($providers->isEmpty()) {
             $this->command->warn('⚠️  Nenhum provider encontrado. Execute ProviderTestSeeder primeiro.');
+
             return;
         }
 
         // Contadores globais para códigos únicos
-        $globalBudgetCounter  = 1;
+        $globalBudgetCounter = 1;
         $globalInvoiceCounter = 1;
 
         foreach ($providers as $provider) {
@@ -52,11 +53,12 @@ class BudgetTestSeeder extends Seeder
 
     private function createBudgetsForProvider(Provider $provider, int &$globalBudgetCounter, int &$globalInvoiceCounter): void
     {
-        $tenant    = $provider->tenant;
+        $tenant = $provider->tenant;
         $customers = Customer::where('tenant_id', $tenant->id)->get();
 
         if ($customers->isEmpty()) {
             $this->command->warn("⚠️  Nenhum cliente encontrado para o tenant {$tenant->id}");
+
             return;
         }
 
@@ -71,21 +73,21 @@ class BudgetTestSeeder extends Seeder
 
     private function createBudgetWithServices(Provider $provider, Tenant $tenant, Customer $customer, int $budgetIndex, int &$globalBudgetCounter, int &$globalInvoiceCounter): void
     {
-        DB::transaction(function () use ($provider, $tenant, $customer, $budgetIndex, &$globalBudgetCounter, &$globalInvoiceCounter) {
+        DB::transaction(function () use ($tenant, $customer, &$globalBudgetCounter, &$globalInvoiceCounter) {
             // Usar globalBudgetCounter para código sequencial único
-            $budgetDate       = now()->format('Ymd');
+            $budgetDate = now()->format('Ymd');
             $budgetSequential = str_pad((string) $globalBudgetCounter, 4, '0', STR_PAD_LEFT);
-            $budgetCode       = "ORC-{$budgetDate}-{$budgetSequential}";
+            $budgetCode = "ORC-{$budgetDate}-{$budgetSequential}";
 
             // Criar budget
             $budget = Budget::create([
-                'tenant_id'   => $tenant->id,
+                'tenant_id' => $tenant->id,
                 'customer_id' => $customer->id,
-                'code'        => $budgetCode,
-                'total'       => 0, // Será calculado depois
-                'discount'    => 0,
-                'status'      => BudgetStatus::DRAFT->value,
-                'due_date'    => now()->addDays(rand(7, 30)),
+                'code' => $budgetCode,
+                'total' => 0, // Será calculado depois
+                'discount' => 0,
+                'status' => BudgetStatus::DRAFT->value,
+                'due_date' => now()->addDays(rand(7, 30)),
             ]);
 
             $totalBudget = 0;
@@ -99,7 +101,7 @@ class BudgetTestSeeder extends Seeder
             $categories = Category::all(); // Categorias são globais
             if ($categories->isEmpty()) {
                 // Criar uma categoria global se não existir nenhuma
-                $category   = Category::create([
+                $category = Category::create([
                     'name' => 'Categoria Teste',
                     'slug' => 'categoria-teste',
                     'is_active' => true,
@@ -108,12 +110,12 @@ class BudgetTestSeeder extends Seeder
             }
 
             foreach ($serviceStatuses as $index => $status) {
-                $serviceTotal  = $this->createServiceWithItems($budget, $tenant, $categories->random(), $status, $index + 1, $budgetCode);
-                $totalBudget  += $serviceTotal;
+                $serviceTotal = $this->createServiceWithItems($budget, $tenant, $categories->random(), $status, $index + 1, $budgetCode);
+                $totalBudget += $serviceTotal;
             }
 
             $serviceCompleted = $budget->services()->where('status', ServiceStatus::COMPLETED->value)->first();
-            $serviceApproved  = $budget->services()->where('status', ServiceStatus::APPROVED->value)->first();
+            $serviceApproved = $budget->services()->where('status', ServiceStatus::APPROVED->value)->first();
 
             if ($serviceCompleted) {
                 $this->createInvoiceForService($budget, $tenant, $customer, $serviceCompleted, $budgetDate, $globalInvoiceCounter, true);
@@ -134,19 +136,19 @@ class BudgetTestSeeder extends Seeder
     private function createServiceWithItems(Budget $budget, Tenant $tenant, Category $category, ServiceStatus $status, int $serviceIndex, string $budgetCode): float
     {
         // Gerar código de serviço seguindo padrão YYYYMMDD-0001-S001
-        $serviceCode = "{$budgetCode}-S" . str_pad((string) $serviceIndex, 3, '0', STR_PAD_LEFT);
+        $serviceCode = "{$budgetCode}-S".str_pad((string) $serviceIndex, 3, '0', STR_PAD_LEFT);
 
         // Criar service
         $service = Service::create([
-            'tenant_id'   => $tenant->id,
-            'budget_id'   => $budget->id,
+            'tenant_id' => $tenant->id,
+            'budget_id' => $budget->id,
             'category_id' => $category->id,
-            'code'        => $serviceCode,
+            'code' => $serviceCode,
             'description' => "Serviço de teste {$serviceIndex} para orçamento {$budget->code}",
-            'status'      => $status->value,
-            'discount'    => 0,
-            'total'       => 0, // Será calculado
-            'due_date'    => now()->addDays(rand(1, 30)),
+            'status' => $status->value,
+            'discount' => 0,
+            'total' => 0, // Será calculado
+            'due_date' => now()->addDays(rand(1, 30)),
         ]);
 
         $totalService = 0;
@@ -158,34 +160,34 @@ class BudgetTestSeeder extends Seeder
         if ($products->count() < 3) {
             for ($i = $products->count(); $i < 3; $i++) {
                 $product = Product::create([
-                    'tenant_id'   => $tenant->id,
+                    'tenant_id' => $tenant->id,
                     'category_id' => $category->id,
-                    'name'        => "Produto Teste {$i}",
-                    'description' => "Produto criado para teste",
-                    'sku'         => "PRD-{$tenant->id}-{$i}",
-                    'price'       => rand(10, 500),
-                    'unit'        => 'un',
-                    'active'      => true,
+                    'name' => "Produto Teste {$i}",
+                    'description' => 'Produto criado para teste',
+                    'sku' => "PRD-{$tenant->id}-{$i}",
+                    'price' => rand(10, 500),
+                    'unit' => 'un',
+                    'active' => true,
                 ]);
                 $products->push($product);
             }
         }
 
         foreach ($products as $index => $product) {
-            $quantity  = rand(1, 10);
+            $quantity = rand(1, 10);
             $unitValue = (float) $product->price;
-            $total     = $quantity * $unitValue;
+            $total = $quantity * $unitValue;
 
             ServiceItem::create([
-                'tenant_id'  => $tenant->id,
+                'tenant_id' => $tenant->id,
                 'service_id' => $service->id,
                 'product_id' => $product->id,
                 'unit_value' => $unitValue,
-                'quantity'   => $quantity,
-                'total'      => $total,
+                'quantity' => $quantity,
+                'total' => $total,
             ]);
 
-            $totalService  += $total;
+            $totalService += $total;
         }
 
         // Atualizar total do service
@@ -198,23 +200,23 @@ class BudgetTestSeeder extends Seeder
     {
         // Gerar código de fatura seguindo padrão FAT-YYYYMMDD-0001
         $invoiceSequential = str_pad((string) $invoiceCounter, 4, '0', STR_PAD_LEFT);
-        $invoiceCode       = "FAT-{$budgetDate}-{$invoiceSequential}";
+        $invoiceCode = "FAT-{$budgetDate}-{$invoiceSequential}";
 
         $subtotal = $service->total;
         $discount = $isPartial ? $service->total * 0.5 : 0;
-        $total    = $subtotal - $discount;
+        $total = $subtotal - $discount;
 
         Invoice::create([
-            'tenant_id'      => $tenant->id,
-            'service_id'     => $service->id,
-            'customer_id'    => $customer->id,
-            'code'           => $invoiceCode,
-            'subtotal'       => $subtotal,
-            'discount'       => $discount,
-            'total'          => $total,
-            'due_date'       => now()->addDays(rand(7, 30)),
+            'tenant_id' => $tenant->id,
+            'service_id' => $service->id,
+            'customer_id' => $customer->id,
+            'code' => $invoiceCode,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => $total,
+            'due_date' => now()->addDays(rand(7, 30)),
             'payment_method' => collect(['pix', 'boleto', 'cartao'])->random(),
-            'status'         => InvoiceStatus::PENDING->value,
+            'status' => InvoiceStatus::PENDING->value,
         ]);
     }
 }

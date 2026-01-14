@@ -1,15 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">Dashboard Financeiro</h1>
-                <p class="text-muted mb-0">Visão geral das finanças do seu negócio</p>
-            </div>
-            <div>
-                <select class="form-select" id="periodSelect" onchange="changePeriod()">
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard Financeiro"
+            icon="currency-dollar"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Financeiro' => '#'
+            ]">
+            <div class="d-flex align-items-center gap-3">
+                <p class="text-muted mb-0 small">Visão geral das finanças do seu negócio</p>
+                <select class="form-select form-select-sm w-auto" id="periodSelect" onchange="changePeriod()">
                     @foreach ($periods as $key => $label)
                         <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>
                             {{ $label }}
@@ -17,7 +19,7 @@
                     @endforeach
                 </select>
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- KPI Cards -->
         <div class="row mb-4">

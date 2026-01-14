@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo Session usando estrutura padrão do Laravel
@@ -36,10 +37,10 @@ class Session extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'user_id'       => 'integer',
-        'ip_address'    => 'string',
-        'user_agent'    => 'string',
-        'payload'       => 'string',
+        'user_id' => 'integer',
+        'ip_address' => 'string',
+        'user_agent' => 'string',
+        'payload' => 'string',
         'last_activity' => 'integer',
     ];
 
@@ -63,7 +64,6 @@ class Session extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
-
 }

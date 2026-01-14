@@ -1,10 +1,15 @@
 @extends('layouts.admin')
 
-@section('breadcrumb')
-    <li class="breadcrumb-item active">Dashboard IA </li>
-@endsection
-
 @section('admin_content')
+    <x-layout.page-header
+        title="Dashboard de Inteligência Artificial"
+        icon="robot"
+        :breadcrumb-items="[
+            'Admin' => url('/admin'),
+            'IA' => '#'
+        ]">
+    </x-layout.page-header>
+
     <style>
         .metric-card {
             text-align: center;
@@ -40,31 +45,27 @@
     </style>
 
     <div class="container-fluid">
-        <!-- Header -->
+        <!-- Métricas Principais -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card bg-primary text-white">
+                <div class="card">
                     <div class="card-body">
-                        <h1 class="mb-4">
-                            <i class="bi bi-robot me-3"></i>
-                            Dashboard de Inteligência Artificial
-                        </h1>
                         <div class="row" id="header-metrics">
-                            <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="downtime-reduction">-</div>
-                                <small>Redução de Downtime</small>
+                            <div class="col-md-3 text-center border-end">
+                                <div class="h5 mb-0 font-weight-bold" id="downtime-reduction">-</div>
+                                <small class="text-muted">Redução de Downtime</small>
+                            </div>
+                            <div class="col-md-3 text-center border-end">
+                                <div class="h5 mb-0 font-weight-bold" id="revenue-increase">-</div>
+                                <small class="text-muted">Aumento de Receita</small>
+                            </div>
+                            <div class="col-md-3 text-center border-end">
+                                <div class="h5 mb-0 font-weight-bold" id="alerts-count">-</div>
+                                <small class="text-muted">Alertas Ativos</small>
                             </div>
                             <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="revenue-increase">-</div>
-                                <small>Aumento de Receita</small>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="alerts-count">-</div>
-                                <small>Alertas Ativos</small>
-                            </div>
-                            <div class="col-md-3 text-center">
-                                <div class="h5 mb-0" id="efficiency-gains">-</div>
-                                <small>Ganhos de Eficiência</small>
+                                <div class="h5 mb-0 font-weight-bold" id="efficiency-gains">-</div>
+                                <small class="text-muted">Ganhos de Eficiência</small>
                             </div>
                         </div>
                     </div>
@@ -129,10 +130,9 @@
                             </div>
                             <p class="mt-2">Carregando predições...</p>
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="/admin/ai/reports?type=churn" class="btn btn-primary btn-sm">
-                                Ver Relatório Completo
-                            </a>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <x-ui.button type="link" href="/admin/ai/reports?type=churn" variant="primary" size="sm" label="Ver Relatório Completo" />
+                            <small class="text-muted">Atualizado há 2 horas</small>
                         </div>
                     </div>
                 </div>
@@ -155,10 +155,7 @@
                             <p class="mt-2">Carregando alertas...</p>
                         </div>
                         <div class="text-center mt-3">
-                            <button class="btn btn-primary btn-sm" onclick="loadDashboardData()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                Atualizar Dashboard
-                            </button>
+                            <x-ui.button variant="primary" size="sm" icon="arrow-clockwise" label="Atualizar Dashboard" onclick="loadDashboardData()" />
                         </div>
                     </div>
                 </div>
@@ -239,7 +236,7 @@
                 <div class="alert alert-warning alert-item">
                     <strong>${p.customer_name}</strong> (ID: ${p.customer_id})<br>
                     Probabilidade de Churn: <strong>${p.churn_probability}%</strong><br>
-                    <a href="/admin/customer/${p.customer_id}" class="btn btn-sm btn-outline-secondary mt-2">Ver Cliente</a>
+                    <a href="/admin/customer/${p.customer_id}" class="btn btn-sm btn-secondary mt-2">Ver Cliente</a>
                 </div>`;
                 container.insertAdjacentHTML('beforeend', predictionHtml);
             });

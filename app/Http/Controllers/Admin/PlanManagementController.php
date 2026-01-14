@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Models\AuditLog;
 use App\Models\Plan;
 use App\Models\PlanSubscription;
 use App\Models\Tenant;
@@ -99,10 +100,11 @@ class PlanManagementController extends Controller
             ]);
 
             // Log activity
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($plan)
-                ->log('Plano criado: '.$plan->name);
+            AuditLog::log(
+                action: 'created',
+                model: $plan,
+                metadata: ['description' => 'Plano criado: '.$plan->name]
+            );
         });
 
         Cache::forget('plans.active');
@@ -171,10 +173,11 @@ class PlanManagementController extends Controller
             ]);
 
             // Log activity
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($plan)
-                ->log('Plano atualizado: '.$plan->name);
+            AuditLog::log(
+                action: 'updated',
+                model: $plan,
+                metadata: ['description' => 'Plano atualizado: '.$plan->name]
+            );
         });
 
         Cache::forget('plans.active');
@@ -195,10 +198,11 @@ class PlanManagementController extends Controller
 
         DB::transaction(function () use ($plan) {
             // Log activity before deletion
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($plan)
-                ->log('Plano excluído: '.$plan->name);
+            AuditLog::log(
+                action: 'deleted',
+                model: $plan,
+                metadata: ['description' => 'Plano excluído: '.$plan->name]
+            );
 
             $plan->delete();
         });
@@ -218,10 +222,11 @@ class PlanManagementController extends Controller
             'status' => $plan->status === 'active' ? 'inactive' : 'active',
         ]);
 
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($plan)
-            ->log('Status do plano alterado: '.$plan->name.' - '.$plan->status);
+        AuditLog::log(
+            action: 'updated',
+            model: $plan,
+            metadata: ['description' => 'Status do plano alterado: '.$plan->name.' - '.$plan->status]
+        );
 
         Cache::forget('plans.active');
 
@@ -239,10 +244,11 @@ class PlanManagementController extends Controller
         $newPlan->status = 'draft';
         $newPlan->save();
 
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($newPlan)
-            ->log('Plano duplicado: '.$plan->name.' -> '.$newPlan->name);
+        AuditLog::log(
+            action: 'created',
+            model: $newPlan,
+            metadata: ['description' => 'Plano duplicado: '.$plan->name.' -> '.$newPlan->name]
+        );
 
         return redirect()->route('admin.plans.edit', $newPlan)
             ->with('success', 'Plano duplicado com sucesso!');
@@ -266,7 +272,7 @@ class PlanManagementController extends Controller
                 $q->whereHas('tenant', function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%");
                 })
-                    ->orWhereHas('user', function ($q) use ($search) {
+                    ->orWhereHas('provider.user', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
                     });

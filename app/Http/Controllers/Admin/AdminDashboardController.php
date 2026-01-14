@@ -280,32 +280,27 @@ class AdminDashboardController extends Controller
 
     private function getDatabaseSize(): string
     {
-        try {
-            // Detectar o tipo de banco e usar a função apropriada
-            $driver = DB::getDriverName();
+        // Detectar o tipo de banco e usar a função apropriada
+        $driver = DB::getDriverName();
 
-            if ($driver === 'pgsql') {
-                // PostgreSQL
-                $size = (int) (DB::select('SELECT pg_database_size(current_database()) as size')[0]->size ?? 0);
-            } elseif ($driver === 'mysql') {
-                // MySQL/MariaDB
-                $databaseName = DB::getDatabaseName();
-                $result = DB::select('
-                    SELECT SUM(data_length + index_length) as size
-                    FROM information_schema.tables
-                    WHERE table_schema = ?
-                ', [$databaseName]);
-                $size = (int) ($result[0]->size ?? 0);
-            } else {
-                // Para outros bancos, retornar 0
-                $size = 0;
-            }
-
-            return $this->formatBytes($size);
-        } catch (\Exception $e) {
-            // Em caso de erro, retornar 0 bytes
-            return $this->formatBytes(0);
+        if ($driver === 'pgsql') {
+            // PostgreSQL
+            $size = (int) (DB::select('SELECT pg_database_size(current_database()) as size')[0]->size ?? 0);
+        } elseif ($driver === 'mysql') {
+            // MySQL/MariaDB
+            $databaseName = DB::getDatabaseName();
+            $result = DB::select('
+                SELECT SUM(data_length + index_length) as size
+                FROM information_schema.tables
+                WHERE table_schema = ?
+            ', [$databaseName]);
+            $size = (int) ($result[0]->size ?? 0);
+        } else {
+            // Para outros bancos, retornar 0
+            $size = 0;
         }
+
+        return $this->formatBytes($size);
     }
 
     private function getTotalStorageUsed(): string

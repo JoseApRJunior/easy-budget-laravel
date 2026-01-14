@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\Customer\CustomerDTO;
+use App\DTOs\Customer\CustomerFilterDTO;
+use App\DTOs\Customer\CustomerInteractionDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\CustomerPessoaFisicaRequest;
 use App\Http\Requests\CustomerPessoaJuridicaRequest;
+use App\Models\Address;
 use App\Models\CommonData;
+use App\Models\Contact;
 use App\Models\Customer;
-use App\Models\CustomerAddress;
-use App\Models\CustomerContact;
 use App\Models\CustomerInteraction;
 use App\Services\Application\CustomerInteractionService;
+use App\Services\Domain\AddressService;
+use App\Services\Domain\ContactService;
 use App\Services\Domain\CustomerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 /**
  * API RESTful para gestão de clientes
@@ -29,6 +33,8 @@ class CustomerApiController extends Controller
     public function __construct(
         private CustomerService $customerService,
         private CustomerInteractionService $interactionService,
+        private AddressService $addressService,
+        private ContactService $contactService,
     ) {}
 
     /**
@@ -36,24 +42,10 @@ class CustomerApiController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only([
-            'search', 'status', 'customer_type', 'priority_level',
-            'tags', 'created_from', 'created_to', 'sort_by', 'sort_direction', 'per_page',
-        ]);
+        $filterDTO = CustomerFilterDTO::fromRequest($request->all());
+        $result = $this->customerService->getFilteredCustomers($filterDTO);
 
-        $customers = $this->customerService->searchCustomers($filters, auth()->user());
-
-        return response()->json([
-            'customers' => $customers->items(),
-            'pagination' => [
-                'current_page' => $customers->currentPage(),
-                'per_page' => $customers->perPage(),
-                'total' => $customers->total(),
-                'last_page' => $customers->lastPage(),
-                'from' => $customers->firstItem(),
-                'to' => $customers->lastItem(),
-            ],
-        ]);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -61,20 +53,10 @@ class CustomerApiController extends Controller
      */
     public function storePessoaFisica(CustomerPessoaFisicaRequest $request): JsonResponse
     {
-        try {
-            $customer = $this->customerService->createCustomer($request->validated());
+        $dto = CustomerDTO::fromRequest(array_merge($request->validated(), ['type' => CommonData::TYPE_INDIVIDUAL]));
+        $result = $this->customerService->createCustomer($dto);
 
-            return response()->json([
-                'message' => 'Cliente pessoa física criado com sucesso',
-                'customer' => $customer->load(['address', 'contact', 'tags']),
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao criar cliente',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result, 201);
     }
 
     /**
@@ -82,115 +64,76 @@ class CustomerApiController extends Controller
      */
     public function storePessoaJuridica(CustomerPessoaJuridicaRequest $request): JsonResponse
     {
-        try {
-            $customer = $this->customerService->createCustomer($request->validated());
+        $dto = CustomerDTO::fromRequest(array_merge($request->validated(), ['type' => CommonData::TYPE_BUSINESS]));
+        $result = $this->customerService->createCustomer($dto);
 
-            return response()->json([
-                'message' => 'Cliente pessoa jurídica criado com sucesso',
-                'customer' => $customer->load(['address', 'contact', 'tags']),
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao criar cliente',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result, 201);
     }
 
     /**
      * Exibe detalhes de um cliente.
      */
-    public function show(Customer $customer): JsonResponse
+    public function show(int $id): JsonResponse
     {
-        if ($customer->tenant_id !== auth()->user()->tenant_id) {
-            return response()->json(['message' => 'Cliente não encontrado'], 404);
+        $result = $this->customerService->findCustomer($id);
+
+        if ($result->isSuccess()) {
+            $customer = $result->getData();
+            $customer->load([
+                'address',
+                'contact',
+                'tags',
+                'interactions' => function ($query) {
+                    $query->with('user')->orderBy('interaction_date', 'desc')->limit(10);
+                },
+            ]);
         }
 
-        $customer->load([
-            'address',
-            'contact',
-            'tags',
-            'interactions' => function ($query) {
-                $query->with('user')->orderBy('interaction_date', 'desc')->limit(10);
-            },
-        ]);
-
-        return response()->json([
-            'customer' => $customer,
-        ]);
+        return $this->jsonResponse($result);
     }
 
     /**
      * Atualiza cliente.
      */
-    public function update(Request $request, Customer $customer): JsonResponse
+    public function update(Request $request, int $id): JsonResponse
     {
-        if ($customer->tenant_id !== auth()->user()->tenant_id) {
-            return response()->json(['message' => 'Cliente não encontrado'], 404);
+        $result = $this->customerService->findCustomer($id);
+
+        if (! $result->isSuccess()) {
+            return $this->jsonResponse($result);
         }
 
-        try {
-            // Validar dados conforme tipo de cliente
-            $isIndividual = ($customer->commonData?->type ?? CommonData::TYPE_INDIVIDUAL) === CommonData::TYPE_INDIVIDUAL;
-            if ($isIndividual) {
-                $request->validate((new CustomerPessoaFisicaRequest)->rules());
-                $validatedData = $request->validated();
-            } else {
-                $request->validate((new CustomerPessoaJuridicaRequest)->rules());
-                $validatedData = $request->validated();
-            }
+        $customer = $result->getData();
 
-            $updatedResult = $this->customerService->updateCustomer($customer->id, $validatedData);
-            if (! $updatedResult->isSuccess()) {
-                return response()->json([
-                    'message' => 'Erro ao atualizar cliente',
-                    'error' => $updatedResult->getMessage(),
-                ], 400);
-            }
-            $updatedCustomer = $updatedResult->getData();
+        // Validar dados conforme tipo de cliente
+        $isIndividual = ($customer->commonData?->type ?? CommonData::TYPE_INDIVIDUAL) === CommonData::TYPE_INDIVIDUAL;
 
-            return response()->json([
-                'message' => 'Cliente atualizado com sucesso',
-                'customer' => $updatedCustomer->load(['address', 'contact', 'tags']),
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar cliente',
-                'error' => $e->getMessage(),
-            ], 500);
+        if ($isIndividual) {
+            $rules = (new CustomerPessoaFisicaRequest)->rules();
+        } else {
+            $rules = (new CustomerPessoaJuridicaRequest)->rules();
         }
+
+        $validatedData = $request->validate($rules);
+
+        $dto = CustomerDTO::fromRequest($validatedData);
+        $updatedResult = $this->customerService->updateCustomer($id, $dto);
+
+        if ($updatedResult->isSuccess()) {
+            $updatedResult->getData()->load(['address', 'contact', 'tags']);
+        }
+
+        return $this->jsonResponse($updatedResult);
     }
 
     /**
      * Remove cliente.
      */
-    public function destroy(Customer $customer): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        if ($customer->tenant_id !== auth()->user()->tenant_id) {
-            return response()->json(['message' => 'Cliente não encontrado'], 404);
-        }
+        $result = $this->customerService->deleteCustomer($id);
 
-        try {
-            $result = $this->customerService->delete($customer->id);
-            if (! $result->isSuccess()) {
-                return response()->json([
-                    'message' => 'Erro ao remover cliente',
-                    'error' => $result->getMessage(),
-                ], 400);
-            }
-
-            return response()->json([
-                'message' => 'Cliente removido com sucesso',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao remover cliente',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -202,76 +145,45 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
 
-        $request->validate(CustomerAddress::businessRules());
+        $validatedData = $request->validate(Address::businessRules());
+        $validatedData['customer_id'] = $customer->id;
 
-        try {
-            $addressData = $request->validated();
-            $addressData['customer_id'] = $customer->id;
+        $dto = AddressDTO::fromRequest($validatedData);
+        $result = $this->addressService->createAddress($dto);
 
-            $address = CustomerAddress::create($addressData);
-
-            return response()->json([
-                'message' => 'Endereço adicionado com sucesso',
-                'address' => $address,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao adicionar endereço',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
      * Atualiza endereço do cliente.
      */
-    public function updateAddress(Request $request, Customer $customer, CustomerAddress $address): JsonResponse
+    public function updateAddress(Request $request, Customer $customer, Address $address): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $address->customer_id !== $customer->id) {
             return response()->json(['message' => 'Endereço não encontrado'], 404);
         }
 
-        $request->validate(CustomerAddress::businessRules());
+        $validatedData = $request->validate(Address::businessRules());
+        $validatedData['customer_id'] = $customer->id;
 
-        try {
-            $address->updateCustomer($request->validated());
+        $dto = AddressDTO::fromRequest($validatedData);
+        $result = $this->addressService->updateAddress($address->id, $dto);
 
-            return response()->json([
-                'message' => 'Endereço atualizado com sucesso',
-                'address' => $address,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar endereço',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
      * Remove endereço do cliente.
      */
-    public function removeAddress(Customer $customer, CustomerAddress $address): JsonResponse
+    public function removeAddress(Customer $customer, Address $address): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $address->customer_id !== $customer->id) {
             return response()->json(['message' => 'Endereço não encontrado'], 404);
         }
 
-        try {
-            $address->delete();
+        $result = $this->addressService->deleteAddress($address->id);
 
-            return response()->json([
-                'message' => 'Endereço removido com sucesso',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao remover endereço',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -283,158 +195,99 @@ class CustomerApiController extends Controller
             return response()->json(['message' => 'Cliente não encontrado'], 404);
         }
 
-        $request->validate(CustomerContact::businessRules());
+        $validatedData = $request->validate(Contact::businessRules());
+        $validatedData['customer_id'] = $customer->id;
 
-        try {
-            $contactData = $request->validated();
-            $contactData['customer_id'] = $customer->id;
+        $dto = ContactDTO::fromRequest($validatedData);
+        $result = $this->contactService->createContact($dto);
 
-            $contact = CustomerContact::create($contactData);
-
-            return response()->json([
-                'message' => 'Contato adicionado com sucesso',
-                'contact' => $contact,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao adicionar contato',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
      * Atualiza contato do cliente.
      */
-    public function updateContact(Request $request, Customer $customer, CustomerContact $contact): JsonResponse
+    public function updateContact(Request $request, Customer $customer, Contact $contact): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $contact->customer_id !== $customer->id) {
             return response()->json(['message' => 'Contato não encontrado'], 404);
         }
 
-        $request->validate(CustomerContact::businessRules());
+        $validatedData = $request->validate(Contact::businessRules());
+        $validatedData['customer_id'] = $customer->id;
 
-        try {
-            $contact->updateCustomer($request->validated());
+        $dto = ContactDTO::fromRequest($validatedData);
+        $result = $this->contactService->updateContact($contact->id, $dto);
 
-            return response()->json([
-                'message' => 'Contato atualizado com sucesso',
-                'contact' => $contact,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar contato',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
      * Remove contato do cliente.
      */
-    public function removeContact(Customer $customer, CustomerContact $contact): JsonResponse
+    public function removeContact(Customer $customer, Contact $contact): JsonResponse
     {
         if ($customer->tenant_id !== auth()->user()->tenant_id || $contact->customer_id !== $customer->id) {
             return response()->json(['message' => 'Contato não encontrado'], 404);
         }
 
-        try {
-            $contact->delete();
+        $result = $this->contactService->deleteContact($contact->id);
 
-            return response()->json([
-                'message' => 'Contato removido com sucesso',
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao remover contato',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
      * Busca interações do cliente.
      */
-    public function getInteractions(Request $request, Customer $customer): JsonResponse
+    public function getInteractions(Request $request, int $id): JsonResponse
     {
-        if ($customer->tenant_id !== auth()->user()->tenant_id) {
-            return response()->json(['message' => 'Cliente não encontrado'], 404);
+        $result = $this->customerService->findCustomer($id);
+
+        if (! $result->isSuccess()) {
+            return $this->jsonResponse($result);
         }
+
+        $customer = $result->getData();
 
         $filters = $request->only(['type', 'direction', 'start_date', 'end_date', 'user_id', 'pending_actions', 'per_page']);
 
         $interactions = $this->interactionService->getCustomerInteractions($customer, $filters);
 
-        return response()->json([
-            'interactions' => $interactions->items(),
-            'pagination' => [
-                'current_page' => $interactions->currentPage(),
-                'per_page' => $interactions->perPage(),
-                'total' => $interactions->total(),
-                'last_page' => $interactions->lastPage(),
-            ],
-        ]);
+        return $this->jsonSuccess($interactions);
     }
 
     /**
      * Adiciona interação ao cliente.
      */
-    public function addInteraction(Request $request, Customer $customer): JsonResponse
+    public function addInteraction(Request $request, int $id): JsonResponse
     {
-        if ($customer->tenant_id !== auth()->user()->tenant_id) {
-            return response()->json(['message' => 'Cliente não encontrado'], 404);
+        $dto = CustomerInteractionDTO::fromRequest($request->all());
+
+        $result = $this->customerService->createInteraction($id, $dto);
+
+        if ($result->isSuccess()) {
+            $result->getData()->load('user');
         }
 
-        $request->validate(CustomerInteraction::businessRules());
-
-        try {
-            $interactionData = $request->validated();
-            $interactionData['customer_id'] = $customer->id;
-            $interactionData['user_id'] = auth()->user()->id;
-
-            $interaction = $this->interactionService->createInteraction($customer, $interactionData, auth()->user());
-
-            return response()->json([
-                'message' => 'Interação adicionada com sucesso',
-                'interaction' => $interaction->load('user'),
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao adicionar interação',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonResponse($result, 201);
     }
 
     /**
      * Atualiza interação do cliente.
      */
-    public function updateInteraction(Request $request, Customer $customer, CustomerInteraction $interaction): JsonResponse
+    public function updateInteraction(Request $request, int $customerId, int $interactionId): JsonResponse
     {
-        if ($customer->tenant_id !== auth()->user()->tenant_id || $interaction->customer_id !== $customer->id) {
-            return response()->json(['message' => 'Interação não encontrada'], 404);
+        $interaction = CustomerInteraction::find($interactionId);
+
+        if (! $interaction || $interaction->customer_id !== $customerId) {
+            return $this->jsonError('Interação não encontrada', null, 404);
         }
 
         $request->validate(CustomerInteraction::businessRules());
 
-        try {
-            $updatedInteraction = $this->interactionService->updateInteraction($interaction, $request->validated(), auth()->user());
+        $updatedInteraction = $this->interactionService->updateInteraction($interaction, $request->validated(), auth()->user());
 
-            return response()->json([
-                'message' => 'Interação atualizada com sucesso',
-                'interaction' => $updatedInteraction->load('user'),
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao atualizar interação',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return $this->jsonSuccess($updatedInteraction->load('user'), 'Interação atualizada com sucesso');
     }
 
     /**
@@ -446,28 +299,9 @@ class CustomerApiController extends Controller
             'query' => 'required|string|min:2',
         ]);
 
-        $customers = Customer::where('tenant_id', auth()->user()->tenant_id)
-            ->where(function ($query) use ($request) {
-                $query->where('company_name', 'like', "%{$request->query}%")
-                    ->orWhere('fantasy_name', 'like', "%{$request->query}%")
-                    ->orWhereHas('commonData', function ($q) use ($request) {
-                        $q->where('first_name', 'like', "%{$request->query}%")
-                            ->orWhere('last_name', 'like', "%{$request->query}%");
-                    });
-            })
-            ->limit(10)
-            ->get();
+        $result = $this->customerService->searchForAutocomplete($request->get('query'));
 
-        return response()->json([
-            'customers' => $customers->map(function ($customer) {
-                return [
-                    'id' => $customer->id,
-                    'text' => $customer->name ?? $customer->company_name,
-                    'email' => $customer->primary_email,
-                    'phone' => $customer->primary_phone,
-                ];
-            }),
-        ]);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -480,20 +314,10 @@ class CustomerApiController extends Controller
             'tags.*' => 'integer|exists:customer_tags,id',
         ]);
 
-        $customers = Customer::where('tenant_id', auth()->user()->tenant_id)
-            ->withTags($request->tags)
-            ->with(['address', 'contacts', 'tags'])
-            ->paginate(15);
+        $filterDTO = CustomerFilterDTO::fromRequest(['tags' => $request->tags]);
+        $result = $this->customerService->getFilteredCustomers($filterDTO);
 
-        return response()->json([
-            'customers' => $customers->items(),
-            'pagination' => [
-                'current_page' => $customers->currentPage(),
-                'per_page' => $customers->perPage(),
-                'total' => $customers->total(),
-                'last_page' => $customers->lastPage(),
-            ],
-        ]);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -501,31 +325,15 @@ class CustomerApiController extends Controller
      */
     public function findNearby(Request $request): JsonResponse
     {
-        $request->validate([
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'radius' => 'nullable|integer|min:1|max:100',
-        ]);
+        // Se houver CEP, busca por CEP
+        if ($request->has('cep')) {
+            $result = $this->customerService->findNearbyCustomers($request->get('cep'));
 
-        $nearbyCustomers = $this->customerService->findNearbyCustomers(
-            $request->latitude,
-            $request->longitude,
-            $request->radius ?? 10,
-            auth()->user(),
-        );
+            return $this->jsonResponse($result);
+        }
 
-        return response()->json([
-            'customers' => $nearbyCustomers->map(function ($customer) {
-                return [
-                    'id' => $customer->id,
-                    'name' => $customer->name ?? $customer->company_name,
-                    'primary_address' => $customer->primary_address?->full_address,
-                    'distance' => $customer->primary_address?->getDistanceTo(
-                        $request->latitude, $request->longitude,
-                    ),
-                ];
-            }),
-        ]);
+        // Caso contrário, tenta por latitude/longitude se o repositório suportar
+        return $this->jsonError('Busca por latitude/longitude não implementada. Use CEP.', null, 400);
     }
 
     /**
@@ -533,11 +341,9 @@ class CustomerApiController extends Controller
      */
     public function getStats(): JsonResponse
     {
-        $stats = $this->customerService->getCustomerStats(auth()->user());
+        $result = $this->customerService->getDashboardData();
 
-        return response()->json([
-            'stats' => $stats,
-        ]);
+        return $this->jsonResponse($result);
     }
 
     /**
@@ -550,10 +356,7 @@ class CustomerApiController extends Controller
             'format' => 'required|string|in:csv,excel',
         ]);
 
-        // TODO: Implementar lógica de importação
-        return response()->json([
-            'message' => 'Funcionalidade de importação será implementada em breve',
-        ], 501);
+        return $this->jsonError('Funcionalidade de importação será implementada em breve', null, 501);
     }
 
     /**
@@ -561,71 +364,46 @@ class CustomerApiController extends Controller
      */
     public function searchForTable(Request $request): JsonResponse
     {
-        $query = $request->input('q', '');
-        $page = $request->input('page', 1);
-        $perPage = 20;
+        $filterDTO = CustomerFilterDTO::fromRequest($request->all());
+        $result = $this->customerService->getFilteredCustomers($filterDTO);
 
-        $customers = Customer::with(['commonData', 'contact'])
-            ->where('tenant_id', auth()->user()->tenant_id)
-            ->when(! empty($query), function ($q) use ($query) {
-                $q->where('id', 'like', "%{$query}%")
-                    ->orWhereHas('commonData', function ($subQuery) use ($query) {
-                        $subQuery->where('first_name', 'like', "%{$query}%")
-                            ->orWhere('last_name', 'like', "%{$query}%")
-                            ->orWhere('company_name', 'like', "%{$query}%");
-                    });
-            })
-            ->paginate($perPage);
+        if (! $result->isSuccess()) {
+            return $this->jsonResponse($result);
+        }
 
-        $result = $customers->getCollection()->map(function ($customer) {
-            $name = 'Cliente #'.$customer->id;
-            if ($customer->commonData) {
-                if ($customer->commonData->first_name || $customer->commonData->last_name) {
-                    $name = trim($customer->commonData->first_name.' '.$customer->commonData->last_name);
-                } elseif ($customer->commonData->company_name) {
-                    $name = $customer->commonData->company_name;
-                }
-            }
+        /** @var \Illuminate\Pagination\LengthAwarePaginator $customers */
+        $customers = $result->getData();
+
+        $formatted = collect($customers->items())->map(function ($customer) {
+            $commonData = $customer->commonData;
+            $contact = $customer->contact;
+
+            $name = $commonData ? ($commonData->company_name ?: trim(($commonData->first_name ?? '').' '.($commonData->last_name ?? ''))) : 'Nome não informado';
 
             return [
                 'id' => $customer->id,
                 'customer_name' => $name,
-                'email' => $customer->contact?->email ?? '',
-                'email_business' => $customer->contact?->email_business ?? '',
-                'phone' => $customer->contact?->phone ?? '',
-                'phone_business' => $customer->contact?->phone_business ?? '',
-                'cpf' => $customer->commonData?->cpf ?? '',
-                'cnpj' => $customer->commonData?->cnpj ?? '',
+                'email' => $contact?->email_personal ?? '',
+                'email_business' => $contact?->email_business ?? '',
+                'phone' => $contact?->phone_personal ?? '',
+                'phone_business' => $contact?->phone_business ?? '',
+                'cpf' => $commonData?->cpf ?? '',
+                'cnpj' => $commonData?->cnpj ?? '',
                 'created_at' => $customer->created_at->toISOString(),
             ];
         });
 
-        return response()->json([
-            'success' => true,
-            'data' => $result,
-            'message' => 'Busca realizada com sucesso',
-        ]);
+        return $this->jsonSuccess($formatted, 'Busca realizada com sucesso');
     }
 
     /**
      * Exporta clientes.
      */
-    public function export(Request $request): Response
+    public function export(Request $request): JsonResponse
     {
-        $filters = $request->only([
-            'search', 'status', 'customer_type', 'priority_level', 'tags',
-        ]);
+        $filterDTO = CustomerFilterDTO::fromRequest($request->all());
+        $result = $this->customerService->exportCustomers($filterDTO);
 
-        $customers = $this->customerService->searchCustomers(
-            array_merge($filters, ['per_page' => 1000]),
-            auth()->user(),
-        );
-
-        // TODO: Implementar exportação para Excel/CSV
-        // Por ora, retorna JSON
-        return response()->json([
-            'customers' => $customers->items(),
-            'total' => $customers->total(),
-        ]);
+        return $this->jsonResponse($result);
     }
 }

@@ -1,31 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">
-                            <i class="bi bi-gear me-2"></i>
-                            {{ $title ?? 'Configuração de Provedores de E-mail' }}
-                        </h1>
-                        <p class="text-muted mt-1">Gerencie os provedores de e-mail disponíveis no sistema</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="refreshProviders()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Atualizar
-                        </button>
-                        <a href="{{ route('mailtrap.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
-                            Voltar ao Dashboard
-                        </a>
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            :title="$title ?? 'Configuração de Provedores de E-mail'"
+            icon="gear"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Mailtrap' => route('mailtrap.index'),
+                'Provedores' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshProviders()" />
+                <x-ui.button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Status do Provedor Atual -->
         <div class="row mb-4">
@@ -54,10 +43,7 @@
                                 @endif
                             </div>
                             <div class="col-md-4 text-end">
-                                <button type="button" class="btn btn-sm btn-primary" onclick="testCurrentProvider()">
-                                    <i class="bi bi-lightning me-1"></i>
-                                    Testar Provedor
-                                </button>
+                                <x-ui.button type="button" variant="primary" size="sm" icon="lightning" label="Testar Provedor" onclick="testCurrentProvider()" />
                             </div>
                         </div>
                     </div>
@@ -113,11 +99,8 @@
                                                                 Ativo
                                                             </span>
                                                         @else
-                                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                                onclick="activateProvider('{{ $providerKey }}')">
-                                                                <i class="bi bi-check-lg me-1"></i>
-                                                                Ativar
-                                                            </button>
+                                                            <x-ui.button type="button" variant="primary" size="sm" icon="check-lg" label="Ativar"
+                                                                onclick="activateProvider('{{ $providerKey }}')" />
                                                         @endif
                                                     </div>
                                                 </div>
@@ -149,23 +132,15 @@
 
                                                 <!-- Ações do Provedor -->
                                                 <div class="provider-actions d-flex gap-2">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill"
-                                                        onclick="testProvider('{{ $providerKey }}')">
-                                                        <i class="bi bi-lightning me-1"></i>
-                                                        Testar
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-info flex-fill"
-                                                        onclick="viewProviderConfig('{{ $providerKey }}')">
-                                                        <i class="bi bi-eye me-1"></i>
-                                                        Detalhes
-                                                    </button>
+                                                    <x-ui.button type="button" variant="primary" size="sm" icon="lightning" 
+                                                        label="Testar" class="flex-fill" 
+                                                        onclick="testProvider('{{ $providerKey }}')" />
+                                                    <x-ui.button type="button" variant="info" size="sm" icon="eye" label="Detalhes"
+                                                        class="flex-fill" onclick="viewProviderConfig('{{ $providerKey }}')" />
                                                     @if ($providerKey !== 'log')
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-outline-secondary flex-fill"
-                                                            onclick="configureProvider('{{ $providerKey }}')">
-                                                            <i class="bi bi-pencil me-1"></i>
-                                                            Configurar
-                                                        </button>
+                                                        <x-ui.button type="button" variant="secondary" size="sm" icon="pencil" 
+                                                            label="Configurar" class="flex-fill" 
+                                                            onclick="configureProvider('{{ $providerKey }}')" />
                                                     @endif
                                                 </div>
                                             </div>

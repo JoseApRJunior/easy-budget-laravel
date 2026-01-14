@@ -9,15 +9,23 @@
                         <i class="bi bi-robot text-primary me-2"></i>
                         IA Analytics
                     </h1>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-primary" id="refreshAnalytics">
-                            <i class="bi bi-arrow-clockwise"></i>
+                    <div class="d-flex gap-2">
+                        <x-ui.button 
+                            type="button" 
+                            variant="primary" 
+                            id="refreshAnalytics"
+                            outline
+                            icon="bi bi-arrow-clockwise">
                             Atualizar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="exportReport">
-                            <i class="bi bi-download"></i>
+                        </x-ui.button>
+                        <x-ui.button 
+                            type="button" 
+                            variant="secondary" 
+                            id="exportReport"
+                            outline
+                            icon="bi bi-download">
                             Exportar
-                        </button>
+                        </x-ui.button>
                     </div>
                 </div>
             </div>
@@ -348,29 +356,82 @@
                 document.getElementById('customerGrowth').textContent = '+' + (data.customers?.new_this_month || 0);
                 document.getElementById('averageTicket').textContent = formatCurrency(data.ticket?.average || 0);
                 document.getElementById('ticketGrowth').textContent = (data.ticket?.growth || 0) + '%';
+
+                // Load predictions after metrics
+                loadPredictions();
             }
 
             function loadTrends(period = '6months') {
                 fetch(`{{ route('provider.analytics.trends') }}?period=${period}`)
                     .then(response => response.json())
                     .then(data => {
-                        updateRevenueChart(data);
+                        window.currentTrendsData = data; // Store for combining with predictions
+                        updateRevenueChart(data, window.currentPrediction);
                     })
                     .catch(error => console.error('Erro ao carregar tendências:', error));
             }
 
-            function updateRevenueChart(data) {
+            function loadPredictions() {
+                fetch('{{ route('provider.analytics.predictions') }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        window.currentPrediction = data.next_month_revenue;
+                        if(window.currentTrendsData) {
+                             updateRevenueChart(window.currentTrendsData, window.currentPrediction);
+                        }
+                    })
+                    .catch(error => console.error('Erro ao carregar previsões:', error));
+            }
+
+            function updateRevenueChart(data, prediction = null) {
                 const ctx = document.getElementById('revenueChart').getContext('2d');
-                new Chart(ctx, {
+
+                let labels = [...(data.labels || [])];
+                let values = [...(data.values || [])];
+                let forecastValues = new Array(values.length).fill(null); // Empty for historical
+
+                // Add prediction point if available
+                if (prediction && prediction.predicted > 0) {
+                     // Get current month name from last label or generate next
+                     // Simple approach: Add "Próximo Mês"
+                     labels.push('Previsão');
+                     // Connect the line: last actual value needed?
+                     // Chart.js handles gaps.
+                     // To make it continuous, last actual point + predicted point
+                     forecastValues.push(null); // Spacer
+
+                     // We want the forecast line to start from the last actual point
+                     // So we replace the null at the last position of forecastValues with the last actual value
+                     forecastValues[forecastValues.length - 1] = values[values.length - 1];
+
+                     values.push(null); // No actual value for next month
+                     forecastValues.push(prediction.predicted);
+                }
+
+                if (window.revenueChartInstance) {
+                    window.revenueChartInstance.destroy();
+                }
+
+                window.revenueChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: data.labels || [],
+                        labels: labels,
                         datasets: [{
-                            label: 'Faturamento',
-                            data: data.values || [],
+                            label: 'Faturamento Real',
+                            data: values,
                             borderColor: '#4e73df',
                             backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                            tension: 0.3
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Previsão (IA)',
+                            data: forecastValues,
+                            borderColor: '#1cc88a', // Green for forecast
+                            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                            borderDash: [5, 5], // Dashed line
+                            tension: 0.3,
+                            fill: false
                         }]
                     },
                     options: {
@@ -378,7 +439,21 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: false
+                                display: true
+                            },
+                             tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
                             }
                         },
                         scales: {
@@ -489,10 +564,63 @@
                 </div>
             </div>
             <hr>
+                let segmentsHtml = '';
+                if(data.segments && Object.keys(data.segments).length > 0) {
+                    // Translated map
+                    const segmentNames = {
+                        'Champions': 'Campeões (VIP)',
+                        'Loyal': 'Leais',
+                        'Potential Loyalist': 'Potenciais Leais',
+                        'New': 'Novos',
+                        'At Risk': 'Em Risco',
+                        'Lost': 'Perdidos'
+                    };
+
+                    segmentsHtml = '<h6 class="mt-3">Segmentação (RFM):</h6><ul class="list-group list-group-flush small">';
+                    for (const [segment, count] of Object.entries(data.segments)) {
+                        const name = segmentNames[segment] || segment;
+                        const percent = ((count / data.total_segmented) * 100).toFixed(0);
+                        let badgeClass = 'bg-secondary';
+                        if(segment === 'Champions') badgeClass = 'bg-success';
+                        if(segment === 'At Risk') badgeClass = 'bg-danger';
+                        if(segment === 'Loyal') badgeClass = 'bg-primary';
+
+                        segmentsHtml += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                ${name}
+                                <span class="badge ${badgeClass} rounded-pill">${count} (${percent}%)</span>
+                            </li>
+                        `;
+                    }
+                    segmentsHtml += '</ul>';
+                }
+
+                container.innerHTML = `
+            <div class="row text-center">
+                <div class="col-6 mb-3">
+                    <h5 class="text-primary">${data.total_customers || 0}</h5>
+                    <small class="text-muted">Total de Clientes</small>
+                </div>
+                <div class="col-6 mb-3">
+                    <h5 class="text-success">${data.active_customers || 0}</h5>
+                    <small class="text-muted">Clientes Ativos</small>
+                </div>
+                <div class="col-6 mb-3">
+                    <h5 class="text-info">${data.new_customers_month || 0}</h5>
+                    <small class="text-muted">Novos este Mês</small>
+                </div>
+                <div class="col-6 mb-3">
+                    <h5 class="text-warning">${data.churn_rate || 0}%</h5>
+                    <small class="text-muted">Taxa de Cancelamento</small>
+                </div>
+            </div>
+            <hr>
             <div class="mt-3">
                 <h6>Segmentação Principal:</h6>
                 <p class="text-muted small">${data.main_segment || 'Análise em progresso...'}</p>
+                ${segmentsHtml}
             </div>
+        `;
         `;
             }
 

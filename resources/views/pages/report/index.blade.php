@@ -3,24 +3,17 @@
 @section('title', 'Relatórios')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-bar-chart-line me-2"></i>
-                    Relatórios
-                </h1>
-                <p class="text-muted">Central de relatórios e analytics do sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('reports.dashboard') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Relatórios"
+            icon="bar-chart-line"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('reports.dashboard'),
+                'Lista' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Central de relatórios e analytics do sistema</p>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -149,9 +142,7 @@
                                             </div>
                                             <h5 class="card-title">Financeiro</h5>
                                             <p class="card-text text-muted small">Receitas, despesas e análises</p>
-                                            <a href="{{ route('reports.financial') }}" class="btn btn-primary btn-sm">
-                                                <i class="bi bi-graph-up me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('reports.financial')" variant="primary" size="sm" icon="graph-up" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -165,9 +156,7 @@
                                             </div>
                                             <h5 class="card-title">Clientes</h5>
                                             <p class="card-text text-muted small">Base de clientes e CRM</p>
-                                            <a href="{{ route('reports.customers') }}" class="btn btn-info btn-sm">
-                                                <i class="bi bi-people me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('reports.customers')" variant="info" size="sm" icon="people" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -181,9 +170,7 @@
                                             </div>
                                             <h5 class="card-title">Produtos</h5>
                                             <p class="card-text text-muted small">Catálogo e inventário</p>
-                                            <a href="{{ route('reports.products') }}" class="btn btn-success btn-sm">
-                                                <i class="bi bi-box me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('reports.products')" variant="success" size="sm" icon="box" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -197,9 +184,7 @@
                                             </div>
                                             <h5 class="card-title">Serviços</h5>
                                             <p class="card-text text-muted small">Prestação de serviços</p>
-                                            <a href="{{ route('reports.services') }}" class="btn btn-warning btn-sm">
-                                                <i class="bi bi-gear me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('reports.services')" variant="warning" size="sm" icon="gear" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -213,9 +198,7 @@
                                             </div>
                                             <h5 class="card-title">Orçamentos</h5>
                                             <p class="card-text text-muted small">Propostas e vendas</p>
-                                            <a href="{{ route('reports.budgets') }}" class="btn btn-danger btn-sm">
-                                                <i class="bi bi-receipt me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('reports.budgets')" variant="danger" size="sm" icon="receipt" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -229,9 +212,7 @@
                                             </div>
                                             <h5 class="card-title">Analytics</h5>
                                             <p class="card-text text-muted small">Métricas avançadas</p>
-                                            <a href="{{ route('reports.analytics') }}" class="btn btn-secondary btn-sm">
-                                                <i class="bi bi-pie-chart me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('reports.analytics')" variant="secondary" size="sm" icon="pie-chart" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -245,10 +226,7 @@
                                             </div>
                                             <h5 class="card-title">Estoque</h5>
                                             <p class="card-text text-muted small">Controle de inventário</p>
-                                            <a href="{{ route('provider.inventory.report') }}"
-                                                class="btn btn-info btn-sm">
-                                                <i class="bi bi-boxes me-1"></i>Ver Relatório
-                                            </a>
+                                            <x-ui.button type="link" :href="route('provider.inventory.report')" variant="info" size="sm" icon="boxes" label="Ver Relatório" />
                                         </div>
                                     </div>
                                 </div>
@@ -307,20 +285,14 @@
                                                         <span class="badge bg-success">Concluído</span>
                                                     </div>
                                                 </div>
-                                                <div class="btn-group" role="group">
-                                                    @if (isset($report->download_url))
-                                                        <a href="{{ $report->download_url }}"
-                                                            class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-download"></i>
-                                                        </a>
-                                                    @endif
-                                                    @if (isset($report->view_url))
-                                                        <a href="{{ $report->view_url }}"
-                                                            class="btn btn-sm btn-outline-secondary">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
+                                                <div class="d-flex gap-1">
+                                                        @if (isset($report->download_url))
+                                                            <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" />
+                                                        @endif
+                                                        @if (isset($report->view_url))
+                                                            <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" />
+                                                        @endif
+                                                    </div>
                                             </div>
                                         </div>
                                     @endforeach
@@ -380,18 +352,12 @@
                                                         <span class="modern-badge badge-active">Concluído</span>
                                                     </td>
                                                     <td>
-                                                        <div class="action-btn-group">
+                                                        <div class="d-flex justify-content-center gap-1">
                                                             @if (isset($report->download_url))
-                                                                <a href="{{ $report->download_url }}"
-                                                                    class="action-btn action-btn-view" title="Download">
-                                                                    <i class="bi bi-download"></i>
-                                                                </a>
+                                                                <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                             @endif
                                                             @if (isset($report->view_url))
-                                                                <a href="{{ $report->view_url }}"
-                                                                    class="action-btn action-btn-edit" title="Visualizar">
-                                                                    <i class="bi bi-eye"></i>
-                                                                </a>
+                                                                <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                             @endif
                                                         </div>
                                                     </td>

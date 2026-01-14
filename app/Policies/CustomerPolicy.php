@@ -15,7 +15,7 @@ class CustomerPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -23,7 +23,11 @@ class CustomerPolicy
      */
     public function view(User $user, Customer $customer): bool
     {
-        return $user->isAdmin();
+        if ($customer->tenant_id !== $user->tenant_id) {
+            return false;
+        }
+
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -31,7 +35,7 @@ class CustomerPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -39,7 +43,11 @@ class CustomerPolicy
      */
     public function update(User $user, Customer $customer): bool
     {
-        return $user->isAdmin();
+        if ($customer->tenant_id !== $user->tenant_id) {
+            return false;
+        }
+
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -47,7 +55,11 @@ class CustomerPolicy
      */
     public function delete(User $user, Customer $customer): bool
     {
-        return $user->isAdmin();
+        if ($customer->tenant_id !== $user->tenant_id) {
+            return false;
+        }
+
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -55,7 +67,11 @@ class CustomerPolicy
      */
     public function restore(User $user, Customer $customer): bool
     {
-        return $user->isAdmin();
+        if ($customer->tenant_id !== $user->tenant_id) {
+            return false;
+        }
+
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -63,6 +79,10 @@ class CustomerPolicy
      */
     public function forceDelete(User $user, Customer $customer): bool
     {
+        if ($customer->tenant_id !== $user->tenant_id) {
+            return false;
+        }
+
         return $user->isAdmin();
     }
 
@@ -71,7 +91,11 @@ class CustomerPolicy
      */
     public function toggleStatus(User $user, Customer $customer): bool
     {
-        return $user->isAdmin();
+        if ($customer->tenant_id !== $user->tenant_id) {
+            return false;
+        }
+
+        return $user->isProvider() || $user->isAdmin();
     }
 
     /**
@@ -79,6 +103,6 @@ class CustomerPolicy
      */
     public function export(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->isProvider() || $user->isAdmin();
     }
 }

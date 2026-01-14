@@ -35,10 +35,10 @@ class Pdf extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'data'         => 'array',
-        'metadata'     => 'array',
+        'data' => 'array',
+        'metadata' => 'array',
         'generated_at' => 'datetime',
-        'created_at'   => 'immutable_datetime',
-        'updated_at'   => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 }

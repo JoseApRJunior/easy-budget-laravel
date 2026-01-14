@@ -75,23 +75,17 @@ class ViewTemplates
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-plus-circle me-2"></i>@yield(\'title\', \'Novo Registro\')
-            </h1>
-            <p class="text-muted mb-0">@yield(\'subtitle\', \'Cadastre um novo registro\')</p>
-        </div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="@yield(\'dashboard-route\', \'#\')">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="@yield(\'index-route\', \'#\')">@yield(\'module-name\', \'Módulo\')</a></li>
-                <li class="breadcrumb-item active">@yield(\'action-name\', \'Novo\')</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container py-4">
+    <x-page-header
+        title="@yield(\'title\', \'Novo Registro\')"
+        icon="plus-circle"
+        :breadcrumb-items="[
+            \'Dashboard\' => route(\'provider.dashboard\'),
+            \'@yield(\'module-name\', \'Módulo\')\' => \'@yield(\'index-route\', \'#\')\',
+            \'@yield(\'action-name\', \'Novo\')\' => \'#\'
+        ]">
+        <x-button :href="@yield(\'index-route\', \'#\')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+    </x-page-header>
 
     <!-- Formulário -->
     <div class="row justify-content-center">
@@ -235,19 +229,17 @@ class ViewTemplates
 @extends(\'layouts.app\')
 
 @section(\'content\')
-<div class="container-fluid py-1">
-    <!-- Cabeçalho -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-table me-2"></i>@yield(\'title\', \'Listagem Avançada\')
-            </h1>
-            <p class="text-muted mb-0">@yield(\'subtitle\', \'Gerencie os registros com filtros avançados\')</p>
-        </div>
-        <div class="d-flex gap-2">
-            @yield(\'header-actions\')
-        </div>
-    </div>
+<div class="container-fluid py-4">
+    <x-page-header
+        title="@yield(\'title\', \'Listagem Avançada\')"
+        icon="table"
+        :breadcrumb-items="[
+            \'Dashboard\' => route(\'provider.dashboard\'),
+            \'Módulo\' => \'#\',
+            \'Listagem\' => \'#\'
+        ]">
+        @yield(\'header-actions\')
+    </x-page-header>
 
     <!-- Cards de Estatísticas -->
     @yield(\'stats-cards\')
@@ -909,5 +901,4 @@ resources/views/
 - Documente funcionalidades complexas
 - Use nomes de classe descritivos';
     }
-
 }

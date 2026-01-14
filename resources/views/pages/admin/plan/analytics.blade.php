@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-graph-up me-2"></i>Análises do Plano: {{ $plan->name }}</h1>
-        <div>
+<div class="container-fluid py-4">
+    <x-layout.page-header
+        :title="'Análises do Plano: ' . $plan->name"
+        icon="graph-up"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            $plan->name => route('admin.plans.show', $plan),
+            'Análises' => '#'
+        ]">
+        <div class="d-flex gap-2">
             <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Voltar ao Plano
             </a>
@@ -12,7 +19,7 @@
                 <i class="bi bi-download me-1"></i>Exportar Dados
             </a>
         </div>
-    </div>
+    </x-layout.page-header>
 
     <!-- Key Metrics -->
     <div class="row mb-4">
@@ -20,7 +27,7 @@
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Taxa de Crescimento</h5>
-                    <h3>{{ number_format($analytics['growth_rate'], 2, ',', '.') }}%</h3>
+                    <h3>{{ \App\Helpers\CurrencyHelper::format($analytics['growth_rate'], 2, false) }}%</h3>
                     <small>Comparado ao mês anterior</small>
                 </div>
             </div>
@@ -29,7 +36,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Taxa de Retenção</h5>
-                    <h3>{{ number_format($analytics['retention_rate'], 2, ',', '.') }}%</h3>
+                    <h3>{{ \App\Helpers\CurrencyHelper::format($analytics['retention_rate'], 2, false) }}%</h3>
                     <small>Assinaturas ativas vs total</small>
                 </div>
             </div>
@@ -107,8 +114,8 @@
                                                 <span class="badge bg-secondary">{{ $netGrowth }}</span>
                                             @endif
                                         </td>
-                                        <td>R$ {{ number_format($data['revenue'], 2, ',', '.') }}</td>
-                                        <td>R$ {{ number_format($avgTicket, 2, ',', '.') }}</td>
+                                        <td>{{ \App\Helpers\CurrencyHelper::format($data['revenue']) }}</td>
+                                        <td>{{ \App\Helpers\CurrencyHelper::format($avgTicket) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -130,14 +137,14 @@
                                             <span class="badge bg-secondary">{{ $totalNetGrowth }}</span>
                                         @endif
                                     </th>
-                                    <th>R$ {{ number_format(collect($analytics['monthly_data'])->sum('revenue'), 2, ',', '.') }}</th>
+                                    <th>{{ \App\Helpers\CurrencyHelper::format(collect($analytics['monthly_data'])->sum('revenue')) }}</th>
                                     <th>
                                         @php
                                             $totalNewSubscriptions = collect($analytics['monthly_data'])->sum('new_subscriptions');
                                             $totalRevenue = collect($analytics['monthly_data'])->sum('revenue');
                                             $totalAvgTicket = $totalNewSubscriptions > 0 ? $totalRevenue / $totalNewSubscriptions : 0;
                                         @endphp
-                                        R$ {{ number_format($totalAvgTicket, 2, ',', '.') }}
+                                        {{ \App\Helpers\CurrencyHelper::format($totalAvgTicket) }}
                                     </th>
                                 </tr>
                             </tfoot>

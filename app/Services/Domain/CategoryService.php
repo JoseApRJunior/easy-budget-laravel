@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\Actions\Category\CreateCategoryAction;
+use App\Actions\Category\UpdateCategoryAction;
+use App\DTOs\Category\CategoryDTO;
+use App\DTOs\Category\CategoryFilterDTO;
 use App\Enums\OperationStatus;
 use App\Models\Category;
 use App\Repositories\CategoryRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -26,108 +28,73 @@ use Illuminate\Support\Str;
  */
 class CategoryService extends AbstractBaseService
 {
-    public function __construct( CategoryRepository $repository )
-    {
-        parent::__construct( $repository );
+    public function __construct(
+        CategoryRepository $repository,
+        private CreateCategoryAction $createAction,
+        private UpdateCategoryAction $updateAction,
+    ) {
+        parent::__construct($repository);
     }
 
     protected function getSupportedFilters(): array
     {
-        return [ 'id', 'name', 'slug', 'is_active', 'parent_id', 'created_at', 'updated_at' ];
-    }
-
-    /**
-     * Gera slug único para o tenant.
-     */
-    public function generateUniqueSlug( string $name, int $tenantId, ?int $excludeId = null ): string
-    {
-        $base = Str::slug( $name );
-        $slug = $base;
-        $i    = 1;
-
-        while ( $this->repository->existsBySlugAndTenantId( $slug, $excludeId ) ) {
-            $slug = $base . '-' . $i;
-            $i++;
-        }
-
-        return $slug;
+        return ['id', 'name', 'slug', 'is_active', 'parent_id', 'created_at', 'updated_at'];
     }
 
     /**
      * Valida dados da categoria.
      */
-    public function validate( array $data, bool $isUpdate = false ): ServiceResult
+    public function validate(array $data, bool $isUpdate = false): ServiceResult
     {
-        $validator = Validator::make( $data, Category::businessRules() );
+        $validator = Validator::make($data, Category::businessRules());
 
-        if ( $validator->fails() ) {
-            return $this->error( OperationStatus::INVALID_DATA, implode( ', ', $validator->errors()->all() ) );
+        if ($validator->fails()) {
+            return $this->error(OperationStatus::INVALID_DATA, implode(', ', $validator->errors()->all()));
         }
 
-        return $this->success( $data );
+        return $this->success($data);
     }
 
     /**
-     * Lista categorias do tenant com filtros e paginação.
+     * Lista categorias do tenant com filtros e paginação opcional.
      */
-    public function getFilteredCategories( array $filters = [], int $perPage = 10 ): ServiceResult
+    public function getFilteredCategories(CategoryFilterDTO $filterDto, bool $paginate = true): ServiceResult
     {
-        return $this->safeExecute( function () use ($filters, $perPage) {
-            if ( !$this->tenantId() ) {
-                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
+        return $this->safeExecute(function () use ($filterDto, $paginate) {
+            if (! $this->tenantId()) {
+                return $this->error(OperationStatus::ERROR, 'Tenant não identificado');
             }
 
-            $paginator = $this->repository->getPaginated(
-                $this->normalizeFilters( $filters ),
-                $perPage,
-                [ 'parent' ],
-            );
+            // Normalização padronizada via Trait usando o array do DTO
+            $normalizedFilters = $this->normalizeFilters($filterDto->toFilterArray(), [
+                'aliases' => ['active' => 'is_active'],
+                'likes' => ['name', 'slug'],
+            ]);
 
-            Log::info( 'Categorias carregadas', [ 'total' => $paginator->total() ] );
-            return $paginator;
-        }, 'Erro ao carregar categorias.' );
-    }
+            $with = ['parent' => fn ($q) => $q->withTrashed()];
 
-    /**
-     * Normaliza filtros do request para formato aceito pelo repository.
-     */
-    private function normalizeFilters( array $filters ): array
-    {
+            if ($paginate) {
+                $result = $this->repository->getPaginated(
+                    $normalizedFilters,
+                    $filterDto->per_page,
+                    $with,
+                );
+                Log::info('Categorias carregadas (paginado)', ['total' => $result->total()]);
+            } else {
+                $result = $this->repository->getAllByTenant(
+                    $normalizedFilters,
+                    null, // order by can be added if needed
+                );
+                // getAllByTenant doesn't load relations by default in AbstractTenantRepository
+                // but we can load them if needed.
+                if (!empty($with)) {
+                    $result->load($with);
+                }
+                Log::info('Categorias carregadas (coleção)', ['total' => $result->count()]);
+            }
 
-        $normalized = [];
-
-        if ( array_key_exists( 'all', $filters ) && $filters[ 'all' ] !== null ) {
-            $normalized[ 'all' ] = (bool) $filters[ 'all' ];
-        }
-
-        // Status filter
-        if ( isset( $filters[ 'active' ] ) && $filters[ 'active' ] !== '' && $filters[ 'active' ] !== null ) {
-            $normalized[ 'is_active' ] = (string) $filters[ 'active' ] === '1' || $filters[ 'active' ] === 1;
-        }
-
-        // Search/Name/Slug filters
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $normalized[ 'search' ] = (string) $filters[ 'search' ];
-        }
-
-        if ( !empty( $filters[ 'name' ] ) ) {
-            $normalized[ 'name' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'name' ] . '%' ];
-        }
-
-        if ( !empty( $filters[ 'slug' ] ) ) {
-            $normalized[ 'slug' ] = [ 'operator' => 'like', 'value' => '%' . $filters[ 'slug' ] . '%' ];
-        }
-
-        // Soft delete filter
-        if ( array_key_exists( 'deleted', $filters ) ) {
-            $normalized[ 'deleted' ] = match ( $filters[ 'deleted' ] ) {
-                'only', '1'    => 'only',
-                'current', '0' => 'current',
-                default        => '',
-            };
-        }
-
-        return $normalized;
+            return $result;
+        }, 'Erro ao carregar categorias.');
     }
 
     /**
@@ -135,120 +102,136 @@ class CategoryService extends AbstractBaseService
      */
     public function getParentCategories(): ServiceResult
     {
-        try {
-            $tenantId = $this->tenantId();
+        return $this->safeExecute(function () {
+            $parents = $this->repository->listParents();
 
-            if ( !$tenantId ) {
-                return $this->error( OperationStatus::ERROR, 'Tenant não identificado' );
-            }
-
-            $parents = Category::query()
-                ->withoutGlobalScope( \App\Models\Traits\TenantScope::class)
-                ->where( 'tenant_id', $tenantId )
-                ->whereNull( 'parent_id' )
-                ->whereNull( 'deleted_at' )
-                ->where( 'is_active', true )
-                ->orderBy( 'name' )
-                ->get( [ 'id', 'name' ] );
-
-            return $this->success( $parents, 'Categorias pai carregadas com sucesso.' );
-        } catch ( Exception $e ) {
-            return $this->error( OperationStatus::ERROR, 'Erro ao carregar categorias pai: ' . $e->getMessage(), null, $e );
-        }
+            return $this->success($parents, 'Categorias pai carregadas com sucesso.');
+        }, 'Erro ao carregar categorias pai.');
     }
 
     /**
      * Cria nova categoria para o tenant.
      */
-    public function createCategory( array $data ): ServiceResult
+    public function createCategory(CategoryDTO $dto): ServiceResult
     {
-        return $this->safeExecute( function () use ($data) {
-            $tenantId = $this->ensureTenantId();
+        return $this->safeExecute(function () use ($dto) {
+            $tenantId = (int) $this->tenantId();
+            $data = $dto->toArray();
 
-            if ( isset( $data[ 'name' ] ) ) {
-                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+            // Validações de negócio pré-action
+            if (! empty($data['slug']) && ! Category::validateUniqueSlug($data['slug'], $tenantId)) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
-            if ( empty( $data[ 'slug' ] ) ) {
-                $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId );
-            }
+            if (! empty($data['parent_id'])) {
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], $tenantId);
+                if ($parentResult->isError()) {
+                    return $parentResult;
+                }
 
-            if ( !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId ) ) {
-                return $this->error( OperationStatus::INVALID_DATA, 'Slug já existe neste tenant' );
-            }
+                $parent = $parentResult->getData();
+                if (! $parent->is_active && ($data['is_active'] ?? true)) {
+                    return $this->error(OperationStatus::INVALID_DATA, 'Não é possível criar uma subcategoria ativa sob uma categoria pai inativa.');
+                }
 
-            if ( !empty( $data[ 'parent_id' ] ) ) {
-                $parentResult = $this->validateAndGetParent( (int) $data[ 'parent_id' ], $tenantId );
-                if ( $parentResult->isError() ) return $parentResult;
-
-                if ( ( new Category( [ 'tenant_id' => $tenantId, 'parent_id' => $data[ 'parent_id' ] ] ) )->wouldCreateCircularReference( (int) $data[ 'parent_id' ] ) ) {
-                    return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
+                if ((new Category(['parent_id' => $data['parent_id']]))->wouldCreateCircularReference((int) $data['parent_id'])) {
+                    return $this->error(OperationStatus::INVALID_DATA, 'Não é possível criar referência circular');
                 }
             }
 
-            return DB::transaction( fn() => $this->repository->create( array_merge( $data, [ 'tenant_id' => $tenantId ] ) ) );
-        }, 'Erro ao criar categoria.' );
+            // Delega a criação para a Action
+            $category = $this->createAction->execute($dto, $tenantId);
+
+            return $this->success($category, 'Categoria criada com sucesso.');
+        }, 'Erro ao criar categoria.');
     }
 
     /**
      * Atualiza categoria.
      */
-    public function updateCategory( int $id, array $data ): ServiceResult
+    public function updateCategory(int $id, CategoryDTO $dto): ServiceResult
     {
-        return $this->safeExecute( function () use ($id, $data) {
-            $ownerResult = $this->findAndVerifyOwnership( $id );
-            if ( $ownerResult->isError() ) return $ownerResult;
+        return $this->safeExecute(function () use ($id, $dto) {
+            $tenantId = (int) $this->tenantId();
+            $ownerResult = $this->findAndVerifyOwnership($id);
+            if ($ownerResult->isError()) {
+                return $ownerResult;
+            }
 
             $category = $ownerResult->getData();
+            $data = $dto->toArray();
 
-            $tenantId = $this->tenantId();
-
-            if ( isset( $data[ 'name' ] ) ) {
-                $data[ 'name' ] = mb_convert_case( $data[ 'name' ], MB_CASE_TITLE, 'UTF-8' );
+            // Validações de negócio pré-action
+            if (! empty($data['slug']) && ! Category::validateUniqueSlug($data['slug'], $tenantId, $id)) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Slug já existe neste tenant');
             }
 
-            if ( isset( $data[ 'name' ] ) && empty( $data[ 'slug' ] ) ) {
-                $data[ 'slug' ] = $this->generateUniqueSlug( $data[ 'name' ], $tenantId, $id );
-            }
-
-            if ( isset( $data[ 'slug' ] ) && !Category::validateUniqueSlug( $data[ 'slug' ], $tenantId, $id ) ) {
-                return $this->error( OperationStatus::INVALID_DATA, 'Slug já existe neste tenant' );
-            }
-
-            if ( !empty( $data[ 'parent_id' ] ) ) {
-                if ( $data[ 'parent_id' ] == $id ) {
-                    return $this->error( OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma' );
+            if (! empty($data['parent_id'])) {
+                if ($data['parent_id'] == $id) {
+                    return $this->error(OperationStatus::INVALID_DATA, 'Categoria não pode ser pai de si mesma');
                 }
 
-                $parentResult = $this->validateAndGetParent( (int) $data[ 'parent_id' ], $tenantId );
-                if ( $parentResult->isError() ) return $parentResult;
+                $parentResult = $this->validateAndGetParent((int) $data['parent_id'], $tenantId);
+                if ($parentResult->isError()) {
+                    return $parentResult;
+                }
 
-                if ( $category->wouldCreateCircularReference( (int) $data[ 'parent_id' ] ) ) {
-                    return $this->error( OperationStatus::INVALID_DATA, 'Não é possível criar referência circular' );
+                if ($category->wouldCreateCircularReference((int) $data['parent_id'])) {
+                    return $this->error(OperationStatus::INVALID_DATA, 'Não é possível criar referência circular');
                 }
             }
 
-            return $this->update( $id, $data );
-        }, 'Erro ao atualizar categoria.' );
+            // Regras de negócio para ativação/desativação
+            if (isset($data['is_active'])) {
+                $newStatus = (bool) $data['is_active'];
+                $oldStatus = (bool) $category->is_active;
+
+                if ($newStatus !== $oldStatus && $newStatus === true) {
+                    $parentId = $data['parent_id'] ?? $category->parent_id;
+                    if ($parentId) {
+                        $parent = Category::find($parentId);
+                        if ($parent && ! $parent->is_active) {
+                            return $this->error(OperationStatus::INVALID_DATA, "Não é possível ativar a subcategoria porque a categoria pai '{$parent->name}' está inativa.");
+                        }
+                    }
+                }
+            }
+
+            // Delega a atualização para a Action
+            $updatedCategory = $this->updateAction->execute($category, $dto, $tenantId);
+
+            return $this->success($updatedCategory, 'Categoria atualizada com sucesso.');
+        }, 'Erro ao atualizar categoria.');
     }
 
     /**
      * Remove categoria.
      */
-    public function deleteCategory( int $id ): ServiceResult
+    public function deleteCategory(int $id): ServiceResult
     {
-        return $this->safeExecute( function () use ($id) {
-            $ownerResult = $this->findAndVerifyOwnership( $id );
-            if ( $ownerResult->isError() ) return $ownerResult;
+        return $this->safeExecute(function () use ($id) {
+            $ownerResult = $this->findAndVerifyOwnership($id);
+            if ($ownerResult->isError()) {
+                return $ownerResult;
+            }
 
             $category = $ownerResult->getData();
 
-            if ( $category->hasChildren() ) {
-                return $this->error( OperationStatus::INVALID_DATA, 'Não é possível excluir categoria que possui subcategorias' );
+            // Verificações de "em uso" antes de deletar
+            if ($category->hasChildren()) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir uma categoria que possui subcategorias.');
             }
 
-            return $this->delete( $id );
-        }, 'Erro ao remover categoria.' );
+            if ($category->services()->exists()) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir uma categoria que possui serviços vinculados.');
+            }
+
+            if ($category->products()->exists()) {
+                return $this->error(OperationStatus::INVALID_DATA, 'Não é possível excluir uma categoria que possui produtos vinculados.');
+            }
+
+            return $this->delete($id);
+        }, 'Erro ao remover categoria.');
     }
 
     /**
@@ -260,9 +243,10 @@ class CategoryService extends AbstractBaseService
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute( fn() =>
-            $this->repository->searchCategories( $search, $filters, $orderBy, $limit ),
-            'Erro ao buscar categorias.' );
+        return $this->safeExecute(
+            fn () => $this->repository->search($search, $this->normalizeFilters($filters), $orderBy, $limit),
+            'Erro ao buscar categorias.'
+        );
     }
 
     /**
@@ -273,9 +257,10 @@ class CategoryService extends AbstractBaseService
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute( fn() =>
-            $this->repository->getActiveCategories( $filters, $orderBy, $limit ),
-            'Erro ao buscar categorias ativas.' );
+        return $this->safeExecute(
+            fn () => $this->repository->getActive($this->normalizeFilters($filters), $orderBy, $limit),
+            'Erro ao buscar categorias ativas.'
+        );
     }
 
     /**
@@ -286,49 +271,149 @@ class CategoryService extends AbstractBaseService
         ?array $orderBy = null,
         ?int $limit = null,
     ): ServiceResult {
-        return $this->safeExecute( fn() =>
-            $this->repository->getDeletedCategories( $filters, $orderBy, $limit ),
-            'Erro ao buscar categorias deletadas.' );
+        return $this->safeExecute(function () use ($filters, $orderBy, $limit) {
+            $filters['deleted'] = 'only';
+
+            return $this->repository->getDeleted($this->normalizeFilters($filters), $orderBy, $limit);
+        }, 'Erro ao buscar categorias deletadas.');
     }
 
     /**
      * Restaura categorias deletadas (soft delete) por IDs.
      */
-    public function restoreCategories( array $ids ): ServiceResult
+    public function restoreCategories(array $ids): ServiceResult
     {
-        return $this->safeExecute( fn() => $this->repository->restoreCategories( $ids ), 'Erro ao restaurar categorias.' );
+        return $this->safeExecute(function () use ($ids) {
+            foreach ($ids as $id) {
+                $category = $this->repository->findOneBy('id', (int) $id, [], true);
+                if ($category && $category->parent_id) {
+                    $parent = $this->repository->findOneBy('id', $category->parent_id, [], true);
+                    if ($parent) {
+                        if ($parent->trashed()) {
+                            return $this->error(
+                                OperationStatus::INVALID_DATA,
+                                "Não é possível restaurar a subcategoria '{$category->name}' porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
+                            );
+                        }
+                        if (! $parent->is_active && $category->is_active) {
+                            return $this->error(
+                                OperationStatus::INVALID_DATA,
+                                "Não é possível restaurar a subcategoria '{$category->name}' como ativa porque a categoria pai ({$parent->name}) está inativa."
+                            );
+                        }
+                    }
+                }
+            }
+
+            return $this->repository->restoreMany($ids);
+        }, 'Erro ao restaurar categorias.');
     }
 
     /**
      * Restaura categoria deletada (soft delete) por slug.
      */
-    public function restoreCategoriesBySlug( string $slug ): ServiceResult
+    public function restoreCategoriesBySlug(string $slug): ServiceResult
     {
-        return $this->safeExecute( function () use ($slug) {
-            $tenantId = $this->ensureTenantId();
-            $category = Category::onlyTrashed()
-                ->where( 'tenant_id', $tenantId )
-                ->where( 'slug', $slug )
-                ->first();
+        return $this->safeExecute(function () use ($slug) {
+            $category = $this->repository->findBySlug($slug, true);
 
-            if ( !$category ) {
-                return $this->error( OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída' );
+            if (! $category) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada ou não está excluída');
             }
 
-            $category->restore();
-            return $category;
-        }, 'Erro ao restaurar categoria.' );
+            // Validação: Não permitir restaurar filho se o pai estiver deletado ou inativo
+            if ($category->parent_id) {
+                $parent = $this->repository->findOneBy('id', $category->parent_id, [], true);
+                if ($parent) {
+                    if ($parent->trashed()) {
+                        return $this->error(
+                            OperationStatus::INVALID_DATA,
+                            "Não é possível restaurar esta subcategoria porque a categoria pai ({$parent->name}) está na lixeira. Restaure o pai primeiro."
+                        );
+                    }
+                    if (! $parent->is_active && $category->is_active) {
+                        return $this->error(
+                            OperationStatus::INVALID_DATA,
+                            "Não é possível restaurar esta subcategoria como ativa porque a categoria pai ({$parent->name}) está inativa."
+                        );
+                    }
+                }
+            }
+
+            $success = $this->repository->restoreBySlug($slug);
+
+            if (! $success) {
+                return $this->error(OperationStatus::ERROR, 'Erro ao restaurar a categoria');
+            }
+
+            return $this->success(null, 'Categoria restaurada com sucesso');
+        }, 'Erro ao restaurar categoria.');
     }
 
     /**
-     * Busca categoria por slug dentro do tenant.
+     * Busca categoria por slug dentro do tenant com relacionamentos e contagens.
      */
-    public function findBySlug( string $slug ): ServiceResult
+    public function findBySlug(string $slug, array $with = [], bool $withTrashed = true, array $loadCounts = []): ServiceResult
     {
-        return $this->safeExecute( function () use ($slug) {
-            $entity = $this->repository->findBySlugAndTenantId( $slug );
-            return $entity ?: $this->error( OperationStatus::NOT_FOUND, 'Categoria não encontrada' );
-        }, 'Erro ao buscar categoria.' );
+        return $this->safeExecute(function () use ($slug, $with, $withTrashed, $loadCounts) {
+            $entity = $this->repository->findBySlug($slug, $withTrashed);
+
+            if (! $entity) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Categoria não encontrada');
+            }
+
+            if (! empty($with)) {
+                $entity->load($with);
+            }
+
+            if (! empty($loadCounts)) {
+                $entity->loadCount($loadCounts);
+            }
+
+            return $entity;
+        }, 'Erro ao buscar categoria.');
+    }
+
+    /**
+     * Alterna status (ativo/inativo) de uma categoria via slug.
+     */
+    public function toggleCategoryStatus(string $slug): ServiceResult
+    {
+        return $this->safeExecute(function () use ($slug) {
+            $ownerResult = $this->findBySlug($slug);
+            if ($ownerResult->isError()) {
+                return $ownerResult;
+            }
+
+            $category = $ownerResult->getData();
+            $newStatus = ! $category->is_active;
+
+            // Regras de negócio para ativação/desativação
+            if ($newStatus === true && $category->parent_id && $category->parent_id !== $category->id) {
+                // Ao ativar um filho, o pai deve estar ativo e não pode estar na lixeira
+                $parent = Category::withTrashed()->find($category->parent_id);
+                if ($parent && (! $parent->is_active || $parent->trashed())) {
+                    $reason = $parent->trashed() ? 'está na lixeira' : 'está inativa';
+
+                    return $this->error(OperationStatus::INVALID_DATA, "Não é possível ativar a subcategoria '{$category->name}' porque a categoria pai '{$parent->name}' {$reason}.");
+                }
+            }
+
+            return DB::transaction(function () use ($category, $newStatus) {
+                // Se estiver desativando um pai, desativa todos os filhos em cascata
+                if ($newStatus === false) {
+                    Category::where('parent_id', $category->id)
+                        ->where('tenant_id', $this->tenantId())
+                        ->update(['is_active' => false]);
+                }
+
+                $category->update(['is_active' => $newStatus]);
+
+                $message = $newStatus ? 'Categoria ativada com sucesso' : 'Categoria desativada com sucesso';
+
+                return $this->success($category->fresh(), $message);
+            });
+        }, 'Erro ao alterar status da categoria.');
     }
 
     /**
@@ -336,61 +421,62 @@ class CategoryService extends AbstractBaseService
      */
     public function listAll(): ServiceResult
     {
-        return $this->safeExecute( fn() => $this->repository->findOrderedByNameAndTenantId( 'asc' ), 'Erro ao listar categorias.' );
+        return $this->safeExecute(fn () => $this->repository->findOrderedByName('asc'), 'Erro ao listar categorias.');
     }
 
     /**
-     * Retorna dados para o dashboard de categorias.
+     * Busca categoria por ID dentro do tenant com verificações.
+     */
+    public function getCategoryById(int $id): ServiceResult
+    {
+        return $this->findAndVerifyOwnership($id);
+    }
+
+    /**
+     * Dashboard de categorias com estatísticas.
      */
     public function getDashboardData(): ServiceResult
     {
-        return $this->safeExecute( function () {
-            $total            = $this->repository->countByTenantId();
-            $active           = $this->repository->countActiveByTenantId();
-            $deleted          = $this->repository->countDeletedByTenantId();
-            $recentCategories = $this->repository->getRecentByTenantId( 5 );
+        return $this->safeExecute(function () {
+            $total = $this->repository->countByTenant();
+            $active = $this->repository->countActiveByTenant();
+            $deleted = $this->repository->countDeletedByTenant();
+            $recentCategories = $this->repository->getRecentByTenant(5);
 
-            return [
-                'total_categories'    => $total,
-                'active_categories'   => $active,
-                'inactive_categories' => max( 0, $total - $active ),
-                'deleted_categories'  => $deleted,
-                'recent_categories'   => $recentCategories,
+            $stats = [
+                'total_categories' => $total,
+                'active_categories' => $active,
+                'inactive_categories' => max(0, $total - $active),
+                'deleted_categories' => $deleted,
+                'recent_categories' => $recentCategories,
             ];
-        }, 'Erro ao obter estatísticas de categorias.' );
+
+            return $this->success($stats, 'Estatísticas obtidas com sucesso');
+        }, 'Erro ao obter estatísticas de categorias.');
     }
 
-    // --- Auxiliares Privados ---
-
-    private function ensureTenantId(): int
+    private function findAndVerifyOwnership(int $id): ServiceResult
     {
-        $id = $this->tenantId();
-        if ( !$id ) {
-            throw new Exception( 'Tenant não identificado' );
+        $result = $this->findById($id);
+        if ($result->isError()) {
+            return $result;
         }
-        return $id;
-    }
-
-    private function findAndVerifyOwnership( int $id ): ServiceResult
-    {
-        $result = $this->findById( $id );
-        if ( $result->isError() ) return $result;
 
         $category = $result->getData();
-        if ( $category->tenant_id !== $this->tenantId() ) {
-            return $this->error( OperationStatus::UNAUTHORIZED, 'Categoria não pertence ao tenant atual' );
+        if ($category->tenant_id !== $this->tenantId()) {
+            return $this->error(OperationStatus::UNAUTHORIZED, 'Categoria não pertence ao tenant atual');
         }
 
-        return $this->success( $category );
+        return $this->success($category);
     }
 
-    private function validateAndGetParent( int $parentId, int $tenantId ): ServiceResult
+    private function validateAndGetParent(int $parentId, int $tenantId): ServiceResult
     {
-        $parent = Category::find( $parentId );
-        if ( !$parent || $parent->tenant_id !== $tenantId ) {
-            return $this->error( OperationStatus::INVALID_DATA, 'Categoria pai inválida' );
+        $parent = Category::find($parentId);
+        if (! $parent || $parent->tenant_id !== $tenantId) {
+            return $this->error(OperationStatus::INVALID_DATA, 'Categoria pai inválida');
         }
-        return $this->success( $parent );
-    }
 
+        return $this->success($parent);
+    }
 }

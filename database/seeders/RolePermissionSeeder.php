@@ -15,38 +15,39 @@ class RolePermissionSeeder extends Seeder
         $perms = Permission::all();
 
         $assign = [
-            'admin'    => $perms, // todas permissões
+            'admin' => $perms, // todas permissões
             'provider' => $perms, // todas permissões
-            'manager'  => $perms->filter( function ( $permission ) {
-                return !str_ends_with( $permission->name, '.delete' );
-            } ),
-            'staff'    => $perms->filter( function ( $permission ) {
-                return str_contains( $permission->name, 'budgets.' ) || str_contains( $permission->name, 'services.' );
-            } )->filter( function ( $permission ) {
-                return !str_ends_with( $permission->name, '.delete' );
-            } ),
-            'viewer'   => $perms->filter( function ( $permission ) {
-                return str_ends_with( $permission->name, '.view' );
-            } ),
+            'manager' => $perms->filter(function ($permission) {
+                return ! str_ends_with($permission->name, '.delete');
+            }),
+            'staff' => $perms->filter(function ($permission) {
+                return str_contains($permission->name, 'budgets.') || str_contains($permission->name, 'services.');
+            })->filter(function ($permission) {
+                return ! str_ends_with($permission->name, '.delete');
+            }),
+            'viewer' => $perms->filter(function ($permission) {
+                return str_ends_with($permission->name, '.view');
+            }),
         ];
 
-        foreach ( $assign as $roleName => $permissions ) {
-            $role = $roles->where( 'name', $roleName )->first();
-            if ( !$role ) continue;
+        foreach ($assign as $roleName => $permissions) {
+            $role = $roles->where('name', $roleName)->first();
+            if (! $role) {
+                continue;
+            }
 
-            foreach ( $permissions as $permission ) {
+            foreach ($permissions as $permission) {
                 RolePermission::firstOrCreate(
                     [
-                        'role_id'       => $role->id,
+                        'role_id' => $role->id,
                         'permission_id' => $permission->id,
                     ],
                     [
-                        'role_id'       => $role->id,
+                        'role_id' => $role->id,
                         'permission_id' => $permission->id,
                     ],
                 );
             }
         }
     }
-
 }

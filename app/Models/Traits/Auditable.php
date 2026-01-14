@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models\Traits;
@@ -39,18 +40,18 @@ trait Auditable
         }
         $isSystem = $user === null;
         AuditLog::create([
-            'tenant_id'        => $tenantId,
-            'user_id'          => $userId,
+            'tenant_id' => $tenantId,
+            'user_id' => $userId,
             'is_system_action' => $isSystem,
-            'action'           => $action,
-            'model_type'       => get_class($model),
-            'model_id'         => $model->getKey(),
-            'metadata'         => [],
-            'description'      => $action.' '.$model->getTable(),
-            'severity'         => 'info',
-            'category'         => 'data_modification',
-            'ip_address'       => Request::ip(),
-            'user_agent'       => Request::userAgent(),
+            'action' => $action,
+            'model_type' => get_class($model),
+            'model_id' => $model->getKey(),
+            'metadata' => [],
+            'description' => $action.' '.$model->getTable(),
+            'severity' => 'info',
+            'category' => 'data_modification',
+            'ip_address' => Request::ip(),
+            'user_agent' => Request::userAgent(),
         ]);
     }
 }

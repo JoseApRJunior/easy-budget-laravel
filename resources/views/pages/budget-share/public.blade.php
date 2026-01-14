@@ -1,217 +1,306 @@
-@extends('layouts.public')
+@extends('layouts.app')
 
-@section('title', 'Orçamento Compartilhado')
+@section('title', 'Orçamento: ' . $budget->code)
 
 @section('content')
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow-lg">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">
-                                <i class="bi bi-file-text me-2"></i>Orçamento Compartilhado
-                            </h3>
-                            <small>Acesso via link compartilhado</small>
+<x-layout.page-container :fluid="false" padding="py-4">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>Sucesso!</strong> {{ session('success') }}
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                <div>
+                    <strong>Erro!</strong> {{ session('error') }}
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Cabeçalho da Visualização Pública --}}
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-12 col-md">
+            <div class="d-flex flex-column">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-text  fs-4"></i>
+                    <h4 class="mb-0 fw-semibold text-dark">Orçamento Compartilhado</h4>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                    <span class="text-muted small ms-md-2  ps-md-3">
+                        <i class="bi bi-shield-check me-1 text-success"></i>
+                        Acesso seguro via link oficial •  {{ $budget->code }}
+                    </span>
+                    <x-ui.status-description :item="$budget" class="ms-md-2" />
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-auto">
+            <div class="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+                @if($permissions['can_print'] ?? true)
+                    <a href="{{ route('budgets.public.shared.download-pdf', ['token' => $budgetShare->share_token]) }}"
+                       class="btn btn-sm btn-outline-danger shadow-sm">
+                        <i class="bi bi-file-pdf me-1"></i>Baixar Orçamento (PDF)
+                    </a>
+                @endif
+
+                @if($permissions['can_comment'] ?? false)
+                    <button type="button" class="btn btn-sm btn-outline-primary shadow-sm" onclick="showCommentModal()">
+                        <i class="bi bi-chat-left-text me-1"></i>Comentar
+                    </button>
+                @endif
+
+                @if(($permissions['can_approve'] ?? false) && $budget->status->value === 'pending')
+                    <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm px-3" onclick="cancelBudget()">
+                        <i class="bi bi-slash-circle me-1"></i>CANCELAR
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" onclick="rejectBudget()">
+                        <i class="bi bi-x-circle me-1"></i>REJEITAR
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success fw-semibold px-3 shadow-sm" onclick="approveBudget()">
+                        <i class="bi bi-check-all me-1"></i>APROVAR
+                    </button>
+                @elseif($budget->status->value === 'approved')
+                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" onclick="cancelApprovedBudget()">
+                        <i class="bi bi-slash-circle me-1"></i>CANCELAR ORÇAMENTO APROVADO
+                    </button>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Card Principal de Informações --}}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="row g-4">
+                {{-- Informações do Cliente --}}
+                <div class="col-md-7">
+                    <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Dados do Cliente</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <x-resource.resource-info
+                                :title="$budget->customer?->company_name ?? $budget->customer?->name ?? 'Cliente não identificado'"
+                                :subtitle="$budget->customer?->email ?? 'E-mail não informado'"
+                                icon="person-circle"
+                                titleClass="fw-semibold fs-5 text-dark"
+                            />
                         </div>
-                        <div class="text-end">
-                            <div class="badge bg-light text-dark fs-6">
-                                #{{ str_pad($budget->id, 6, '0', STR_PAD_LEFT) }}
+                        <div class="col-sm-6">
+                            <x-resource.resource-info
+                                :title="$budget->customer?->phone ? \App\Helpers\MaskHelper::formatPhone($budget->customer->phone) : 'Não informado'"
+                                subtitle="Telefone de Contato"
+                                icon="telephone"
+                            />
+                        </div>
+                        @if($budget->customer?->address)
+                            <div class="col-12">
+                                <x-resource.resource-info
+                                    :title="\App\Helpers\AddressHelper::format($budget->customer->address)"
+                                    subtitle="Endereço de Entrega/Serviço"
+                                    icon="geo-alt"
+                                />
                             </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
-                
-                <div class="card-body">
-                    <!-- Informações do Cliente -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5 class="text-primary mb-3">Informações do Cliente</h5>
-                            <div class="card border">
-                                <div class="card-body">
-                                    <div class="mb-2">
-                                        <strong>Nome:</strong>
-                                        <span class="text-muted">{{ $budget->customer->name }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Email:</strong>
-                                        <span class="text-muted">{{ $budget->customer->email ?? 'Não informado' }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Telefone:</strong>
-                                        <span class="text-muted">{{ $budget->customer->phone ?? 'Não informado' }}</span>
-                                    </div>
-                                    @if($budget->customer->address)
-                                    <div class="mb-2">
-                                        <strong>Endereço:</strong>
-                                        <span class="text-muted">{{ $budget->customer->address }}</span>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h5 class="text-primary mb-3">Detalhes do Orçamento</h5>
-                            <div class="card border">
-                                <div class="card-body">
-                                    <div class="mb-2">
-                                        <strong>Data:</strong>
-                                        <span class="text-muted">{{ \Carbon\Carbon::parse($budget->budget_date)->format('d/m/Y') }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Validade:</strong>
-                                        <span class="text-muted">{{ \Carbon\Carbon::parse($budget->validity_date)->format('d/m/Y') }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Status:</strong>
-                                        <span class="badge bg-{{ $budget->status === 'approved' ? 'success' : 
-                                                               ($budget->status === 'pending' ? 'warning' : 'secondary') }}">
-                                            {{ ucfirst($budget->status) }}
-                                        </span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Compartilhado por:</strong>
-                                        <span class="text-muted">{{ $share->created_at->diffForHumans() }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Itens do Orçamento -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h5 class="text-primary mb-3">Itens do Orçamento</h5>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th width="5%">#</th>
-                                            <th width="45%">Descrição</th>
-                                            <th width="10%" class="text-center">Qtd</th>
-                                            <th width="15%" class="text-end">Valor Unit.</th>
-                                            <th width="15%" class="text-end">Subtotal</th>
-                                            <th width="10%" class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($budget->items as $index => $item)
-                                        <tr>
-                                            <td>{{ $index + 1 }}</td>
-                                            <td>
-                                                <strong>{{ $item->service_name }}</strong>
-                                                @if($item->description)
-                                                <br><small class="text-muted">{{ $item->description }}</small>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">{{ $item->quantity }}</td>
-                                            <td class="text-end">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                            <td class="text-end">R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                        onclick="showItemDetails({{ json_encode($item) }})">
-                                                    <i class="bi bi-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">
-                                                Nenhum item encontrado neste orçamento
-                                            </td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                {{-- Detalhes do Orçamento --}}
+                <div class="col-md-5 border-start-md ps-md-4">
+                    <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Datas e Prazos</h6>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <x-resource.resource-info
+                                :title="\Carbon\Carbon::parse($budget->budget_date)->format('d/m/Y')"
+                                subtitle="Data de Emissão"
+                                icon="calendar-check"
+                            />
                         </div>
-                    </div>
-
-                    <!-- Totais -->
-                    <div class="row mb-4">
-                        <div class="col-md-6 offset-md-6">
-                            <div class="card border">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>Subtotal:</span>
-                                        <strong>R$ {{ number_format($budget->subtotal, 2, ',', '.') }}</strong>
-                                    </div>
-                                    @if($budget->discount > 0)
-                                    <div class="d-flex justify-content-between mb-2 text-success">
-                                        <span>Desconto:</span>
-                                        <strong>- R$ {{ number_format($budget->discount, 2, ',', '.') }}</strong>
-                                    </div>
-                                    @endif
-                                    <hr>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span><strong>Total:</strong></span>
-                                        <strong class="text-primary fs-5">R$ {{ number_format($budget->total_value, 2, ',', '.') }}</strong>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-6">
+                            <x-resource.resource-info
+                                :title="\Carbon\Carbon::parse($budget->validity_date)->format('d/m/Y')"
+                                subtitle="Validade"
+                                icon="calendar-x"
+                                titleClass="text-danger"
+                            />
                         </div>
-                    </div>
-
-                    <!-- Observações -->
-                    @if($budget->notes)
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h5 class="text-primary mb-3">Observações</h5>
-                            <div class="card border">
-                                <div class="card-body">
-                                    <p class="mb-0">{{ $budget->notes }}</p>
-                                </div>
+                        @if($budgetShare->created_at)
+                            <div class="col-12">
+                                <x-resource.resource-info
+                                    :title="$budgetShare->created_at->diffForHumans()"
+                                    subtitle="Compartilhado em"
+                                    icon="share"
+                                />
                             </div>
-                        </div>
+                        @endif
                     </div>
-                    @endif
-
-                    <!-- Ações -->
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex gap-2">
-                                    @if($permissions['can_print'] ?? true)
-                                    <button type="button" class="btn btn-outline-primary" onclick="printBudget()">
-                                        <i class="bi bi-printer me-2"></i>Imprimir
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary" onclick="downloadPDF()">
-                                        <i class="bi bi-download me-2"></i>Download PDF
-                                    </button>
-                                    @endif
-                                </div>
-                                
-                                <div class="d-flex gap-2">
-                                    @if($permissions['can_approve'] ?? false && $budget->status === 'pending')
-                                    <button type="button" class="btn btn-success" onclick="approveBudget()">
-                                        <i class="bi bi-check-circle me-2"></i>Aprovar Orçamento
-                                    </button>
-                                    @endif
-                                    
-                                    @if($permissions['can_comment'] ?? false)
-                                    <button type="button" class="btn btn-outline-info" onclick="showCommentModal()">
-                                        <i class="bi bi-chat-dots me-2"></i>Adicionar Comentário
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card-footer text-muted text-center">
-                    <small>
-                        <i class="bi bi-shield-check me-2"></i>
-                        Acesso seguro via link compartilhado • 
-                        <span id="accessTime"></span>
-                    </small>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    {{-- Listagem de Serviços --}}
+    <div class="mb-4">
+        <x-resource.resource-list-card
+            title="Serviços e Itens"
+            mobileTitle="Serviços"
+            icon="tools"
+            :total="$budget->services?->count() ?? 0"
+        >
+            @forelse($budget->services as $service)
+                <div class="border-bottom p-4 {{ $loop->last ? 'border-bottom-0' : '' }}">
+                    <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center mb-3 gap-2">
+                        <div class="flex-grow-1">
+                            <h5 class="fw-semibold mb-1 text-dark">{{ $service->category?->name ?? 'Serviço' }}</h5>
+                            @if(!empty($service->description))
+                                <div class="text-muted small mb-0">{!! nl2br(e($service->description)) !!}</div>
+                            @endif
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center justify-content-start justify-content-md-end gap-2 gap-md-1">
+                            <span class="text-muted small fw-semibold">#{{ $service->code }}</span>
+                            <x-ui.status-description :item="$service" />
+                        </div>
+                    </div>
+
+                    {{-- Desktop Table --}}
+                    <div class="table-responsive rounded-3 border d-none d-md-block">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="border-bottom">
+                                    <th class="ps-3 py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Item / Descrição</th>
+                                    <th class="text-center py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Qtd</th>
+                                    <th class="text-end py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Valor Unit.</th>
+                                    <th class="text-end pe-3 py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($service->serviceItems as $item)
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-semibold text-dark">{{ $item->product?->name ?? 'Item' }}</div>
+                                            @if($item->product?->description)
+                                                <div class="small text-muted">{{ Str::limit($item->product->description, 60) }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="text-center fw-medium">{{ $item->quantity }}</td>
+                                        <td class="text-end text-muted">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                                        <td class="text-end fw-semibold text-dark pe-3">R$ {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted italic">Nenhum item neste serviço</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            <tfoot class="fw-semibold border-top">
+                                <tr>
+                                    <td colspan="3" class="text-end ps-3 py-3">Total do Serviço:</td>
+                                    <td class="text-end pe-3 py-3 text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    {{-- Mobile List View --}}
+                    <div class="d-md-none">
+                        @forelse($service->serviceItems as $item)
+                            <div class="py-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <div class="fw-semibold text-dark">{{ $item->product?->name ?? 'Item' }}</div>
+                                    <span class="text-muted small fw-semibold">x{{ $item->quantity }}</span>
+                                </div>
+
+                                @if($item->product?->description)
+                                    <div class="small text-muted mb-2 lh-sm">{{ Str::limit($item->product->description, 80) }}</div>
+                                @endif
+
+                                <div class="d-flex justify-content-between align-items-center pt-1">
+                                    <span class="small text-muted">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }} /un</span>
+                                    <span class="fw-semibold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center py-3 text-muted italic small">Nenhum item cadastrado</div>
+                        @endforelse
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 p-3 rounded-3">
+                            <span class="fw-semibold small text-muted text-uppercase">Total do Serviço</span>
+                            <span class="fw-semibold text-primary fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="py-5 text-center">
+                    <x-resource.empty-state
+                        resource="serviços"
+                        icon="tools"
+                        message="Nenhum serviço encontrado neste orçamento"
+                    />
+                </div>
+            @endforelse
+        </x-resource.resource-list-card>
+    </div>
+
+    <div class="row g-4 mb-5">
+        {{-- Observações --}}
+        <div class="col-lg-7">
+            @if($budget->notes)
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Observações</h6>
+                        <p class="mb-0 text-dark small leading-relaxed">{{ $budget->notes }}</p>
+                    </div>
+                </div>
+            @endif
+        </div>
+
+        {{-- Resumo Financeiro --}}
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <h6 class="text-uppercase text-muted fw-semibold mb-4 small" style="letter-spacing: 1px;">Resumo Financeiro</h6>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal:</span>
+                        <span class="fw-medium text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
+                    </div>
+
+                    @if($budget->discount > 0)
+                        <div class="d-flex justify-content-between mb-2 text-danger">
+                            <span>Desconto:</span>
+                            <span class="fw-medium">- {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
+                        </div>
+                    @endif
+
+                    <hr class="my-3 opacity-25">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="h5 mb-0 fw-semibold text-dark">VALOR TOTAL:</span>
+                        <span class="h3 mb-0 fw-semibold text-primary">{{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center">
+        <div class="d-flex align-items-center justify-content-center gap-2">
+            <div class="status-indicator bg-success"></div>
+            <small class="text-muted fw-medium">
+                Conexão Segura • <span id="accessTime"></span>
+            </small>
+        </div>
+    </div>
+</x-layout.page-container>
 
 <!-- Modal de Detalhes do Item -->
 <div class="modal fade" id="itemDetailsModal" tabindex="-1">
@@ -264,204 +353,337 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('styles')
+<style>
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(40, 167, 69, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+
+    .border-start-md {
+        border-left: 1px solid #dee2e6;
+    }
+
+    @media (max-width: 767.98px) {
+        .border-start-md {
+            border-left: none;
+            border-top: 1px solid #dee2e6;
+            padding-top: 1.5rem;
+            margin-top: 1rem;
+        }
+    }
+</style>
+@endpush
+
+@push('scripts')
 <script>
-// Atualizar hora de acesso
-document.getElementById('accessTime').textContent = new Date().toLocaleString('pt-BR');
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        document.getElementById('accessTime').textContent = now.toLocaleDateString() + ' às ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-function showItemDetails(item) {
-    const content = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6><strong>Serviço:</strong></h6>
-                <p>${item.service_name}</p>
-                
-                <h6><strong>Descrição:</strong></h6>
-                <p>${item.description || 'Sem descrição'}</p>
-                
-                <h6><strong>Quantidade:</strong></h6>
-                <p>${item.quantity}</p>
-            </div>
-            <div class="col-md-6">
-                <h6><strong>Valor Unitário:</strong></h6>
-                <p>R$ ${parseFloat(item.unit_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                
-                <h6><strong>Subtotal:</strong></h6>
-                <p class="text-primary fw-bold">R$ ${parseFloat(item.subtotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                
-                <h6><strong>Observações:</strong></h6>
-                <p>${item.notes || 'Sem observações'}</p>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('itemDetailsContent').innerHTML = content;
-    const modal = new bootstrap.Modal(document.getElementById('itemDetailsModal'));
-    modal.show();
-}
+        // Lógica do formulário de comentário
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
 
-function printBudget() {
-    window.print();
-}
+                fetch("{{ route('budgets.public.shared.comment', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Comentário enviado com sucesso!',
+                            icon: 'success',
+                            confirmButtonColor: '#0d6efd'
+                        }).then(() => {
+                            bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
+                            commentForm.reset();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao enviar comentário.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            });
+        }
+    });
 
-function downloadPDF() {
-    const token = '{{ $share->token }}';
-    window.location.href = `/budget-share/${token}/download`;
-}
+    function approveBudget() {
+        Swal.fire({
+            title: 'Aprovar Orçamento?',
+            text: "Esta ação não pode ser desfeita e confirmará seu pedido.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Sim, Aprovar!',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Feedback visual de processamento
+                Swal.fire({
+                    title: 'Processando...',
+                    text: 'Aguarde enquanto confirmamos sua aprovação.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-function approveBudget() {
-    if (confirm('Tem certeza que deseja aprovar este orçamento? Esta ação não pode ser desfeita.')) {
-        const token = '{{ $share->token }}';
-        fetch(`/budget-share/${token}/approve`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                fetch("{{ route('budgets.public.shared.accept', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Orçamento aprovado com sucesso!',
+                            icon: 'success',
+                            confirmButtonColor: '#198754'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao aprovar orçamento.',
+                            icon: 'error',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação. Tente novamente.',
+                        icon: 'error',
+                        confirmButtonColor: '#dc3545'
+                    });
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Orçamento aprovado com sucesso!');
-                location.reload();
-            } else {
-                alert('Erro ao aprovar orçamento: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('Erro ao processar solicitação');
         });
     }
-}
 
-function showCommentModal() {
-    const modal = new bootstrap.Modal(document.getElementById('commentModal'));
-    modal.show();
-}
+    function rejectBudget() {
+        Swal.fire({
+            title: 'Rejeitar Orçamento?',
+            text: "Deseja realmente rejeitar este orçamento?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sim, Rejeitar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
-document.getElementById('commentForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const token = '{{ $share->token }}';
-    
-    fetch(`/budget-share/${token}/comment`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            comment: formData.get('comment'),
-            name: formData.get('name'),
-            email: formData.get('email')
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Comentário enviado com sucesso!');
-            bootstrap.Modal.getInstance(document.getElementById('commentModal')).hide();
-            this.reset();
-        } else {
-            alert('Erro ao enviar comentário: ' + data.message);
-        }
-    })
-    .catch(error => {
-        alert('Erro ao processar solicitação');
-    });
-});
-
-// Adicionar estilo de impressão
-const printStyles = `
-    @media print {
-        .card-header, .card-footer, .btn, .modal {
-            display: none !important;
-        }
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-        body {
-            background: white !important;
-        }
+                fetch("{{ route('budgets.public.shared.reject', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Rejeitado',
+                            text: 'Orçamento rejeitado com sucesso.',
+                            icon: 'info',
+                            confirmButtonColor: '#0d6efd'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao rejeitar orçamento.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
     }
-`;
-const styleSheet = document.createElement('style');
-styleSheet.textContent = printStyles;
-document.head.appendChild(styleSheet);
+
+    function cancelBudget() {
+        Swal.fire({
+            title: 'Cancelar Orçamento?',
+            text: "Deseja realmente cancelar este orçamento?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6c757d',
+            cancelButtonColor: '#f8f9fa',
+            confirmButtonText: 'Sim, Cancelar',
+            cancelButtonText: 'Voltar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Cancelando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Cancelado',
+                            text: 'Orçamento cancelado com sucesso.',
+                            icon: 'success'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao cancelar orçamento.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
+    }
+
+    function cancelApprovedBudget() {
+        Swal.fire({
+            title: 'Cancelar Orçamento Aprovado?',
+            text: "Este orçamento já foi aprovado. Deseja realmente cancelá-lo?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sim, Cancelar Aprovado',
+            cancelButtonText: 'Manter Aprovado',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Processando...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch("{{ route('budgets.public.shared.cancel', ['token' => $budgetShare->share_token]) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Sucesso!',
+                            text: 'Orçamento aprovado foi cancelado.',
+                            icon: 'success'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro!',
+                            text: result.message || 'Erro ao cancelar orçamento.',
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Erro ao processar sua solicitação.',
+                        icon: 'error'
+                    });
+                });
+            }
+        });
+    }
+
+    function showCommentModal() {
+        const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+        modal.show();
+    }
 </script>
-@endsection
-
-@section('styles')
-<style>
-.public-layout {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    padding: 2rem 0;
-}
-
-.card {
-    border: none;
-    border-radius: 15px;
-    overflow: hidden;
-}
-
-.card-header {
-    border-radius: 15px 15px 0 0 !important;
-    padding: 1.5rem;
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(0,0,0,.05);
-}
-
-.text-success {
-    color: #28a745 !important;
-}
-
-.text-primary {
-    color: #007bff !important;
-}
-
-.btn {
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-}
-
-.btn-outline-primary {
-    border-color: #007bff;
-    color: #007bff;
-}
-
-.btn-outline-primary:hover {
-    background-color: #007bff;
-    color: white;
-}
-
-.badge {
-    font-size: 0.9rem;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-    
-    .table-responsive {
-        font-size: 0.9rem;
-    }
-    
-    .btn {
-        font-size: 0.9rem;
-        padding: 0.4rem 0.8rem;
-    }
-}
-</style>
-@endsection
+@endpush

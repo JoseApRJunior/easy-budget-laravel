@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-box-seam me-2"></i>Detalhes do Plano: {{ $plan->name }}</h1>
-        <div>
-            <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-arrow-left me-1"></i>Voltar
-            </a>
-            <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-warning me-2">
-                <i class="bi bi-pencil me-1"></i>Editar
-            </a>
-            <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-info">
-                <i class="bi bi-people me-1"></i>Assinantes
-            </a>
+<div class="container-fluid py-4">
+    <x-layout.page-header
+        :title="'Detalhes do Plano: ' . $plan->name"
+        icon="box-seam"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => route('admin.plans.index'),
+            $plan->name => '#'
+        ]">
+        <div class="d-flex gap-2">
+            <x-ui.back-button index-route="admin.plans.index" />
+            <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
+            <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
         </div>
-    </div>
+    </x-layout.page-header>
 
     <div class="row">
         <!-- Plan Information -->
@@ -46,7 +46,7 @@
                         </tr>
                         <tr>
                             <th>Preço:</th>
-                            <td>R$ {{ number_format($plan->price, 2, ',', '.') }}</td>
+                            <td>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
                         </tr>
                         <tr>
                             <th>Status:</th>
@@ -132,19 +132,19 @@
                         </tr>
                         <tr>
                             <th>Receita Total:</th>
-                            <td><strong>R$ {{ number_format($stats['total_revenue'], 2, ',', '.') }}</strong></td>
+                            <td><strong>{{ \App\Helpers\CurrencyHelper::format($stats['total_revenue']) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Receita Mensal:</th>
-                            <td><strong>R$ {{ number_format($stats['monthly_revenue'], 2, ',', '.') }}</strong></td>
+                            <td><strong>{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</strong></td>
                         </tr>
                         <tr>
                             <th>Taxa de Churn:</th>
-                            <td>{{ number_format($stats['churn_rate'], 2, ',', '.') }}%</td>
+                            <td>{{ \App\Helpers\CurrencyHelper::format($stats['churn_rate'], 2, false) }}%</td>
                         </tr>
                         <tr>
                             <th>Taxa de Conversão:</th>
-                            <td>{{ number_format($stats['conversion_rate'], 2, ',', '.') }}%</td>
+                            <td>{{ \App\Helpers\CurrencyHelper::format($stats['conversion_rate'], 2, false) }}%</td>
                         </tr>
                     </table>
                 </div>
@@ -158,9 +158,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Assinaturas Recentes</h5>
-                    <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-sm btn-outline-primary">
-                        Ver Todas
-                    </a>
+                    <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="primary" size="sm" label="Ver Todas" />
                 </div>
                 <div class="card-body">
                     @if($subscriptions->count() > 0)
@@ -198,11 +196,9 @@
                                             </td>
                                             <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
                                             <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
-                                            <td>R$ {{ number_format($subscription->transaction_amount, 2, ',', '.') }}</td>
+                                            <td>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</td>
                                             <td>
-                                                <a href="{{ route('admin.plans.subscribers', [$plan, 'search' => $subscription->id]) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
+                                                <x-ui.button type="link" :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" size="sm" icon="eye" title="Ver detalhes" />
                                             </td>
                                         </tr>
                                     @endforeach
@@ -226,25 +222,18 @@
             <div class="d-flex justify-content-between">
                 <div>
                     @if(!$plan->planSubscriptions()->exists())
-                        <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" class="d-inline">
+                        <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" id="deleteForm-{{ $plan->id }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir este plano?')">
-                                <i class="bi bi-trash me-1"></i>Excluir Plano
-                            </button>
+                            <x-ui.button variant="danger" icon="trash" label="Excluir Plano" 
+                                onclick="if(confirm('Tem certeza que deseja excluir este plano?')) document.getElementById('deleteForm-{{ $plan->id }}').submit();" />
                         </form>
                     @endif
                 </div>
-                <div>
-                    <a href="{{ route('admin.plans.duplicate', $plan) }}" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-copy me-1"></i>Duplicar
-                    </a>
-                    <a href="{{ route('admin.plans.analytics', $plan) }}" class="btn btn-outline-primary me-2">
-                        <i class="bi bi-graph-up me-1"></i>Análises
-                    </a>
-                    <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil me-1"></i>Editar Plano
-                    </a>
+                <div class="d-flex gap-2">
+                    <x-ui.button type="link" :href="route('admin.plans.duplicate', $plan)" variant="secondary" icon="copy" label="Duplicar" />
+                    <x-ui.button type="link" :href="route('admin.plans.analytics', $plan)" variant="primary" icon="graph-up" label="Análises" />
+                    <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
                 </div>
             </div>
         </div>

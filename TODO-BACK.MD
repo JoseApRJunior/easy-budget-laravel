@@ -1,6 +1,6 @@
 # TODO - Backend
 
-## 🔧 10. ENUM PATTERNS - Padrões para Uso de Enums
+### 🔧 10. ENUM PATTERNS - Padrões para Uso de Enums
 
 > **📚 Documentação Completa de Padrões para Enums**
 >
@@ -19,8 +19,45 @@
 5. [Validação com Enums](#-validação-com-enums)
 6. [Case Sensitivity](#-case-sensitivity)
 7. [Exemplos Práticos](#-exemplos-práticos)
+8. [Padrão de Filtragem de Data](#-11-date-filtering-patterns---padrão-de-filtragem-de-data)
+9. [Geração de Códigos Únicos](#-12-unique-code-generation-patterns)
 
 ---
+
+### 🆔 12. UNIQUE CODE GENERATION PATTERNS
+
+Para módulos que exigem códigos sequenciais únicos (Orçamentos, Serviços), utilizamos o padrão de reinício mensal com 6 dígitos sequenciais para garantir escalabilidade e organização.
+
+#### Padrão de Formato:
+`PREFIX-YYYY-MM-000000`
+
+- **PREFIX:** 3 ou 4 letras identificadoras (ex: `ORC`, `SERV`)
+- **YYYY:** Ano com 4 dígitos
+- **MM:** Mês com 2 dígitos
+- **000000:** Sequencial de 6 dígitos (reinicia a cada mês)
+
+#### Exemplo de Implementação no Repository:
+```php
+public function generateUniqueCode(): string
+{
+    $year = date('Y');
+    $month = date('m');
+    $lastRecord = $this->getLastByMonth($year, $month);
+    
+    $sequential = 1;
+    if ($lastRecord) {
+        $sequential = $this->extractSequentialNumber($lastRecord->code) + 1;
+    }
+    
+    return sprintf('PREFIX-%s-%s-%06d', $year, $month, $sequential);
+}
+```
+
+#### Regras Importantes:
+- **Tenant Isolation:** A busca pelo último registro deve sempre respeitar o `tenant_id`.
+- **Monthly Reset:** O contador deve reiniciar em 1 no primeiro dia de cada mês.
+- **Scalability:** O uso de 6 dígitos permite até 999.999 registros por mês por empresa.
+- **Concurrency:** Em cenários de alta concorrência, utilizar `GET_LOCK()` do banco de dados para evitar duplicidade.
 
 ### 🏗️ Estrutura Básica de Enum
 
@@ -217,63 +254,142 @@ if (InvoiceStatus::isValid($someValue)) {
 
 ---
 
-### 📋 Exemplos Práticos
+### 🛡️ 11. STATUS ENUM INTERFACE - Padronização de Status
 
-#### Exemplo 1: Filtro por Status
+> **✅ OBRIGATÓRIO:** Todo Enum de status (Budget, Service, Invoice, etc.) deve implementar a `StatusEnumInterface`.
+
+#### Estrutura Recomendada
+Utilize a trait `HasStatusEnumMethods` para implementar automaticamente os métodos da interface.
 
 ```php
-// No controller
+namespace App\Enums;
+
+use App\Contracts\Interfaces\StatusEnumInterface;
+use App\Traits\Enums\HasStatusEnumMethods;
+
+enum ServiceStatus: string implements StatusEnumInterface
+{
+    use HasStatusEnumMethods;
+
+    case DRAFT = 'draft';
+    // ... cases
+}
+```
+
+#### Benefícios
+- **getOptions():** Retorna opções prontas para o Select do Blade.
+- **getMetadata():** Retorna cor, ícone e label para badges.
+- **isFinished() / isActive():** Facilita lógica de negócio (ex: não editar se finalizado).
+
+---
+
+### 📅 12. DATE FILTERING & DTO PATTERNS - Normalização de Datas
+
+#### Normalização no Controller (Filtros)
+Datas vindas do Frontend (`DD/MM/AAAA`) devem ser convertidas para `Y-m-d` antes de consultas.
+
+```php
+use App\Helpers\DateHelper;
+
 public function index(Request $request)
 {
-    $status = $request->input('status');
-
-    if ($status && !InvoiceStatus::isValid($status)) {
-        return back()->withErrors(['status' => 'Status inválido']);
-    }
-
-    $query = Invoice::where('tenant_id', tenant('id'));
-
-    if ($status) {
-        $query->where('status', $status);
-    }
-
-    return view('invoices.index', ['invoices' => $query->paginate(15)]);
-}
-```
-
-#### Exemplo 2: Atualização de Status
-
-```php
-// No controller
-public function updateStatus(Invoice $invoice, Request $request)
-{
-    $validated = $request->validate([
-        'status' => ['required', 'string', Rule::in(InvoiceStatus::values())],
+    $filters = $request->validate([
+        'start_date' => 'nullable|string',
+        'end_date' => 'nullable|string',
     ]);
 
-    $status = InvoiceStatus::from($validated['status']);
-
-    $invoice->update(['status' => $status->value]);
-
-    return redirect()->back()->with('success', 'Status atualizado com sucesso!');
+    if (!empty($filters['start_date'])) {
+        $filters['start_date'] = DateHelper::parseDate($filters['start_date']);
+    }
+    // ...
 }
 ```
 
-#### Exemplo 3: Verificação de Status
+#### Normalização no DTO
+Use `DateHelper::toCarbon()` ou `DateHelper::parseDate()` no `fromRequest`.
 
 ```php
-// Em um service
-public function canPay(Invoice $invoice): bool
+public static function fromRequest(array $data): self
 {
-    return $invoice->status === InvoiceStatus::PENDING->value
-        || $invoice->status === InvoiceStatus::OVERDUE->value;
-}
-
-public function isPaid(Invoice $invoice): bool
-{
-    return $invoice->status === InvoiceStatus::PAID->value;
+    return new self(
+        // Para campos Carbon no DTO
+        due_date: DateHelper::toCarbon($data['due_date'] ?? null),
+        
+        // Para campos string (Y-m-d) no DTO
+        birth_date: DateHelper::parseDate($data['birth_date'] ?? null),
+    );
 }
 ```
+protected function applyDateRangeFilter($query, $startDate, $endDate, $column = 'created_at')
+{
+    if ($startDate) {
+        $query->where($column, '>=', Carbon::parse($startDate)->startOfDay());
+    }
+    if ($endDate) {
+        $query->where($column, '<=', Carbon::parse($endDate)->endOfDay());
+    }
+}
+```
+
+#### Services e DTOs
+- **Parsing:** Utilizar `DateHelper::parseBirthDate()` (ou similar) para converter strings vindas do frontend (`DD/MM/AAAA`) para o formato do banco (`Y-m-d`).
+- **Validação:** Garantir que datas inválidas não quebrem a aplicação, tratando exceções de parsing no DTO ou Service.
+
+#### Multi-tenancy
+- **Isolamento:** Sempre garantir que filtros de data sejam aplicados *após* ou *junto* com o isolamento de tenant (`tenant_id`), preferencialmente usando o trait `TenantScoped` no Model.
+
+---
+
+### 🚀 12. CRUD PATTERNS - Padrões de CRUD (Ex: ServiceController)
+
+#### Controllers
+- **ServiceResult:** Sempre utilizar o padrão `ServiceResult` para retorno dos services.
+- **Autorização:** Utilizar `$this->authorize()` para validar permissões via Policies.
+- **Redirects:** Tratar sucessos e erros com mensagens de feedback amigáveis (`with('success', ...)` ou `with('error', ...)`).
+- **Index/Filtros:** Seguir o padrão de passagem de filtros para o Service/Repository.
+
+Exemplo de Index:
+```php
+public function index(Request $request): View
+{
+    $this->authorize('viewAny', Service::class);
+    
+    $filters = $request->only(['search', 'category', 'active', 'start_date', 'end_date', 'deleted', 'per_page']);
+    $result = $this->serviceService->getPaginated($filters);
+    
+    return view('pages.service.index', [
+        'services' => $result->getData(),
+        'filters' => $filters,
+        'categories' => $this->categoryService->listParents()->getData(),
+    ]);
+}
+```
+
+Exemplo de Store:
+```php
+public function store(ServiceStoreRequest $request): RedirectResponse
+{
+    $this->authorize('create', Service::class);
+    $dto = ServiceDTO::fromRequest($request->validated());
+    $result = $this->serviceService->create($dto);
+
+    if ($result->isError()) {
+        return redirect()->back()->withInput()->with('error', $result->getMessage());
+    }
+
+    return redirect()->route('provider.services.show', $result->getData()->code)
+        ->with('success', 'Criado com sucesso!');
+}
+```
+
+#### Services
+- **DTOs:** Utilizar DTOs para transferência de dados entre Controller e Service.
+- **Transações:** Utilizar `DB::transaction()` para garantir integridade em operações complexas.
+- **Execução Segura:** Utilizar o método `safeExecute` (da `AbstractBaseService`) para capturar exceções e retornar `ServiceResult`.
+
+#### Repositories
+- **Filtros de Data:** Utilizar `applyDateRangeFilter` da `RepositoryFiltersTrait`.
+- **Tenant:** Garantir que todas as consultas respeitem o `tenant_id` (via `AbstractTenantRepository` ou Trait `TenantScoped`).
 
 ---
 
@@ -359,6 +475,40 @@ $status = InvoiceStatus::PENDING;
 $value = $status->value; // "pending"
 ```
 
+### 📅 11. DATE FILTERING PATTERN - Padrão de Filtro de Datas
+
+Para garantir precisão em consultas de datas, especialmente em colunas `datetime` e `timestamp`, utilize sempre o intervalo completo do dia.
+
+**No Service/Repository:**
+```php
+// ✅ CORRETO: Utilizar intervalo completo (00:00:00 até 23:59:59)
+if ($startDate) {
+    $query->where('created_at', '>=', $startDate . ' 00:00:00');
+}
+if ($endDate) {
+    $query->where('created_at', '<=', $endDate . ' 23:59:59');
+}
+
+// ❌ EVITAR: whereDate pode ser impreciso em alguns bancos ou ignorar componentes de tempo
+$query->whereDate('created_at', '>=', $startDate);
+```
+
+**Normalização de Datas (DateHelper):**
+Sempre utilize o `DateHelper` para normalizar datas vindas do frontend (DD/MM/YYYY) para o formato do banco (YYYY-MM-DD).
+
+```php
+$startDate = DateHelper::parseBirthDate($filters['start_date'] ?? null);
+```
+
+---
+
+### 📋 Checklist de Implementação (Backend)
+- [ ] Usar Service Layer e Actions.
+- [ ] Tipagem estrita (`declare(strict_types=1)`).
+- [ ] Tratamento de erros com `ServiceResult`.
+- [ ] Filtros de data usando intervalo completo (00:00:00 - 23:59:59).
+- [ ] Uso de DTOs para transferência de dados complexos.
+
 ---
 
 ## 📊 ESTATÍSTICAS FINAIS
@@ -395,6 +545,41 @@ $value = $status->value; // "pending"
 -  **4 relatórios detalhados** de análise e correções
 -  **TODO.md atualizado** com status do projeto
 -  **Padrões documentados** para futuras implementações
+
+---
+
+---
+
+## 👥 Refatoração do Módulo de Clientes (CONCLUÍDO)
+
+### Objetivo
+
+Modernizar o módulo de clientes para utilizar os novos padrões arquiteturais do sistema: DTOs, ServiceResult, Service Layer e tipagem estrita.
+
+### Tarefas Concluídas
+
+#### 1. Estrutura de DTOs
+- [x] Criar `CustomerDTO` para transferência de dados de criação e atualização.
+- [x] Criar `CustomerFilterDTO` para padronizar filtros de busca e listagem.
+- [x] Criar `CustomerInteractionDTO` para registro de interações.
+- [x] Criar `AddressDTO` e `ContactDTO` para sub-entidades.
+
+#### 2. Service Layer
+- [x] Refatorar `CustomerService` para usar DTOs e retornar `ServiceResult`.
+- [x] Implementar `AddressService` e `ContactService` seguindo o padrão.
+- [x] Integrar `CustomerInteractionService` com os novos padrões.
+- [x] Implementar métodos de busca avançada e estatísticas no Service.
+
+#### 3. Controllers
+- [x] Refatorar `CustomerController` (Web) para usar DTOs e `ServiceResult`.
+- [x] Refatorar `CustomerApiController` (API) para usar DTOs e `ServiceResult`.
+- [x] Padronizar retornos JSON usando os helpers da classe base `Controller`.
+- [x] Garantir que todas as permissões sejam validadas via Policies.
+
+#### 4. Repositories
+- [x] Garantir que `CustomerRepository` suporte operações baseadas em DTO.
+- [x] Validar isolamento de tenant em todas as consultas.
+- [x] Implementar filtros de data padronizados.
 
 ---
 

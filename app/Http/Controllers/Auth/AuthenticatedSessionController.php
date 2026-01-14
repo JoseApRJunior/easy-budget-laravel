@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Abstracts\Controller;
@@ -7,12 +9,13 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Exibir a tela de login.
      */
     public function create(): View
     {
@@ -20,7 +23,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Lidar com uma solicitação de autenticação recebida.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -35,7 +38,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Destroy an authenticated session.
+     * Destruir uma sessão autenticada.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -65,7 +68,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->save();
 
         if (! app()->environment('production')) {
-            \Illuminate\Support\Facades\Log::debug('Sessão limpa criada para navegador', [
+            Log::debug('Sessão limpa criada para navegador', [
                 'session_id' => substr($request->session()->getId(), -8),
                 'browser_fingerprint' => substr($browserFingerprint, -8),
                 'user_id' => Auth::id(),

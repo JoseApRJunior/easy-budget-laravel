@@ -1,21 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Address;
-use App\Models\Budget;
-use App\Models\BusinessData;
-use App\Models\CommonData;
-use App\Models\Contact;
-use App\Models\MerchantOrderMercadoPago;
-use App\Models\PaymentMercadoPagoPlan;
-use App\Models\PlanSubscription;
-use App\Models\ProviderCredential;
-use App\Models\Service;
-use App\Models\Tenant;
 use App\Models\Traits\TenantScoped;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
 {
-    use HasFactory, TenantScoped, SoftDeletes; // Já está correto no contexto fornecido.
+    use HasFactory, SoftDeletes, TenantScoped; // Já está correto no contexto fornecido.
 
     /**
      * The table associated with the model.
@@ -50,11 +39,11 @@ class Provider extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'      => 'integer',
-        'user_id'        => 'integer',
+        'tenant_id' => 'integer',
+        'user_id' => 'integer',
         'terms_accepted' => 'boolean',
-        'created_at'     => 'immutable_datetime',
-        'updated_at'     => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -63,8 +52,8 @@ class Provider extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'      => 'required|integer|exists:tenants,id',
-            'user_id'        => 'required|integer|exists:users,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'user_id' => 'required|integer|exists:users,id',
             'terms_accepted' => 'required|boolean',
         ];
     }
@@ -74,7 +63,7 @@ class Provider extends Model
      */
     public function budgets(): HasMany
     {
-        return $this->hasMany( Budget::class);
+        return $this->hasMany(Budget::class);
     }
 
     /**
@@ -82,7 +71,7 @@ class Provider extends Model
      */
     public function services(): HasMany
     {
-        return $this->hasMany( Service::class);
+        return $this->hasMany(Service::class);
     }
 
     /**
@@ -90,7 +79,7 @@ class Provider extends Model
      */
     public function planSubscriptions(): HasMany
     {
-        return $this->hasMany( PlanSubscription::class);
+        return $this->hasMany(PlanSubscription::class);
     }
 
     /**
@@ -108,11 +97,11 @@ class Provider extends Model
     /**
      * Scope para provedores ativos.
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->whereHas( 'user', function ( $q ) {
-            $q->where( 'is_active', true );
-        } );
+        return $query->whereHas('user', function ($q) {
+            $q->where('is_active', true);
+        });
     }
 
     /**
@@ -120,7 +109,7 @@ class Provider extends Model
      */
     public function providerCredentials(): HasMany
     {
-        return $this->hasMany( ProviderCredential::class);
+        return $this->hasMany(ProviderCredential::class);
     }
 
     /**
@@ -128,7 +117,7 @@ class Provider extends Model
      */
     public function merchantOrderMercadoPago(): HasMany
     {
-        return $this->hasMany( MerchantOrderMercadoPago::class);
+        return $this->hasMany(MerchantOrderMercadoPago::class);
     }
 
     /**
@@ -136,7 +125,7 @@ class Provider extends Model
      */
     public function paymentMercadoPagoPlans(): HasMany
     {
-        return $this->hasMany( PaymentMercadoPagoPlan::class);
+        return $this->hasMany(PaymentMercadoPagoPlan::class);
     }
 
     /**
@@ -144,7 +133,7 @@ class Provider extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -152,7 +141,7 @@ class Provider extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -160,7 +149,7 @@ class Provider extends Model
      */
     public function commonData(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne( CommonData::class);
+        return $this->hasOne(CommonData::class);
     }
 
     /**
@@ -168,7 +157,7 @@ class Provider extends Model
      */
     public function contact(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne( Contact::class);
+        return $this->hasOne(Contact::class);
     }
 
     /**
@@ -176,7 +165,7 @@ class Provider extends Model
      */
     public function address(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne( Address::class);
+        return $this->hasOne(Address::class);
     }
 
     /**
@@ -200,7 +189,6 @@ class Provider extends Model
      */
     public function businessData(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne( BusinessData::class);
+        return $this->hasOne(BusinessData::class);
     }
-
 }

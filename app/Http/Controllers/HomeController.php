@@ -55,31 +55,23 @@ class HomeController extends Controller
      */
     public function index(): View
     {
-        try {
-            $result = $this->planService->list();
+        $result = $this->planService->list();
 
-            if ($result->isSuccess()) {
-                $plans = $this->getServiceData($result, []);
-                $this->logOperation('home_index_accessed', ['plans_count' => count($plans)]);
-
-                return view('pages.home.index', [
-                    'plans' => $plans,
-                ]);
-            }
-
-            // Se falhou, loga o erro e retorna view vazia
-            Log::error('Erro no serviço de planos: '.$this->getServiceErrorMessage($result));
+        if ($result->isSuccess()) {
+            $plans = $this->getServiceData($result, []);
+            $this->logOperation('home_index_accessed', ['plans_count' => count($plans)]);
 
             return view('pages.home.index', [
-                'plans' => [],
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro ao carregar página inicial: '.$e->getMessage());
-
-            return view('pages.home.index', [
-                'plans' => [],
+                'plans' => $plans,
             ]);
         }
+
+        // Se falhou, loga o erro e retorna view vazia
+        Log::error('Erro no serviço de planos: '.$this->getServiceErrorMessage($result));
+
+        return view('pages.home.index', [
+            'plans' => [],
+        ]);
     }
 
     /**

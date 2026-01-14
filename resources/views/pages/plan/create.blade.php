@@ -1,12 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="main-container py-1">
-        <!-- Cabeçalho -->
-        <div class="text-center mb-5">
-            <h1 class="h2 fw-bold text-primary mb-3">Criar Novo Plano</h1>
-            <p class="text-muted lead">Configure um novo plano de assinatura para seus clientes</p>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Criar Novo Plano"
+            icon="gem"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => route('provider.plans.index'),
+                'Novo' => '#'
+            ]">
+            <p class="text-muted mb-0">Configure um novo plano de assinatura para seus clientes</p>
+        </x-layout.page-header>
 
         <!-- Formulário -->
         <div class="row justify-content-center">

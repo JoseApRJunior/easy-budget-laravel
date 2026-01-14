@@ -65,8 +65,8 @@ class FinancialReportService extends AbstractBaseService
             ->whereBetween('confirmed_at', [$dateRange['previous_start'], $dateRange['previous_end']])
             ->sum('amount');
 
-        $growth = $previousPeriod > 0 
-            ? (($currentPeriod - $previousPeriod) / $previousPeriod) * 100 
+        $growth = $previousPeriod > 0
+            ? (($currentPeriod - $previousPeriod) / $previousPeriod) * 100
             : 0;
 
         return [
@@ -211,6 +211,7 @@ class FinancialReportService extends AbstractBaseService
             ->get()
             ->mapWithKeys(function ($item) {
                 $methods = Payment::getPaymentMethods();
+
                 return [$methods[$item->method] ?? $item->method => $item->count];
             })
             ->toArray();
@@ -285,19 +286,19 @@ class FinancialReportService extends AbstractBaseService
                 ->with(['customer.commonData', 'service.category', 'payments']);
 
             // Aplicar filtros
-            if (!empty($filters['date_from'])) {
+            if (! empty($filters['date_from'])) {
                 $query->whereDate('created_at', '>=', $filters['date_from']);
             }
 
-            if (!empty($filters['date_to'])) {
+            if (! empty($filters['date_to'])) {
                 $query->whereDate('created_at', '<=', $filters['date_to']);
             }
 
-            if (!empty($filters['customer_id'])) {
+            if (! empty($filters['customer_id'])) {
                 $query->where('customer_id', $filters['customer_id']);
             }
 
-            if (!empty($filters['status'])) {
+            if (! empty($filters['status'])) {
                 $query->where('status', $filters['status']);
             }
 

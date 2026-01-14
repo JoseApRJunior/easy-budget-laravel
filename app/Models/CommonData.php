@@ -78,6 +78,18 @@ class CommonData extends Model
     ];
 
     /**
+     * Get the full name or company name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        if ($this->type === self::TYPE_COMPANY) {
+            return $this->company_name ?? '';
+        }
+
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+    }
+
+    /**
      * Regras de validação para o modelo CommonData.
      */
     public static function businessRules(string $type): array
@@ -86,7 +98,7 @@ class CommonData extends Model
             'tenant_id' => 'required|integer|exists:tenants,id',
             'type' => 'required|in:individual,company',
             'description' => 'nullable|string|max:65535',
-            'area_of_activity_id' => 'nullable|integer|exists:area_of_activities,id',
+            'area_of_activity_id' => 'nullable|integer|exists:areas_of_activity,id',
             'profession_id' => 'nullable|integer|exists:professions,id',
         ];
 
@@ -98,6 +110,7 @@ class CommonData extends Model
         } else {
             $rules['company_name'] = 'required|string|max:255';
             $rules['cnpj'] = 'required|string|size:14|unique:common_datas,cnpj';
+            $rules['birth_date'] = 'nullable|date|before:today';
         }
 
         return $rules;
@@ -173,5 +186,17 @@ class CommonData extends Model
     public function isCompany(): bool
     {
         return $this->type === self::TYPE_COMPANY;
+    }
+
+    /**
+     * Get the display name (company name or full name).
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        if ($this->isCompany()) {
+            return $this->company_name ?? '';
+        }
+
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
     }
 }

@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
-use App\Enums\OperationStatus;
+use App\Actions\Provider\RegisterProviderAction;
+use App\DTOs\Provider\ProviderRegistrationDTO;
 use App\Events\PasswordResetRequested;
 use App\Events\UserRegistered;
 use App\Models\User;
-use App\Models\UserConfirmationToken;
 use App\Repositories\TenantRepository;
 use App\Repositories\UserConfirmationTokenRepository;
 use App\Repositories\UserRepository;
-use App\Services\Application\EmailVerificationService;
-use App\Services\Application\ProviderManagementService;
-use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Exception;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
@@ -48,253 +43,152 @@ use Illuminate\Support\Facades\Log;
  */
 class UserRegistrationService extends AbstractBaseService
 {
-    protected UserConfirmationTokenService    $userConfirmationTokenService;
-    protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
-    protected UserRepository                  $userRepository;
-    protected ProviderManagementService       $providerManagementService;
-    protected EmailVerificationService        $emailVerificationService;
-    protected TenantRepository                $tenantRepository;
-
     public function __construct(
-        UserRepository $userRepository,
-        UserConfirmationTokenService $userConfirmationTokenService,
-        UserConfirmationTokenRepository $userConfirmationTokenRepository,
-        ProviderManagementService $providerManagementService,
-        EmailVerificationService $emailVerificationService,
-        TenantRepository $tenantRepository,
+        private UserRepository $userRepository,
+        private UserConfirmationTokenService $userConfirmationTokenService,
+        private UserConfirmationTokenRepository $userConfirmationTokenRepository,
+        private ProviderManagementService $providerManagementService,
+        private EmailVerificationService $emailVerificationService,
+        private TenantRepository $tenantRepository,
+        private RegisterProviderAction $registerProviderAction,
     ) {
-        $this->userRepository                  = $userRepository;
-        $this->userConfirmationTokenService    = $userConfirmationTokenService;
-        $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
-        $this->providerManagementService       = $providerManagementService;
-        $this->emailVerificationService        = $emailVerificationService;
-        $this->tenantRepository                = $tenantRepository;
+        parent::__construct($userRepository);
     }
 
     /**
      * Registra um novo usuário no sistema com lógica completa.
      *
-     * Este método implementa toda a lógica de negócio do registro seguindo
-     * a arquitetura estabelecida: criação de entidades → eventos.
-     *
-     * Funcionalidades implementadas:
-     * - Criação automática de Tenant
-     * - Criação de CommonData com dados pessoais
-     * - Criação de Provider vinculado ao usuário
-     * - Integração com planos e assinaturas
-     * - Associação automática de role 'provider'
-     * - Login automático do usuário
-     * - Envio de e-mail usando eventos (apenas para registros normais)
-     * - Tratamento completo de erros
-     *
-     * NOTA: A validação de dados é responsabilidade do Controller/FormRequest.
-     * Este método assume que os dados já foram validados.
-     *
-     * @param array $userData Dados do usuário (first_name, last_name, email, password, phone, terms_accepted)
-     * @param bool $isSocialRegistration Se é um registro via rede social (default: false)
+     * @param  ProviderRegistrationDTO  $dto  DTO com dados do usuário
+     * @param  bool  $isSocialRegistration  Se é um registro via rede social (default: false)
      * @return ServiceResult Resultado da operação
      */
-    public function registerUser( array $userData, bool $isSocialRegistration = false ): ServiceResult
+    public function registerUser(ProviderRegistrationDTO $dto, bool $isSocialRegistration = false): ServiceResult
     {
-        try {
-            DB::beginTransaction();
+        return $this->safeExecute(function () use ($dto, $isSocialRegistration) {
+            // Delegar toda a lógica de criação para RegisterProviderAction
+            $this->logStep('Executando RegisterProviderAction');
 
-            // Validação básica dos dados obrigatórios
-            $validationResult = $this->validateUserData( $userData );
-            if ( !$validationResult->isSuccess() ) {
-                return $validationResult;
-            }
-
-            // Delegar toda a lógica de criação para ProviderManagementService
-            $this->logStep( 'Delegando criação completa para ProviderManagementService' );
-            $registrationResult = $this->providerManagementService->createProviderFromRegistration( $userData );
-
-            if ( !$registrationResult->isSuccess() ) {
-                DB::rollBack();
-                return $registrationResult;
-            }
-
-            $results = $registrationResult->getData();
-
-            DB::commit();
+            $results = $this->registerProviderAction->execute($dto);
 
             // Processar token de verificação e evento apenas para registros normais
-            // Para registros sociais (Google), o e-mail já é verificado pelo provedor
-            if ( !$isSocialRegistration ) {
-                $tokenResult = $this->processEmailVerification( $results[ 'user' ] );
-                $token       = $tokenResult ? $tokenResult->getData()[ 'token' ] : null;
+            if (! $isSocialRegistration) {
+                $tokenResult = $this->processEmailVerification($results['user']);
+                $token = $tokenResult ? $tokenResult->getData()['token'] : null;
 
-                Event::dispatch( new UserRegistered(
-                    $results[ 'user' ],
-                    $results[ 'tenant' ],
+                Event::dispatch(new UserRegistered(
+                    $results['user'],
+                    $results['tenant'],
                     $token,
-                ) );
+                ));
             } else {
-                // Para registros sociais, não precisamos de token nem evento de verificação
                 $token = null;
-                $this->logStep( 'Registro social - pulando verificação de e-mail (Google já verifica)' );
+                $this->logStep('Registro social - pulando verificação de e-mail (Google já verifica)');
             }
 
-            $this->logStep( 'Registro concluído com sucesso', [
-                'user_id'         => $results[ 'user' ]->id,
-                'email'           => $results[ 'user' ]->email,
-                'tenant_id'       => $results[ 'tenant' ]->id,
-                'plan_id'         => $results[ 'plan' ]->id,
-                'provider_id'     => $results[ 'provider' ]->id,
-                'subscription_id' => $results[ 'subscription' ]->id,
-            ] );
+            $this->logStep('Registro concluído com sucesso', [
+                'user_id' => $results['user']->id,
+                'email' => $results['user']->email,
+                'tenant_id' => $results['tenant']->id,
+                'plan_id' => $results['plan']->id,
+                'provider_id' => $results['provider']->id,
+                'subscription_id' => $results['subscription']->id,
+            ]);
 
-            return ServiceResult::success( [
-                'user'         => $results[ 'user' ],
-                'tenant'       => $results[ 'tenant' ],
-                'provider'     => $results[ 'provider' ],
-                'plan'         => $results[ 'plan' ],
-                'subscription' => $results[ 'subscription' ],
-                'message'      => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.'
-            ], 'Usuário registrado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            DB::rollBack();
-
-            Log::error( 'Erro no registro de usuário: ' . $e->getMessage(), [
-                'email'     => $userData[ 'email' ] ?? null,
-                'trace'     => $e->getTraceAsString(),
-                'user_data' => $userData,
-            ] );
-
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro interno do servidor. Tente novamente em alguns minutos.',
-            );
-        }
-    }
-
-    /**
-     * Valida dados obrigatórios para registro de usuário.
-     *
-     * @param array $userData Dados do usuário
-     * @return ServiceResult Resultado da validação
-     */
-    private function validateUserData( array $userData ): ServiceResult
-    {
-        // Para registros sociais, phone não é obrigatório
-        $isSocialRegistration = ( $userData[ 'password' ] === null && $userData[ 'phone' ] === null );
-
-        if (
-            empty( $userData[ 'first_name' ] ) || empty( $userData[ 'last_name' ] ) ||
-            empty( $userData[ 'email' ] ) ||
-            ( !$isSocialRegistration && empty( $userData[ 'password' ] ) && $userData[ 'password' ] !== null ) ||
-            ( !$isSocialRegistration && empty( $userData[ 'phone' ] ) ) || // Phone obrigatório apenas para registros normais
-            empty( $userData[ 'terms_accepted' ] )
-        ) {
-            return ServiceResult::error(
-                OperationStatus::INVALID_DATA,
-                'Dados obrigatórios ausentes para registro de usuário.',
-            );
-        }
-        return ServiceResult::success( null, 'Dados válidos.' );
+            return $this->success([
+                'user' => $results['user'],
+                'tenant' => $results['tenant'],
+                'provider' => $results['provider'],
+                'plan' => $results['plan'],
+                'subscription' => $results['subscription'],
+                'message' => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.',
+            ], 'Usuário registrado com sucesso.');
+        }, 'Erro no registro de usuário.');
     }
 
     /**
      * Registra um log para um passo específico.
      *
-     * @param string $message Mensagem do log
-     * @param array $context Contexto adicional
+     * @param  string  $message  Mensagem do log
+     * @param  array  $context  Contexto adicional
      */
-    private function logStep( string $message, array $context = [] ): void
+    private function logStep(string $message, array $context = []): void
     {
-        Log::info( $message, $context );
+        Log::info($message, $context);
     }
 
     /**
      * Processa a criação do token de verificação de e-mail.
      *
-     * @param User $user Usuário
+     * @param  User  $user  Usuário
      * @return ServiceResult|null Resultado do processamento
      */
-    private function processEmailVerification( User $user ): ?ServiceResult
+    private function processEmailVerification(User $user): ?ServiceResult
     {
-        $this->logStep( 'Criando token de verificação de e-mail...', [ 'user_id' => $user->id ] );
-        $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken( $user );
+        $this->logStep('Criando token de verificação de e-mail...', ['user_id' => $user->id]);
+        $tokenResult = $this->userConfirmationTokenService->createEmailVerificationToken($user);
 
-        if ( !$tokenResult->isSuccess() ) {
-            $this->logStep( 'Falha ao criar token de verificação, mas usuário foi registrado', [
+        if (! $tokenResult->isSuccess()) {
+            $this->logStep('Falha ao criar token de verificação, mas usuário foi registrado', [
                 'user_id' => $user->id,
-                'error'   => $tokenResult->getMessage(),
-            ] );
+                'error' => $tokenResult->getMessage(),
+            ]);
+
             return null;
         }
 
-        $this->logStep( 'Token de verificação criado com sucesso', [ 'user_id' => $user->id ] );
+        $this->logStep('Token de verificação criado com sucesso', ['user_id' => $user->id]);
+
         return $tokenResult;
     }
 
     /**
      * Solicita redefinição de senha para um usuário.
      *
-     * Este método cria o token de redefinição e dispara evento para
-     * envio de e-mail ao invés de chamar MailerService diretamente.
-     *
-     * @param string $email E-mail do usuário
+     * @param  string  $email  E-mail do usuário
      * @return ServiceResult Resultado da operação
      */
-    public function requestPasswordReset( string $email ): ServiceResult
+    public function requestPasswordReset(string $email): ServiceResult
     {
-        try {
+        return $this->safeExecute(function () use ($email) {
             // Buscar usuário por e-mail
-            $user = $this->userRepository->findByEmail( $email );
-            if ( !$user ) {
+            $user = $this->userRepository->findByEmail($email);
+            if (! $user) {
                 // Não revelar se o e-mail existe ou não por segurança
-                return ServiceResult::success(
+                return $this->success(
                     null,
                     'Se o e-mail existir em nosso sistema, você receberá instruções de redefinição.',
                 );
             }
 
             // Criar token de redefinição em formato base64url
-            $token     = generateSecureTokenUrl();
-            $expiresAt = now()->addMinutes( (int) config( 'auth.passwords.users.expire', 60 ) );
+            $token = generateSecureTokenUrl();
+            $expiresAt = now()->addMinutes((int) config('auth.passwords.users.expire', 60));
 
-            $confirmationToken = new UserConfirmationToken( [
-                'user_id'    => $user->id,
-                'token'      => $token,
+            $this->userConfirmationTokenRepository->create([
+                'user_id' => $user->id,
+                'token' => $token,
                 'expires_at' => $expiresAt,
-                'type'       => 'password_reset',
-            ] );
-
-            $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
+                'type' => 'password_reset',
+            ]);
 
             // Buscar tenant do usuário
             $tenant = null;
-            if ( $user->tenant_id ) {
-                $tenant = $this->tenantRepository->find( $user->tenant_id );
+            if ($user->tenant_id) {
+                $tenant = $this->tenantRepository->find($user->tenant_id);
             }
 
             // Disparar evento para envio de e-mail de redefinição
-            // AO INVÉS de chamar MailerService diretamente
-            Event::dispatch( new PasswordResetRequested( $user, $token, $tenant ) );
+            Event::dispatch(new PasswordResetRequested($user, $token, $tenant));
 
-            Log::info( 'Solicitação de redefinição de senha processada com eventos', [
+            Log::info('Solicitação de redefinição de senha processada com eventos', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
-            ] );
+                'email' => $user->email,
+            ]);
 
-            return ServiceResult::success(
+            return $this->success(
                 null,
                 'Instruções de redefinição de senha foram enviadas para seu e-mail.',
             );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao solicitar redefinição de senha', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ] );
-
-            return ServiceResult::error(
-                OperationStatus::ERROR,
-                'Erro ao processar solicitação de redefinição de senha.',
-            );
-        }
+        }, 'Erro ao solicitar redefinição de senha.');
     }
-
 }

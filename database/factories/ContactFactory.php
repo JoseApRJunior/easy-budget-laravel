@@ -20,13 +20,12 @@ class ContactFactory extends Factory
     public function definition(): array
     {
         return [
-            'tenant_id'      => Tenant::factory(),
+            'tenant_id' => Tenant::factory(),
             'email_personal' => $this->faker->unique()->safeEmail,
             'phone_personal' => $this->faker->phoneNumber,
             'email_business' => $this->faker->unique()->companyEmail,
             'phone_business' => $this->faker->phoneNumber,
-            'website'        => $this->faker->url,
+            'website' => $this->faker->url,
         ];
     }
-
 }

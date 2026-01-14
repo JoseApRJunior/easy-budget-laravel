@@ -3,32 +3,16 @@
 @section('title', 'Dashboard de Relatórios')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-bar-chart-line me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Relatórios</span>
-                        <span class="d-sm-none">Relatórios</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Dashboard de Relatórios
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-            <p class="text-muted mb-0 small">
-                Visão geral dos relatórios gerados e métricas de uso do sistema.
-            </p>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard de Relatórios"
+            icon="bar-chart-line"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Visão geral dos relatórios gerados e métricas de uso do sistema.</p>
+        </x-layout.page-header>
 
         @php
             $totalReports = $stats['total_reports'] ?? 0;
@@ -162,18 +146,12 @@
                                                         <span class="badge bg-success">Concluído</span>
                                                     </td>
                                                     <td class="text-center">
-                                                        <div class="btn-group" role="group">
+                                                        <div class="d-flex justify-content-center gap-1">
                                                             @if (isset($report->download_url))
-                                                                <a href="{{ $report->download_url }}"
-                                                                    class="btn btn-sm btn-outline-primary">
-                                                                    <i class="bi bi-download"></i>
-                                                                </a>
+                                                                <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                             @endif
                                                             @if (isset($report->view_url))
-                                                                <a href="{{ $report->view_url }}"
-                                                                    class="btn btn-sm btn-outline-secondary">
-                                                                    <i class="bi bi-eye"></i>
-                                                                </a>
+                                                                <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                             @endif
                                                         </div>
                                                     </td>
@@ -207,18 +185,12 @@
                                                         <span class="badge bg-success">Concluído</span>
                                                     </div>
                                                 </div>
-                                                <div class="btn-group" role="group">
+                                                <div class="d-flex gap-1">
                                                     @if (isset($report->download_url))
-                                                        <a href="{{ $report->download_url }}"
-                                                            class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-download"></i>
-                                                        </a>
+                                                        <x-ui.button type="link" :href="$report->download_url" variant="primary" outline size="sm" icon="download" title="Download" />
                                                     @endif
                                                     @if (isset($report->view_url))
-                                                        <a href="{{ $report->view_url }}"
-                                                            class="btn btn-sm btn-outline-secondary">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
+                                                        <x-ui.button type="link" :href="$report->view_url" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                     @endif
                                                 </div>
                                             </div>
@@ -274,18 +246,10 @@
                         </h6>
                     </div>
                     <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.reports.financial') }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-graph-up me-2"></i>Financeiro
-                        </a>
-                        <a href="{{ route('provider.reports.customers') }}" class="btn btn-sm btn-info">
-                            <i class="bi bi-people me-2"></i>Clientes
-                        </a>
-                        <a href="{{ route('provider.reports.products') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-box me-2"></i>Produtos
-                        </a>
-                        <a href="{{ route('provider.reports.index') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-list-ul me-2"></i>Ver Todos
-                        </a>
+                        <x-ui.button type="link" :href="route('provider.reports.financial')" variant="primary" size="sm" icon="graph-up" label="Financeiro" />
+                        <x-ui.button type="link" :href="route('provider.reports.customers')" variant="info" size="sm" icon="people" label="Clientes" />
+                        <x-ui.button type="link" :href="route('provider.reports.products')" variant="success" size="sm" icon="box" label="Produtos" />
+                        <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" outline size="sm" icon="list-ul" label="Ver Todos" />
                     </div>
                 </div>
             </div>

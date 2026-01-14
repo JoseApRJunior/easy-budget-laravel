@@ -9,12 +9,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1 class="h3 mb-0">Gerenciamento de Filas de E-mail</h1>
                     <div>
-                        <button type="button" class="btn btn-primary me-2" onclick="refreshStats()">
-                            <i class="fas fa-sync-alt me-2"></i>Atualizar
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="testEmail()">
-                            <i class="fas fa-paper-plane me-2"></i>Testar E-mail
-                        </button>
+                        <x-ui.button variant="primary" label="Atualizar" icon="sync-alt" onclick="refreshStats()" class="me-2" />
+                        <x-ui.button variant="success" label="Testar E-mail" icon="paper-plane" onclick="testEmail()" />
                     </div>
                 </div>
 
@@ -76,12 +72,8 @@
                             <div class="card-body">
                                 <p class="text-muted">Remove jobs antigos e falhados para manter o sistema limpo.</p>
                                 <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-warning" onclick="cleanupJobs(7)">
-                                        Limpar Jobs (7 dias)
-                                    </button>
-                                    <button type="button" class="btn btn-outline-warning" onclick="cleanupJobs(30)">
-                                        Limpar Jobs (30 dias)
-                                    </button>
+                                    <x-ui.button variant="warning" label="Limpar Jobs (7 dias)" onclick="cleanupJobs(7)" />
+                                    <x-ui.button variant="warning" outline label="Limpar Jobs (30 dias)" onclick="cleanupJobs(30)" />
                                 </div>
                             </div>
                         </div>
@@ -96,9 +88,7 @@
                             </div>
                             <div class="card-body">
                                 <p class="text-muted">Tenta processar novamente jobs que falharam.</p>
-                                <button type="button" class="btn btn-info" onclick="retryFailedJobs()">
-                                    Retry Jobs Falhados
-                                </button>
+                                <x-ui.button variant="info" label="Retry Jobs Falhados" onclick="retryFailedJobs()" />
                             </div>
                         </div>
                     </div>

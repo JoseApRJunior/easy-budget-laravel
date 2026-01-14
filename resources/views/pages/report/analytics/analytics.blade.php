@@ -3,36 +3,21 @@
 @section('title', 'Relatório de Analytics')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-pie-chart me-2"></i>
-                    Relatório de Analytics
-                </h1>
-                <p class="text-muted">Métricas avançadas e análises de performance do sistema</p>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Relatório de Analytics"
+            icon="pie-chart"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('provider.reports.index'),
+                'Analytics' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="button" variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshData()" />
+                <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-spreadsheet" label="Exportar" onclick="exportAnalytics()" />
+                <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" size="sm" icon="arrow-left" label="Voltar" />
             </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Analytics</li>
-                </ol>
-            </nav>
-        </div>
-
-        <!-- Botões de Ação -->
-        <div class="d-flex justify-content-end mb-4">
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshData()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                </button>
-                <button type="button" class="btn btn-outline-success btn-sm" onclick="exportAnalytics()">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar
-                </button>
-            </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Cards de Métricas Principais -->
         <div class="row mb-4">

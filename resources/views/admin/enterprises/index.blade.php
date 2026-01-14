@@ -1,30 +1,19 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Gestão de Empresas</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">
-                    <i class="bi bi-building text-primary me-2"></i>Gestão de Empresas
-                </h1>
-                <p class="text-muted">Monitoramento e controle das empresas cadastradas no sistema</p>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Gestão de Empresas"
+            icon="building"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Gestão de Empresas' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
+                <x-ui.button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
             </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary" onclick="exportData()">
-                    <i class="bi bi-download me-1"></i>Exportar
-                </button>
-                <a href="{{ route('admin.enterprises.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Nova Empresa
-                </a>
-            </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">
@@ -259,27 +248,15 @@
                                         </td>
                                         <td>{{ $enterprise->created_at->format('d/m/Y') }}</td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('admin.enterprises.show', $enterprise->id) }}"
-                                                    class="btn btn-sm btn-outline-primary" title="Ver">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('admin.enterprises.edit', $enterprise->id) }}"
-                                                    class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
+                                            <div class="d-flex gap-1">
+                                                <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" title="Ver" />
+                                                <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 @if ($enterprise->status === 'active')
-                                                    <button
-                                                        onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                        class="btn btn-sm btn-outline-danger" title="Suspender">
-                                                        <i class="bi bi-pause"></i>
-                                                    </button>
+                                                    <x-ui.button variant="danger" size="sm" icon="pause" title="Suspender"
+                                                        onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                                 @else
-                                                    <button
-                                                        onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                        class="btn btn-sm btn-outline-success" title="Reativar">
-                                                        <i class="bi bi-play"></i>
-                                                    </button>
+                                                    <x-ui.button variant="success" size="sm" icon="play" title="Reativar"
+                                                        onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                                 @endif
                                             </div>
                                         </td>
@@ -325,27 +302,15 @@
                                         <br>
                                         <strong>Criado em:</strong> {{ $enterprise->created_at->format('d/m/Y') }}
                                     </p>
-                                    <div class="btn-group w-100" role="group">
-                                        <a href="{{ route('admin.enterprises.show', $enterprise->id) }}"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> Ver
-                                        </a>
-                                        <a href="{{ route('admin.enterprises.edit', $enterprise->id) }}"
-                                            class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-pencil"></i> Editar
-                                        </a>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                                        <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
                                         @if ($enterprise->status === 'active')
-                                            <button
-                                                onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-pause"></i> Suspender
-                                            </button>
+                                            <x-ui.button variant="danger" size="sm" icon="pause" label="Suspender" class="flex-grow-1"
+                                                onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                         @else
-                                            <button
-                                                onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')"
-                                                class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-play"></i> Reativar
-                                            </button>
+                                            <x-ui.button variant="success" size="sm" icon="play" label="Reativar" class="flex-grow-1"
+                                                onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
                                         @endif
                                     </div>
                                 </div>
@@ -383,9 +348,7 @@
                         <i class="bi bi-building fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nenhuma empresa encontrada</h5>
                         <p class="text-muted">Não há empresas para exibir com os filtros aplicados.</p>
-                        <a href="{{ route('admin.enterprises.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Criar Primeira Empresa
-                        </a>
+                        <x-ui.button type="link" :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Criar Primeira Empresa" />
                     </div>
                 @endif
             </div>
@@ -404,8 +367,8 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="confirmModalAction">Confirmar</button>
+                    <x-ui.button variant="secondary" data-bs-dismiss="modal">Cancelar</x-ui.button>
+                    <x-ui.button variant="primary" id="confirmModalAction">Confirmar</x-ui.button>
                 </div>
             </div>
         </div>

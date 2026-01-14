@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Abstracts\Controller;
+use App\Services\Application\AuditLogService;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
@@ -21,6 +22,7 @@ class SettingsApiController extends Controller
         private SettingsService $settingsService,
         private SettingsBackupService $backupService,
         private FileUploadService $fileUploadService,
+        private AuditLogService $auditLogService,
     ) {}
 
     /**
@@ -28,25 +30,16 @@ class SettingsApiController extends Controller
      */
     public function index(): JsonResponse
     {
-        try {
-            $userSettings = $this->settingsService->getCompleteUserSettings();
-            $systemSettings = $this->settingsService->getCompleteSystemSettings();
+        $userSettings = $this->settingsService->getCompleteUserSettings();
+        $systemSettings = $this->settingsService->getCompleteSystemSettings();
 
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'user_settings' => $userSettings,
-                    'system_settings' => $systemSettings,
-                ],
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao obter configurações',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user_settings' => $userSettings,
+                'system_settings' => $systemSettings,
+            ],
+        ]);
     }
 
     /**
@@ -54,45 +47,35 @@ class SettingsApiController extends Controller
      */
     public function update(Request $request): JsonResponse
     {
-        try {
-            $data = $request->validate([
-                'theme' => 'sometimes|in:light,dark,auto',
-                'primary_color' => 'sometimes|regex:/^#[0-9A-Fa-f]{6}$/',
-                'layout_density' => 'sometimes|in:compact,normal,spacious',
-                'sidebar_position' => 'sometimes|in:left,right',
-                'animations_enabled' => 'sometimes|boolean',
-                'sound_enabled' => 'sometimes|boolean',
-                'email_notifications' => 'sometimes|boolean',
-                'transaction_notifications' => 'sometimes|boolean',
-                'weekly_reports' => 'sometimes|boolean',
-                'security_alerts' => 'sometimes|boolean',
-                'newsletter_subscription' => 'sometimes|boolean',
-                'push_notifications' => 'sometimes|boolean',
-                'full_name' => 'sometimes|string|max:255',
-                'bio' => 'sometimes|string|max:1000',
-                'phone' => 'sometimes|string|max:20',
-                'birth_date' => 'sometimes|date|before:today',
-                'social_facebook' => 'sometimes|url|max:255',
-                'social_twitter' => 'sometimes|url|max:255',
-                'social_linkedin' => 'sometimes|url|max:255',
-                'social_instagram' => 'sometimes|url|max:255',
-            ]);
+        $data = $request->validate([
+            'primary_color' => 'sometimes|regex:/^#[0-9A-Fa-f]{6}$/',
+            'layout_density' => 'sometimes|in:compact,normal,spacious',
+            'sidebar_position' => 'sometimes|in:left,right',
+            'animations_enabled' => 'sometimes|boolean',
+            'sound_enabled' => 'sometimes|boolean',
+            'email_notifications' => 'sometimes|boolean',
+            'transaction_notifications' => 'sometimes|boolean',
+            'weekly_reports' => 'sometimes|boolean',
+            'security_alerts' => 'sometimes|boolean',
+            'newsletter_subscription' => 'sometimes|boolean',
+            'push_notifications' => 'sometimes|boolean',
+            'full_name' => 'sometimes|string|max:255',
+            'bio' => 'sometimes|string|max:1000',
+            'phone' => 'sometimes|string|max:20',
+            'birth_date' => 'sometimes|date|before:today',
+            'social_facebook' => 'sometimes|url|max:255',
+            'social_twitter' => 'sometimes|url|max:255',
+            'social_linkedin' => 'sometimes|url|max:255',
+            'social_instagram' => 'sometimes|url|max:255',
+        ]);
 
-            $settings = $this->settingsService->updateUserSettings($data);
+        $settings = $this->settingsService->updateUserSettings($data);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Configurações atualizadas com sucesso',
-                'data' => $settings,
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao atualizar configurações',
-                'error' => $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Configurações atualizadas com sucesso',
+            'data' => $settings,
+        ]);
     }
 
     /**
@@ -100,45 +83,35 @@ class SettingsApiController extends Controller
      */
     public function partialUpdate(Request $request): JsonResponse
     {
-        try {
-            $data = $request->validate([
-                'theme' => 'sometimes|in:light,dark,auto',
-                'primary_color' => 'sometimes|regex:/^#[0-9A-Fa-f]{6}$/',
-                'layout_density' => 'sometimes|in:compact,normal,spacious',
-                'sidebar_position' => 'sometimes|in:left,right',
-                'animations_enabled' => 'sometimes|boolean',
-                'sound_enabled' => 'sometimes|boolean',
-                'email_notifications' => 'sometimes|boolean',
-                'transaction_notifications' => 'sometimes|boolean',
-                'weekly_reports' => 'sometimes|boolean',
-                'security_alerts' => 'sometimes|boolean',
-                'newsletter_subscription' => 'sometimes|boolean',
-                'push_notifications' => 'sometimes|boolean',
-                'full_name' => 'sometimes|string|max:255',
-                'bio' => 'sometimes|string|max:1000',
-                'phone' => 'sometimes|string|max:20',
-                'birth_date' => 'sometimes|date|before:today',
-                'social_facebook' => 'sometimes|url|max:255',
-                'social_twitter' => 'sometimes|url|max:255',
-                'social_linkedin' => 'sometimes|url|max:255',
-                'social_instagram' => 'sometimes|url|max:255',
-            ]);
+        $data = $request->validate([
+            'primary_color' => 'sometimes|regex:/^#[0-9A-Fa-f]{6}$/',
+            'layout_density' => 'sometimes|in:compact,normal,spacious',
+            'sidebar_position' => 'sometimes|in:left,right',
+            'animations_enabled' => 'sometimes|boolean',
+            'sound_enabled' => 'sometimes|boolean',
+            'email_notifications' => 'sometimes|boolean',
+            'transaction_notifications' => 'sometimes|boolean',
+            'weekly_reports' => 'sometimes|boolean',
+            'security_alerts' => 'sometimes|boolean',
+            'newsletter_subscription' => 'sometimes|boolean',
+            'push_notifications' => 'sometimes|boolean',
+            'full_name' => 'sometimes|string|max:255',
+            'bio' => 'sometimes|string|max:1000',
+            'phone' => 'sometimes|string|max:20',
+            'birth_date' => 'sometimes|date|before:today',
+            'social_facebook' => 'sometimes|url|max:255',
+            'social_twitter' => 'sometimes|url|max:255',
+            'social_linkedin' => 'sometimes|url|max:255',
+            'social_instagram' => 'sometimes|url|max:255',
+        ]);
 
-            $settings = $this->settingsService->updateUserSettings($data);
+        $settings = $this->settingsService->updateUserSettings($data);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Configurações atualizadas com sucesso',
-                'data' => $settings,
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao atualizar configurações',
-                'error' => $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Configurações atualizadas com sucesso',
+            'data' => $settings,
+        ]);
     }
 
     /**
@@ -146,26 +119,17 @@ class SettingsApiController extends Controller
      */
     public function uploadAvatar(Request $request): JsonResponse
     {
-        try {
-            $request->validate([
-                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            ]);
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
 
-            $result = $this->settingsService->updateAvatar($request->file('avatar'));
+        $result = $this->settingsService->updateAvatar($request->file('avatar'));
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Avatar atualizado com sucesso',
-                'data' => $result,
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao fazer upload do avatar',
-                'error' => $e->getMessage(),
-            ], 422);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Avatar atualizado com sucesso',
+            'data' => $result,
+        ]);
     }
 
     /**
@@ -173,21 +137,12 @@ class SettingsApiController extends Controller
      */
     public function deleteAvatar(): JsonResponse
     {
-        try {
-            $this->settingsService->removeAvatar();
+        $this->settingsService->removeAvatar();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Avatar removido com sucesso',
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao remover avatar',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Avatar removido com sucesso',
+        ]);
     }
 
     /**
@@ -195,35 +150,26 @@ class SettingsApiController extends Controller
      */
     public function backup(Request $request): JsonResponse
     {
-        try {
-            $request->validate([
-                'type' => 'in:user,system,full',
-            ]);
+        $request->validate([
+            'type' => 'in:user,system,full',
+        ]);
 
-            $type = $request->get('type', 'full');
-            $user = auth()->user();
+        $type = $request->get('type', 'full');
+        $user = auth()->user();
 
-            if ($type === 'full') {
-                $result = $this->backupService->createFullBackup($user, 'api');
-            } elseif ($type === 'user') {
-                $result = $this->backupService->createUserSettingsBackup($user, 'api');
-            } else {
-                $result = $this->backupService->createSystemSettingsBackup($user->tenant_id, 'api');
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Backup criado com sucesso',
-                'data' => $result,
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao criar backup',
-                'error' => $e->getMessage(),
-            ], 500);
+        if ($type === 'full') {
+            $result = $this->backupService->createFullBackup($user, 'api');
+        } elseif ($type === 'user') {
+            $result = $this->backupService->createUserSettingsBackup($user, 'api');
+        } else {
+            $result = $this->backupService->createSystemSettingsBackup($user->tenant_id, 'api');
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Backup criado com sucesso',
+            'data' => $result,
+        ]);
     }
 
     /**
@@ -231,34 +177,25 @@ class SettingsApiController extends Controller
      */
     public function restore(Request $request): JsonResponse
     {
-        try {
-            $request->validate([
-                'filename' => 'required|string',
-                'type' => 'required|in:user,system,full',
-            ]);
+        $request->validate([
+            'filename' => 'required|string',
+            'type' => 'required|in:user,system,full',
+        ]);
 
-            $user = auth()->user();
+        $user = auth()->user();
 
-            if ($request->type === 'full') {
-                $this->backupService->restoreFullBackup($user, $request->filename);
-            } elseif ($request->type === 'user') {
-                $this->backupService->restoreUserSettingsBackup($user, $request->filename);
-            } else {
-                $this->backupService->restoreSystemSettingsBackup($user->tenant_id, $request->filename);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Backup restaurado com sucesso',
-            ]);
-
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao restaurar backup',
-                'error' => $e->getMessage(),
-            ], 422);
+        if ($request->type === 'full') {
+            $this->backupService->restoreFullBackup($user, $request->filename);
+        } elseif ($request->type === 'user') {
+            $this->backupService->restoreUserSettingsBackup($user, $request->filename);
+        } else {
+            $this->backupService->restoreSystemSettingsBackup($user->tenant_id, $request->filename);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Backup restaurado com sucesso',
+        ]);
     }
 
     /**
@@ -280,7 +217,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $backups,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -306,7 +242,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Backup removido com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -340,7 +275,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $backupInfo,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -367,7 +301,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $validation,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -384,19 +317,27 @@ class SettingsApiController extends Controller
     {
         try {
             $filters = $request->only([
-                'action', 'user_id', 'severity', 'category', 'model_type',
-                'start_date', 'end_date', 'security_only', 'data_modifications_only',
-                'sort_by', 'sort_direction',
+                'action',
+                'user_id',
+                'severity',
+                'category',
+                'model_type',
+                'start_date',
+                'end_date',
+                'security_only',
+                'data_modifications_only',
+                'sort_by',
+                'sort_direction',
             ]);
 
             $perPage = $request->get('per_page', 50);
-            $logs = app(\App\Services\AuditService::class)->getAuditLogs($filters, $perPage);
+            $result = $this->auditLogService->getFilteredLogs($filters, $perPage);
+            $logs = $result->getData();
 
             return response()->json([
                 'success' => true,
                 'data' => $logs,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -412,7 +353,8 @@ class SettingsApiController extends Controller
     public function auditDetail(int $id): JsonResponse
     {
         try {
-            $log = app(\App\Services\AuditService::class)->getAuditLogs(['id' => $id], 1)->first();
+            $result = $this->auditLogService->getFilteredLogs(['id' => $id], 1);
+            $log = $result->getData()->first();
 
             if (! $log) {
                 return response()->json([
@@ -425,7 +367,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $log,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -455,7 +396,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $sessions,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -482,7 +422,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Sessão terminada com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -505,7 +444,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $stats,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -538,7 +476,6 @@ class SettingsApiController extends Controller
                     'last_sync' => now(),
                 ],
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -561,7 +498,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'data' => $integrations,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -587,7 +523,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => 'Configurações de integração atualizadas com sucesso',
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -619,7 +554,6 @@ class SettingsApiController extends Controller
                 'success' => true,
                 'message' => $message,
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -649,7 +583,6 @@ class SettingsApiController extends Controller
                     'system_security' => $systemSettings->getSecuritySettings(),
                 ],
             ]);
-
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

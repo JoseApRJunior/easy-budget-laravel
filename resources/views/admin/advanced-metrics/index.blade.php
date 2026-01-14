@@ -3,19 +3,14 @@
 @section('title', 'Advanced Metrics Dashboard - EasyBudget Admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Métricas Avançadas</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">Advanced Metrics Dashboard</h1>
-                <p class="text-muted">Analytics e insights abrangentes do sistema</p>
-            </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Advanced Metrics Dashboard"
+            icon="graph-up-arrow"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Métricas Avançadas' => '#'
+            ]">
             <div class="d-flex gap-2">
                 <!-- Date Range Selector -->
                 <div class="dropdown">
@@ -25,14 +20,10 @@
                         {{ ucfirst(str_replace('days', ' Days', str_replace('months', ' Months', request('range', '30days')))) }}
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '7days']) }}">Last 7
-                                Days</a></li>
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '30days']) }}">Last 30
-                                Days</a></li>
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '90days']) }}">Last 90
-                                Days</a></li>
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '12months']) }}">Last
-                                12 Months</a></li>
+                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '7days']) }}">Last 7 Days</a></li>
+                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '30days']) }}">Last 30 Days</a></li>
+                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '90days']) }}">Last 90 Days</a></li>
+                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '12months']) }}">Last 12 Months</a></li>
                     </ul>
                 </div>
 
@@ -59,7 +50,7 @@
                     <i class="bi bi-arrow-clockwise"></i>
                 </button>
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Card de Filtros (SEPARADO) -->
         <div class="card mb-4">

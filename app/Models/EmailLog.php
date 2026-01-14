@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmailLog extends Model
 {
@@ -60,15 +62,15 @@ class EmailLog extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'         => 'integer',
+        'tenant_id' => 'integer',
         'email_template_id' => 'integer',
-        'sent_at'           => 'datetime',
-        'opened_at'         => 'datetime',
-        'clicked_at'        => 'datetime',
-        'bounced_at'        => 'datetime',
-        'metadata'          => 'array',
-        'created_at'        => 'immutable_datetime',
-        'updated_at'        => 'datetime',
+        'sent_at' => 'datetime',
+        'opened_at' => 'datetime',
+        'clicked_at' => 'datetime',
+        'bounced_at' => 'datetime',
+        'metadata' => 'array',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -89,23 +91,23 @@ class EmailLog extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'         => 'required|integer|exists:tenants,id',
+            'tenant_id' => 'required|integer|exists:tenants,id',
             'email_template_id' => 'required|integer|exists:email_templates,id',
-            'recipient_email'   => 'required|email|max:255',
-            'recipient_name'    => 'nullable|string|max:255',
-            'subject'           => 'required|string|max:500',
-            'sender_email'      => 'required|email|max:255',
-            'sender_name'       => 'nullable|string|max:255',
-            'status'            => 'required|in:pending,sent,delivered,opened,clicked,bounced,failed',
-            'sent_at'           => 'nullable|datetime',
-            'opened_at'         => 'nullable|datetime',
-            'clicked_at'        => 'nullable|datetime',
-            'bounced_at'        => 'nullable|datetime',
-            'error_message'     => 'nullable|string|max:1000',
-            'metadata'          => 'nullable|array',
-            'tracking_id'       => 'nullable|string|max:100|unique:email_logs,tracking_id',
-            'ip_address'        => 'nullable|ip',
-            'user_agent'        => 'nullable|string|max:500',
+            'recipient_email' => 'required|email|max:255',
+            'recipient_name' => 'nullable|string|max:255',
+            'subject' => 'required|string|max:500',
+            'sender_email' => 'required|email|max:255',
+            'sender_name' => 'nullable|string|max:255',
+            'status' => 'required|in:pending,sent,delivered,opened,clicked,bounced,failed',
+            'sent_at' => 'nullable|datetime',
+            'opened_at' => 'nullable|datetime',
+            'clicked_at' => 'nullable|datetime',
+            'bounced_at' => 'nullable|datetime',
+            'error_message' => 'nullable|string|max:1000',
+            'metadata' => 'nullable|array',
+            'tracking_id' => 'nullable|string|max:100|unique:email_logs,tracking_id',
+            'ip_address' => 'nullable|ip',
+            'user_agent' => 'nullable|string|max:500',
         ];
     }
 
@@ -114,74 +116,76 @@ class EmailLog extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
      * Get the email template that owns the EmailLog.
      */
-    public function emailTemplate(): BelongsTo
+    public function template(): BelongsTo
     {
-        return $this->belongsTo( EmailTemplate::class);
+        return $this->belongsTo(EmailTemplate::class, 'email_template_id');
     }
+    
+    // ... rest of class ...
 
     /**
      * Scope para logs por status.
      */
-    public function scopeByStatus( $query, string $status )
+    public function scopeByStatus($query, string $status)
     {
-        return $query->where( 'status', $status );
+        return $query->where('status', $status);
     }
 
     /**
      * Scope para logs enviados.
      */
-    public function scopeSent( $query )
+    public function scopeSent($query)
     {
-        return $query->where( 'status', 'sent' );
+        return $query->where('status', 'sent');
     }
 
     /**
      * Scope para logs abertos.
      */
-    public function scopeOpened( $query )
+    public function scopeOpened($query)
     {
-        return $query->whereNotNull( 'opened_at' );
+        return $query->whereNotNull('opened_at');
     }
 
     /**
      * Scope para logs clicados.
      */
-    public function scopeClicked( $query )
+    public function scopeClicked($query)
     {
-        return $query->whereNotNull( 'clicked_at' );
+        return $query->whereNotNull('clicked_at');
     }
 
     /**
      * Scope para logs com erro.
      */
-    public function scopeFailed( $query )
+    public function scopeFailed($query)
     {
-        return $query->whereIn( 'status', [ 'failed', 'bounced' ] );
+        return $query->whereIn('status', ['failed', 'bounced']);
     }
 
     /**
      * Scope para logs por período.
      */
-    public function scopeByPeriod( $query, string $period )
+    public function scopeByPeriod($query, string $period)
     {
-        switch ( $period ) {
+        switch ($period) {
             case 'today':
-                return $query->whereDate( 'created_at', today() );
+                return $query->whereDate('created_at', today());
             case 'week':
-                return $query->whereBetween( 'created_at', [
-                    now()->startOfWeek(),
-                    now()->endOfWeek()
-                ] );
+                return $query->whereBetween('created_at', [
+                    Carbon::now()->startOfWeek(),
+                    Carbon::now()->endOfWeek(),
+                ]);
             case 'month':
-                return $query->whereMonth( 'created_at', now()->month );
+                return $query->whereMonth('created_at', Carbon::now()->month);
             case 'year':
-                return $query->whereYear( 'created_at', now()->year );
+                return $query->whereYear('created_at', Carbon::now()->year);
             default:
                 return $query;
         }
@@ -190,9 +194,9 @@ class EmailLog extends Model
     /**
      * Scope para logs por destinatário.
      */
-    public function scopeByRecipient( $query, string $email )
+    public function scopeByRecipient($query, string $email)
     {
-        return $query->where( 'recipient_email', $email );
+        return $query->where('recipient_email', $email);
     }
 
     /**
@@ -200,7 +204,7 @@ class EmailLog extends Model
      */
     public function isOpened(): bool
     {
-        return !is_null( $this->opened_at );
+        return ! is_null($this->opened_at);
     }
 
     /**
@@ -208,7 +212,7 @@ class EmailLog extends Model
      */
     public function isClicked(): bool
     {
-        return !is_null( $this->clicked_at );
+        return ! is_null($this->clicked_at);
     }
 
     /**
@@ -216,47 +220,47 @@ class EmailLog extends Model
      */
     public function isFailed(): bool
     {
-        return in_array( $this->status, [ 'failed', 'bounced' ] );
+        return in_array($this->status, ['failed', 'bounced']);
     }
 
     /**
      * Marca o email como aberto.
      */
-    public function markAsOpened( string $ipAddress = null, string $userAgent = null ): void
+    public function markAsOpened(?string $ipAddress = null, ?string $userAgent = null): void
     {
-        if ( !$this->isOpened() ) {
-            $this->update( [
-                'opened_at'  => now(),
-                'status'     => 'opened',
+        if (! $this->isOpened()) {
+            $this->update([
+                'opened_at' => Carbon::now(),
+                'status' => 'opened',
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
-            ] );
+            ]);
         }
     }
 
     /**
      * Marca o email como clicado.
      */
-    public function markAsClicked( string $ipAddress = null, string $userAgent = null ): void
+    public function markAsClicked(?string $ipAddress = null, ?string $userAgent = null): void
     {
-        $this->update( [
-            'clicked_at' => now(),
-            'status'     => 'clicked',
+        $this->update([
+            'clicked_at' => Carbon::now(),
+            'status' => 'clicked',
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
-        ] );
+        ]);
     }
 
     /**
      * Marca o email como com erro.
      */
-    public function markAsFailed( string $errorMessage, string $status = 'failed' ): void
+    public function markAsFailed(string $errorMessage, string $status = 'failed'): void
     {
-        $this->update( [
-            'status'        => $status,
+        $this->update([
+            'status' => $status,
             'error_message' => $errorMessage,
-            'bounced_at'    => $status === 'bounced' ? now() : null,
-        ] );
+            'bounced_at' => $status === 'bounced' ? Carbon::now() : null,
+        ]);
     }
 
     /**
@@ -265,18 +269,17 @@ class EmailLog extends Model
     public function getStats(): array
     {
         return [
-            'id'            => $this->id,
-            'recipient'     => $this->recipient_name . ' <' . $this->recipient_email . '>',
-            'status'        => $this->status,
-            'sent_at'       => $this->sent_at?->toISOString(),
-            'opened_at'     => $this->opened_at?->toISOString(),
-            'clicked_at'    => $this->clicked_at?->toISOString(),
+            'id' => $this->id,
+            'recipient' => $this->recipient_name.' <'.$this->recipient_email.'>',
+            'status' => $this->status,
+            'sent_at' => $this->sent_at?->toISOString(),
+            'opened_at' => $this->opened_at?->toISOString(),
+            'clicked_at' => $this->clicked_at?->toISOString(),
             'error_message' => $this->error_message,
-            'tracking_id'   => $this->tracking_id,
-            'is_opened'     => $this->isOpened(),
-            'is_clicked'    => $this->isClicked(),
-            'is_failed'     => $this->isFailed(),
+            'tracking_id' => $this->tracking_id,
+            'is_opened' => $this->isOpened(),
+            'is_clicked' => $this->isClicked(),
+            'is_failed' => $this->isFailed(),
         ];
     }
-
 }

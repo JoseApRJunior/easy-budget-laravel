@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Provider;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProviderPolicy
@@ -15,7 +15,7 @@ class ProviderPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('manage-providers');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-providers');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProviderPolicy
      */
     public function view(User $user, Provider $provider): bool
     {
-        return $user->hasPermission('manage-providers');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-providers');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProviderPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('manage-providers');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-providers');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProviderPolicy
      */
     public function update(User $user, Provider $provider): bool
     {
-        return $user->hasPermission('manage-providers');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-providers');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProviderPolicy
      */
     public function delete(User $user, Provider $provider): bool
     {
-        return $user->hasPermission('manage-providers');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-providers');
     }
 
     /**

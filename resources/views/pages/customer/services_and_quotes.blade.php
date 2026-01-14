@@ -2,19 +2,15 @@
 
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-clipboard-data me-2"></i>Serviços e Orçamentos
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Serviços e Orçamentos</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Serviços e Orçamentos"
+            icon="clipboard-data"
+            :breadcrumb-items="[
+                'Dashboard' => route( 'provider.dashboard' ),
+                'Serviços e Orçamentos' => '#'
+            ]"
+        />
 
         <!-- Serviços -->
         <div class="card border-0 shadow-sm mb-4">
@@ -71,21 +67,13 @@
                                         </span>
                                     </td>
                                     <td class="text-end px-4">
-                                        <div class="btn-group">
-                                            <a href="{{ route( 'provider.services.show', $servico->id ) }}"
-                                                class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
-                                                title="Visualizar">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route( 'provider.services.edit', $servico->id ) }}"
-                                                class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="confirmDelete('servico', {{ $servico->id }})" data-bs-toggle="tooltip"
-                                                title="Excluir">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <x-ui.button type="link" :href="route( 'provider.services.show', $servico->id )" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route( 'provider.services.edit', $servico->id )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                onclick="handleGenericDelete(this)" 
+                                                data-type="servico" 
+                                                data-id="{{ $servico->id }}" />
                                         </div>
                                     </td>
                                 </tr>
@@ -158,21 +146,13 @@
                                         </span>
                                     </td>
                                     <td class="text-end px-4">
-                                        <div class="btn-group">
-                                            <a href="{{ route( 'provider.budgets.show', $orcamento->code ) }}"
-                                                class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip"
-                                                title="Visualizar">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route( 'provider.budgets.edit', $orcamento->code ) }}"
-                                                class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="confirmDelete('orcamento', {{ $orcamento->id }})"
-                                                data-bs-toggle="tooltip" title="Excluir">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <x-ui.button type="link" :href="route( 'provider.budgets.show', $orcamento->code )" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route( 'provider.budgets.edit', $orcamento->code )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                onclick="handleGenericDelete(this)"
+                                                data-type="orcamento" 
+                                                data-id="{{ $orcamento->id }}" />
                                         </div>
                                     </td>
                                 </tr>
@@ -225,6 +205,15 @@
             tooltipTriggerList.map( function ( tooltipTriggerEl ) {
                 return new bootstrap.Tooltip( tooltipTriggerEl );
             } );
+
+            // Listener para botões de exclusão
+            document.querySelectorAll('.btn-delete-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const id = this.getAttribute('data-id');
+                    confirmDelete(type, id);
+                });
+            });
         } );
 
         function confirmDelete( type, id ) {

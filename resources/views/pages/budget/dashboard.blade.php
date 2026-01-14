@@ -3,35 +3,17 @@
 @section('title', 'Dashboard de Orçamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-file-earmark-text me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Orçamentos</span>
-                        <span class="d-sm-none">Orçamentos</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.budgets.index') }}">Orçamentos</a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Dashboard
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-            <p class="text-muted mb-0 small">
-                Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.
-            </p>
-        </div>
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Dashboard de Orçamentos"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => '#'
+            ]"
+        >
+            <p class="text-muted mb-0 small">Visão geral dos orçamentos do seu negócio com métricas e acompanhamento de performance.</p>
+        </x-layout.page-header>
 
         @php
             $total = $stats['total_budgets'] ?? 0;
@@ -41,403 +23,233 @@
             $totalValue = $stats['total_budget_value'] ?? 0;
             $recent = $stats['recent_budgets'] ?? collect();
 
-            $approvedRate = $total > 0 ? number_format(($approved / $total) * 100, 1, ',', '.') : 0;
+            $approvedRate = $total > 0 ? \App\Helpers\CurrencyHelper::format(($approved / $total) * 100, 1, false) : 0;
         @endphp
 
         <!-- Cards de Métricas -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-file-earmark-text text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Total de Orçamentos</h6>
-                                <h3 class="mb-0">{{ $total }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Quantidade total de orçamentos cadastrados para este tenant.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
+                title="Total de Orçamentos"
+                :value="$total"
+                description="Quantidade total de orçamentos cadastrados."
+                icon="file-earmark-text"
+                variant="primary"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-check-circle-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Orçamentos Aprovados</h6>
-                                <h3 class="mb-0">{{ $approved }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Propostas aprovadas pelos clientes e prontas para execução.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Orçamentos Aprovados"
+                :value="$approved"
+                description="Orçamentos que foram aceitos pelos clientes."
+                icon="check-circle"
+                variant="success"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-warning bg-gradient me-3">
-                                <i class="bi bi-clock-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Orçamentos Pendentes</h6>
-                                <h3 class="mb-0">{{ $pending }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Propostas aguardando aprovação ou resposta do cliente.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Orçamentos Pendentes"
+                :value="$pending"
+                description="Aguardando resposta ou revisão do cliente."
+                icon="clock"
+                variant="warning"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-info bg-gradient me-3">
-                                <i class="bi bi-graph-up-arrow text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Taxa de Aprovação</h6>
-                                <h3 class="mb-0">{{ $approvedRate }}%</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Percentual de orçamentos aprovados em relação ao total.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-dashboard.stat-card
+                title="Taxa de Aprovação"
+                :value="$approvedRate . '%'"
+                description="Percentual de orçamentos aprovados."
+                icon="graph-up-arrow"
+                variant="info"
+            />
+        </x-layout.grid-row>
 
-        <!-- Cards de Valores Financeiros -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-currency-dollar text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Valor Total em Orçamentos</h6>
-                                <h3 class="mb-0">R$ {{ number_format($totalValue, 2, ',', '.') }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Soma do valor de todos os orçamentos cadastrados.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <!-- Cards de Valores Financeiros e Gráfico -->
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
+                title="Valor Total em Orçamentos"
+                :value="\App\Helpers\CurrencyHelper::format($totalValue)"
+                description="Soma total de todos os orçamentos gerados."
+                icon="cash-stack"
+                variant="success"
+                col="col-md-4"
+            />
 
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-secondary bg-gradient me-3">
-                                <i class="bi bi-x-circle-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Orçamentos Rejeitados</h6>
-                                <h3 class="mb-0">{{ $rejected }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Propostas recusadas ou rejeitadas pelos clientes.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-dashboard.stat-card
+                title="Ticket Médio"
+                :value="\App\Helpers\CurrencyHelper::format($total > 0 ? $totalValue / $total : 0)"
+                description="Valor médio por orçamento gerado no sistema."
+                icon="calculator"
+                variant="primary"
+                col="col-md-4"
+            />
 
-        <!-- Gráfico de Distribuição de Status -->
-        <div class="row g-4 mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-bar-chart-line me-2"></i>Distribuição de Orçamentos por Status
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="statusChart" width="400" height="100"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-resource.resource-list-card
+                title="Status dos Orçamentos"
+                mobileTitle="Status"
+                icon="pie-chart"
+                padding="p-4"
+                col="col-md-4"
+            >
+                <x-dashboard.chart-doughnut
+                    id="statusChart"
+                    :data="$stats['status_breakdown_detailed'] ?? []"
+                    empty-text="Nenhum orçamento cadastrado"
+                />
+                 <p class="text-muted small mb-0 mt-3 text-center">
+                    Acompanhe o fluxo de trabalho por status atual.
+                </p>
+            </x-resource.resource-list-card>
+        </x-layout.grid-row>
 
         <!-- Conteúdo Principal -->
-        <div class="row g-4">
-            <!-- Orçamentos Recentes -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>
-                            <span class="d-none d-sm-inline">Orçamentos Recentes</span>
-                            <span class="d-sm-none">Recentes</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                            <!-- Desktop View -->
-                            <div class="desktop-view">
-                                <div class="table-responsive">
-                                    <table class="modern-table table mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Código</th>
-                                            <th>Cliente</th>
-                                            <th>Valor Total</th>
-                                            <th>Status</th>
-                                            <th>Data de Criação</th>
-                                            <th class="text-end">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recent as $budget)
-                                            @php
-                                                $customer = $budget->customer ?? null;
-                                                $commonData = $customer?->commonData ?? null;
+        <x-layout.grid-row>
+            <!-- Orçamentos Recentes (8 colunas) -->
+            <x-layout.grid-col size="col-lg-8">
+                <x-resource.resource-list-card
+                    title="Orçamentos Recentes"
+                    icon="clock-history"
+                    :total="$recent->count()"
+                >
+                    @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
+                        <x-slot name="desktop">
+                            <x-resource.resource-table>
+                                <x-slot name="thead">
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Código</x-resource.table-cell>
+                                        <x-resource.table-cell header>Cliente</x-resource.table-cell>
+                                        <x-resource.table-cell header>Valor Total</x-resource.table-cell>
+                                        <x-resource.table-cell header>Status</x-resource.table-cell>
+                                        <x-resource.table-cell header>Data</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                    </x-resource.table-row>
+                                </x-slot>
 
-                                                $customerName =
-                                                    $commonData?->company_name ??
-                                                    trim(
-                                                        ($commonData->first_name ?? '') .
-                                                            ' ' .
-                                                            ($commonData->last_name ?? ''),
-                                                    ) ?:
-                                                    'Cliente não informado';
-
-                                                $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
-                                                $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
-                                                $statusLabel = $statusEnum?->label() ?? 'Rascunho';
-                                                
-                                                $statusClass = match ($budget->status) {
-                                                    'draft', 'cancelled' => 'bg-secondary-subtle text-secondary',
-                                                    'pending' => 'bg-warning-subtle text-warning',
-                                                    'approved' => 'bg-success-subtle text-success',
-                                                    'rejected' => 'bg-danger-subtle text-danger',
-                                                    'completed' => 'bg-info-subtle text-info',
-                                                    default => 'bg-secondary-subtle text-secondary',
-                                                };
-                                                
-                                                $statusBadge = '<span class="badge ' . $statusClass . '">' . $statusLabel . '</span>';
-                                            @endphp
-                                            <tr>
-                                                <td>{{ $budget->code }}</td>
-                                                <td>{{ Str::limit($customerName, 30) }}</td>
-                                                <td>R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</td>
-                                                <td>{!! $statusBadge !!}</td>
-                                                <td>{{ optional($budget->created_at)->format('d/m/Y') }}</td>
-                                                <td class="text-end">
-                                                    <a href="{{ route('provider.budgets.show', $budget->code) }}"
-                                                        class="btn btn-sm btn-outline-secondary">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Mobile View -->
-                        <div class="mobile-view">
-                            <div class="list-group list-group-flush">
                                 @foreach ($recent as $budget)
                                     @php
                                         $customer = $budget->customer ?? null;
                                         $commonData = $customer?->commonData ?? null;
-                                        $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
-                                        
-                                        $statusValue = is_string($budget->status) ? $budget->status : ($budget->status?->value ?? 'draft');
-                                        $statusEnum = \App\Enums\BudgetStatus::fromString($statusValue);
-                                        $statusLabel = $statusEnum?->label() ?? 'Rascunho';
-                                        
-                                        $statusClass = match ($budget->status) {
-                                            'draft', 'cancelled' => 'bg-secondary-subtle text-secondary',
-                                            'pending' => 'bg-warning-subtle text-warning',
-                                            'approved' => 'bg-success-subtle text-success',
-                                            'rejected' => 'bg-danger-subtle text-danger',
-                                            'completed' => 'bg-info-subtle text-info',
-                                            default => 'bg-secondary-subtle text-secondary',
-                                        };
-                                        
-                                        $statusConfig = ['class' => $statusClass, 'text' => $statusLabel];
+
+                                        $customerName = $commonData?->company_name ??
+                                            trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?:
+                                            'Cliente não informado';
                                     @endphp
-                                    <a href="{{ route('provider.budgets.show', $budget->code) }}" class="list-group-item list-group-item-action py-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-file-earmark-text text-muted me-2 mt-1"></i>
-                                            <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-1">{{ $budget->code }}</div>
-                                                <div class="small text-muted mb-2">{{ Str::limit($customerName, 30) }}</div>
-                                                <div class="d-flex gap-2 flex-wrap align-items-center">
-                                                    <span class="badge {{ $statusConfig['class'] }}">{{ $statusConfig['text'] }}</span>
-                                                    <span class="small text-muted">R$ {{ number_format($budget->total ?? 0, 2, ',', '.') }}</span>
-                                                    <span class="small text-muted">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
-                                                </div>
-                                            </div>
-                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
-                                        </div>
-                                    </a>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell class="fw-bold text-dark">{{ $budget->code }}</x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-resource.table-cell-truncate :text="$customerName" />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-ui.status-badge :item="$budget" />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</x-resource.table-cell>
+                                        <x-resource.table-cell align="center">
+                                            <x-resource.action-buttons
+                                                :item="$budget"
+                                                resource="budgets"
+                                                identifier="code"
+                                                :can-delete="false"
+                                                size="sm"
+                                            />
+                                        </x-resource.table-cell>
+                                    </x-resource.table-row>
                                 @endforeach
-                            </div>
-                        </div>
+                            </x-resource.resource-table>
+                        </x-slot>
+
+                        <x-slot name="mobile">
+                            @foreach ($recent as $budget)
+                                @php
+                                    $customer = $budget->customer ?? null;
+                                    $commonData = $customer?->commonData ?? null;
+                                    $customerName = $commonData?->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? '')) ?: 'Cliente não informado';
+                                @endphp
+                                <x-resource.resource-mobile-item
+                                    icon="file-earmark-text"
+                                    :href="route('provider.budgets.show', $budget->code)"
+                                >
+                                    <x-resource.resource-mobile-header
+                                        :title="$budget->code"
+                                        :subtitle="optional($budget->created_at)->format('d/m/Y')"
+                                    />
+
+                                    <x-resource.resource-mobile-field
+                                        label="Cliente"
+                                        :value="$customerName"
+                                    />
+
+                                    <x-layout.grid-row g="2">
+                                        <x-resource.resource-mobile-field
+                                            label="Valor"
+                                            :value="\App\Helpers\CurrencyHelper::format($budget->total ?? 0)"
+                                            col="col-6"
+                                        />
+                                        <x-resource.resource-mobile-field
+                                            label="Status"
+                                            col="col-6"
+                                            align="end"
+                                        >
+                                            <x-ui.status-badge :item="$budget" />
+                                        </x-resource.resource-mobile-field>
+                                    </x-layout.grid-row>
+                                </x-resource.resource-mobile-item>
+                            @endforeach
+                        </x-slot>
                     @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                            <br>
-                            Nenhum orçamento recente encontrado.
-                            <br>
-                            <small>Crie novos orçamentos para visualizar aqui.</small>
-                        </div>
+                        <x-resource.empty-state
+                            title="Nenhum orçamento recente"
+                            description="Crie novos orçamentos para visualizar aqui."
+                            icon="inbox"
+                        />
                     @endif
-                    </div>
-                </div>
-            </div>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
 
-            <!-- Insights e Atalhos -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0 small text-muted">
-                            <li class="mb-2">
-                                <i class="bi bi-clock-fill text-warning me-2"></i>
-                                Acompanhe orçamentos pendentes para aumentar sua taxa de conversão.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-graph-up-arrow text-success me-2"></i>
-                                Orçamentos aprovados geram receita garantida para seu negócio.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-envelope-fill text-primary me-2"></i>
-                                Envie lembretes para clientes com orçamentos pendentes.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+            <!-- Sidebar (4 colunas) -->
+            <x-layout.grid-col size="col-lg-4">
+                <x-layout.v-stack gap="4">
+                    <!-- Insights -->
+                    <x-resource.resource-list-card
+                        title="Insights Rápidos"
+                        icon="lightbulb"
+                        padding="p-3"
+                        gap="3"
+                    >
+                        <x-dashboard.insight-item
+                            icon="clock-fill"
+                            variant="warning"
+                            description="Acompanhe orçamentos pendentes para aumentar sua taxa de conversão."
+                        />
+                        <x-dashboard.insight-item
+                            icon="graph-up-arrow"
+                            variant="success"
+                            description="Orçamentos aprovados geram receita garantida para seu negócio."
+                        />
+                        <x-dashboard.insight-item
+                            icon="envelope-check"
+                            variant="primary"
+                            description="Envie lembretes para clientes com orçamentos pendentes."
+                        />
+                    </x-resource.resource-list-card>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-link-45deg me-2"></i>Atalhos
-                        </h6>
-                    </div>
-                    <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.budgets.create') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-plus-circle me-2"></i>Novo Orçamento
-                        </a>
-                        <a href="{{ route('provider.budgets.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Listar Orçamentos
-                        </a>
-                        <a href="{{ route('provider.reports.budgets') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-file-earmark-text me-2"></i>Relatório de Orçamentos
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <!-- Atalhos -->
+                    <x-resource.quick-actions
+                        title="Ações de Orçamento"
+                        icon="lightning-charge"
+                    >
+                        <x-ui.button type="link" href="{{ route('provider.budgets.create') }}" variant="success" size="md" icon="plus-lg" label="Criar Novo Orçamento" />
+                        <x-ui.button type="link" href="{{ route('provider.budgets.index') }}" variant="outline-primary" size="md" icon="search" label="Consultar Orçamentos" />
+                        <x-ui.button type="link" href="{{ route('provider.budgets.index', ['deleted' => 'only']) }}" variant="outline-secondary" size="md" icon="trash" label="Lixeira de Orçamentos" />
+                    </x-resource.quick-actions>
+                </x-layout.v-stack>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 @endsection
 
-@push('styles')
-    <style>
-        .text-code {
-            font-family: 'Courier New', monospace;
-            background-color: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.85em;
-        }
-    </style>
-@endpush
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Dados para o gráfico de status
-            const statusData = @json($stats['status_breakdown'] ?? []);
-            const statusLabels = [];
-            const statusValues = [];
-            const statusColors = [];
-
-            // Mapeamento de cores para cada status
-            const statusColorMap = {
-                'draft': '#6c757d',
-                'pending': '#ffc107',
-                'approved': '#28a745',
-                'rejected': '#dc3545',
-                'cancelled': '#6c757d',
-                'completed': '#007bff'
-            };
-
-            // Preparar dados para o gráfico
-            Object.keys(statusData).forEach(status => {
-                if (statusData[status] > 0) {
-                    statusLabels.push(status.charAt(0).toUpperCase() + status.slice(1));
-                    statusValues.push(statusData[status]);
-                    statusColors.push(statusColorMap[status] || '#6c757d');
-                }
-            });
-
-            // Criar gráfico de pizza
-            const ctx = document.getElementById('statusChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: statusLabels,
-                    datasets: [{
-                        data: statusValues,
-                        backgroundColor: statusColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                    return context.label + ': ' + context.parsed + ' (' + percentage +
-                                        '%)';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        });
+        function refreshData() {
+            window.location.reload();
+        }
     </script>
 @endpush

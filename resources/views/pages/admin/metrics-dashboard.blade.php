@@ -1,12 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4"><i class="bi bi-graph-up me-2"></i>Dashboard de Métricas</h2>
-            </div>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard de Métricas"
+            icon="graph-up"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Métricas' => '#'
+            ]">
+            <x-ui.button type="link" :href="url('/admin')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Cards de Resumo -->
         <div class="row mb-4">
@@ -29,7 +33,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6>Taxa de Sucesso</h6>
-                                <h3>{{ number_format($success_rate ?? 0, 1) }}%</h3>
+                                <h3>{{ \App\Helpers\CurrencyHelper::format($success_rate ?? 0, 1, false) }}%</h3>
                             </div>
                             <i class="bi bi-check-circle fs-1 opacity-50"></i>
                         </div>
@@ -55,7 +59,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <h6>Execuções/Hora</h6>
-                                <h3>{{ number_format($executions_per_hour ?? 0, 1) }}k</h3>
+                                <h3>{{ \App\Helpers\CurrencyHelper::format($executions_per_hour ?? 0, 1, false) }}k</h3>
                             </div>
                             <i class="bi bi-activity fs-1 opacity-50"></i>
                         </div>
@@ -92,7 +96,7 @@
                                             <td><span
                                                     class="badge bg-{{ $middleware['status'] == 'Ativo' ? 'success' : 'danger' }}">{{ $middleware['status'] }}</span>
                                             </td>
-                                            <td>{{ number_format($middleware['executions']) }}</td>
+                                            <td>{{ \App\Helpers\CurrencyHelper::format($middleware['executions'], 0, false) }}</td>
                                             <td>{{ $middleware['average_time'] }}ms</td>
                                             <td>{{ $middleware['last_execution'] }}</td>
                                         </tr>

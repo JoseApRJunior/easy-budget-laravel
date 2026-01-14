@@ -149,9 +149,9 @@ class AIMetricsController extends Controller
     protected function predictHighRiskCustomers(): array
     {
         // AI model simulation
-        $customers = Customer::with(['planSubscriptions', 'invoices'])
-            ->whereHas('planSubscriptions', function ($query) {
-                $query->where('status', 'active');
+        $customers = Customer::with(['invoices'])
+            ->whereHas('invoices', function ($query) {
+                $query->where('status', 'overdue');
             })
             ->limit(10)
             ->get();

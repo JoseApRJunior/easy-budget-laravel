@@ -12,6 +12,8 @@ namespace App\Enums;
  */
 enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     /** Operação executada com sucesso */
     case SUCCESS = 'success';
 
@@ -36,6 +38,9 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     /** Erro de validação */
     case VALIDATION_ERROR = 'validation_error';
 
+    /** Token expirado */
+    case EXPIRED = 'expired';
+
     /**
      * Retorna uma descrição para o status
      */
@@ -49,7 +54,8 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
             self::UNAUTHORIZED => 'Operação não autorizada',
             self::INVALID_DATA => 'Dados inválidos fornecidos',
             self::CONFLICT => 'Conflito de dados',
-            self::VALIDATION_ERROR => 'Erro de validação'
+            self::VALIDATION_ERROR => 'Erro de validação',
+            self::EXPIRED => 'Token expirado'
         };
     }
 
@@ -62,7 +68,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     {
         return match ($this) {
             self::SUCCESS => '#28a745', // Verde
-            self::NOT_FOUND, self::INVALID_DATA, self::VALIDATION_ERROR => '#ffc107', // Amarelo
+            self::NOT_FOUND, self::INVALID_DATA, self::VALIDATION_ERROR, self::EXPIRED => '#ffc107', // Amarelo
             self::ERROR, self::FORBIDDEN, self::UNAUTHORIZED, self::CONFLICT => '#dc3545', // Vermelho
         };
     }
@@ -83,6 +89,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
             self::INVALID_DATA => 'bi-exclamation-circle',
             self::CONFLICT => 'bi-arrow-left-right',
             self::VALIDATION_ERROR => 'bi-exclamation-diamond',
+            self::EXPIRED => 'bi-hourglass-bottom',
         };
     }
 
@@ -95,7 +102,7 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
     {
         return match ($this) {
             self::SUCCESS, self::ERROR, self::NOT_FOUND, self::FORBIDDEN, self::UNAUTHORIZED,
-            self::INVALID_DATA, self::CONFLICT, self::VALIDATION_ERROR => true,
+            self::INVALID_DATA, self::CONFLICT, self::VALIDATION_ERROR, self::EXPIRED => true,
         };
     }
 
@@ -111,116 +118,13 @@ enum OperationStatus: string implements \App\Contracts\Interfaces\StatusEnumInte
 
     /**
      * Retorna metadados completos do status
-     *
-     * @return array<string, mixed> Array com descrição, cor, ícone e flags
      */
     public function getMetadata(): array
     {
-        return [
-            'value' => $this->value,
-            'description' => $this->getDescription(),
-            'color' => $this->getColor(),
-            'icon' => $this->getIcon(),
-            'is_active' => $this->isActive(),
-            'is_finished' => $this->isFinished(),
+        return array_merge($this->defaultMetadata(), [
             'is_success' => $this->isSuccess(),
             'is_error' => $this->isError(),
-        ];
-    }
-
-    /**
-     * Cria instância do enum a partir de string
-     *
-     * @param  string  $value  Valor do status
-     * @return OperationStatus|null Instância do enum ou null se inválido
-     */
-    public static function fromString(string $value): ?self
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Retorna opções formatadas para uso em formulários/selects
-     *
-     * @param  bool  $includeFinished  Incluir status finalizados
-     * @return array<string, string> Array associativo [valor => descrição]
-     */
-    public static function getOptions(bool $includeFinished = true): array
-    {
-        $options = [];
-
-        foreach (self::cases() as $status) {
-            if (! $includeFinished && $status->isFinished()) {
-                continue;
-            }
-            $options[$status->value] = $status->getDescription();
-        }
-
-        return $options;
-    }
-
-    /**
-     * Ordena status por prioridade para exibição
-     *
-     * @param  bool  $includeFinished  Incluir status finalizados na ordenação
-     * @return array<OperationStatus> Status ordenados por prioridade
-     */
-    public static function getOrdered(bool $includeFinished = true): array
-    {
-        $statuses = self::cases();
-
-        usort($statuses, function (OperationStatus $a, OperationStatus $b) {
-            // Ordem: SUCCESS, NOT_FOUND, INVALID_DATA, VALIDATION_ERROR, FORBIDDEN, CONFLICT, ERROR
-            $order = [
-                self::SUCCESS->value => 1,
-                self::NOT_FOUND->value => 2,
-                self::INVALID_DATA->value => 3,
-                self::VALIDATION_ERROR->value => 4,
-                self::FORBIDDEN->value => 5,
-                self::UNAUTHORIZED->value => 6,
-                self::CONFLICT->value => 7,
-                self::ERROR->value => 8,
-            ];
-
-            return ($order[$a->value] ?? 99) <=> ($order[$b->value] ?? 99);
-        });
-
-        return $statuses;
-    }
-
-    /**
-     * Calcula métricas de status para dashboards
-     *
-     * @param  array<OperationStatus>  $statuses  Lista de status para análise
-     * @return array<string, int> Métricas [sucesso, erro, total]
-     */
-    public static function calculateMetrics(array $statuses): array
-    {
-        $total = count($statuses);
-        $success = 0;
-        $error = 0;
-
-        foreach ($statuses as $status) {
-            if ($status->isSuccess()) {
-                $success++;
-            } elseif ($status->isError()) {
-                $error++;
-            }
-        }
-
-        return [
-            'total' => $total,
-            'success' => $success,
-            'error' => $error,
-            'success_percentage' => $total > 0 ? round(($success / $total) * 100, 1) : 0,
-            'error_percentage' => $total > 0 ? round(($error / $total) * 100, 1) : 0,
-        ];
+        ]);
     }
 
     /**

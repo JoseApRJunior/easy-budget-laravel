@@ -1,7 +1,7 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-  <div class="container-fluid py-1">
+  <div class="container-fluid py-4">
 
     @php
       $user        = auth()->user();
@@ -15,13 +15,13 @@
       @includeWhen( $user?->isTrial() || ( $pendingPlan && $pendingPlan->status === 'pending' ), 'partials.components.provider.plan-modal' )
     @endunless
 
-    <h1 class="mb-4">
-      @if( $isAdmin )
-        Painel Administrativo
-      @else
-        Painel do Prestador
-      @endif
-    </h1>
+    <x-layout.page-header
+      :title="$isAdmin ? 'Painel Administrativo' : 'Painel do Prestador'"
+      :icon="$isAdmin ? 'shield-lock' : 'speedometer2'"
+      :breadcrumb-items="[
+        'Dashboard' => '#'
+      ]"
+    />
 
     {{-- Verificar se os dados do dashboard estão disponíveis --}}
     @if( isset( $metrics ) && isset( $charts ) && isset( $recentTransactions ) && isset( $quickActions ) )
@@ -61,10 +61,10 @@
 
       <div class="row g-4">
         <div class="col-12 col-lg-6">
-          <x-financial-summary :summary="$financialSummary" />
+          <x-dashboard.financial-summary :summary="$financialSummary" />
         </div>
         <div class="col-12 col-lg-6">
-          <x-activities :activities="$recentTransactions" :translations="$translations" :total="count( $recentTransactions )" />
+          <x-dashboard.activities :activities="$recentTransactions" :translations="$translations" :total="count( $recentTransactions )" />
         </div>
       </div>
 
@@ -72,7 +72,14 @@
       @if( !$isAdmin )
         <div class="row g-4 mt-2">
           <div class="col-12">
-            <x-quick-actions />
+            <x-resource.quick-actions>
+                <div class="d-flex flex-wrap gap-2">
+                    <x-ui.button type="link" :href="route('provider.budgets.create')" variant="primary" icon="file-earmark-plus" label="Criar Novo Orçamento" />
+                    <x-ui.button type="link" :href="route('provider.reports.index')" variant="info" icon="graph-up" label="Ver Relatórios" />
+                    <x-ui.button type="link" :href="route('provider.services.index')" variant="success" outline icon="tools" label="Gerenciar Serviços" />
+                    <x-ui.button type="link" :href="route('provider.customers.index')" variant="dark" outline icon="people" label="Clientes" />
+                </div>
+            </x-resource.quick-actions>
           </div>
         </div>
       @else
@@ -86,15 +93,9 @@
               </div>
               <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
-                  <a href="{{ route( 'admin.users.index' ) }}" class="btn btn-primary">
-                    <i class="bi bi-people me-1"></i> Gerenciar Usuários
-                  </a>
-                  <a href="{{ route( 'admin.settings' ) }}" class="btn btn-info">
-                    <i class="bi bi-gear me-1"></i> Configurações do Sistema
-                  </a>
-                  <a href="{{ route( 'admin.index' ) }}" class="btn btn-outline-success">
-                    <i class="bi bi-speedometer me-1"></i> Painel Principal
-                  </a>
+                  <x-ui.button type="link" :href="route( 'admin.users.index' )" variant="primary" icon="people" label="Gerenciar Usuários" />
+                  <x-ui.button type="link" :href="route( 'admin.settings' )" variant="info" icon="gear" label="Configurações do Sistema" />
+                  <x-ui.button type="link" :href="route( 'admin.index' )" variant="success" outline icon="speedometer" label="Painel Principal" />
                 </div>
               </div>
             </div>
@@ -126,10 +127,9 @@
             </div>
             <div class="card-body">
               <div class="alert alert-info">
-                <h6>Informações do Sistema</h6>
+                <h6>Informações da Conta</h6>
                 <p>Usuário: {{ $user->email }}</p>
                 <p>Tipo: {{ $isAdmin ? 'Administrador' : 'Prestador de Serviços' }}</p>
-                <p>Tenant ID: {{ $user->tenant_id }}</p>
               </div>
             </div>
           </div>

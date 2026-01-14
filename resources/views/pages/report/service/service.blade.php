@@ -3,24 +3,17 @@
 @section('title', 'Relatório de Serviços')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-tools me-2"></i>
-                    Relatório de Serviços
-                </h1>
-                <p class="text-muted">Visualize e analise todos os serviços prestados no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Serviços</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Relatório de Serviços"
+            icon="tools"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('provider.reports.index'),
+                'Serviços' => '#'
+            ]">
+            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">
@@ -30,7 +23,25 @@
             <div class="card-body">
                 <form id="filtersFormServices" method="GET" action="{{ route('provider.reports.services') }}">
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <x-form.filter-field
+                                type="date"
+                                name="start_date"
+                                label="Data Inicial"
+                                :value="request('start_date')"
+                            />
+                        </div>
+
+                        <div class="col-md-3">
+                            <x-form.filter-field
+                                type="date"
+                                name="end_date"
+                                label="Data Final"
+                                :value="request('end_date')"
+                            />
+                        </div>
+
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="name">Nome do Serviço</label>
                                 <input type="text" class="form-control" id="name" name="name"
@@ -38,33 +49,28 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="price_min">Preço Mínimo</label>
                                 <input type="text" class="form-control money-input" id="price_min" name="price_min"
-                                    value="{{ request('price_min') ? number_format(request('price_min'), 2, ',', '.') : '' }}"
+                                    value="{{ request('price_min') ? \App\Helpers\CurrencyHelper::format(request('price_min'), 2, false) : '' }}"
                                     placeholder="0,00" maxlength="20">
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <label for="price_max">Preço Máximo</label>
                                 <input type="text" class="form-control money-input" id="price_max" name="price_max"
-                                    value="{{ request('price_max') ? number_format(request('price_max'), 2, ',', '.') : '' }}"
+                                    value="{{ request('price_max') ? \App\Helpers\CurrencyHelper::format(request('price_max'), 2, false) : '' }}"
                                     placeholder="0,00" maxlength="20">
                             </div>
                         </div>
 
                         <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" id="btnFilterServices" class="btn btn-primary" aria-label="Filtrar">
-                                    <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.reports.services') }}" class="btn btn-secondary"
-                                    aria-label="Limpar filtros">
-                                    <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                </a>
+                            <div class="d-flex gap-2">
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterServices" />
+                                <x-ui.button type="link" :href="route('provider.reports.services')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -81,9 +87,7 @@
                     <p class="text-muted mb-3">
                         Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
                     </p>
-                    <a href="{{ route('provider.services.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Criar Primeiro Serviço
-                    </a>
+                    <x-ui.button type="link" :href="route('provider.services.create')" variant="primary" icon="plus" label="Criar Primeiro Serviço" />
                 </div>
             </div>
         @else
@@ -109,15 +113,9 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" title="Exportar PDF"
-                                        id="export-pdf">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-sm" title="Exportar Excel"
-                                        id="export-excel">
-                                        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                                    </button>
+                                <div class="d-flex gap-1" role="group">
+                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>
@@ -139,7 +137,7 @@
                                             <p class="text-muted small mb-2">{{ Str::limit($service->description, 50) }}
                                             </p>
                                             <small class="text-muted">
-                                                R$ {{ number_format($service->price, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($service->price) }}
                                             </small>
                                         </div>
                                         <i class="bi bi-chevron-right text-muted ms-2"></i>
@@ -191,18 +189,12 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <strong>R$ {{ number_format($service->price, 2, ',', '.') }}</strong>
+                                                <strong>{{ \App\Helpers\CurrencyHelper::format($service->price) }}</strong>
                                             </td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.services.show', $service) }}"
-                                                        class="action-btn action-btn-view" title="Visualizar">
-                                                        <i class="bi bi-eye-fill"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.services.edit', $service) }}"
-                                                        class="action-btn action-btn-edit" title="Editar">
-                                                        <i class="bi bi-pencil-fill"></i>
-                                                    </a>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-ui.button type="link" :href="route('provider.services.edit', $service->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -248,8 +240,8 @@
             window.location.href = url.toString();
         }
 
-        // Máscara para valores monetários
         document.addEventListener('DOMContentLoaded', function() {
+            // Máscara para valores monetários
             const moneyInputs = document.querySelectorAll('.money-input');
             moneyInputs.forEach(function(input) {
                 input.addEventListener('input', function(e) {
@@ -258,6 +250,57 @@
                     value = value.replace('.', ',');
                     e.target.value = value;
                 });
+            });
+
+            // Validação de Datas
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = document.getElementById('filtersFormServices');
+
+            if (!startDate || !endDate || !form) return;
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = (input) => {
+                const startVal = startDate.value;
+                const endVal = endDate.value;
+
+                if (!startVal || !endVal) return true;
+
+                const start = parseDate(startVal);
+                const end = parseDate(endVal);
+
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
+
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                }
             });
         });
     </script>

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\CustomersExport;
@@ -12,17 +14,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerManagementController extends Controller
 {
-    protected CacheService $cacheService;
-
-    public function __construct(CacheService $cacheService)
-    {
-        $this->cacheService = $cacheService;
-    }
+    public function __construct(
+        protected CacheService $cacheService
+    ) {}
 
     public function index(Request $request): View
     {
@@ -36,7 +36,7 @@ class CustomerManagementController extends Controller
         $sortOrder = $request->get('sort_order', 'asc');
         $perPage = $request->get('per_page', 25);
 
-        $query = Customer::with(['tenant', 'city', 'state'])
+        $query = Customer::with(['tenant', 'address'])
             ->withCount(['budgets', 'services', 'invoices']);
 
         if ($search) {
@@ -122,38 +122,25 @@ class CustomerManagementController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $customer = new Customer;
-            $customer->fill($validated);
-            $customer->save();
+        $customer = new Customer;
+        $customer->fill($validated);
+        $customer->save();
 
-            $this->cacheService->forgetPattern('customers.*');
+        $this->cacheService->forgetPattern('customers.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Customer created', [
-                'customer_id' => $customer->id,
-                'name' => $customer->name,
-                'email' => $customer->email,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Customer created', [
+            'customer_id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.customers.index')
-                ->with('success', 'Cliente criado com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating customer', [
-                'error' => $e->getMessage(),
-                'data' => $validated,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Erro ao criar cliente. Por favor, tente novamente.');
-        }
+        return redirect()->back()
+            ->with('success', 'Cliente criado com sucesso!');
     }
 
     public function show(Customer $customer): View
@@ -162,8 +149,7 @@ class CustomerManagementController extends Controller
 
         $customer->load([
             'tenant',
-            'city',
-            'state',
+            'address',
             'budgets',
             'services',
             'invoices',
@@ -183,7 +169,7 @@ class CustomerManagementController extends Controller
     {
         $this->authorize('manage-customers');
 
-        $customer->load(['tenant', 'city', 'state']);
+        $customer->load(['tenant', 'address']);
 
         $tenants = Tenant::where('is_active', true)
             ->orderBy('name')
@@ -219,38 +205,24 @@ class CustomerManagementController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $customer->fill($validated);
-            $customer->save();
+        $customer->fill($validated);
+        $customer->save();
 
-            $this->cacheService->forgetPattern('customers.*');
+        $this->cacheService->forgetPattern('customers.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Customer updated', [
-                'customer_id' => $customer->id,
-                'name' => $customer->name,
-                'email' => $customer->email,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Customer updated', [
+            'customer_id' => $customer->id,
+            'name' => $customer->name,
+            'email' => $customer->email,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.customers.show', $customer)
-                ->with('success', 'Cliente atualizado com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error updating customer', [
-                'customer_id' => $customer->id,
-                'error' => $e->getMessage(),
-                'data' => $validated,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Erro ao atualizar cliente. Por favor, tente novamente.');
-        }
+        return redirect()->back()
+            ->with('success', 'Cliente atualizado com sucesso!');
     }
 
     public function destroy(Customer $customer): JsonResponse
@@ -278,76 +250,47 @@ class CustomerManagementController extends Controller
             ], 422);
         }
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $customerName = $customer->name;
-            $customer->delete();
+        $customerName = $customer->name;
+        $customer->delete();
 
-            $this->cacheService->forgetPattern('customers.*');
+        $this->cacheService->forgetPattern('customers.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Customer deleted', [
-                'customer_name' => $customerName,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Customer deleted', [
+            'customer_name' => $customerName,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Cliente excluído com sucesso!',
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting customer', [
-                'customer_id' => $customer->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao excluir cliente. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Cliente excluído com sucesso!',
+        ]);
     }
 
     public function toggleStatus(Customer $customer): JsonResponse
     {
         $this->authorize('manage-customers');
 
-        try {
-            $customer->is_active = ! $customer->is_active;
-            $customer->save();
+        $customer->is_active = ! $customer->is_active;
+        $customer->save();
 
-            $this->cacheService->forgetPattern('customers.*');
+        $this->cacheService->forgetPattern('customers.*');
 
-            Log::info('Customer status toggled', [
-                'customer_id' => $customer->id,
-                'name' => $customer->name,
-                'new_status' => $customer->is_active ? 'active' : 'inactive',
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Customer status toggled', [
+            'customer_id' => $customer->id,
+            'name' => $customer->name,
+            'new_status' => $customer->is_active ? 'active' : 'inactive',
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Status alterado com sucesso!',
-                'is_active' => $customer->is_active,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error toggling customer status', [
-                'customer_id' => $customer->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Status alterado com sucesso!',
+            'is_active' => $customer->is_active,
+        ]);
     }
 
     public function export(Request $request)
@@ -360,7 +303,7 @@ class CustomerManagementController extends Controller
         $status = $request->get('status');
         $tenant = $request->get('tenant');
 
-        $query = Customer::with(['tenant', 'city', 'state'])
+        $query = Customer::with(['tenant', 'address'])
             ->withCount(['budgets', 'services', 'invoices']);
 
         if ($search) {

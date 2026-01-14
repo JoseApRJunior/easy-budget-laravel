@@ -22,12 +22,42 @@ class BudgetUpdateRequest extends FormRequest
     }
 
     /**
+     * Get custom validator for budget status checks.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            // Get the budget code from the route
+            $code = $this->route('code');
+
+            if (! $code) {
+                return;
+            }
+
+            // Fetch the budget with its tenant scope
+            $budget = \App\Models\Budget::where('code', $code)
+                ->where('tenant_id', auth()->user()->tenant_id)
+                ->first();
+
+            if (! $budget) {
+                $validator->errors()->add('budget', 'Orçamento não encontrado.');
+
+                return;
+            }
+
+            // Block edits on non-DRAFT budgets
+            if ($budget->status !== \App\Enums\BudgetStatus::DRAFT->value) {
+                $validator->errors()->add('status', 'Orçamentos enviados (pendentes), aprovados ou concluídos não podem ser editados. Para alterar, crie um novo orçamento ou rejeite o atual.');
+            }
+        });
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      */
     public function rules(): array
     {
         $tenantId = auth()->user()->tenant_id ?? 0;
-        $budgetId = $this->route('budget')?->id;
 
         return [
             'customer_id' => [
@@ -36,22 +66,16 @@ class BudgetUpdateRequest extends FormRequest
                 Rule::exists('customers', 'id')->where('tenant_id', $tenantId),
             ],
             'status' => [
-                'required',
-                Rule::in(array_column(BudgetStatus::cases(), 'value')),
+                'nullable',
+                Rule::in(BudgetStatus::values()),
             ],
+            'total' => 'required|numeric|min:0|max:9999999.99',
             'discount' => 'nullable|numeric|min:0|max:999999.99',
             'description' => 'nullable|string|max:1000',
-            'due_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:today',
             'payment_terms' => 'nullable|string|max:2000',
-            'items' => 'nullable|array|min:1',
-            'items.*.product_id' => [
-                'required_with:items',
-                'integer',
-                Rule::exists('products', 'id')->where('tenant_id', $tenantId),
-            ],
-            'items.*.unit_value' => 'required_with:items|numeric|min:0|max:999999.99',
-            'items.*.quantity' => 'required_with:items|integer|min:1|max:9999',
-            'items.*.total' => 'nullable|numeric|min:0|max:999999.99',
+            'items' => 'nullable|array',
+            'services' => 'nullable|array',
         ];
     }
 
@@ -63,26 +87,14 @@ class BudgetUpdateRequest extends FormRequest
         return [
             'customer_id.required' => 'O cliente é obrigatório.',
             'customer_id.exists' => 'Cliente não encontrado.',
-            'status.required' => 'O status é obrigatório.',
-            'status.in' => 'Status inválido.',
+            'total.required' => 'O valor total é obrigatório.',
+            'total.numeric' => 'O valor total deve ser um número.',
             'discount.numeric' => 'O desconto deve ser um valor numérico.',
             'discount.min' => 'O desconto não pode ser negativo.',
-            'discount.max' => 'O desconto não pode ser maior que R$ 999.999,99.',
+            'due_date.date' => 'A data de vencimento deve ser uma data válida.',
+            'due_date.after_or_equal' => 'A data de vencimento deve ser hoje ou uma data posterior.',
             'description.max' => 'A descrição não pode ter mais de 1000 caracteres.',
             'payment_terms.max' => 'Os termos de pagamento não podem ter mais de 2000 caracteres.',
-            'items.required' => 'Pelo menos um item deve ser adicionado.',
-            'items.*.product_id.required_with' => 'O produto é obrigatório para cada item.',
-            'items.*.product_id.exists' => 'Produto não encontrado.',
-            'items.*.unit_value.required_with' => 'O valor unitário é obrigatório para cada item.',
-            'items.*.unit_value.numeric' => 'O valor unitário deve ser numérico.',
-            'items.*.unit_value.min' => 'O valor unitário não pode ser negativo.',
-            'items.*.unit_value.max' => 'O valor unitário não pode ser maior que R$ 999.999,99.',
-            'items.*.quantity.required_with' => 'A quantidade é obrigatória para cada item.',
-            'items.*.quantity.integer' => 'A quantidade deve ser um número inteiro.',
-            'items.*.quantity.min' => 'A quantidade deve ser pelo menos 1.',
-            'items.*.quantity.max' => 'A quantidade não pode ser maior que 9999.',
-            'items.*.total.min' => 'O total do item não pode ser negativo.',
-            'items.*.total.max' => 'O total do item não pode ser maior que R$ 999.999,99.',
         ];
     }
 
@@ -111,10 +123,33 @@ class BudgetUpdateRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Converte valores vazios para null
-        if ($this->discount === '') {
-            $this->merge(['discount' => null]);
+        // Unformat currency values
+        if ($this->has('discount')) {
+            $this->merge([
+                'discount' => \App\Helpers\CurrencyHelper::unformat($this->discount),
+            ]);
         }
+        if ($this->has('total')) {
+            $this->merge([
+                'total' => \App\Helpers\CurrencyHelper::unformat($this->total),
+            ]);
+        }
+
+        // Unformat item values
+        if ($this->has('items')) {
+            $items = $this->items;
+            foreach ($items as $key => $item) {
+                if (isset($item['unit_value'])) {
+                    $items[$key]['unit_value'] = \App\Helpers\CurrencyHelper::unformat($item['unit_value']);
+                }
+                if (isset($item['total'])) {
+                    $items[$key]['total'] = \App\Helpers\CurrencyHelper::unformat($item['total']);
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
+
+        // Converte valores vazios para null
         if ($this->due_date === '') {
             $this->merge(['due_date' => null]);
         }

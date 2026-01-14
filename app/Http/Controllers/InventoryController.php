@@ -4,534 +4,525 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Inventory\InventoryFilterDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Product;
-use App\Services\Domain\InventoryService;
-use Exception;
+use App\Services\Application\InventoryManagementService;
+use App\Services\Domain\InventoryExportService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    private InventoryService $inventoryService;
+    private InventoryManagementService $inventoryManagementService;
 
-    public function __construct( InventoryService $inventoryService )
-    {
-        $this->inventoryService = $inventoryService;
+    private InventoryExportService $inventoryExportService;
+
+    public function __construct(
+        InventoryManagementService $inventoryManagementService,
+        InventoryExportService $inventoryExportService
+    ) {
+        $this->inventoryManagementService = $inventoryManagementService;
+        $this->inventoryExportService = $inventoryExportService;
     }
 
     /**
      * Dashboard de Inventário
      */
-    public function dashboard(): View
+    public function dashboard(): View|RedirectResponse
     {
-        // Total de produtos
-        $totalProducts = Product::count();
+        $this->authorize('viewAny', Product::class);
+        $result = $this->inventoryManagementService->getDashboardData();
 
-        // Produtos com estoque baixo, alto e sem estoque
-        $lowStockProducts = \App\Models\ProductInventory::query()
-            ->whereRaw( 'quantity <= min_quantity' )
-            ->count();
-
-        $highStockProducts = \App\Models\ProductInventory::query()
-            ->whereNotNull( 'max_quantity' )
-            ->whereRaw( 'quantity >= max_quantity' )
-            ->count();
-
-        $outOfStockProducts = \App\Models\ProductInventory::query()
-            ->where( 'quantity', '=', 0 )
-            ->count();
-
-        // Valor total do estoque
-        $totalInventoryValue = \DB::table( 'product_inventory' )
-            ->join( 'products', 'product_inventory.product_id', '=', 'products.id' )
-            ->selectRaw( 'SUM(product_inventory.quantity * products.price) as total' )
-            ->value( 'total' ) ?? 0;
-
-        // Itens com estoque alto (limit 5)
-        $highStockItems = \App\Models\ProductInventory::query()
-            ->whereNotNull( 'max_quantity' )
-            ->whereRaw( 'quantity >= max_quantity' )
-            ->with( 'product' )
-            ->limit( 5 )
-            ->get();
-
-        // Itens com estoque baixo (limit 5)
-        $lowStockItems = \App\Models\ProductInventory::query()
-            ->whereRaw( 'quantity <= min_quantity' )
-            ->with( 'product' )
-            ->limit( 5 )
-            ->get();
-
-        // Movimentações recentes (limit 10)
-        $recentMovements = \App\Models\InventoryMovement::query()
-            ->with( [ 'product', 'user' ] )
-            ->orderBy( 'created_at', 'desc' )
-            ->limit( 10 )
-            ->get();
-
-        return view( 'pages.inventory.dashboard', compact(
-            'totalProducts',
-            'lowStockProducts',
-            'highStockProducts',
-            'outOfStockProducts',
-            'totalInventoryValue',
-            'highStockItems',
-            'lowStockItems',
-            'recentMovements',
-        ) );
+        return view('pages.inventory.dashboard', (array) $result->getData());
     }
 
     /**
      * Lista de inventário
      */
-    public function index( Request $request ): View
+    public function index(Request $request): View|RedirectResponse
     {
-        // Buscar categorias para o filtro
-        $categories = \App\Models\Category::all();
+        $this->authorize('viewAny', Product::class);
 
-        // Query base de inventário
-        $query = \App\Models\ProductInventory::query()
-            ->with( [ 'product.category' ] );
-
-        // Filtro por busca (nome ou SKU do produto)
-        if ( $search = $request->input( 'search' ) ) {
-            $query->whereHas( 'product', function ( $q ) use ( $search ) {
-                $q->where( 'name', 'like', "%{$search}%" )
-                    ->orWhere( 'sku', 'like', "%{$search}%" );
-            } );
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyIndexData();
+        } else {
+            // Se houver qualquer parâmetro (mesmo que vazio, vindo do form de filtro), processa a busca
+            $filterDto = InventoryFilterDTO::fromRequest($request->all());
+            $result = $this->inventoryManagementService->getIndexData($filterDto);
         }
 
-        // Filtro por categoria
-        if ( $categoryId = $request->input( 'category' ) ) {
-            $query->whereHas( 'product', function ( $q ) use ( $categoryId ) {
-                $q->where( 'category_id', $categoryId );
-            } );
+        if ($result->isError()) {
+            return $this->redirectError('provider.inventory.dashboard', 'Erro ao carregar inventário: '.$result->getMessage());
         }
 
-        // Filtro por status do estoque
-        if ( $status = $request->input( 'status' ) ) {
-            switch ( $status ) {
-                case 'low':
-                    $query->whereRaw( 'quantity <= min_quantity' );
-                    break;
-                case 'out':
-                    $query->where( 'quantity', '=', 0 );
-                    break;
-                case 'sufficient':
-                    $query->whereRaw( 'quantity > min_quantity' );
-                    break;
-            }
-        }
-
-        // Paginar resultados com eager loading
-        $inventories = $query
-            ->with( [ 'product.category' ] )
-            ->paginate( 15 );
-
-        return view( 'pages.inventory.index', compact( 'categories', 'inventories' ) );
+        return view('pages.inventory.index', (array) $result->getData());
     }
 
     /**
      * Movimentações de inventário
      */
-    public function movements( Request $request ): View
+    public function movements(Request $request): View|RedirectResponse
     {
-        $products = Product::query()
-            ->orderBy( 'name' )
-            ->get();
+        $this->authorize('viewMovements', \App\Models\Product::class);
 
-        $query = \App\Models\InventoryMovement::query()
-            ->with( [ 'product', 'user' ] )
-            ->orderByDesc( 'created_at' );
-
-        if ( $productId = $request->input( 'product_id' ) ) {
-            $query->where( 'product_id', (int) $productId );
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyMovementsData();
+        } else {
+            $result = $this->inventoryManagementService->getMovementsData($request->all());
         }
 
-        if ( $type = $request->input( 'type' ) ) {
-            $query->where( 'type', $type );
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
         }
 
-        if ( $start = $request->input( 'start_date' ) ) {
-            $query->whereDate( 'created_at', '>=', $start );
+        return view('pages.inventory.movements', (array) $result->getData());
+    }
+
+    /**
+     * Exibir detalhes de uma movimentação específica
+     */
+    public function movementShow(int $id): View|RedirectResponse
+    {
+        $this->authorize('viewMovements', \App\Models\Product::class);
+        $result = $this->inventoryManagementService->getMovementDetails($id);
+
+        if ($result->isError()) {
+            return redirect()->route('provider.inventory.movements')->with('error', $result->getMessage());
         }
 
-        if ( $end = $request->input( 'end_date' ) ) {
-            $query->whereDate( 'created_at', '<=', $end );
-        }
-
-        $movements = $query->paginate( 15 );
-
-        $summaryQuery = \App\Models\InventoryMovement::query();
-        if ( $productId ) {
-            $summaryQuery->where( 'product_id', (int) $productId );
-        }
-        if ( $start ) {
-            $summaryQuery->whereDate( 'created_at', '>=', $start );
-        }
-        if ( $end ) {
-            $summaryQuery->whereDate( 'created_at', '<=', $end );
-        }
-
-        $totalEntries = (float) $summaryQuery->clone()
-            ->where( 'type', 'entry' )
-            ->sum( 'quantity' );
-
-        $totalExits = (float) $summaryQuery->clone()
-            ->whereIn( 'type', [ 'exit', 'subtraction' ] )
-            ->sum( 'quantity' );
-
-        $totalAdjustments = (float) $summaryQuery->clone()
-            ->where( 'type', 'adjustment' )
-            ->sum( 'quantity' );
-
-        $totalReservations = (float) $summaryQuery->clone()
-            ->where( 'type', 'reservation' )
-            ->sum( 'quantity' );
-
-        $totalCancellations = (float) $summaryQuery->clone()
-            ->where( 'type', 'cancellation' )
-            ->sum( 'quantity' );
-
-        $countEntries       = (int) $summaryQuery->clone()->where( 'type', 'entry' )->count();
-        $countExits         = (int) $summaryQuery->clone()->whereIn( 'type', [ 'exit', 'subtraction' ] )->count();
-        $countAdjustments   = (int) $summaryQuery->clone()->where( 'type', 'adjustment' )->count();
-        $countReservations  = (int) $summaryQuery->clone()->where( 'type', 'reservation' )->count();
-        $countCancellations = (int) $summaryQuery->clone()->where( 'type', 'cancellation' )->count();
-
-        $summary = [
-            'total_entries'       => $totalEntries,
-            'total_exits'         => $totalExits,
-            'balance'             => $totalEntries - $totalExits,
-            'total_adjustments'   => $totalAdjustments,
-            'total_reservations'  => $totalReservations,
-            'total_cancellations' => $totalCancellations,
-            'count_entries'       => $countEntries,
-            'count_exits'         => $countExits,
-            'count_adjustments'   => $countAdjustments,
-            'count_reservations'  => $countReservations,
-            'count_cancellations' => $countCancellations,
-        ];
-
-        return view( 'pages.inventory.movements', compact( 'products', 'movements', 'summary' ) );
+        return view('pages.inventory.movements.show', (array) $result->getData());
     }
 
     /**
      * Giro de estoque
      */
-    public function stockTurnover( Request $request ): View
+    public function stockTurnover(Request $request): View|RedirectResponse
     {
-        $filters = $request->only( [ 'start_date', 'end_date', 'category_id' ] ) + [
-            'start_date'  => '',
-            'end_date'    => '',
-            'category_id' => '',
-        ];
+        $this->authorize('viewReports', \App\Models\Product::class);
 
-        $categories = \App\Models\Category::all();
-
-        $query = Product::query()
-            ->with( [ 'category' ] )
-            ->select( [ 'products.*' ] )
-            ->when( !empty( $filters[ 'category_id' ] ), function ( $q ) use ( $filters ) {
-                $q->where( 'category_id', (int) $filters[ 'category_id' ] );
-            } )
-            ->selectSub(
-                \DB::table( 'product_inventory' )
-                    ->selectRaw( 'COALESCE(SUM(quantity),0)' )
-                    ->whereColumn( 'product_id', 'products.id' ),
-                'current_stock',
-            )
-            ->selectSub(
-                \DB::table( 'product_inventory' )
-                    ->selectRaw( 'COALESCE(AVG(quantity),0)' )
-                    ->whereColumn( 'product_id', 'products.id' ),
-                'average_stock',
-            )
-            ->selectSub(
-                \DB::table( 'inventory_movements' )
-                    ->selectRaw( 'COALESCE(SUM(quantity),0)' )
-                    ->whereColumn( 'product_id', 'products.id' )
-                    ->where( 'type', 'entry' )
-                    ->when( !empty( $filters[ 'start_date' ] ), function ( $q ) use ( $filters ) {
-                        $q->whereDate( 'created_at', '>=', $filters[ 'start_date' ] );
-                    } )
-                    ->when( !empty( $filters[ 'end_date' ] ), function ( $q ) use ( $filters ) {
-                        $q->whereDate( 'created_at', '<=', $filters[ 'end_date' ] );
-                    } ),
-                'total_entries',
-            )
-            ->selectSub(
-                \DB::table( 'inventory_movements' )
-                    ->selectRaw( 'COALESCE(SUM(quantity),0)' )
-                    ->whereColumn( 'product_id', 'products.id' )
-                    ->whereIn( 'type', [ 'exit', 'subtraction' ] )
-                    ->when( !empty( $filters[ 'start_date' ] ), function ( $q ) use ( $filters ) {
-                        $q->whereDate( 'created_at', '>=', $filters[ 'start_date' ] );
-                    } )
-                    ->when( !empty( $filters[ 'end_date' ] ), function ( $q ) use ( $filters ) {
-                        $q->whereDate( 'created_at', '<=', $filters[ 'end_date' ] );
-                    } ),
-                'total_exits',
-            )
-            ->selectSub(
-                \DB::table( 'product_inventory' )
-                    ->selectRaw( 'COALESCE(MIN(min_quantity),0)' )
-                    ->whereColumn( 'product_id', 'products.id' ),
-                'min_quantity',
-            );
-
-        $stockTurnover = $query->paginate( 15 );
-
-        $totalProducts = (int) $stockTurnover->total();
-        $totalEntries  = (float) $stockTurnover->sum( 'total_entries' );
-        $totalExits    = (float) $stockTurnover->sum( 'total_exits' );
-        $avgTurnover   = 0.0;
-        if ( $stockTurnover->count() > 0 ) {
-            $sumTurnover = 0.0;
-            foreach ( $stockTurnover as $item ) {
-                $avgBase      = (float) ( $item->average_stock ?? 0 );
-                $sumTurnover += $avgBase > 0 ? ( (float) $item->total_exits ) / $avgBase : 0.0;
-            }
-            $avgTurnover = $sumTurnover / $stockTurnover->count();
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyStockTurnoverData();
+        } else {
+            $result = $this->inventoryManagementService->getStockTurnoverData($request->all());
         }
 
-        $reportData = [
-            'total_products'   => $totalProducts,
-            'total_entries'    => $totalEntries,
-            'total_exits'      => $totalExits,
-            'average_turnover' => $avgTurnover,
-        ];
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
 
-        return view( 'pages.inventory.stock-turnover', compact( 'filters', 'categories', 'stockTurnover', 'reportData' ) );
+        return view('pages.inventory.stock-turnover', (array) $result->getData());
     }
 
     /**
      * Produtos mais usados
      */
-    public function mostUsedProducts(): View
+    public function mostUsedProducts(Request $request): View|RedirectResponse
     {
-        return view( 'pages.inventory.most-used' );
+        $this->authorize('viewReports', \App\Models\Product::class);
+
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyMostUsedProductsData();
+        } else {
+            $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
+        }
+
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
+
+        return view('pages.inventory.most-used', (array) $result->getData());
     }
 
     /**
      * Alertas de estoque
      */
-    public function alerts(): View
+    public function alerts(): View|RedirectResponse
     {
-        $tenantId = auth()->user()->tenant_id ?? null;
-        $perPage  = 15;
+        $this->authorize('manageAlerts', \App\Models\Product::class);
+        $result = $this->inventoryManagementService->getAlertsData();
 
-        $lowStockProducts = \App\Models\ProductInventory::query()
-            ->byTenant( $tenantId )
-            ->lowStock()
-            ->with( [ 'product.category' ] )
-            ->orderBy( 'updated_at', 'desc' )
-            ->paginate( $perPage );
+        return view('pages.inventory.alerts', (array) $result->getData());
+    }
 
-        $highStockProducts = \App\Models\ProductInventory::query()
-            ->byTenant( $tenantId )
-            ->whereNotNull( 'max_quantity' )
-            ->highStock()
-            ->with( [ 'product.category' ] )
-            ->orderBy( 'updated_at', 'desc' )
-            ->paginate( $perPage );
+    /**
+     * Exportar inventário do Index
+     */
+    public function exportIndex(Request $request)
+    {
+        $this->authorize('viewAny', Product::class);
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
 
-        return view( 'pages.inventory.alerts', compact( 'lowStockProducts', 'highStockProducts' ) );
+        $filterDto = InventoryFilterDTO::fromRequest($request->all());
+        $filterDto->perPage = 10000; // Pegar todos os registros para exportação
+
+        $result = $this->inventoryManagementService->getIndexData($filterDto);
+        $data = collect($result->getData()['inventories']->items());
+
+        $this->inventoryExportService->setExportType('inventory');
+
+        return $this->inventoryExportService->export($data, $format, 'inventario_geral');
     }
 
     /**
      * Relatório de inventário
      */
-    public function report( Request $request ): View
+    public function report(Request $request): View|RedirectResponse
     {
-        $type      = $request->input( 'type', 'summary' );
-        $startDate = $request->input( 'start_date' );
-        $endDate   = $request->input( 'end_date' );
+        $this->authorize('viewReports', \App\Models\Product::class);
 
-        // Dados do relatório (a serem implementados conforme necessidade)
-        $reportData = [];
+        // Se não houver nenhum parâmetro na query (primeiro acesso), mostra estado vazio
+        if (empty($request->query())) {
+            $result = $this->inventoryManagementService->getEmptyReportData();
+        } else {
+            $result = $this->inventoryManagementService->getReportData($request->all());
+        }
 
-        return view( 'pages.inventory.report', compact( 'type', 'startDate', 'endDate', 'reportData' ) );
+        if ($result->isError()) {
+            return back()->with('error', $result->getMessage())->withInput();
+        }
+
+        return view('pages.inventory.report', (array) $result->getData());
     }
 
     /**
      * Exportar inventário
      */
-    public function export()
+    public function export(Request $request)
     {
-        // TODO: implementar exportação
-        return redirect()->back()->with( 'warning', 'Exportação em desenvolvimento' );
+        $this->authorize('viewReports', \App\Models\Product::class);
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
+        $reportType = $request->input('report_type', 'summary');
+
+        // Se report_type for igual ao format (devido ao uso de 'type' em ambos), tenta buscar do request explicitamente
+        if ($reportType === $format && $request->has('report_type')) {
+            $reportType = $request->input('report_type');
+        } elseif ($reportType === $format) {
+            // Caso padrão se houver ambiguidade
+            $reportType = 'summary';
+        }
+
+        // Garantir que o report_type seja passado corretamente para o serviço
+        $filters = $request->all();
+        $filters['report_type'] = $reportType;
+
+        $result = $this->inventoryManagementService->getReportData($filters);
+        $data = collect($result->getData()['reportData']);
+
+        $this->inventoryExportService->setExportType('report_'.$reportType);
+
+        return $this->inventoryExportService->export($data, $format, 'relatorio_inventario_'.$reportType);
     }
 
     /**
      * Exportar movimentações
      */
-    public function exportMovements()
+    public function exportMovements(Request $request)
     {
-        // TODO: implementar exportação
-        return redirect()->back()->with( 'warning', 'Exportação em desenvolvimento' );
+        $this->authorize('viewMovements', \App\Models\Product::class);
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
+
+        $result = $this->inventoryManagementService->getMovementsData($request->all());
+        // Pegar todos os registros sem paginação para exportação
+        $filters = $request->all();
+        $filters['per_page'] = 10000;
+        $result = $this->inventoryManagementService->getMovementsData($filters);
+        $data = collect($result->getData()['movements']->items());
+
+        $this->inventoryExportService->setExportType('movements');
+
+        return $this->inventoryExportService->export($data, $format, 'movimentacoes_estoque');
     }
 
     /**
      * Exportar giro de estoque
      */
-    public function exportStockTurnover()
+    public function exportStockTurnover(Request $request)
     {
-        // TODO: implementar exportação
-        return redirect()->back()->with( 'warning', 'Exportação em desenvolvimento' );
+        $this->authorize('viewReports', \App\Models\Product::class);
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
+
+        // Pegar todos os registros sem paginação para exportação
+        $filters = $request->all();
+        $filters['per_page'] = 10000;
+        $result = $this->inventoryManagementService->getStockTurnoverData($filters);
+        $data = collect($result->getData()['stockTurnover']->items());
+
+        $this->inventoryExportService->setExportType('stock_turnover');
+
+        return $this->inventoryExportService->export($data, $format, 'giro_estoque');
     }
 
     /**
      * Exportar produtos mais usados
      */
-    public function exportMostUsed()
+    public function exportMostUsed(Request $request)
     {
-        // TODO: implementar exportação
-        return redirect()->back()->with( 'warning', 'Exportação em desenvolvimento' );
+        $this->authorize('viewReports', \App\Models\Product::class);
+        $format = $request->input('format') ?? $request->input('type') ?? 'xlsx';
+
+        $result = $this->inventoryManagementService->getMostUsedProductsData($request->all());
+        $data = collect($result->getData()['products']);
+
+        $this->inventoryExportService->setExportType('most_used');
+
+        return $this->inventoryExportService->export($data, $format, 'produtos_mais_usados');
     }
 
     /**
      * Exibir detalhes de inventário de um produto
      */
-    public function show( $sku ): View
+    public function show(Request $request, $sku): View|RedirectResponse
     {
-        $product = Product::where( 'sku', $sku )->firstOrFail();
+        $result = $this->inventoryManagementService->getProductBySku($sku);
 
-        return view( 'pages.inventory.show', compact( 'product' ) );
+        if (! $result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $product = $result->getData();
+        $this->authorize('view', $product);
+
+        $movementsQuery = $product->inventoryMovements();
+        $summary = $this->inventoryManagementService->calculateMovementSummary($movementsQuery);
+
+        $movements = $movementsQuery
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('pages.inventory.show', [
+            'product' => $product,
+            'inventory' => $product->inventory,
+            'movements' => $movements,
+            'summary' => $summary,
+        ]);
+    }
+
+    /**
+     * Atualizar limites de estoque (mínimo e máximo)
+     */
+    public function updateLimits(Request $request, $sku): RedirectResponse
+    {
+        $result = $this->inventoryManagementService->getProductBySku($sku);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $product = $result->getData();
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
+            'min_quantity' => 'required|integer|min:0',
+            'max_quantity' => 'nullable|integer|min:0',
+        ]);
+
+        $min = (int) $request->input('min_quantity');
+        $max = $request->input('max_quantity') !== null ? (int) $request->input('max_quantity') : null;
+
+        if ($max !== null && $max <= $min) {
+            return redirect()->back()->with('error', 'A quantidade máxima deve ser maior que a mínima.')->withInput();
+        }
+
+        $updateResult = $this->inventoryManagementService->updateStockLimits(
+            (int) $product->id,
+            $min,
+            $max
+        );
+
+        if ($updateResult->isSuccess()) {
+            return redirect()
+                ->back()
+                ->with('success', 'Limites de estoque atualizados com sucesso!');
+        }
+
+        return redirect()
+            ->back()
+            ->with('error', $updateResult->getMessage());
     }
 
     /**
      * Formulário de entrada de estoque
      */
-    public function entryForm( $sku ): View
+    public function entryForm($sku): View|RedirectResponse
     {
-        $product = Product::where( 'sku', $sku )->firstOrFail();
+        $result = $this->inventoryManagementService->getProductBySku($sku);
 
-        return view( 'pages.inventory.entry', compact( 'product' ) );
+        if (! $result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $product = $result->getData();
+        $this->authorize('adjustInventory', $product);
+
+        return view('pages.inventory.entry', ['product' => $product]);
     }
 
     /**
      * Processar entrada de estoque
      */
-    public function entry( Request $request, $sku )
+    public function entry(Request $request, $sku)
     {
-        $request->validate( [
+        $result = $this->inventoryManagementService->getProductBySku($sku);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $product = $result->getData();
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
             'quantity' => 'required|integer|min:1',
-            'reason'   => 'nullable|string|max:255',
-        ] );
+            'reason' => 'nullable|string|max:255',
+        ]);
 
-        $product = Product::where( 'sku', $sku )->firstOrFail();
-
-        $result = $this->inventoryService->addStock(
-            (int) $product->id,
-            (int) $product->tenant_id,
-            (int) $request->input( 'quantity' ),
-            (string) $request->input( 'reason', 'Entrada manual' )
+        $entryResult = $this->inventoryManagementService->addStock(
+            (string) $sku,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason', 'Entrada manual')
         );
 
-        if ( $result->isSuccess() ) {
+        if ($entryResult->isSuccess()) {
             return redirect()
-                ->route( 'provider.inventory.index' )
-                ->with( 'success', 'Estoque adicionado com sucesso!' );
+                ->back()
+                ->with('success', 'Estoque adicionado com sucesso!');
         }
 
         return redirect()
             ->back()
-            ->with( 'error', $result->getMessage() );
+            ->with('error', $entryResult->getMessage());
     }
 
     /**
      * Formulário de saída de estoque
      */
-    public function exitForm( $sku ): View
+    public function exitForm($sku): View|RedirectResponse
     {
-        $product = Product::where( 'sku', $sku )->firstOrFail();
+        $productResult = $this->inventoryManagementService->getProductBySku($sku);
 
-        return view( 'pages.inventory.exit', compact( 'product' ) );
+        if (! $productResult->isSuccess()) {
+            return redirect()->back()->with('error', $productResult->getMessage());
+        }
+
+        $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
+
+        return view('pages.inventory.exit', ['product' => $product]);
     }
 
     /**
      * Processar saída de estoque
      */
-    public function exit( Request $request, $sku )
+    public function exit(Request $request, $sku)
     {
-        $request->validate( [
+        $productResult = $this->inventoryManagementService->getProductBySku($sku);
+        if (! $productResult->isSuccess()) {
+            return redirect()->back()->with('error', $productResult->getMessage());
+        }
+
+        $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
             'quantity' => 'required|integer|min:1',
-            'reason'   => 'nullable|string|max:255',
-        ] );
+            'reason' => 'nullable|string|max:255',
+        ]);
 
-        $product = Product::where( 'sku', $sku )->firstOrFail();
-
-        $result = $this->inventoryService->removeStock(
-            (int) $product->id,
-            (int) $product->tenant_id,
-            (int) $request->input( 'quantity' ),
-            (string) $request->input( 'reason', 'Saída manual' )
+        $result = $this->inventoryManagementService->removeStock(
+            (string) $sku,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason', 'Saída manual')
         );
 
-        if ( $result->isSuccess() ) {
+        if ($result->isSuccess()) {
             return redirect()
-                ->route( 'provider.inventory.index' )
-                ->with( 'success', 'Estoque removido com sucesso!' );
+                ->back()
+                ->with('success', 'Estoque removido com sucesso!');
         }
 
         return redirect()
             ->back()
-            ->with( 'error', $result->getMessage() );
+            ->with('error', $result->getMessage());
     }
 
     /**
      * Formulário de ajuste de estoque
      */
-    public function adjustStockForm( $sku ): View
+    public function adjustStockForm($sku): View|RedirectResponse
     {
-        $product   = Product::where( 'sku', $sku )->firstOrFail();
-        $inventory = \App\Models\ProductInventory::where( 'product_id', $product->id )->first();
+        $productResult = $this->inventoryManagementService->getProductBySku($sku);
 
-        return view( 'pages.inventory.adjust', compact( 'product', 'inventory' ) );
+        if (! $productResult->isSuccess()) {
+            return redirect()->back()->with('error', $productResult->getMessage());
+        }
+
+        $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
+
+        $inventory = $product->inventory;
+
+        return view('pages.inventory.adjust', compact('product', 'inventory'));
     }
 
     /**
      * Processar ajuste de estoque
      */
-    public function adjustStock( Request $request, $sku )
+    public function adjustStock(Request $request, $sku)
     {
-        $request->validate( [
+        $productResult = $this->inventoryManagementService->getProductBySku($sku);
+        if (! $productResult->isSuccess()) {
+            return redirect()->back()->with('error', $productResult->getMessage());
+        }
+
+        $product = $productResult->getData();
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
             'new_quantity' => 'required|integer|min:0',
-            'reason'       => 'required|string|min:10|max:255',
-        ] );
+            'reason' => 'required|string|min:10|max:255',
+        ]);
 
-        $product = Product::where( 'sku', $sku )->firstOrFail();
-
-        $result = $this->inventoryService->setStock(
-            $product->id,
-            (int) $request->input( 'new_quantity' ),
-            (string) $request->input( 'reason' )
+        $result = $this->inventoryManagementService->setStock(
+            (string) $sku,
+            (int) $request->input('new_quantity'),
+            (string) $request->input('reason')
         );
 
-        if ( $result->isSuccess() ) {
+        if ($result->isSuccess()) {
             return redirect()
-                ->route( 'provider.inventory.index' )
-                ->with( 'success', 'Estoque ajustado com sucesso!' );
+                ->back()
+                ->with('success', 'Estoque ajustado com sucesso!');
         }
 
         return redirect()
             ->back()
-            ->with( 'error', $result->getMessage() );
+            ->with('error', $result->getMessage());
     }
 
     /**
      * Verificar disponibilidade (API)
      */
-    public function checkAvailability( Request $request ): JsonResponse
+    public function checkAvailability(Request $request): JsonResponse
     {
-        // TODO: implementar verificação de disponibilidade
-        return response()->json( [
-            'available' => true,
-            'quantity'  => 0,
-        ] );
+        $this->authorize('viewAny', \App\Models\Product::class);
+
+        $request->validate([
+            'product_id' => 'required|integer|exists:products,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $result = $this->inventoryManagementService->checkAvailability(
+            (int) $request->input('product_id'),
+            (int) $request->input('quantity')
+        );
+
+        return response()->json($result->getData(), $result->isSuccess() ? 200 : 400);
     }
 
     /**
@@ -539,38 +530,27 @@ class InventoryController extends Controller
      *
      * Rota: products.inventory.add
      */
-    public function add( Request $request, int $productId ): JsonResponse
+    public function add(Request $request, int $productId): JsonResponse
     {
-        $request->validate( [
+        $product = \App\Models\Product::findOrFail($productId);
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
             'quantity' => 'required|integer|min:1',
-            'reason'   => 'nullable|string|max:255',
-        ] );
+            'reason' => 'nullable|string|max:255',
+        ]);
 
-        try {
-            $result = $this->inventoryService->addStock(
-                $productId,
-                (int) $request->input( 'quantity' ),
-                (string) $request->input( 'reason', '' )
-            );
+        $result = $this->inventoryManagementService->addStockById(
+            $productId,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason', 'Entrada manual via API')
+        );
 
-            if ( !$result->isSuccess() ) {
-                return response()->json( [
-                    'success' => false,
-                    'message' => $result->getMessage(),
-                ], 400 );
-            }
-
-            return response()->json( [
-                'success' => true,
-                'message' => 'Estoque adicionado com sucesso',
-                'data'    => $result->getData(),
-            ] );
-        } catch ( Exception $e ) {
-            return response()->json( [
-                'success' => false,
-                'message' => 'Erro ao adicionar estoque: ' . $e->getMessage(),
-            ], 500 );
-        }
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+            'data' => $result->getData(),
+        ], $result->isSuccess() ? 200 : 400);
     }
 
     /**
@@ -578,38 +558,54 @@ class InventoryController extends Controller
      *
      * Rota: products.inventory.remove
      */
-    public function remove( Request $request, int $productId ): JsonResponse
+    public function remove(Request $request, int $productId): JsonResponse
     {
-        $request->validate( [
+        $product = \App\Models\Product::findOrFail($productId);
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
             'quantity' => 'required|integer|min:1',
-            'reason'   => 'nullable|string|max:255',
-        ] );
+            'reason' => 'nullable|string|max:255',
+        ]);
 
-        try {
-            $result = $this->inventoryService->removeStock(
-                $productId,
-                (int) $request->input( 'quantity' ),
-                (string) $request->input( 'reason', '' )
-            );
+        $result = $this->inventoryManagementService->removeStockById(
+            $productId,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason', 'Saída manual via API')
+        );
 
-            if ( !$result->isSuccess() ) {
-                return response()->json( [
-                    'success' => false,
-                    'message' => $result->getMessage(),
-                ], 400 );
-            }
-
-            return response()->json( [
-                'success' => true,
-                'message' => 'Estoque removido com sucesso',
-                'data'    => $result->getData(),
-            ] );
-        } catch ( Exception $e ) {
-            return response()->json( [
-                'success' => false,
-                'message' => 'Erro ao remover estoque: ' . $e->getMessage(),
-            ], 500 );
-        }
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+            'data' => $result->getData(),
+        ], $result->isSuccess() ? 200 : 400);
     }
 
+    /**
+     * Ajusta estoque de um produto.
+     *
+     * Rota: products.inventory.adjust
+     */
+    public function adjust(Request $request, int $productId): JsonResponse
+    {
+        $product = \App\Models\Product::findOrFail($productId);
+        $this->authorize('adjustInventory', $product);
+
+        $request->validate([
+            'quantity' => 'required|integer|min:0',
+            'reason' => 'required|string|min:10|max:255',
+        ]);
+
+        $result = $this->inventoryManagementService->setStockById(
+            $productId,
+            (int) $request->input('quantity'),
+            (string) $request->input('reason')
+        );
+
+        return response()->json([
+            'success' => $result->isSuccess(),
+            'message' => $result->getMessage(),
+            'data' => $result->getData(),
+        ], $result->isSuccess() ? 200 : 400);
+    }
 }

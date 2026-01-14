@@ -50,6 +50,7 @@ class InventoryMovement extends Model
         'reason',
         'reference_id',
         'reference_type',
+        'user_id',
     ];
 
     /**
@@ -58,13 +59,13 @@ class InventoryMovement extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
+        'tenant_id' => 'integer',
         'product_id' => 'integer',
-        'type'       => 'string', // enum('in', 'out')
-        'quantity'   => 'integer',
+        'type' => 'string', // enum('in', 'out')
+        'quantity' => 'integer',
         'previous_quantity' => 'integer',
         'new_quantity' => 'integer',
-        'reason'     => 'string',
+        'reason' => 'string',
         'reference_id' => 'integer',
         'reference_type' => 'string',
         'created_at' => 'immutable_datetime',
@@ -86,7 +87,7 @@ class InventoryMovement extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -94,15 +95,14 @@ class InventoryMovement extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo( Product::class);
+        return $this->belongsTo(Product::class);
     }
 
     /**
-     * Get the user that created the InventoryMovement.
+     * Get the user who performed the movement.
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( \App\Models\User::class);
+        return $this->belongsTo(User::class);
     }
-
 }

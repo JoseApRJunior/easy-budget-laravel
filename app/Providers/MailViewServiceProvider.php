@@ -14,7 +14,6 @@ class MailViewServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        View::addNamespace( 'mail', resource_path( 'views/vendor/mail' ) );
+        View::addNamespace('mail', resource_path('views/vendor/mail'));
     }
-
 }

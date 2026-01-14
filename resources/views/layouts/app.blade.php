@@ -1,6 +1,6 @@
 {{-- resources/views/layouts/app.blade.php --}}
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-100">
+<html lang="pt-BR" class="h-100" data-bs-theme="light">
 
 @include('partials.shared.head')
 
@@ -11,7 +11,7 @@
         @include('partials.components.alerts')
 
         @if (session()->has('trial_expired_warning'))
-            @include('partials.components.trial-expired-warning')
+        @include('partials.components.trial-expired-warning')
         @endif
 
         @yield('content')
@@ -19,17 +19,21 @@
 
     @include('partials.shared.footer')
 
-    <script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
-    <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Scripts Base -->
+    <script defer src="{{ asset('assets/js/jquery-3.7.1.min.js') }}?v={{ filemtime(public_path('assets/js/jquery-3.7.1.min.js')) }}"></script>
+    <script defer src="{{ asset('assets/js/bootstrap.bundle.min.js') }}?v={{ filemtime(public_path('assets/js/bootstrap.bundle.min.js')) }}"></script>
+    <script defer src="{{ asset('assets/js/tom-select/tom-select.complete.min.js') }}?v={{ filemtime(public_path('assets/js/tom-select/tom-select.complete.min.js')) }}"></script>
 
-    <script defer src="{{ asset('assets/js/modules/vanilla-masks.js') }}?v={{ time() }}"></script>
-    <script defer src="{{ asset('assets/js/modules/utils.js') }}?v={{ time() }}" type="module"></script>
-    <script defer src="{{ asset('assets/js/main.js') }}?v={{ time() }}" type="module"></script>
+    <!-- Módulos e Componentes -->
+    <script defer src="{{ asset('assets/js/modules/vanilla-masks.js') }}?v={{ filemtime(public_path('assets/js/modules/vanilla-masks.js')) }}"></script>
+    <script defer src="{{ asset('assets/js/main.js') }}?v={{ filemtime(public_path('assets/js/main.js')) }}" type="module"></script>
 
-    <script defer src="{{ asset('assets/js/components/alerts.js') }}?v={{ time() }}"></script>
-    <script defer src="{{ asset('assets/js/cep-lookup.js') }}?v={{ time() }}"></script>
+    <script defer src="{{ asset('assets/js/components/alerts.js') }}?v={{ filemtime(public_path('assets/js/components/alerts.js')) }}"></script>
+    <script defer src="{{ asset('assets/js/cep-lookup.js') }}?v={{ filemtime(public_path('assets/js/cep-lookup.js')) }}"></script>
 
     @stack('scripts')
+    @yield('scripts')
+    @stack('modals')
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

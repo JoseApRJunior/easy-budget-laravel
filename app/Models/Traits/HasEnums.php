@@ -8,7 +8,6 @@ use App\Enums\BudgetStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
 use App\Enums\SupportStatus;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 
@@ -22,6 +21,7 @@ use Illuminate\Support\Arr;
  * IMPORTANTE: Não mantém mais arrays estáticos antigos - é 100% baseado em enums PHP modernos.
  *
  * @version 2.0 - Refatorado para usar apenas enums modernos
+ *
  * @since 2025-11-09 - Migração completa do sistema legado
  */
 trait HasEnums
@@ -32,177 +32,157 @@ trait HasEnums
      * Obtém as opções de enum para um tipo específico.
      * Agora usa os enums reais quando disponíveis, mantendo compatibilidade.
      *
-     * @param string $type Tipo de enum: 'budget', 'service', 'invoice', 'support'
-     * @return array
+     * @param  string  $type  Tipo de enum: 'budget', 'service', 'invoice', 'support'
      */
-    public function getEnumOptions( string $type ): array
+    public function getEnumOptions(string $type): array
     {
-        return match ( strtolower( $type ) ) {
-            'budget'  => $this->getBudgetStatusOptions(),
+        return match (strtolower($type)) {
+            'budget' => $this->getBudgetStatusOptions(),
             'service' => $this->getServiceStatusOptions(),
             'invoice' => $this->getInvoiceStatusOptions(),
             'support' => $this->getSupportStatusOptions(),
-            default   => [],
+            default => [],
         };
     }
 
     /**
      * Obtém opções de status de suporte usando SupportStatus real.
-     *
-     * @return array
      */
     private function getSupportStatusOptions(): array
     {
         $options = [];
-        foreach ( SupportStatus::cases() as $status ) {
-            $options[ $status->value ] = [
-                'value'       => $status->value,
-                'slug'        => $status->name,
-                'name'        => $this->getStatusDisplayName( $status ),
-                'description' => $this->getStatusDisplayName( $status ),
-                'color'       => $this->getStatusColor( $status ),
-                'icon'        => $this->getStatusIcon( $status ),
-                'order_index' => $this->getStatusOrderIndex( $status ),
-                'is_active'   => $this->getStatusIsActive( $status ),
+        foreach (SupportStatus::cases() as $status) {
+            $options[$status->value] = [
+                'value' => $status->value,
+                'slug' => $status->name,
+                'name' => $this->getStatusDisplayName($status),
+                'description' => $this->getStatusDisplayName($status),
+                'color' => $this->getStatusColor($status),
+                'icon' => $this->getStatusIcon($status),
+                'order_index' => $this->getStatusOrderIndex($status),
+                'is_active' => $this->getStatusIsActive($status),
             ];
         }
+
         return $options;
     }
 
     /**
      * Obtém opções de status de orçamento usando BudgetStatus real.
-     *
-     * @return array
      */
     private function getBudgetStatusOptions(): array
     {
         $options = [];
-        foreach ( BudgetStatus::cases() as $status ) {
-            $options[ $status->value ] = [
-                'value'       => $status->value,
-                'slug'        => $status->name,
-                'name'        => $this->getStatusDisplayName( $status ),
-                'description' => $this->getStatusDisplayName( $status ),
-                'color'       => $this->getStatusColor( $status ),
-                'icon'        => $this->getStatusIcon( $status ),
-                'order_index' => $this->getStatusOrderIndex( $status ),
-                'is_active'   => $this->getStatusIsActive( $status ),
+        foreach (BudgetStatus::cases() as $status) {
+            $options[$status->value] = [
+                'value' => $status->value,
+                'slug' => $status->name,
+                'name' => $this->getStatusDisplayName($status),
+                'description' => $this->getStatusDisplayName($status),
+                'color' => $this->getStatusColor($status),
+                'icon' => $this->getStatusIcon($status),
+                'order_index' => $this->getStatusOrderIndex($status),
+                'is_active' => $this->getStatusIsActive($status),
             ];
         }
+
         return $options;
     }
 
     /**
      * Obtém opções de status de serviço usando ServiceStatus real.
-     *
-     * @return array
      */
     private function getServiceStatusOptions(): array
     {
         $options = [];
-        foreach ( ServiceStatus::cases() as $status ) {
-            $options[ $status->value ] = [
-                'value'       => $status->value,
-                'slug'        => $status->name,
-                'name'        => $this->getStatusDisplayName( $status ),
-                'description' => $this->getStatusDisplayName( $status ),
-                'color'       => $this->getStatusColor( $status ),
-                'icon'        => $this->getStatusIcon( $status ),
-                'order_index' => $this->getStatusOrderIndex( $status ),
-                'is_active'   => $this->getStatusIsActive( $status ),
+        foreach (ServiceStatus::cases() as $status) {
+            $options[$status->value] = [
+                'value' => $status->value,
+                'slug' => $status->name,
+                'name' => $this->getStatusDisplayName($status),
+                'description' => $this->getStatusDisplayName($status),
+                'color' => $this->getStatusColor($status),
+                'icon' => $this->getStatusIcon($status),
+                'order_index' => $this->getStatusOrderIndex($status),
+                'is_active' => $this->getStatusIsActive($status),
             ];
         }
+
         return $options;
     }
 
     /**
      * Obtém opções de status de fatura usando InvoiceStatus real.
-     *
-     * @return array
      */
     private function getInvoiceStatusOptions(): array
     {
         $options = [];
-        foreach ( InvoiceStatus::cases() as $status ) {
-            $options[ $status->value ] = [
-                'value'       => $status->value,
-                'slug'        => $status->name,
-                'name'        => $this->getStatusDisplayName( $status ),
-                'description' => $this->getStatusDisplayName( $status ),
-                'color'       => $this->getStatusColor( $status ),
-                'icon'        => $this->getStatusIcon( $status ),
-                'order_index' => $this->getStatusOrderIndex( $status ),
-                'is_active'   => $this->getStatusIsActive( $status ),
+        foreach (InvoiceStatus::cases() as $status) {
+            $options[$status->value] = [
+                'value' => $status->value,
+                'slug' => $status->name,
+                'name' => $this->getStatusDisplayName($status),
+                'description' => $this->getStatusDisplayName($status),
+                'color' => $this->getStatusColor($status),
+                'icon' => $this->getStatusIcon($status),
+                'order_index' => $this->getStatusOrderIndex($status),
+                'is_active' => $this->getStatusIsActive($status),
             ];
         }
+
         return $options;
     }
 
     /**
      * Verifica se um valor é válido para um tipo de enum.
      *
-     * @param string $type Tipo de enum
+     * @param  string  $type  Tipo de enum
     /**
      * Obtém nome de display de um status de forma segura
-     *
-     * @param mixed $status
-     * @return string
      */
-    private function getStatusDisplayName( mixed $status ): string
+    private function getStatusDisplayName(mixed $status): string
     {
-        return method_exists( $status, 'getDescription' )
+        return method_exists($status, 'getDescription')
             ? $status->getDescription()
             : $status->name;
     }
 
     /**
      * Obtém cor de um status de forma segura
-     *
-     * @param mixed $status
-     * @return string
      */
-    private function getStatusColor( mixed $status ): string
+    private function getStatusColor(mixed $status): string
     {
-        return method_exists( $status, 'getColor' )
+        return method_exists($status, 'getColor')
             ? $status->getColor()
             : '#6c757d';
     }
 
     /**
      * Obtém ícone de um status de forma segura
-     *
-     * @param mixed $status
-     * @return string
      */
-    private function getStatusIcon( mixed $status ): string
+    private function getStatusIcon(mixed $status): string
     {
-        return method_exists( $status, 'getIcon' )
+        return method_exists($status, 'getIcon')
             ? $status->getIcon()
             : 'bi-circle';
     }
 
     /**
      * Obtém índice de ordem de um status de forma segura
-     *
-     * @param mixed $status
-     * @return int
      */
-    private function getStatusOrderIndex( mixed $status ): int
+    private function getStatusOrderIndex(mixed $status): int
     {
-        return method_exists( $status, 'getOrderIndex' )
+        return method_exists($status, 'getOrderIndex')
             ? $status->getOrderIndex()
             : 0;
     }
 
     /**
      * Obtém status ativo de um status de forma segura
-     *
-     * @param mixed $status
-     * @return bool
      */
-    private function getStatusIsActive( mixed $status ): bool
+    private function getStatusIsActive(mixed $status): bool
     {
-        return method_exists( $status, 'isActive' )
+        return method_exists($status, 'isActive')
             ? $status->isActive()
             : true;
     }
@@ -210,78 +190,78 @@ trait HasEnums
     /**
      * Verifica se um valor é válido para um tipo de enum.
      *
-     * @param string $type Tipo de enum
-     * @param mixed $value Valor a validar
-     * @return bool
+     * @param  string  $type  Tipo de enum
+     * @param  mixed  $value  Valor a validar
      */
-    public function isValidEnumValue( string $type, mixed $value ): bool
+    public function isValidEnumValue(string $type, mixed $value): bool
     {
-        $options = $this->getEnumOptions( $type );
-        return Arr::has( $options, $value );
+        $options = $this->getEnumOptions($type);
+
+        return Arr::has($options, $value);
     }
 
     /**
      * Obtém o label (nome) de um status.
      *
-     * @param string $type Tipo de enum
-     * @param int $value Valor do status
-     * @return string|null
+     * @param  string  $type  Tipo de enum
+     * @param  int  $value  Valor do status
      */
-    public function getEnumLabel( string $type, int $value ): ?string
+    public function getEnumLabel(string $type, int $value): ?string
     {
-        $options = $this->getEnumOptions( $type );
-        return $options[ $value ][ 'name' ] ?? null;
+        $options = $this->getEnumOptions($type);
+
+        return $options[$value]['name'] ?? null;
     }
 
     /**
      * Obtém a cor de um status.
      *
-     * @param string $type Tipo de enum
-     * @param int $value Valor do status
-     * @return string|null
+     * @param  string  $type  Tipo de enum
+     * @param  int  $value  Valor do status
      */
-    public function getEnumColor( string $type, int $value ): ?string
+    public function getEnumColor(string $type, int $value): ?string
     {
-        $options = $this->getEnumOptions( $type );
-        return $options[ $value ][ 'color' ] ?? null;
+        $options = $this->getEnumOptions($type);
+
+        return $options[$value]['color'] ?? null;
     }
 
     /**
      * Obtém o ícone de um status.
      *
-     * @param string $type Tipo de enum
-     * @param int $value Valor do status
-     * @return string|null
+     * @param  string  $type  Tipo de enum
+     * @param  int  $value  Valor do status
      */
-    public function getEnumIcon( string $type, int $value ): ?string
+    public function getEnumIcon(string $type, int $value): ?string
     {
-        $options = $this->getEnumOptions( $type );
-        return $options[ $value ][ 'icon' ] ?? null;
+        $options = $this->getEnumOptions($type);
+
+        return $options[$value]['icon'] ?? null;
     }
 
     /**
      * Obtém todos os status ativos para um tipo.
      *
-     * @param string $type Tipo de enum
-     * @return array
+     * @param  string  $type  Tipo de enum
      */
-    public function getActiveEnums( string $type ): array
+    public function getActiveEnums(string $type): array
     {
-        $options = $this->getEnumOptions( $type );
-        return array_filter( $options, fn( $option ) => $option[ 'is_active' ] );
+        $options = $this->getEnumOptions($type);
+
+        return array_filter($options, fn ($option) => $option['is_active']);
     }
 
     /**
      * Converte um valor de enum para array com metadados.
      *
-     * @param string $type Tipo de enum
-     * @param int $value Valor do status
-     * @return array|null
+     * @param  string  $type  Tipo de enum
+     * @param  int  $value  Valor do status
      */
-    public function getEnumMetadata( string $type, int $value ): ?array
+    public function getEnumMetadata(string $type, int $value): ?array
     {
-        $options = $this->getEnumOptions( $type );
-        return $options[ $value ] ?? null;
+        $options = $this->getEnumOptions($type);
+
+        return $options[$value] ?? null;
     }
 
     /**
@@ -306,5 +286,4 @@ trait HasEnums
      * Esta limitação evita erros de runtime por coluna inexistente e promove Clean Architecture
      * com responsabilidades bem definidas.
      */
-
 }

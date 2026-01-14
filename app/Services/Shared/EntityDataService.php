@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Shared;
 
+use App\Helpers\DateHelper;
 use App\Models\Address;
 use App\Models\CommonData;
 use App\Models\Contact;
-use App\Helpers\DateHelper;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -26,21 +26,21 @@ class EntityDataService
         // Limpar CPF/CNPJ se fornecidos
         $cpf = null;
         $cnpj = null;
-        
-        if (!empty($data['cpf'])) {
+
+        if (! empty($data['cpf'])) {
             $cpf = preg_replace('/\D/', '', $data['cpf']);
         }
-        
-        if (!empty($data['cnpj'])) {
+
+        if (! empty($data['cnpj'])) {
             $cnpj = preg_replace('/\D/', '', $data['cnpj']);
         }
-        
+
         return CommonData::create([
             'tenant_id' => $tenantId,
             'first_name' => $data['first_name'] ?? null,
             'last_name' => $data['last_name'] ?? null,
-            'birth_date' => isset($data['birth_date']) 
-                ? DateHelper::parseBirthDate($data['birth_date']) 
+            'birth_date' => isset($data['birth_date'])
+                ? DateHelper::parseDate($data['birth_date'])
                 : null,
             'cpf' => $cpf,
             'cnpj' => $cnpj,
@@ -57,18 +57,36 @@ class EntityDataService
     public function updateCommonData(CommonData $commonData, array $data): CommonData
     {
         $updateData = [];
-        
-        if (isset($data['first_name'])) $updateData['first_name'] = $data['first_name'];
-        if (isset($data['last_name'])) $updateData['last_name'] = $data['last_name'];
-        if (isset($data['birth_date'])) $updateData['birth_date'] = DateHelper::parseBirthDate($data['birth_date']);
-        if (isset($data['cpf'])) $updateData['cpf'] = preg_replace('/\D/', '', $data['cpf']);
-        if (isset($data['cnpj'])) $updateData['cnpj'] = preg_replace('/\D/', '', $data['cnpj']);
-        if (isset($data['company_name'])) $updateData['company_name'] = $data['company_name'];
-        if (isset($data['description'])) $updateData['description'] = $data['description'];
-        if (isset($data['area_of_activity_id'])) $updateData['area_of_activity_id'] = $data['area_of_activity_id'];
-        if (isset($data['profession_id'])) $updateData['profession_id'] = $data['profession_id'];
 
-        if (!empty($updateData)) {
+        if (isset($data['first_name'])) {
+            $updateData['first_name'] = $data['first_name'];
+        }
+        if (isset($data['last_name'])) {
+            $updateData['last_name'] = $data['last_name'];
+        }
+        if (isset($data['birth_date'])) {
+            $updateData['birth_date'] = DateHelper::parseDate($data['birth_date']);
+        }
+        if (isset($data['cpf'])) {
+            $updateData['cpf'] = preg_replace('/\D/', '', $data['cpf']);
+        }
+        if (isset($data['cnpj'])) {
+            $updateData['cnpj'] = preg_replace('/\D/', '', $data['cnpj']);
+        }
+        if (isset($data['company_name'])) {
+            $updateData['company_name'] = $data['company_name'];
+        }
+        if (isset($data['description'])) {
+            $updateData['description'] = $data['description'];
+        }
+        if (isset($data['area_of_activity_id'])) {
+            $updateData['area_of_activity_id'] = $data['area_of_activity_id'];
+        }
+        if (isset($data['profession_id'])) {
+            $updateData['profession_id'] = $data['profession_id'];
+        }
+
+        if (! empty($updateData)) {
             $commonData->update($updateData);
         }
 
@@ -101,9 +119,9 @@ class EntityDataService
             'email_business' => $data['email_business'] ?? null,
             'phone_business' => $data['phone_business'] ?? null,
             'website' => $data['website'] ?? null,
-        ], fn($value) => $value !== null);
+        ], fn ($value) => $value !== null);
 
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $contact->update($updateData);
         }
 
@@ -138,9 +156,9 @@ class EntityDataService
             'city' => $data['city'] ?? null,
             'state' => $data['state'] ?? null,
             'cep' => $data['cep'] ?? null,
-        ], fn($value) => $value !== null);
+        ], fn ($value) => $value !== null);
 
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $address->update($updateData);
         }
 

@@ -1,18 +1,29 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-graph-up-arrow me-2"></i>Dashboard Executivo</h2>
-            <div>
-                <button class="btn btn-outline-primary" onclick="refreshCharts()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                </button>
-                <a href="/admin/executive-dashboard/export-pdf" class="btn btn-success">
-                    <i class="bi bi-file-earmark-pdf me-1"></i>Exportar PDF
-                </a>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard Executivo"
+            icon="graph-up-arrow"
+            :breadcrumb-items="[
+                'Admin' => '#',
+                'Executivo' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button 
+                    variant="outline-primary" 
+                    onclick="refreshCharts()"
+                    icon="bi bi-arrow-clockwise">
+                    Atualizar
+                </x-ui.button>
+                <x-ui.button 
+                    href="/admin/executive-dashboard/export-pdf" 
+                    variant="success"
+                    icon="bi bi-file-earmark-pdf">
+                    Exportar PDF
+                </x-ui.button>
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- KPIs Cards -->
         <div class="row mb-4">
@@ -22,7 +33,7 @@
                         <div class="d-flex align-items-center justify-content-center mb-2">
                             <i class="bi bi-activity fs-1 text-primary me-2"></i>
                             <div>
-                                <h3 class="mb-0">{{ number_format($kpis['total_requests']) }}</h3>
+                                <h3 class="mb-0">{{ \App\Helpers\CurrencyHelper::format($kpis['total_requests'], 0, false) }}</h3>
                                 <small class="text-muted">Requisições (24h)</small>
                             </div>
                         </div>

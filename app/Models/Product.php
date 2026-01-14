@@ -13,14 +13,12 @@ use Illuminate\Support\Str;
 
 class Product extends Model
 {
+    use Auditable, TenantScoped;
     use HasFactory;
-    use TenantScoped, Auditable;
     use SoftDeletes;
 
     /**
      * Boot the model.
-     *
-     * @return void
      */
     protected static function boot(): void
     {
@@ -40,7 +38,7 @@ class Product extends Model
      *
      * @var array
      */
-    protected $with = [ 'category' ];
+    protected $with = ['category'];
 
     /**
      * The attributes that are mass assignable.
@@ -54,6 +52,7 @@ class Product extends Model
         'description',
         'sku',
         'price',
+        'cost_price',
         'unit',
         'active',
         'image',
@@ -65,18 +64,19 @@ class Product extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'   => 'integer',
+        'tenant_id' => 'integer',
         'category_id' => 'integer',
-        'name'        => 'string',
+        'name' => 'string',
         'description' => 'string',
-        'sku'         => 'string',
-        'price'       => 'decimal:2',
-        'unit'        => 'string',
-        'active'      => 'boolean',
-        'image'       => 'string',
-        'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'datetime',
-        'deleted_at'  => 'datetime',
+        'sku' => 'string',
+        'price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'unit' => 'string',
+        'active' => 'boolean',
+        'image' => 'string',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -87,39 +87,36 @@ class Product extends Model
     public static function businessRules(): array
     {
         return [
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'sku'         => 'nullable|string|max:255',
-            'price'       => 'required|numeric|min:0',
-            'unit'        => 'nullable|string|max:20',
-            'active'      => 'boolean',
-            'image'       => 'nullable|string|max:255',
+            'sku' => 'nullable|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
+            'unit' => 'nullable|string|max:20',
+            'active' => 'boolean',
+            'image' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
-            'tenant_id'   => 'required|exists:tenants,id',
+            'tenant_id' => 'required|exists:tenants,id',
         ];
     }
 
     /**
      * Validação personalizada para sku único por tenant.
      * Esta validação deve ser usada no contexto de um request onde o tenant_id está disponível.
-     *
-     * @param  string|null  $sku
-     * @param  int|null  $excludeId
-     * @return string
      */
-    public static function validateUniqueSkuRule( ?string $sku, ?int $excludeId = null ): string
+    public static function validateUniqueSkuRule(?string $sku, ?int $excludeId = null): string
     {
-        if ( empty( $sku ) ) {
+        if (empty($sku)) {
             return 'nullable|string|max:255';
         }
 
         $rule = 'unique:products,sku';
 
-        if ( $excludeId ) {
-            $rule .= ',' . $excludeId . ',id';
+        if ($excludeId) {
+            $rule .= ','.$excludeId.',id';
         }
 
-        return $rule . ',tenant_id,' . request()->user()->tenant_id;
+        return $rule.',tenant_id,'.request()->user()->tenant_id;
     }
 
     /**
@@ -129,7 +126,7 @@ class Product extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -139,7 +136,7 @@ class Product extends Model
      */
     public function category(): BelongsTo
     {
-        return $this->belongsTo( Category::class);
+        return $this->belongsTo(Category::class);
     }
 
     /**
@@ -149,17 +146,17 @@ class Product extends Model
      */
     public function inventoryMovements(): HasMany
     {
-        return $this->hasMany( InventoryMovement::class);
+        return $this->hasMany(InventoryMovement::class);
     }
 
     /**
      * Controle de inventário do produto.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\ProductInventory>
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<\App\Models\ProductInventory>
      */
-    public function inventory(): HasMany
+    public function inventory(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasMany( ProductInventory::class);
+        return $this->hasOne(ProductInventory::class);
     }
 
     /**
@@ -169,7 +166,7 @@ class Product extends Model
      */
     public function serviceItems(): HasMany
     {
-        return $this->hasMany( ServiceItem::class);
+        return $this->hasMany(ServiceItem::class);
     }
 
     // ==================== SCOPES ÚTEIS ====================
@@ -180,9 +177,9 @@ class Product extends Model
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'active', true );
+        return $query->where('active', true);
     }
 
     /**
@@ -192,9 +189,9 @@ class Product extends Model
      * @param  int  $tenantId
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeByTenant( $query, $tenantId )
+    public function scopeByTenant($query, $tenantId)
     {
-        return $query->where( 'tenant_id', $tenantId );
+        return $query->where('tenant_id', $tenantId);
     }
 
     /**
@@ -205,9 +202,9 @@ class Product extends Model
      * @param  float  $max
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeByPriceRange( $query, $min, $max )
+    public function scopeByPriceRange($query, $min, $max)
     {
-        return $query->whereBetween( 'price', [ $min, $max ] );
+        return $query->whereBetween('price', [$min, $max]);
     }
 
     /**
@@ -217,9 +214,9 @@ class Product extends Model
      * @param  string  $name
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeByName( $query, $name )
+    public function scopeByName($query, $name)
     {
-        return $query->where( 'name', 'LIKE', '%' . $name . '%' );
+        return $query->where('name', 'LIKE', '%'.$name.'%');
     }
 
     /**
@@ -228,34 +225,31 @@ class Product extends Model
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeWithInventory( $query )
+    public function scopeWithInventory($query)
     {
-        return $query->with( [ 'inventory' ] );
+        return $query->with(['inventory']);
     }
 
     // ==================== MÉTODOS DE NEGÓCIO ====================
 
     /**
      * Verifica se o produto está disponível no inventário.
-     *
-     * @return bool
      */
     public function isAvailable(): bool
     {
         $totalQuantity = $this->inventory()
-            ->sum( 'quantity' );
+            ->sum('quantity');
 
         return $totalQuantity > 0;
     }
 
     /**
      * Alterna o status ativo/inativo do produto.
-     *
-     * @return bool
      */
     public function toggleActive(): bool
     {
-        $this->active = !$this->active;
+        $this->active = ! $this->active;
+
         return $this->save();
     }
 
@@ -263,66 +257,88 @@ class Product extends Model
 
     /**
      * Retorna o preço formatado como moeda (BRL).
-     *
-     * @return string
      */
     public function getFormattedPriceAttribute(): string
     {
-        return 'R$ ' . number_format( (float) $this->price, 2, ',', '.' );
+        return 'R$ '.number_format((float) $this->price, 2, ',', '.');
+    }
+
+    /**
+     * Retorna o preço de custo formatado como moeda (BRL).
+     */
+    public function getFormattedCostPriceAttribute(): string
+    {
+        return 'R$ '.number_format((float) $this->cost_price, 2, ',', '.');
+    }
+
+    /**
+     * Retorna a margem de lucro em valor monetário.
+     */
+    public function getProfitMarginValueAttribute(): float
+    {
+        return (float) $this->price - (float) $this->cost_price;
+    }
+
+    /**
+     * Retorna a margem de lucro em porcentagem.
+     */
+    public function getProfitMarginPercentageAttribute(): float
+    {
+        if ($this->price <= 0) {
+            return 0;
+        }
+
+        $margin = $this->profit_margin_value;
+
+        return ($margin / (float) $this->price) * 100;
     }
 
     /**
      * Retorna a URL completa da imagem do produto.
-     *
-     * @return string
      */
     public function getImageUrlAttribute(): string
     {
-        if ( empty( $this->image ) ) {
+        if (empty($this->image)) {
             // Usar a imagem "não encontrada" como fallback
-            return asset( 'storage/img_not_found.png' );
+            return asset('storage/img_not_found.png');
         }
 
         // Se a imagem já for uma URL completa, retorna como está
-        if ( filter_var( $this->image, FILTER_VALIDATE_URL ) ) {
+        if (filter_var($this->image, FILTER_VALIDATE_URL)) {
             return $this->image;
         }
 
-        $p = ltrim( (string) $this->image, '/' );
-        if ( Str::startsWith( $p, 'storage/' ) ) {
+        $p = ltrim((string) $this->image, '/');
+        if (Str::startsWith($p, 'storage/')) {
             // Verificar se o arquivo existe antes de tentar acessá-lo
-            $fullPath = storage_path( 'app/public/' . Str::after( $p, 'storage/' ) );
-            if ( file_exists( $fullPath ) ) {
-                return asset( $p );
+            $fullPath = storage_path('app/public/'.Str::after($p, 'storage/'));
+            if (file_exists($fullPath)) {
+                return asset($p);
             }
         } else {
             // Verificar se o arquivo existe antes de tentar acessá-lo
-            $fullPath = storage_path( 'app/public/' . $p );
-            if ( file_exists( $fullPath ) ) {
-                return asset( 'storage/' . $p );
+            $fullPath = storage_path('app/public/'.$p);
+            if (file_exists($fullPath)) {
+                return asset('storage/'.$p);
             }
         }
 
         // Se o arquivo não existir, retornar a imagem de fallback
-        return asset( 'storage/img_not_found.png' );
+        return asset('storage/img_not_found.png');
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
 
     /**
      * Retorna a quantidade total em estoque do produto.
-     *
-     * @return float
      */
     public function getTotalStockAttribute(): float
     {
-        return $this->inventory()->sum( 'quantity' );
+        return $this->inventory()->sum('quantity');
     }
 
     /**
      * Retorna o valor total do produto em estoque.
-     *
-     * @return float
      */
     public function getTotalStockValueAttribute(): float
     {
@@ -333,9 +349,8 @@ class Product extends Model
      * Verifica se o produto está em baixa no estoque.
      *
      * @param  float  $threshold
-     * @return bool
      */
-    public function isLowStock( $threshold = 10 ): bool
+    public function isLowStock($threshold = 10): bool
     {
         return $this->total_stock <= $threshold;
     }
@@ -347,5 +362,4 @@ class Product extends Model
     {
         return $this->sku;
     }
-
 }

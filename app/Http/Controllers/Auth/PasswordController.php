@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Abstracts\Controller;
@@ -11,7 +13,7 @@ use Illuminate\Validation\Rules\Password;
 class PasswordController extends Controller
 {
     /**
-     * Update the user's password.
+     * Atualizar a senha do usuário.
      */
     public function update(Request $request): RedirectResponse
     {

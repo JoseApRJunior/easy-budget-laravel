@@ -3,22 +3,19 @@
 @section('title', $pageTitle . ' - Easy Budget')
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                Sistema de Alertas
-            </h1>
-            <div class="btn-group">
-                <button type="button" class="btn btn-primary" onclick="checkAlertsNow()">
-                    <i class="fas fa-sync-alt"></i> Verificar Agora
-                </button>
-                <a href="{{ url('/admin/alerts/settings') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-cog"></i> Configurações
-                </a>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Sistema de Alertas"
+            icon="exclamation-triangle"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Alertas' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" />
+                <x-ui.button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" />
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">
@@ -141,10 +138,8 @@
                                                 <td>{{ \Carbon\Carbon::parse($alert['created_at'])->format('d/m/Y H:i') }}
                                                 </td>
                                                 <td>
-                                                    <button class="btn btn-sm btn-success"
-                                                        onclick="resolveAlert({{ $alert['id'] }})">
-                                                        <i class="fas fa-check"></i> Resolver
-                                                    </button>
+                                                    <x-ui.button variant="success" size="sm" icon="check" label="Resolver"
+                                                        onclick="resolveAlert({{ $alert['id'] }})" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -213,8 +208,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="text-sm">Performance Geral</span>
-                                <span
-                                    class="text-sm text-{{ $systemStatus['performance'] >= 95 ? 'success' : ($systemStatus['performance'] >= 90 ? 'warning' : 'danger') }}">{{ number_format($systemStatus['performance'], 1) }}%</span>
+                                <span class="text-sm text-{{ $systemStatus['performance'] >= 95 ? 'success' : ($systemStatus['performance'] >= 90 ? 'warning' : 'danger') }}">{{ \App\Helpers\CurrencyHelper::format($systemStatus['performance'], 1, false) }}%</span>
                             </div>
                             <div class="progress">
                                 <div class="progress-bar bg-{{ $systemStatus['performance'] >= 95 ? 'success' : ($systemStatus['performance'] >= 90 ? 'warning' : 'danger') }}"
@@ -226,7 +220,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="text-sm">Disponibilidade</span>
                                 <span
-                                    class="text-sm text-{{ $systemStatus['availability'] >= 99 ? 'success' : 'warning' }}">{{ number_format($systemStatus['availability'], 1) }}%</span>
+                                    class="text-sm text-{{ $systemStatus['availability'] >= 99 ? 'success' : 'warning' }}">{{ \App\Helpers\CurrencyHelper::format($systemStatus['availability'], 1, false) }}%</span>
                             </div>
                             <div class="progress">
                                 <div class="progress-bar bg-{{ $systemStatus['availability'] >= 99 ? 'success' : 'warning' }}"

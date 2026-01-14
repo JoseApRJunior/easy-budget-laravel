@@ -32,20 +32,20 @@ class ReportDefinition extends Model
         'tags',
         'version',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
 
     protected $casts = [
-        'config'          => 'array',
-        'query_builder'   => 'array',
-        'filters'         => 'array',
-        'visualization'   => 'array',
+        'config' => 'array',
+        'query_builder' => 'array',
+        'filters' => 'array',
+        'visualization' => 'array',
         'schedule_config' => 'array',
-        'is_active'       => 'boolean',
-        'is_system'       => 'boolean',
-        'tags'            => 'array',
-        'created_at'      => 'immutable_datetime',
-        'updated_at'      => 'datetime'
+        'is_active' => 'boolean',
+        'is_system' => 'boolean',
+        'tags' => 'array',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -53,10 +53,10 @@ class ReportDefinition extends Model
      */
     public const CATEGORIES = [
         'financial' => 'Financeiro',
-        'customer'  => 'Clientes',
-        'budget'    => 'Orçamentos',
+        'customer' => 'Clientes',
+        'budget' => 'Orçamentos',
         'executive' => 'Executivo',
-        'custom'    => 'Personalizado'
+        'custom' => 'Personalizado',
     ];
 
     /**
@@ -66,8 +66,8 @@ class ReportDefinition extends Model
         'table' => 'Tabela',
         'chart' => 'Gráfico',
         'mixed' => 'Misto',
-        'kpi'   => 'KPI',
-        'pivot' => 'Tabela Dinâmica'
+        'kpi' => 'KPI',
+        'pivot' => 'Tabela Dinâmica',
     ];
 
     /**
@@ -76,21 +76,21 @@ class ReportDefinition extends Model
     public static function rules(): array
     {
         return [
-            'tenant_id'       => 'required|exists:tenants,id',
-            'user_id'         => 'required|exists:users,id',
-            'name'            => 'required|string|max:255',
-            'description'     => 'nullable|string',
-            'category'        => 'required|string|in:' . implode( ',', array_keys( self::CATEGORIES ) ),
-            'type'            => 'required|string|in:' . implode( ',', array_keys( self::TYPES ) ),
-            'config'          => 'required|array',
-            'query_builder'   => 'required|array',
-            'filters'         => 'nullable|array',
-            'visualization'   => 'nullable|array',
+            'tenant_id' => 'required|exists:tenants,id',
+            'user_id' => 'required|exists:users,id',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category' => 'required|string|in:'.implode(',', array_keys(self::CATEGORIES)),
+            'type' => 'required|string|in:'.implode(',', array_keys(self::TYPES)),
+            'config' => 'required|array',
+            'query_builder' => 'required|array',
+            'filters' => 'nullable|array',
+            'visualization' => 'nullable|array',
             'schedule_config' => 'nullable|array',
-            'is_active'       => 'boolean',
-            'is_system'       => 'boolean',
-            'tags'            => 'nullable|array',
-            'version'         => 'integer|min:1'
+            'is_active' => 'boolean',
+            'is_system' => 'boolean',
+            'tags' => 'nullable|array',
+            'version' => 'integer|min:1',
         ];
     }
 
@@ -99,50 +99,50 @@ class ReportDefinition extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     public function executions(): HasMany
     {
-        return $this->hasMany( ReportExecution::class, 'definition_id' );
+        return $this->hasMany(ReportExecution::class, 'definition_id');
     }
 
     public function schedules(): HasMany
     {
-        return $this->hasMany( ReportSchedule::class, 'definition_id' );
+        return $this->hasMany(ReportSchedule::class, 'definition_id');
     }
 
     /**
      * Scopes
      */
-    public function scopeActive( $query )
+    public function scopeActive($query)
     {
-        return $query->where( 'is_active', true );
+        return $query->where('is_active', true);
     }
 
-    public function scopeByCategory( $query, string $category )
+    public function scopeByCategory($query, string $category)
     {
-        return $query->where( 'category', $category );
+        return $query->where('category', $category);
     }
 
-    public function scopeByType( $query, string $type )
+    public function scopeByType($query, string $type)
     {
-        return $query->where( 'type', $type );
+        return $query->where('type', $type);
     }
 
-    public function scopeSystemReports( $query )
+    public function scopeSystemReports($query)
     {
-        return $query->where( 'is_system', true );
+        return $query->where('is_system', true);
     }
 
-    public function scopeUserReports( $query )
+    public function scopeUserReports($query)
     {
-        return $query->where( 'is_system', false );
+        return $query->where('is_system', false);
     }
 
     /**
@@ -150,12 +150,12 @@ class ReportDefinition extends Model
      */
     public function getCategoryLabel(): string
     {
-        return self::CATEGORIES[ $this->category ] ?? 'Desconhecido';
+        return self::CATEGORIES[$this->category] ?? 'Desconhecido';
     }
 
     public function getTypeLabel(): string
     {
-        return self::TYPES[ $this->type ] ?? 'Desconhecido';
+        return self::TYPES[$this->type] ?? 'Desconhecido';
     }
 
     public function isScheduled(): bool
@@ -181,11 +181,10 @@ class ReportDefinition extends Model
         parent::boot();
         static::bootTenantScoped();
 
-        static::creating( function ( $model ) {
-            if ( empty( $model->version ) ) {
+        static::creating(function ($model) {
+            if (empty($model->version)) {
                 $model->version = 1;
             }
-        } );
+        });
     }
-
 }

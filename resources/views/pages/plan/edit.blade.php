@@ -1,12 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="main-container py-1">
-        <!-- Cabeçalho -->
-        <div class="text-center mb-5">
-            <h1 class="h2 fw-bold text-primary mb-3">Editar Plano</h1>
-            <p class="text-muted lead">Atualize as informações do plano "{{ $plan->name }}"</p>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Editar Plano"
+            icon="gem"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => route('provider.plans.index'),
+                $plan->name => route('provider.plans.show', $plan->slug),
+                'Editar' => '#'
+            ]">
+            <p class="text-muted mb-0">Atualize as informações do plano "{{ $plan->name }}"</p>
+        </x-layout.page-header>
 
         <!-- Formulário -->
         <div class="row justify-content-center">
@@ -163,17 +169,11 @@
 
                         <!-- Footer com botões -->
                         <div class="card-footer bg-light d-flex justify-content-between">
-                            <a href="{{ route('plans.show', $plan->slug) }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-eye me-2"></i>Visualizar
-                            </a>
+                            <x-ui.button type="link" :href="route('plans.show', $plan->slug)" variant="info" icon="eye" label="Visualizar" />
 
-                            <div>
-                                <a href="{{ route('plans.index') }}" class="btn btn-outline-secondary me-2">
-                                    <i class="bi bi-arrow-left me-2"></i>Voltar
-                                </a>
-                                <button type="submit" class="btn btn-warning btn-lg">
-                                    <i class="bi bi-check-lg me-2"></i>Salvar Alterações
-                                </button>
+                            <div class="d-flex gap-2">
+                                <x-ui.button type="link" :href="route('plans.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                                <x-ui.button type="submit" variant="warning" size="lg" icon="check-lg" label="Salvar Alterações" />
                             </div>
                         </div>
                     </form>

@@ -22,18 +22,18 @@ class RoleRepository extends AbstractGlobalRepository
      */
     protected function makeModel(): Model
     {
-        return new Role();
+        return new Role;
     }
 
     /**
      * Busca papel por nome.
      *
-     * @param string $name Nome do papel
+     * @param  string  $name  Nome do papel
      * @return Role|null Papel encontrado
      */
-    public function findByName( string $name ): ?Role
+    public function findByName(string $name): ?Role
     {
-        return $this->model->where( 'name', $name )->first();
+        return $this->model->where('name', $name)->first();
     }
 
     /**
@@ -43,21 +43,20 @@ class RoleRepository extends AbstractGlobalRepository
      */
     public function findActive(): Collection
     {
-        return $this->getAllGlobal( [ 'status' => 'active' ] );
+        return $this->getAllGlobal(['status' => 'active']);
     }
 
     /**
      * Busca papéis ordenados por nome.
      *
-     * @param string $direction Direção da ordenação (asc/desc)
+     * @param  string  $direction  Direção da ordenação (asc/desc)
      * @return Collection<Role> Papéis ordenados
      */
-    public function findOrderedByName( string $direction = 'asc' ): Collection
+    public function findOrderedByName(string $direction = 'asc'): Collection
     {
         return $this->getAllGlobal(
             [],
-            [ 'name' => $direction ],
+            ['name' => $direction],
         );
     }
-
 }

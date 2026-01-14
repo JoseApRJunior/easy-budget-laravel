@@ -3,21 +3,19 @@
 @section('title', 'Dashboard de Monitoramento')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-graph-up me-2"></i>Dashboard de Monitoramento
-            </h1>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard de Monitoramento"
+            icon="graph-up"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Monitoramento' => '#'
+            ]">
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-primary btn-sm" onclick="refreshMetrics()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-                </button>
-                <a href="{{ url('/admin/monitoring/metrics') }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-graph-up me-1"></i>Métricas Detalhadas
-                </a>
+                <x-ui.button variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
+                <x-ui.button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" size="sm" icon="graph-up" label="Métricas Detalhadas" />
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Cards de Resumo -->
         <div class="row g-4 mb-4">
@@ -31,7 +29,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Tempo Médio de Resposta</div>
                                 <div class="fs-4 fw-bold text-primary" id="avg-response-time">
-                                    {{ number_format($summary['average_response_time'] ?? 0, 4) }}s
+                                    {{ \App\Helpers\CurrencyHelper::format($summary['average_response_time'] ?? 0, 4, false) }}s
                                 </div>
                             </div>
                         </div>
@@ -49,7 +47,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Taxa de Sucesso</div>
                                 <div class="fs-4 fw-bold text-success" id="success-rate">
-                                    {{ number_format($summary['success_rate'] ?? 100, 2) }}%
+                                    {{ \App\Helpers\CurrencyHelper::format($summary['success_rate'] ?? 100, 2, false) }}%
                                 </div>
                             </div>
                         </div>
@@ -67,7 +65,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Uso Médio de Memória</div>
                                 <div class="fs-4 fw-bold text-info" id="avg-memory">
-                                    {{ number_format(($summary['average_memory'] ?? 0) / 1024 / 1024, 2) }}MB
+                                    {{ \App\Helpers\CurrencyHelper::format(($summary['average_memory'] ?? 0) / 1024 / 1024, 2, false) }}MB
                                 </div>
                             </div>
                         </div>
@@ -85,7 +83,7 @@
                             <div class="flex-grow-1 ms-3">
                                 <div class="text-muted small">Total de Execuções</div>
                                 <div class="fs-4 fw-bold text-warning" id="total-executions">
-                                    {{ number_format($summary['total_executions'] ?? 0) }}
+                                    {{ \App\Helpers\CurrencyHelper::format($summary['total_executions'] ?? 0, 0, false) }}
                                 </div>
                             </div>
                         </div>
@@ -131,7 +129,7 @@
                                                 @endif
                                             </td>
                                             <td>{{ $middleware['success_rate'] }}%</td>
-                                            <td>{{ number_format($middleware['average_time'], 4) }}s</td>
+                                            <td>{{ \App\Helpers\CurrencyHelper::format($middleware['average_time'], 4, false) }}s</td>
                                             <td>
                                                 <small class="text-muted">{{ $middleware['last_execution'] }}</small>
                                             </td>

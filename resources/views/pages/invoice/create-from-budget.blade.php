@@ -1,8 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container py-1">
-        <h1 class="h4 mb-3">Criar Fatura a partir do Orçamento</h1>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Criar Fatura a partir do Orçamento"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                'Orçamento #' . $budget->code => route('provider.budgets.show', $budget->code),
+                'Gerar Fatura' => '#'
+            ]">
+            <p class="text-muted mb-0">Selecione os itens do orçamento para gerar a fatura</p>
+        </x-layout.page-header>
 
         <div class="card mb-4">
             <div class="card-body">
@@ -12,11 +22,11 @@
                         <div><strong>Cliente:</strong> {{ $budget->customer->name ?? '-' }}</div>
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <div><strong>Total do Orçamento:</strong> R$ {{ number_format($budget->total, 2, ',', '.') }}</div>
-                        <div><strong>Total Faturado:</strong> R$ {{ number_format($alreadyBilled, 2, ',', '.') }}</div>
+                        <div><strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</div>
+                        <div><strong>Total Faturado:</strong> {{ \App\Helpers\CurrencyHelper::format($alreadyBilled) }}</div>
                         <div><strong>Saldo Disponível:</strong> <span id="remaining-balance"
                                 class="text-{{ $remainingBalance > 0 ? 'success' : 'danger' }}">R$
-                                {{ number_format($remainingBalance, 2, ',', '.') }}</span></div>
+                                {{ \App\Helpers\CurrencyHelper::format($remainingBalance) }}</span></div>
                     </div>
                 </div>
             </div>
@@ -31,7 +41,7 @@
                 <div class="card-body">
                     <div class="alert alert-info">
                         <strong>Selecione os itens para faturar:</strong> O total selecionado não pode exceder o saldo
-                        disponível de <strong>R$ {{ number_format($remainingBalance, 2, ',', '.') }}</strong>
+                        disponível de <strong>{{ \App\Helpers\CurrencyHelper::format($remainingBalance) }}</strong>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped">
@@ -77,7 +87,7 @@
                                                     data-original-unit-value="{{ $item->unit_value }}" />
                                             </td>
                                             <td class="text-end original-total">R$
-                                                {{ number_format($item->total, 2, ',', '.') }}</td>
+                                                {{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                                             <td class="text-end selected-total" data-item-id="{{ $item->id }}">R$ 0,00
                                             </td>
                                         </tr>
@@ -124,7 +134,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Desconto</label>
                             <input type="text" inputmode="numeric" class="form-control" name="discount" id="discount"
-                                value="R$ {{ number_format($budget->discount ?? 0, 2, ',', '.') }}" />
+                                value="{{ \App\Helpers\CurrencyHelper::format($budget->discount ?? 0, 2, false) }}" />
                             <script>
                                 document.addEventListener('DOMContentLoaded', function() {
                                     try {
@@ -275,7 +285,11 @@
                         // Validate quantity doesn't exceed original
                         if (currentQuantity > originalQuantity) {
                             this.value = originalQuantity;
-                            alert('A quantidade não pode exceder a quantidade original do orçamento');
+                            if (window.easyAlert) {
+                                window.easyAlert.warning('A quantidade não pode exceder a quantidade original do orçamento');
+                            } else {
+                                alert('A quantidade não pode exceder a quantidade original do orçamento');
+                            }
                         }
 
                         updateSelectedTotal();
@@ -295,13 +309,21 @@
 
                     if (totalSelected === 0) {
                         e.preventDefault();
-                        alert('Por favor, selecione pelo menos um item para faturar.');
+                        if (window.easyAlert) {
+                            window.easyAlert.error('Por favor, selecione pelo menos um item para faturar.');
+                        } else {
+                            alert('Por favor, selecione pelo menos um item para faturar.');
+                        }
                         return;
                     }
 
                     if (totalSelected > remainingBalance) {
                         e.preventDefault();
-                        alert('O total selecionado excede o saldo disponível do orçamento.');
+                        if (window.easyAlert) {
+                            window.easyAlert.error('O total selecionado excede o saldo disponível do orçamento.');
+                        } else {
+                            alert('O total selecionado excede o saldo disponível do orçamento.');
+                        }
                         return;
                     }
 

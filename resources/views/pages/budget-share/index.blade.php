@@ -3,34 +3,23 @@
 @section( 'title', 'Compartilhamentos de Orçamentos' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-share me-2"></i>
-                Compartilhamentos de Orçamentos
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.budgets.index') }}">Orçamentos</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Compartilhamentos</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Compartilhamentos de Orçamentos"
+            icon="share"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('provider.budgets.index'),
+                'Compartilhamentos' => '#'
+            ]">
+            <x-ui.button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" />
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="card-title mb-0">Lista de Compartilhamentos</h3>
-                            <div class="btn-group">
-                                <a href="{{ route('provider.budgets.index') }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-arrow-left"></i> Voltar aos Orçamentos
-                                </a>
-                            </div>
-                        </div>
+                        <h3 class="card-title mb-0">Lista de Compartilhamentos</h3>
                     </div>
                     <div class="card-body">
                         @if(session('success'))
@@ -74,14 +63,14 @@
                                             <td>{{ $share->budget->customer->name ?? 'N/A' }}</td>
                                             <td>{{ $share->email }}</td>
                                             <td>
-                                                <x-share-token :token="substr($share->share_token, 0, 8) . '...'" :show-copy="false" />
+                                                <x-resource.share-token :token="substr($share->share_token, 0, 8) . '...'" :show-copy="false" />
                                                 <button class="btn btn-sm btn-outline-secondary copy-token" data-token="{{ $share->share_token }}" title="Copiar token completo">
                                                     <i class="fas fa-copy"></i>
                                                 </button>
                                             </td>
                                             <td>{{ $share->expires_at ? $share->expires_at->format('d/m/Y H:i') : 'Nunca' }}</td>
                                             <td>
-                                                <x-share-status-badge :share="$share" />
+                                                <x-ui.share-status-badge :share="$share" />
                                             </td>
                                             <td>{{ $share->created_at->format('d/m/Y H:i') }}</td>
                                             <td>

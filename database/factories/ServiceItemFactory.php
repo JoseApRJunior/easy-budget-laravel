@@ -16,18 +16,17 @@ class ServiceItemFactory extends Factory
 
     public function definition(): array
     {
-        $tenant  = Tenant::factory()->create();
-        $service = Service::factory()->create( [ 'tenant_id' => $tenant->id ] );
-        $product = Product::factory()->create( [ 'tenant_id' => $tenant->id ] );
+        $tenant = Tenant::factory()->create();
+        $service = Service::factory()->create(['tenant_id' => $tenant->id]);
+        $product = Product::factory()->create(['tenant_id' => $tenant->id]);
 
         return [
-            'tenant_id'  => $tenant->id,
+            'tenant_id' => $tenant->id,
             'service_id' => $service->id,
             'product_id' => $product->id,
-            'unit_value' => $this->faker->randomFloat( 2, 10, 100 ),
-            'quantity'   => $this->faker->numberBetween( 1, 10 ),
-            'total'      => $this->faker->randomFloat( 2, 50, 1000 ),
+            'unit_value' => $this->faker->randomFloat(2, 10, 100),
+            'quantity' => $this->faker->numberBetween(1, 10),
+            'total' => $this->faker->randomFloat(2, 50, 1000),
         ];
     }
-
 }

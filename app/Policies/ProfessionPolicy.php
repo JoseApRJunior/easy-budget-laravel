@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Profession;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProfessionPolicy
@@ -15,7 +15,7 @@ class ProfessionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('manage-professions');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-professions');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProfessionPolicy
      */
     public function view(User $user, Profession $profession): bool
     {
-        return $user->hasPermission('manage-professions');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-professions');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProfessionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermission('manage-professions');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-professions');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProfessionPolicy
      */
     public function update(User $user, Profession $profession): bool
     {
-        return $user->hasPermission('manage-professions');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-professions');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProfessionPolicy
      */
     public function delete(User $user, Profession $profession): bool
     {
-        return $user->hasPermission('manage-professions');
+        return $user->isAdmin() || $user->isProvider() || $user->hasPermission('manage-professions');
     }
 
     /**

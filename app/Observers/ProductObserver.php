@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Models\AuditLog;
 use App\Models\Product;
+use App\Services\Application\AuditLogService;
 
 class ProductObserver
 {
+    public function __construct(protected AuditLogService $auditLogService) {}
+
     public function created(Product $product): void
     {
         $this->log($product, 'product_created', 'Produto criado');
@@ -34,21 +36,11 @@ class ProductObserver
 
     private function log(Product $product, string $action, string $description, array $extra = []): void
     {
-        try {
-            $oldValues = $extra['old_values'] ?? null;
-            $newValues = $extra['new_values'] ?? null;
+        $oldValues = $extra['old_values'] ?? null;
+        $newValues = $extra['new_values'] ?? null;
 
-            $log = AuditLog::log($action, $product, $oldValues, $newValues, $extra);
+        $metadata = array_merge($extra, ['description' => $description]);
 
-            if ($log instanceof AuditLog && $log->getKey()) {
-                $log->update(['description' => $description]);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Failed to create audit log', [
-                'action' => $action,
-                'product_id' => $product->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $this->auditLogService->log($action, $product, $oldValues, $newValues, $metadata);
     }
 }

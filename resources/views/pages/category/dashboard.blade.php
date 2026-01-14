@@ -3,276 +3,193 @@
 @section('title', 'Dashboard de Categorias')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-tags me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Categorias</span>
-                        <span class="d-sm-none">Categorias</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            Dashboard de Categorias
-                        </li>
-                    </ol>
-                </nav>
-            </div>
-            <p class="text-muted mb-0 small">
-                Visão geral das suas categorias.
-            </p>
-        </div>
+<x-layout.page-container>
+    <!-- Cabeçalho -->
+    <x-layout.page-header
+        title="Dashboard de Categorias"
+        icon="tags"
+        description="Visão geral das suas categorias."
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Categorias' => '#'
+        ]"
+    />
 
-        @php
-            $total = $stats['total_categories'] ?? 0;
-            $active = $stats['active_categories'] ?? 0;
-            $inactive = $stats['inactive_categories'] ?? 0;
-            $deleted = $stats['deleted_categories'] ?? 0;
-            $recent = $stats['recent_categories'] ?? collect();
-            $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
-        @endphp
+    @php
+    $total = $stats['total_categories'] ?? 0;
+    $active = $stats['active_categories'] ?? 0;
+    $inactive = $stats['inactive_categories'] ?? 0;
+    $deleted = $stats['deleted_categories'] ?? 0;
+    $recent = $stats['recent_categories'] ?? collect();
+    $activityRate = $total > 0 ? number_format(($active / $total) * 100, 1, ',', '.') : 0;
+    @endphp
 
-        <!-- Cards de Métricas -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-md-6 col-xl-5-custom">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body p-3 d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
-                                <i class="bi bi-tags text-white" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <h6 class="text-muted mb-0 small fw-bold">TOTAL</h6>
-                        </div>
-                        <h3 class="mb-1 fw-bold">{{ $total }}</h3>
-                        <p class="text-muted small-text mb-0">Ativas e inativas.</p>
-                    </div>
-                </div>
-            </div>
+    <!-- Cards de Métricas -->
+    <x-layout.grid-row class="mb-4">
+        <x-dashboard.stat-card
+            title="Total"
+            :value="$total"
+            description="Ativas e inativas."
+            icon="tags"
+            variant="primary"
+            isCustom
+        />
 
-            <div class="col-12 col-md-6 col-xl-5-custom">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body p-3 d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar-circle bg-success bg-gradient me-2" style="width: 35px; height: 35px;">
-                                <i class="bi bi-check-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <h6 class="text-muted mb-0 small fw-bold">ATIVAS</h6>
-                        </div>
-                        <h3 class="mb-1 fw-bold text-success">{{ $active }}</h3>
-                        <p class="text-muted small-text mb-0">Disponíveis para uso.</p>
-                    </div>
-                </div>
-            </div>
+        <x-dashboard.stat-card
+            title="Ativas"
+            :value="$active"
+            description="Disponíveis para uso."
+            icon="check-circle-fill"
+            variant="success"
+            isCustom
+        />
 
-            <div class="col-12 col-md-6 col-xl-5-custom">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body p-3 d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar-circle bg-secondary bg-gradient me-2" style="width: 35px; height: 35px;">
-                                <i class="bi bi-pause-circle-fill text-white" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <h6 class="text-muted mb-0 small fw-bold">INATIVAS</h6>
-                        </div>
-                        <h3 class="mb-1 fw-bold text-secondary">{{ $inactive }}</h3>
-                        <p class="text-muted small-text mb-0">Suspensas temporariamente.</p>
-                    </div>
-                </div>
-            </div>
+        <x-dashboard.stat-card
+            title="Inativas"
+            :value="$inactive"
+            description="Suspensas temporariamente."
+            icon="pause-circle-fill"
+            variant="secondary"
+            isCustom
+        />
 
-            <div class="col-12 col-md-6 col-xl-5-custom">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body p-3 d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar-circle bg-danger bg-gradient me-2" style="width: 35px; height: 35px;">
-                                <i class="bi bi-trash3-fill text-white" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <h6 class="text-muted mb-0 small fw-bold">DELETADAS</h6>
-                        </div>
-                        <h3 class="mb-1 fw-bold text-danger">{{ $deleted }}</h3>
-                        <p class="text-muted small-text mb-0">Na lixeira.</p>
-                    </div>
-                </div>
-            </div>
+        <x-dashboard.stat-card
+            title="Deletadas"
+            :value="$deleted"
+            description="Na lixeira."
+            icon="trash3-fill"
+            variant="danger"
+            isCustom
+        />
 
-            <div class="col-12 col-md-6 col-xl-5-custom">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body p-3 d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="avatar-circle bg-info bg-gradient me-2" style="width: 35px; height: 35px;">
-                                <i class="bi bi-percent text-white" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <h6 class="text-muted mb-0 small fw-bold">TAXA USO</h6>
-                        </div>
-                        <h3 class="mb-1 fw-bold text-info">{{ $activityRate }}%</h3>
-                        <p class="text-muted small-text mb-0">Percentual de ativas.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-dashboard.stat-card
+            title="Taxa Uso"
+            :value="$activityRate . '%'"
+            description="Percentual de ativas."
+            icon="percent"
+            variant="info"
+            isCustom
+        />
+    </x-layout.grid-row>
 
-        <!-- Conteúdo Principal -->
-        <div class="row g-4">
-            <!-- Categorias Recentes -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>
-                            <span class="d-none d-sm-inline">Categorias Recentes</span>
-                            <span class="d-sm-none">Recentes</span>
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
-                            <!-- Desktop View -->
-                            <div class="desktop-view">
-                                <div class="table-responsive">
-                                    <table class="modern-table table mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Categoria</th>
-                                                <th>Tipo</th>
-                                                <th>Status</th>
-                                                <th>Criada em</th>
-                                                <th class="text-center">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($recent as $category)
-                                                <tr>
-                                                    <td>
-                                                        <div class="d-flex align-items-center">
-                                                            @if ($category->parent)
-                                                                <i
-                                                                    class="bi bi-arrow-return-right text-muted me-2 subcategory-icon"></i>
-                                                            @endif
-                                                            <i class="bi bi-tag me-2 text-muted"></i>
-                                                            <span>{{ $category->name }}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        @if ($category->parent)
-                                                            <small class="text-muted">Subcategoria</small>
-                                                        @else
-                                                            <small class="text-muted">Categoria</small>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        @if ($category->is_active)
-                                                            <span class="badge bg-success-subtle text-success">Ativa</span>
-                                                        @else
-                                                            <span class="badge bg-danger-subtle text-danger">Inativa</span>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        {{ optional($category->created_at)->format('d/m/Y') }}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                            class="btn btn-sm btn-outline-secondary">
-                                                            <i class="bi bi-eye"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+    <!-- Conteúdo Principal -->
+    <x-layout.grid-row>
+        <!-- Categorias Recentes -->
+        <x-layout.grid-col size="col-lg-8">
+            <x-resource.resource-list-card
+                title="Categorias Recentes"
+                mobileTitle="Recentes"
+                icon="clock-history"
+                :total="$recent->count()"
+                class="h-100"
+            >
+                @if ($recent instanceof \Illuminate\Support\Collection && $recent->isNotEmpty())
+                    <x-slot:desktop>
+                        <x-resource.resource-table>
+                            <x-slot:thead>
+                                <x-resource.table-row>
+                                    <x-resource.table-cell header>Categoria</x-resource.table-cell>
+                                    <x-resource.table-cell header>Tipo</x-resource.table-cell>
+                                    <x-resource.table-cell header>Status</x-resource.table-cell>
+                                    <x-resource.table-cell header>Criada em</x-resource.table-cell>
+                                    <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                </x-resource.table-row>
+                            </x-slot:thead>
 
-                            <!-- Mobile View -->
-                            <div class="mobile-view">
-                                <div class="list-group">
-                                    @foreach ($recent as $category)
-                                        <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                            class="list-group-item list-group-item-action py-3">
-                                            <div class="d-flex align-items-start">
-                                                @if ($category->parent)
-                                                    <i
-                                                        class="bi bi-arrow-return-right text-muted me-2 mt-1 subcategory-icon-mobile"></i>
-                                                @endif
-                                                <i class="bi bi-tag text-muted me-2 mt-1"></i>
-                                                <div class="flex-grow-1">
-                                                    <div class="fw-semibold mb-2">{{ $category->name }}</div>
-                                                    <div class="d-flex gap-2 flex-wrap">
-                                                        @if ($category->is_active)
-                                                            <span class="badge bg-success-subtle text-success">Ativa</span>
-                                                        @else
-                                                            <span class="badge bg-danger-subtle text-danger">Inativa</span>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @else
-                            <div class="p-4">
-                                <p class="text-muted mb-0">
-                                    Nenhuma categoria recente encontrada. Cadastre novas categorias para visualizar
-                                    aqui.
-                                </p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
+                            @foreach ($recent as $category)
+                                <x-resource.table-row>
+                                    <x-resource.table-cell>
+                                        <div class="fw-bold text-dark">{{ $category->name }}</div>
+                                        <div class="text-muted small">{{ $category->slug }}</div>
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell>
+                                        <span class="badge bg-light text-dark border fw-normal">
+                                            {{ $category->parent_id ? 'Subcategoria' : 'Principal' }}
+                                        </span>
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell>
+                                        <x-ui.status-badge :item="$category" statusField="active" />
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell class="text-muted small">
+                                        {{ $category->created_at->format('d/m/Y') }}
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell align="center">
+                                        <x-resource.action-buttons
+                                            :item="$category"
+                                            resource="categories"
+                                            identifier="slug"
+                                            :can-delete="false"
+                                        />
+                                    </x-resource.table-cell>
+                                </x-resource.table-row>
+                            @endforeach
+                        </x-resource.resource-table>
+                    </x-slot:desktop>
 
-            <!-- Insights e Atalhos -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-lightbulb me-2"></i>Insights Rápidos
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0 small text-muted">
-                            <li class="mb-2">
-                                <i class="bi bi-diagram-3-fill text-primary me-2"></i>
-                                Mantenha a estrutura hierárquica organizada para facilitar a navegação.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-tag-fill text-success me-2"></i>
-                                Use nomes descritivos para suas categorias.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                Revise categorias inativas que ainda podem ser úteis para o negócio.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+                    <x-slot:mobile>
+                        @foreach ($recent as $category)
+                            <x-resource.resource-mobile-item
+                                icon="tag"
+                                :href="route('provider.categories.index', ['search' => $category->name])"
+                            >
+                                <x-resource.resource-mobile-header
+                                    :title="$category->name"
+                                    :subtitle="$category->created_at->format('d/m/Y')"
+                                />
+                                <x-resource.resource-mobile-field
+                                    label="Tipo"
+                                    :value="$category->parent_id ? 'Subcategoria' : 'Principal'"
+                                />
+                                <x-resource.resource-mobile-field label="Status">
+                                    <x-ui.status-badge :item="$category" statusField="active" />
+                                </x-resource.resource-mobile-field>
+                            </x-resource.resource-mobile-item>
+                        @endforeach
+                    </x-slot:mobile>
+                @else
+                    <x-resource.empty-state resource="categorias recentes" />
+                @endif
+            </x-resource.resource-list-card>
+        </x-layout.grid-col>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-link-45deg me-2"></i>Atalhos
-                        </h6>
-                    </div>
-                    <div class="card-body d-grid gap-2">
-                        <a href="{{ route('provider.categories.create') }}" class="btn btn-sm btn-success">
-                            <i class="bi bi-plus-circle me-2"></i>Nova Categoria
-                        </a>
-                        <a href="{{ route('provider.categories.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-tags me-2"></i>Listar Categorias
-                        </a>
-                        <a href="{{ route('provider.categories.index', ['deleted' => 'only']) }}"
-                            class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-archive me-2"></i>Ver Deletadas
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        <!-- Insights e Atalhos -->
+        <x-layout.grid-col size="col-lg-4">
+            <x-layout.v-stack gap="4">
+                <!-- Insights -->
+                <x-resource.resource-list-card
+                    title="Insights Rápidos"
+                    icon="lightbulb"
+                    padding="p-3"
+                    gap="3"
+                >
+                    <x-dashboard.insight-item
+                        icon="diagram-3-fill"
+                        variant="primary"
+                        description="Mantenha a estrutura hierárquica organizada para facilitar a navegação."
+                    />
+                    <x-dashboard.insight-item
+                        icon="tag-fill"
+                        variant="success"
+                        description="Use nomes descritivos para suas categorias."
+                    />
+                    <x-dashboard.insight-item
+                        icon="exclamation-triangle-fill"
+                        variant="warning"
+                        description="Revise categorias inativas que ainda podem ser úteis para o negócio."
+                    />
+                </x-resource.resource-list-card>
+
+                <!-- Atalhos -->
+                <x-resource.quick-actions
+                    title="Ações de Categoria"
+                    icon="lightning-charge"
+                >
+                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="md" icon="plus-lg" label="Nova Categoria" />
+                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" size="md" icon="tags" label="Listar Categorias" />
+                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="outline-secondary" size="md" icon="trash" label="Ver Deletadas" />
+                </x-resource.quick-actions>
+            </x-layout.v-stack>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
+</x-layout.page-container>
 @endsection

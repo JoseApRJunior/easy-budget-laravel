@@ -1,26 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-diagram-3 me-2"></i>Áreas de Atividade
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url('/admin') }}">Dashboard Admin</a></li>
-                    <li class="breadcrumb-item active">Áreas de Atividade</li>
-                </ol>
-            </nav>
-        </div>
-
-        <!-- Botão Adicionar -->
-        <div class="mb-4">
-            <a href="{{ url('/admin/area-of-activities/create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Adicionar Área de Atividade
-            </a>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Áreas de Atividade"
+            icon="diagram-3"
+            :breadcrumb-items="[
+                'Admin' => url('/admin'),
+                'Áreas de Atividade' => '#'
+            ]">
+            <x-ui.button type="link" :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" />
+        </x-layout.page-header>
 
         <!-- Tabela de Áreas de Atividade -->
         <div class="card border-0 shadow-sm">
@@ -55,18 +45,10 @@
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="d-flex justify-content-center gap-2">
-                                                <a href="{{ url('/admin/area-of-activities/' . $areaOfActivity->id) }}"
-                                                    class="btn btn-sm btn-outline-info" title="Visualizar">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ url('/admin/area-of-activities/' . $areaOfActivity->id . '/edit') }}"
-                                                    class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" title="Excluir"
-                                                    onclick="confirmDelete('{{ $areaOfActivity->id }}', '{{ $areaOfActivity->name }}')">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <x-ui.button type="link" :href="url('/admin/area-of-activities/' . $areaOfActivity->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-ui.button type="link" :href="url('/admin/area-of-activities/' . $areaOfActivity->id . '/edit')" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                    onclick="confirmDelete('{{ $areaOfActivity->id }}', '{{ $areaOfActivity->name }}')" />
                                             </div>
                                         </td>
                                     </tr>

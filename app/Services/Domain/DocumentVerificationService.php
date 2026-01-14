@@ -20,6 +20,7 @@ class DocumentVerificationService
         $budget = Budget::where('pdf_verification_hash', $hash)->first();
         if ($budget) {
             Log::info('document_verified', ['type' => 'budget', 'id' => $budget->id]);
+
             return ServiceResult::success([
                 'document' => $budget,
                 'type' => 'Orçamento',
@@ -30,6 +31,7 @@ class DocumentVerificationService
         $service = Service::where('pdf_verification_hash', $hash)->first();
         if ($service) {
             Log::info('document_verified', ['type' => 'service', 'id' => $service->id]);
+
             return ServiceResult::success([
                 'document' => $service,
                 'type' => 'Ordem de Serviço',
@@ -40,6 +42,7 @@ class DocumentVerificationService
         $report = Report::where('hash', $hash)->first();
         if ($report) {
             Log::info('document_verified', ['type' => 'report', 'id' => $report->id]);
+
             return ServiceResult::success([
                 'document' => $report,
                 'type' => 'Relatório',
@@ -48,6 +51,7 @@ class DocumentVerificationService
         }
 
         Log::warning('document_not_found', ['hash' => $hash]);
+
         return ServiceResult::error(OperationStatus::NOT_FOUND, 'Documento não encontrado', ['hash' => $hash]);
     }
 }

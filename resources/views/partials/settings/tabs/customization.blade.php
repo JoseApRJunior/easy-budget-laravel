@@ -10,28 +10,11 @@
                 
                 <!-- Tema do Sistema -->
                 <div class="mb-4">
-                    <h5 class="h6 text-primary mb-3">Tema do Sistema</h5>
+                    <h5 class="h6 text-primary mb-3">Cores do Sistema</h5>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="theme" class="form-label">Tema</label>
-                            <select class="form-select" id="theme" name="theme">
-                                <option value="light" {{ old('theme', $tabs['customization']['data']['user_settings']['theme'] ?? 'light') === 'light' ? 'selected' : '' }}>
-                                    Claro
-                                </option>
-                                <option value="dark" {{ old('theme', $tabs['customization']['data']['user_settings']['theme'] ?? 'light') === 'dark' ? 'selected' : '' }}>
-                                    Escuro
-                                </option>
-                                <option value="auto" {{ old('theme', $tabs['customization']['data']['user_settings']['theme'] ?? 'light') === 'auto' ? 'selected' : '' }}>
-                                    Automático
-                                </option>
-                            </select>
-                            <small class="form-text text-muted">
-                                O tema automático se adapta ao horário do dia
-                            </small>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label for="primary_color" class="form-label">Cor Primária</label>
-                            <input type="color" class="form-control form-control-color" id="primary_color" name="primary_color"
+                            <input type="color" class="form-control form-control-color w-100" id="primary_color" name="primary_color"
                                    value="{{ old('primary_color', $tabs['customization']['data']['user_settings']['primary_color'] ?? '#0066cc') }}">
                             <small class="form-text text-muted">
                                 Cor principal do sistema

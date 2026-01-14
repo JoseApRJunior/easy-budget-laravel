@@ -3,26 +3,16 @@
 @section('title', 'Dashboard de Faturas')
 
 @section('content')
-    <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="flex-grow-1">
-                    <h1 class="h4 h3-md mb-1">
-                        <i class="bi bi-receipt me-2"></i>
-                        <span class="d-none d-sm-inline">Dashboard de Faturas</span>
-                        <span class="d-sm-none">Faturas</span>
-                    </h1>
-                </div>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Dashboard de Faturas</li>
-                    </ol>
-                </nav>
-            </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard de Faturas"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => '#'
+            ]">
             <p class="text-muted mb-0 small">Acompanhe suas faturas, recebimentos e pendências.</p>
-        </div>
+        </x-layout.page-header>
 
         @php
             $total = $stats['total_invoices'] ?? 0;
@@ -35,7 +25,7 @@
             $toReceive = $stats['total_pending'] ?? 0;
             $recent = $stats['recent_invoices'] ?? collect();
             $breakdown = $stats['status_breakdown'] ?? [];
-            $paidRate = $total > 0 ? number_format(($paid / $total) * 100, 1, ',', '.') : 0;
+            $paidRate = $total > 0 ? \App\Helpers\CurrencyHelper::format(($paid / $total) * 100) : 0;
         @endphp
 
         <div class="row g-4 mb-4">
@@ -114,19 +104,19 @@
                             <div class="col">
                                 <div class="border rounded p-3">
                                     <div class="text-muted small">Faturado</div>
-                                    <div class="h5 mb-0">R$ {{ number_format($billed, 2, ',', '.') }}</div>
+                                    <div class="h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($billed) }}</div>
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="border rounded p-3">
                                     <div class="text-muted small">Recebido</div>
-                                    <div class="h5 mb-0">R$ {{ number_format($received, 2, ',', '.') }}</div>
+                                    <div class="h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($received) }}</div>
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="border rounded p-3">
                                     <div class="text-muted small">A Receber</div>
-                                    <div class="h5 mb-0">R$ {{ number_format($toReceive, 2, ',', '.') }}</div>
+                                    <div class="h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($toReceive) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -179,15 +169,12 @@
                                             <tr>
                                                 <td><code class="text-code">{{ $inv->code }}</code></td>
                                                 <td>{{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</td>
-                                                <td><span class="badge"
-                                                        style="background: {{ $inv->invoiceStatus?->getColor() }}">{{ $inv->invoiceStatus?->getDescription() }}</span>
-                                                </td>
-                                                <td>R$ {{ number_format($inv->total, 2, ',', '.') }}</td>
+                                                <td><x-ui.status-badge :item="$inv" /></td>
+                                                <td>{{ \App\Helpers\CurrencyHelper::format($inv->total) }}</td>
                                                 <td>{{ optional($inv->due_date)->format('d/m/Y') }}</td>
-                                                <td class="text-end"><a
-                                                        href="{{ route('provider.invoices.show', $inv->code) }}"
-                                                        class="btn btn-sm btn-outline-primary"><i
-                                                            class="bi bi-eye"></i></a></td>
+                                                <td class="text-end">
+                                                    <x-ui.button type="link" :href="route('provider.invoices.show', $inv->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -218,7 +205,7 @@
                                                     </div>
                                                     <div class="small text-muted">
                                                         <div>Cliente: {{ $inv->customer?->commonData?->first_name ?? 'N/A' }}</div>
-                                                        <div>Total: R$ {{ number_format($inv->total, 2, ',', '.') }}</div>
+                                                        <div>Total: {{ \App\Helpers\CurrencyHelper::format($inv->total) }}</div>
                                                     </div>
                                                 </div>
                                                 <i class="bi bi-chevron-right text-muted ms-2"></i>
@@ -254,10 +241,10 @@
                     <div class="card-header bg-transparent border-0">
                         <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Atalhos</h6>
                     </div>
-                    <div class="card-body d-grid gap-2"><a href="{{ route('provider.invoices.create') }}"
-                            class="btn btn-sm btn-success"><i class="bi bi-plus-circle me-2"></i>Nova Fatura</a><a
-                            href="{{ route('provider.invoices.index') }}" class="btn btn-sm btn-outline-primary"><i
-                                class="bi bi-receipt me-2"></i>Listar Faturas</a></div>
+                    <div class="card-body d-grid gap-2">
+                        <x-ui.button type="link" :href="route('provider.invoices.create')" variant="success" size="sm" icon="plus-circle" label="Nova Fatura" />
+                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" outline size="sm" icon="receipt" label="Listar Faturas" />
+                    </div>
                 </div>
             </div>
         </div>

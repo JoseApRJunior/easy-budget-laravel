@@ -225,12 +225,8 @@
                     @endif
                     
                     <div class="d-grid gap-2">
-                        <button class="btn btn-outline-primary" onclick="window.print()">
-                            <i class="bi bi-printer me-2"></i>Imprimir
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(window.location.href)">
-                            <i class="bi bi-clipboard me-2"></i>Copiar Link
-                        </button>
+                        <x-ui.button variant="primary" icon="printer" label="Imprimir" onclick="window.print()" />
+                        <x-ui.button variant="secondary" icon="clipboard" label="Copiar Link" onclick="navigator.clipboard.writeText(window.location.href)" />
                     </div>
                 </div>
             </div>

@@ -23,8 +23,8 @@ class SchedulePolicy
      */
     public function view(User $user, Schedule $schedule): bool
     {
-        return $user->tenant_id === $schedule->tenant_id && 
-               ($user->hasRole(['admin', 'provider']) || 
+        return $user->tenant_id === $schedule->tenant_id &&
+               ($user->hasRole(['admin', 'provider']) ||
                 $user->id === $schedule->service->customer->user_id);
     }
 
@@ -41,7 +41,7 @@ class SchedulePolicy
      */
     public function update(User $user, Schedule $schedule): bool
     {
-        return $user->tenant_id === $schedule->tenant_id && 
+        return $user->tenant_id === $schedule->tenant_id &&
                $user->hasRole(['admin', 'provider']);
     }
 
@@ -50,7 +50,7 @@ class SchedulePolicy
      */
     public function delete(User $user, Schedule $schedule): bool
     {
-        return $user->tenant_id === $schedule->tenant_id && 
+        return $user->tenant_id === $schedule->tenant_id &&
                $user->hasRole(['admin', 'provider']);
     }
 }

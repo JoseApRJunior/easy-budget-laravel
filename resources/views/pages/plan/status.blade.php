@@ -1,7 +1,18 @@
 @extends( 'layouts.app' )
 
-@section( 'content' )
-    <div class="container mt-5">
+@section('content')
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Status do Pagamento"
+            icon="credit-card"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => route('provider.plans.index'),
+                'Status do Pagamento' => '#'
+            ]">
+            <p class="text-muted mb-0">Acompanhe o processamento do seu pagamento</p>
+        </x-layout.page-header>
+
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div class="card text-center shadow-sm">

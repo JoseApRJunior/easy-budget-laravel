@@ -7,7 +7,7 @@ namespace App\Services\Application;
 use App\Models\EmailTemplate;
 use App\Services\Infrastructure\VariableProcessor;
 use App\Support\ServiceResult;
-use App\Traits\SlugGenerator;
+use App\Enums\OperationStatus;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +16,10 @@ use Illuminate\Support\Facades\Validator;
 
 class EmailTemplateService
 {
-    use SlugGenerator;
+    use \App\Traits\SlugGenerator;
 
-    private VariableProcessor    $variableProcessor;
+    private VariableProcessor $variableProcessor;
+
     private EmailTrackingService $trackingService;
 
     public function __construct(
@@ -26,98 +27,98 @@ class EmailTemplateService
         EmailTrackingService $trackingService,
     ) {
         $this->variableProcessor = $variableProcessor;
-        $this->trackingService   = $trackingService;
+        $this->trackingService = $trackingService;
     }
 
-    protected function findEntityByIdAndTenantId( int $id, int $tenantId ): ?Model
+    protected function findEntityByIdAndTenantId(int $id, int $tenantId): ?Model
     {
-        return EmailTemplate::where( 'id', $id )
-            ->where( 'tenant_id', $tenantId )
+        return EmailTemplate::where('id', $id)
+            ->where('tenant_id', $tenantId)
             ->first();
     }
 
-    protected function listEntitiesByTenantId( int $tenantId, array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null ): array
+    protected function listEntitiesByTenantId(int $tenantId, array $filters = [], ?array $orderBy = null, ?int $limit = null, ?int $offset = null): array
     {
-        $query = EmailTemplate::where( 'tenant_id', $tenantId );
+        $query = EmailTemplate::where('tenant_id', $tenantId);
 
         // Aplicar filtros
-        if ( isset( $filters[ 'category' ] ) ) {
-            $query->byCategory( $filters[ 'category' ] );
+        if (isset($filters['category'])) {
+            $query->byCategory($filters['category']);
         }
 
-        if ( isset( $filters[ 'is_active' ] ) ) {
-            $query->where( 'is_active', $filters[ 'is_active' ] );
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
         }
 
-        if ( isset( $filters[ 'search' ] ) ) {
-            $search = $filters[ 'search' ];
-            $query->where( function ( $q ) use ( $search ) {
-                $q->where( 'name', 'like', "%{$search}%" )
-                    ->orWhere( 'subject', 'like', "%{$search}%" )
-                    ->orWhere( 'slug', 'like', "%{$search}%" );
-            } );
+        if (isset($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('slug', 'like', "%{$search}%");
+            });
         }
 
         // Ordenação
-        if ( $orderBy ) {
-            $query->orderBy( $orderBy[ 0 ], $orderBy[ 1 ] );
+        if ($orderBy) {
+            $query->orderBy($orderBy[0], $orderBy[1]);
         } else {
             $query->ordered();
         }
 
-        if ( $limit ) {
-            $query->limit( $limit );
+        if ($limit) {
+            $query->limit($limit);
         }
 
-        if ( $offset ) {
-            $query->offset( $offset );
+        if ($offset) {
+            $query->offset($offset);
         }
 
         return $query->get()->toArray();
     }
 
-    protected function createEntity( array $data, int $tenantId ): Model
+    protected function createEntity(array $data, int $tenantId): Model
     {
-        $template = new EmailTemplate();
-        $template->fill( [
-            'tenant_id'    => $tenantId,
-            'name'         => $data[ 'name' ],
-            'slug'         => $data[ 'slug' ] ?? $this->generateSlug( $data[ 'name' ] ),
-            'category'     => $data[ 'category' ],
-            'subject'      => $data[ 'subject' ],
-            'html_content' => $data[ 'html_content' ],
-            'text_content' => $data[ 'text_content' ] ?? null,
-            'variables'    => $data[ 'variables' ] ?? [],
-            'is_active'    => $data[ 'is_active' ] ?? true,
-            'is_system'    => $data[ 'is_system' ] ?? false,
-            'sort_order'   => $data[ 'sort_order' ] ?? 0,
-            'metadata'     => $data[ 'metadata' ] ?? [],
-        ] );
+        $template = new EmailTemplate;
+        $template->fill([
+            'tenant_id' => $tenantId,
+            'name' => $data['name'],
+            'slug' => $data['slug'] ?? $this->generateSlug($data['name']),
+            'category' => $data['category'],
+            'subject' => $data['subject'],
+            'html_content' => $data['html_content'],
+            'text_content' => $data['text_content'] ?? null,
+            'variables' => $data['variables'] ?? [],
+            'is_active' => $data['is_active'] ?? true,
+            'is_system' => $data['is_system'] ?? false,
+            'sort_order' => $data['sort_order'] ?? 0,
+            'metadata' => $data['metadata'] ?? [],
+        ]);
 
         return $template;
     }
 
-    protected function updateEntity( Model $entity, array $data, int $tenantId ): void
+    protected function updateEntity(Model $entity, array $data, int $tenantId): void
     {
-        $entity->fill( $data );
+        $entity->fill($data);
     }
 
-    protected function saveEntity( Model $entity ): bool
+    protected function saveEntity(Model $entity): bool
     {
         return $entity->save();
     }
 
-    protected function deleteEntity( Model $entity ): bool
+    protected function deleteEntity(Model $entity): bool
     {
         return $entity->delete();
     }
 
-    protected function belongsToTenant( Model $entity, int $tenantId ): bool
+    protected function belongsToTenant(Model $entity, int $tenantId): bool
     {
         return (int) $entity->tenant_id === $tenantId;
     }
 
-    protected function canDeleteEntity( Model $entity ): bool
+    protected function canDeleteEntity(Model $entity): bool
     {
         return $entity->canBeDeleted();
     }
@@ -125,104 +126,106 @@ class EmailTemplateService
     /**
      * Implementação dos métodos abstratos da BaseTenantService.
      */
-
-    public function getByIdAndTenantId( int $id, int $tenantId ): ServiceResult
+    public function getByIdAndTenantId(int $id, int $tenantId): ServiceResult
     {
-        $template = $this->findEntityByIdAndTenantId( $id, $tenantId );
-        if ( !$template ) {
-            return $this->error( 'NOT_FOUND', 'Template não encontrado.' );
-        }
-        return $this->success( $template, 'Template encontrado.' );
-    }
-
-    public function listByTenantId( int $tenantId, array $filters = [] ): ServiceResult
-    {
-        $templates = $this->listEntitiesByTenantId( $tenantId, $filters );
-        return $this->success( $templates, 'Templates listados.' );
-    }
-
-    public function createByTenantId( array $data, int $tenantId ): ServiceResult
-    {
-        return $this->createTemplate( $data, $tenantId );
-    }
-
-    public function updateByIdAndTenantId( int $id, array $data, int $tenantId ): ServiceResult
-    {
-        return $this->updateTemplate( $id, $data, $tenantId );
-    }
-
-    public function deleteByIdAndTenantId( int $id, int $tenantId ): ServiceResult
-    {
-        $template = $this->findEntityByIdAndTenantId( $id, $tenantId );
-        if ( !$template ) {
-            return $this->error( 'NOT_FOUND', 'Template não encontrado.' );
+        $template = $this->findEntityByIdAndTenantId($id, $tenantId);
+        if (! $template) {
+            return $this->error('NOT_FOUND', 'Template não encontrado.');
         }
 
-        if ( !$this->canDeleteEntity( $template ) ) {
-            return $this->error( 'UNAUTHORIZED', 'Template não pode ser excluído.' );
-        }
-
-        if ( !$this->deleteEntity( $template ) ) {
-            return $this->error( 'ERROR', 'Falha ao excluir template.' );
-        }
-
-        return $this->success( null, 'Template excluído com sucesso.' );
+        return $this->success($template, 'Template encontrado.');
     }
 
-    public function validate( array $data, bool $isUpdate = false ): ServiceResult
+    public function listByTenantId(int $tenantId, array $filters = []): ServiceResult
     {
-        if ( !isset( $data[ 'tenant_id' ] ) ) {
-            return $this->error( 'INVALID_DATA', 'tenant_id é obrigatório.' );
+        $templates = $this->listEntitiesByTenantId($tenantId, $filters);
+
+        return $this->success($templates, 'Templates listados.');
+    }
+
+    public function createByTenantId(array $data, int $tenantId): ServiceResult
+    {
+        return $this->createTemplate($data, $tenantId);
+    }
+
+    public function updateByIdAndTenantId(int $id, array $data, int $tenantId): ServiceResult
+    {
+        return $this->updateTemplate($id, $data, $tenantId);
+    }
+
+    public function deleteByIdAndTenantId(int $id, int $tenantId): ServiceResult
+    {
+        $template = $this->findEntityByIdAndTenantId($id, $tenantId);
+        if (! $template) {
+            return $this->error('NOT_FOUND', 'Template não encontrado.');
         }
 
-        return $this->validateForTenant( $data, (int) $data[ 'tenant_id' ], $isUpdate );
+        if (! $this->canDeleteEntity($template)) {
+            return $this->error('UNAUTHORIZED', 'Template não pode ser excluído.');
+        }
+
+        if (! $this->deleteEntity($template)) {
+            return $this->error('ERROR', 'Falha ao excluir template.');
+        }
+
+        return $this->success(null, 'Template excluído com sucesso.');
+    }
+
+    public function validate(array $data, bool $isUpdate = false): ServiceResult
+    {
+        if (! isset($data['tenant_id'])) {
+            return $this->error('INVALID_DATA', 'tenant_id é obrigatório.');
+        }
+
+        return $this->validateForTenant($data, (int) $data['tenant_id'], $isUpdate);
     }
 
     /**
      * Validação específica para templates de email.
      */
-    protected function validateForTenant( array $data, int $tenantId, bool $isUpdate = false ): ServiceResult
+    protected function validateForTenant(array $data, int $tenantId, bool $isUpdate = false): ServiceResult
     {
         $rules = [
-            'name'         => 'required|string|max:255',
-            'slug'         => 'required|string|max:100|unique:email_templates,slug',
-            'category'     => 'required|in:transactional,promotional,notification,system',
-            'subject'      => 'required|string|max:500',
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:100|unique:email_templates,slug',
+            'category' => 'required|in:transactional,promotional,notification,system',
+            'subject' => 'required|string|max:500',
             'html_content' => 'required|string',
             'text_content' => 'nullable|string',
-            'variables'    => 'nullable|array',
-            'is_active'    => 'boolean',
-            'is_system'    => 'boolean',
-            'sort_order'   => 'integer|min:0',
-            'metadata'     => 'nullable|array',
+            'variables' => 'nullable|array',
+            'is_active' => 'boolean',
+            'is_system' => 'boolean',
+            'sort_order' => 'integer|min:0',
+            'metadata' => 'nullable|array',
         ];
 
         // Ajustes para atualização
-        if ( $isUpdate && isset( $data[ 'id' ] ) ) {
-            $rules[ 'slug' ] = 'required|string|max:100|unique:email_templates,slug,' . $data[ 'id' ];
+        if ($isUpdate && isset($data['id'])) {
+            $rules['slug'] = 'required|string|max:100|unique:email_templates,slug,'.$data['id'];
         }
 
-        $validator = Validator::make( $data, $rules );
+        $validator = Validator::make($data, $rules);
 
-        if ( $validator->fails() ) {
+        if ($validator->fails()) {
             $messages = $validator->errors()->all();
-            return $this->error( 'INVALID_DATA', implode( ', ', $messages ) );
+
+            return $this->error('INVALID_DATA', implode(', ', $messages));
         }
 
         // Validar variáveis utilizadas
-        if ( isset( $data[ 'html_content' ] ) ) {
-            $availableVariables = $this->variableProcessor->getAvailableVariables( $tenantId );
-            $allAvailable       = [];
-            foreach ( $availableVariables as $category ) {
-                $allAvailable = array_merge( $allAvailable, array_keys( $category ) );
+        if (isset($data['html_content'])) {
+            $availableVariables = $this->variableProcessor->getAvailableVariables($tenantId);
+            $allAvailable = [];
+            foreach ($availableVariables as $category) {
+                $allAvailable = array_merge($allAvailable, array_keys($category));
             }
 
-            $validation = $this->variableProcessor->validateVariables( $data[ 'html_content' ], $allAvailable );
+            $validation = $this->variableProcessor->validateVariables($data['html_content'], $allAvailable);
 
-            if ( !$validation[ 'valid' ] ) {
+            if (! $validation['valid']) {
                 return $this->error(
                     'INVALID_DATA',
-                    'Variáveis inválidas encontradas: ' . implode( ', ', $validation[ 'invalid' ] )
+                    'Variáveis inválidas encontradas: '.implode(', ', $validation['invalid'])
                 );
             }
         }
@@ -233,286 +236,286 @@ class EmailTemplateService
     /**
      * Cria template com validação completa.
      */
-    public function createTemplate( array $data, int $tenantId ): ServiceResult
+    public function createTemplate(array $data, int $tenantId): ServiceResult
     {
-        return DB::transaction( function () use ($data, $tenantId) {
+        return DB::transaction(function () use ($data, $tenantId) {
             try {
                 // Validação
-                $validation = $this->validateForTenant( $data, $tenantId );
-                if ( !$validation->isSuccess() ) {
+                $validation = $this->validateForTenant($data, $tenantId);
+                if (! $validation->isSuccess()) {
                     return $validation;
                 }
 
                 // Criar entidade
-                $template = $this->createEntity( $data, $tenantId );
+                $template = $this->createEntity($data, $tenantId);
 
-                if ( !$this->saveEntity( $template ) ) {
-                    return $this->error( 'ERROR', 'Falha ao salvar template.' );
+                if (! $this->saveEntity($template)) {
+                    return $this->error('ERROR', 'Falha ao salvar template.');
                 }
 
                 // Extrair variáveis utilizadas
-                $usedVariables = $this->variableProcessor->extractVariables( $template->html_content );
-                $template->update( [ 'variables' => $usedVariables ] );
+                $usedVariables = $this->variableProcessor->extractVariables($template->html_content);
+                $template->update(['variables' => $usedVariables]);
 
-                return $this->success( $template, 'Template criado com sucesso.' );
+                return $this->success($template, 'Template criado com sucesso.');
 
-            } catch ( Exception $e ) {
-                Log::error( 'Erro ao criar template de email', [
+            } catch (Exception $e) {
+                Log::error('Erro ao criar template de email', [
                     'tenant_id' => $tenantId,
-                    'data'      => $data,
-                    'error'     => $e->getMessage()
-                ] );
+                    'data' => $data,
+                    'error' => $e->getMessage(),
+                ]);
 
-                return $this->error( 'ERROR', 'Erro interno ao criar template: ' . $e->getMessage() );
+                return $this->error('ERROR', 'Erro interno ao criar template: '.$e->getMessage());
             }
-        } );
+        });
     }
 
     /**
      * Atualiza template com validação completa.
      */
-    public function updateTemplate( int $templateId, array $data, int $tenantId ): ServiceResult
+    public function updateTemplate(int $templateId, array $data, int $tenantId): ServiceResult
     {
-        return DB::transaction( function () use ($templateId, $data, $tenantId) {
+        return DB::transaction(function () use ($templateId, $data, $tenantId) {
             try {
-                $template = $this->findEntityByIdAndTenantId( $templateId, $tenantId );
+                $template = $this->findEntityByIdAndTenantId($templateId, $tenantId);
 
-                if ( !$template ) {
-                    return $this->error( 'NOT_FOUND', 'Template não encontrado.' );
+                if (! $template) {
+                    return $this->error('NOT_FOUND', 'Template não encontrado.');
                 }
 
-                if ( !$template->canBeEdited() ) {
-                    return $this->error( 'UNAUTHORIZED', 'Template não pode ser editado.' );
+                if (! $template->canBeEdited()) {
+                    return $this->error('UNAUTHORIZED', 'Template não pode ser editado.');
                 }
 
                 // Validação
-                $data[ 'id' ] = $templateId;
-                $validation   = $this->validateForTenant( $data, $tenantId, true );
-                if ( !$validation->isSuccess() ) {
+                $data['id'] = $templateId;
+                $validation = $this->validateForTenant($data, $tenantId, true);
+                if (! $validation->isSuccess()) {
                     return $validation;
                 }
 
                 // Atualizar entidade
-                $this->updateEntity( $template, $data, $tenantId );
+                $this->updateEntity($template, $data, $tenantId);
 
-                if ( !$this->saveEntity( $template ) ) {
-                    return $this->error( 'ERROR', 'Falha ao atualizar template.' );
+                if (! $this->saveEntity($template)) {
+                    return $this->error('ERROR', 'Falha ao atualizar template.');
                 }
 
                 // Atualizar variáveis utilizadas
-                $usedVariables = $this->variableProcessor->extractVariables( $template->html_content );
-                $template->update( [ 'variables' => $usedVariables ] );
+                $usedVariables = $this->variableProcessor->extractVariables($template->html_content);
+                $template->update(['variables' => $usedVariables]);
 
-                return $this->success( $template, 'Template atualizado com sucesso.' );
+                return $this->success($template, 'Template atualizado com sucesso.');
 
-            } catch ( Exception $e ) {
-                Log::error( 'Erro ao atualizar template de email', [
+            } catch (Exception $e) {
+                Log::error('Erro ao atualizar template de email', [
                     'template_id' => $templateId,
-                    'tenant_id'   => $tenantId,
-                    'error'       => $e->getMessage()
-                ] );
+                    'tenant_id' => $tenantId,
+                    'error' => $e->getMessage(),
+                ]);
 
-                return $this->error( 'ERROR', 'Erro interno ao atualizar template: ' . $e->getMessage() );
+                return $this->error('ERROR', 'Erro interno ao atualizar template: '.$e->getMessage());
             }
-        } );
+        });
     }
 
     /**
      * Duplica template existente.
      */
-    public function duplicateTemplate( int $templateId, int $tenantId ): ServiceResult
+    public function duplicateTemplate(int $templateId, int $tenantId): ServiceResult
     {
         try {
-            $originalTemplate = $this->findEntityByIdAndTenantId( $templateId, $tenantId );
+            $originalTemplate = $this->findEntityByIdAndTenantId($templateId, $tenantId);
 
-            if ( !$originalTemplate ) {
-                return $this->error( 'NOT_FOUND', 'Template original não encontrado.' );
+            if (! $originalTemplate) {
+                return $this->error('NOT_FOUND', 'Template original não encontrado.');
             }
 
-            $newTemplate            = $originalTemplate->replicate();
-            $newTemplate->name      = 'Cópia de ' . $originalTemplate->name;
-            $newTemplate->slug      = $originalTemplate->slug . '-copy-' . time();
+            $newTemplate = $originalTemplate->replicate();
+            $newTemplate->name = 'Cópia de '.$originalTemplate->name;
+            $newTemplate->slug = $originalTemplate->slug.'-copy-'.time();
             $newTemplate->is_system = false;
             $newTemplate->save();
 
-            return $this->success( $newTemplate, 'Template duplicado com sucesso.' );
+            return $this->success($newTemplate, 'Template duplicado com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao duplicar template', [
+        } catch (Exception $e) {
+            Log::error('Erro ao duplicar template', [
                 'template_id' => $templateId,
-                'tenant_id'   => $tenantId,
-                'error'       => $e->getMessage()
-            ] );
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
 
-            return $this->error( 'ERROR', 'Erro ao duplicar template: ' . $e->getMessage() );
+            return $this->error('ERROR', 'Erro ao duplicar template: '.$e->getMessage());
         }
     }
 
     /**
      * Processa template com dados variáveis.
      */
-    public function processTemplate( int $templateId, array $data, int $tenantId ): ServiceResult
+    public function processTemplate(int $templateId, array $data, int $tenantId): ServiceResult
     {
         try {
-            $template = $this->findEntityByIdAndTenantId( $templateId, $tenantId );
+            $template = $this->findEntityByIdAndTenantId($templateId, $tenantId);
 
-            if ( !$template ) {
-                return $this->error( 'NOT_FOUND', 'Template não encontrado.' );
+            if (! $template) {
+                return $this->error('NOT_FOUND', 'Template não encontrado.');
             }
 
             // Processar dados dinâmicos
-            $processedData = $this->variableProcessor->processDynamicData( $data, $tenantId );
+            $processedData = $this->variableProcessor->processDynamicData($data, $tenantId);
 
             // Processar conteúdo HTML
-            $processedHtml = $this->variableProcessor->processText( $template->html_content, $processedData );
+            $processedHtml = $this->variableProcessor->processText($template->html_content, $processedData);
 
             // Processar conteúdo texto se existir
             $processedText = $template->text_content
-                ? $this->variableProcessor->processText( $template->text_content, $processedData )
+                ? $this->variableProcessor->processText($template->text_content, $processedData)
                 : null;
 
             // Processar assunto
-            $processedSubject = $this->variableProcessor->processText( $template->subject, $processedData );
+            $processedSubject = $this->variableProcessor->processText($template->subject, $processedData);
 
-            return $this->success( [
-                'template'       => $template,
-                'subject'        => $processedSubject,
-                'html_content'   => $processedHtml,
-                'text_content'   => $processedText,
+            return $this->success([
+                'template' => $template,
+                'subject' => $processedSubject,
+                'html_content' => $processedHtml,
+                'text_content' => $processedText,
                 'variables_used' => $template->variables,
                 'processed_data' => $processedData,
-            ], 'Template processado com sucesso.' );
+            ], 'Template processado com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao processar template', [
+        } catch (Exception $e) {
+            Log::error('Erro ao processar template', [
                 'template_id' => $templateId,
-                'tenant_id'   => $tenantId,
-                'error'       => $e->getMessage()
-            ] );
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
 
-            return $this->error( 'ERROR', 'Erro ao processar template: ' . $e->getMessage() );
+            return $this->error('ERROR', 'Erro ao processar template: '.$e->getMessage());
         }
     }
 
     /**
      * Obtém preview do template.
      */
-    public function getTemplatePreview( int $templateId, array $data, int $tenantId ): ServiceResult
+    public function getTemplatePreview(int $templateId, array $data, int $tenantId): ServiceResult
     {
-        $processResult = $this->processTemplate( $templateId, $data, $tenantId );
+        $processResult = $this->processTemplate($templateId, $data, $tenantId);
 
-        if ( !$processResult->isSuccess() ) {
+        if (! $processResult->isSuccess()) {
             return $processResult;
         }
 
         $processed = $processResult->getData();
 
-        return $this->success( [
-            'id'           => $processed[ 'template' ]->id,
-            'name'         => $processed[ 'template' ]->name,
-            'subject'      => $processed[ 'subject' ],
-            'html_content' => $processed[ 'html_content' ],
-            'text_content' => $processed[ 'text_content' ],
-            'category'     => $processed[ 'template' ]->category,
-        ], 'Preview gerado com sucesso.' );
+        return $this->success([
+            'id' => $processed['template']->id,
+            'name' => $processed['template']->name,
+            'subject' => $processed['subject'],
+            'html_content' => $processed['html_content'],
+            'text_content' => $processed['text_content'],
+            'category' => $processed['template']->category,
+        ], 'Preview gerado com sucesso.');
     }
 
     /**
      * Obtém estatísticas do template.
      */
-    public function getTemplateStats( int $templateId, int $tenantId ): ServiceResult
+    public function getTemplateStats(int $templateId, int $tenantId): ServiceResult
     {
         try {
-            $template = $this->findEntityByIdAndTenantId( $templateId, $tenantId );
+            $template = $this->findEntityByIdAndTenantId($templateId, $tenantId);
 
-            if ( !$template ) {
-                return $this->error( 'NOT_FOUND', 'Template não encontrado.' );
+            if (! $template) {
+                return $this->error('NOT_FOUND', 'Template não encontrado.');
             }
 
-            $stats = $this->trackingService->getTemplateStats( $templateId, $tenantId );
+            $stats = $this->trackingService->getTemplateStats($templateId, $tenantId);
 
-            return $this->success( [
-                'template'      => $template,
-                'stats'         => $stats,
+            return $this->success([
+                'template' => $template,
+                'stats' => $stats,
                 'usage_summary' => $template->getUsageStats(),
-            ], 'Estatísticas obtidas com sucesso.' );
+            ], 'Estatísticas obtidas com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao obter estatísticas do template', [
+        } catch (Exception $e) {
+            Log::error('Erro ao obter estatísticas do template', [
                 'template_id' => $templateId,
-                'tenant_id'   => $tenantId,
-                'error'       => $e->getMessage()
-            ] );
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
 
-            return $this->error( 'ERROR', 'Erro ao obter estatísticas: ' . $e->getMessage() );
+            return $this->error('ERROR', 'Erro ao obter estatísticas: '.$e->getMessage());
         }
     }
 
     /**
      * Lista templates com filtros avançados.
      */
-    public function listTemplatesWithFilters( int $tenantId, array $filters = [] ): ServiceResult
+    public function listTemplatesWithFilters(int $tenantId, array $filters = []): ServiceResult
     {
         try {
-            $templates = $this->listEntitiesByTenantId( $tenantId, $filters );
+            $templates = $this->listEntitiesByTenantId($tenantId, $filters);
 
             // Adicionar estatísticas básicas para cada template
-            foreach ( $templates as &$template ) {
-                $templateModel = EmailTemplate::find( $template[ 'id' ] );
-                if ( $templateModel ) {
-                    $template[ 'stats' ] = $templateModel->getUsageStats();
+            foreach ($templates as &$template) {
+                $templateModel = EmailTemplate::find($template['id']);
+                if ($templateModel) {
+                    $template['stats'] = $templateModel->getUsageStats();
                 }
             }
 
-            return $this->success( $templates, 'Templates listados com sucesso.' );
+            return $this->success($templates, 'Templates listados com sucesso.');
 
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao listar templates', [
+        } catch (Exception $e) {
+            Log::error('Erro ao listar templates', [
                 'tenant_id' => $tenantId,
-                'filters'   => $filters,
-                'error'     => $e->getMessage()
-            ] );
+                'filters' => $filters,
+                'error' => $e->getMessage(),
+            ]);
 
-            return $this->error( 'ERROR', 'Erro ao listar templates: ' . $e->getMessage() );
+            return $this->error('ERROR', 'Erro ao listar templates: '.$e->getMessage());
         }
     }
 
     /**
      * Cria templates predefinidos para o tenant.
      */
-    public function createDefaultTemplates( int $tenantId ): ServiceResult
+    public function createDefaultTemplates(int $tenantId): ServiceResult
     {
-        return DB::transaction( function () use ($tenantId) {
+        return DB::transaction(function () use ($tenantId) {
             try {
                 $defaultTemplates = $this->getDefaultTemplateDefinitions();
 
                 $createdCount = 0;
-                foreach ( $defaultTemplates as $templateData ) {
-                    $templateData[ 'tenant_id' ] = $tenantId;
-                    $templateData[ 'is_system' ] = true;
+                foreach ($defaultTemplates as $templateData) {
+                    $templateData['tenant_id'] = $tenantId;
+                    $templateData['is_system'] = true;
 
-                    $template = new EmailTemplate();
-                    $template->fill( $templateData );
+                    $template = new EmailTemplate;
+                    $template->fill($templateData);
 
-                    if ( $template->save() ) {
+                    if ($template->save()) {
                         $createdCount++;
                     }
                 }
 
                 return $this->success(
-                    [ 'created_count' => $createdCount ],
+                    ['created_count' => $createdCount],
                     "{$createdCount} templates padrão criados com sucesso.",
                 );
 
-            } catch ( Exception $e ) {
-                Log::error( 'Erro ao criar templates padrão', [
+            } catch (Exception $e) {
+                Log::error('Erro ao criar templates padrão', [
                     'tenant_id' => $tenantId,
-                    'error'     => $e->getMessage()
-                ] );
+                    'error' => $e->getMessage(),
+                ]);
 
-                return $this->error( 'ERROR', 'Erro ao criar templates padrão: ' . $e->getMessage() );
+                return $this->error('ERROR', 'Erro ao criar templates padrão: '.$e->getMessage());
             }
-        } );
+        });
     }
 
     /**
@@ -522,84 +525,84 @@ class EmailTemplateService
     {
         return [
             [
-                'name'         => 'Confirmação de Orçamento',
-                'slug'         => 'budget-confirmation',
-                'category'     => 'transactional',
-                'subject'      => 'Confirmação de Orçamento #{{budget_number}}',
+                'name' => 'Confirmação de Orçamento',
+                'slug' => 'budget-confirmation',
+                'category' => 'transactional',
+                'subject' => 'Confirmação de Orçamento #{{budget_number}}',
                 'html_content' => $this->getBudgetConfirmationTemplate(),
                 'text_content' => $this->getBudgetConfirmationTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 1,
+                'is_active' => true,
+                'sort_order' => 1,
             ],
             [
-                'name'         => 'Aprovação de Orçamento',
-                'slug'         => 'budget-approved',
-                'category'     => 'notification',
-                'subject'      => 'Orçamento #{{budget_number}} Aprovado',
+                'name' => 'Aprovação de Orçamento',
+                'slug' => 'budget-approved',
+                'category' => 'notification',
+                'subject' => 'Orçamento #{{budget_number}} Aprovado',
                 'html_content' => $this->getBudgetApprovedTemplate(),
                 'text_content' => $this->getBudgetApprovedTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 2,
+                'is_active' => true,
+                'sort_order' => 2,
             ],
             [
-                'name'         => 'Rejeição de Orçamento',
-                'slug'         => 'budget-rejected',
-                'category'     => 'notification',
-                'subject'      => 'Orçamento #{{budget_number}} Rejeitado',
+                'name' => 'Rejeição de Orçamento',
+                'slug' => 'budget-rejected',
+                'category' => 'notification',
+                'subject' => 'Orçamento #{{budget_number}} Rejeitado',
                 'html_content' => $this->getBudgetRejectedTemplate(),
                 'text_content' => $this->getBudgetRejectedTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 3,
+                'is_active' => true,
+                'sort_order' => 3,
             ],
             [
-                'name'         => 'Fatura Gerada',
-                'slug'         => 'invoice-generated',
-                'category'     => 'transactional',
-                'subject'      => 'Fatura #{{invoice_number}} Gerada',
+                'name' => 'Fatura Gerada',
+                'slug' => 'invoice-generated',
+                'category' => 'transactional',
+                'subject' => 'Fatura #{{invoice_number}} Gerada',
                 'html_content' => $this->getInvoiceGeneratedTemplate(),
                 'text_content' => $this->getInvoiceGeneratedTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 4,
+                'is_active' => true,
+                'sort_order' => 4,
             ],
             [
-                'name'         => 'Pagamento Confirmado',
-                'slug'         => 'payment-confirmed',
-                'category'     => 'notification',
-                'subject'      => 'Pagamento da Fatura #{{invoice_number}} Confirmado',
+                'name' => 'Pagamento Confirmado',
+                'slug' => 'payment-confirmed',
+                'category' => 'notification',
+                'subject' => 'Pagamento da Fatura #{{invoice_number}} Confirmado',
                 'html_content' => $this->getPaymentConfirmedTemplate(),
                 'text_content' => $this->getPaymentConfirmedTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 5,
+                'is_active' => true,
+                'sort_order' => 5,
             ],
             [
-                'name'         => 'Lembrete de Vencimento',
-                'slug'         => 'payment-due-reminder',
-                'category'     => 'notification',
-                'subject'      => 'Lembrete: Fatura #{{invoice_number}} Vence em {{invoice_due_date}}',
+                'name' => 'Lembrete de Vencimento',
+                'slug' => 'payment-due-reminder',
+                'category' => 'notification',
+                'subject' => 'Lembrete: Fatura #{{invoice_number}} Vence em {{invoice_due_date}}',
                 'html_content' => $this->getPaymentDueReminderTemplate(),
                 'text_content' => $this->getPaymentDueReminderTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 6,
+                'is_active' => true,
+                'sort_order' => 6,
             ],
             [
-                'name'         => 'Boas-vindas',
-                'slug'         => 'welcome',
-                'category'     => 'promotional',
-                'subject'      => 'Bem-vindo à {{company_name}}!',
+                'name' => 'Boas-vindas',
+                'slug' => 'welcome',
+                'category' => 'promotional',
+                'subject' => 'Bem-vindo à {{company_name}}!',
                 'html_content' => $this->getWelcomeTemplate(),
                 'text_content' => $this->getWelcomeTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 7,
+                'is_active' => true,
+                'sort_order' => 7,
             ],
             [
-                'name'         => 'Recuperação de Senha',
-                'slug'         => 'password-reset',
-                'category'     => 'system',
-                'subject'      => 'Recuperação de Senha - {{company_name}}',
+                'name' => 'Recuperação de Senha',
+                'slug' => 'password-reset',
+                'category' => 'system',
+                'subject' => 'Recuperação de Senha - {{company_name}}',
                 'html_content' => $this->getPasswordResetTemplate(),
                 'text_content' => $this->getPasswordResetTextTemplate(),
-                'is_active'    => true,
-                'sort_order'   => 8,
+                'is_active' => true,
+                'sort_order' => 8,
             ],
         ];
     }
@@ -825,4 +828,21 @@ class EmailTemplateService
         return "Olá {{user_name}},\n\nVocê solicitou a recuperação de senha.\n\nUse o link abaixo para criar uma nova senha:\n{{reset_link}}\n\nEste link expira em 24 horas.\n\nEquipe {{company_name}}";
     }
 
+    /**
+     * Retorna um ServiceResult de sucesso.
+     *
+     * @param  mixed  $data
+     */
+    private function success($data = null, string $message = 'Operação realizada com sucesso'): ServiceResult
+    {
+        return ServiceResult::success($data, $message);
+    }
+
+    /**
+     * Retorna um ServiceResult de erro.
+     */
+    private function error(string $message, array $context = []): ServiceResult
+    {
+        return ServiceResult::error(OperationStatus::ERROR, $message, $context);
+    }
 }

@@ -3,42 +3,30 @@
 @section('title', 'Detalhes do Compartilhamento')
 
 @section('content')
-<div class="container-fluid py-1">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            <i class="bi bi-share me-2"></i>
-            Detalhes do Compartilhamento
-        </h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.index') }}">Orçamentos</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.budgets.shares.index') }}">Compartilhamentos</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
-            </ol>
-        </nav>
-    </div>
+<div class="container-fluid py-4">
+    <x-layout.page-header
+        title="Detalhes do Compartilhamento"
+        icon="share"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => route('provider.budgets.index'),
+            'Compartilhamentos' => route('provider.budgets.shares.index'),
+            'Detalhes' => '#'
+        ]">
+        <div class="d-flex gap-2">
+            <x-ui.button :href="route('provider.budgets.shares.edit', $share->id)" variant="primary" icon="pencil" label="Editar" />
+            <x-ui.button type="button" variant="danger" outline icon="trash" label="Revogar" onclick="confirmRevoke({{ $share->id }})" />
+            <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </div>
+    </x-layout.page-header>
 
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header">
                     <h4 class="card-title mb-0">
                         <i class="bi bi-share me-2"></i>Informações do Compartilhamento
                     </h4>
-                    <div class="d-flex gap-2">
-                        <a href="{{ route('provider.budgets.shares.edit', $share->id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-pencil me-1"></i>Editar
-                        </a>
-                        <button type="button" class="btn btn-sm btn-outline-danger" 
-                                onclick="confirmRevoke({{ $share->id }})">
-                            <i class="bi bi-trash me-1"></i>Revogar
-                        </button>
-                        <a href="{{ route('provider.budgets.shares.index') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>Voltar
-                        </a>
-                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -122,12 +110,12 @@
 
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Status do Orçamento</label>
-                                <p class="form-control-plaintext">
-                                    <span class="badge bg-{{ $share->budget->status === 'approved' ? 'success' : 
-                                                           ($share->budget->status === 'pending' ? 'warning' : 'secondary') }}">
-                                        {{ ucfirst($share->budget->status) }}
-                                    </span>
-                                </p>
+                                <div class="d-flex flex-column">
+                                    <div class="mb-1">
+                                        <x-ui.status-badge :item="$share->budget" statusField="status" />
+                                    </div>
+                                    <x-ui.status-description :item="$share->budget" statusField="status" />
+                                </div>
                             </div>
                         </div>
                     </div>

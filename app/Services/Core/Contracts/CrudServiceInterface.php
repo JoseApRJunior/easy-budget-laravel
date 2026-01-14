@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Core\Contracts;
@@ -11,11 +12,7 @@ use App\Support\ServiceResult;
  * Contrato fundamental que agrega as especializações Read, Write, Batch e SoftDelete.
  * Seguindo o Princípio da Segregação de Interfaces (ISP), este contrato é agora uma composição.
  */
-interface CrudServiceInterface extends
-    ReadServiceInterface,
-    WriteServiceInterface,
-    BatchServiceInterface,
-    SoftDeleteServiceInterface
+interface CrudServiceInterface extends BatchServiceInterface, ReadServiceInterface, SoftDeleteServiceInterface, WriteServiceInterface
 {
     /**
      * Verifica se um recurso existe baseado nos critérios.

@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Modelo para configurações gerais do sistema
@@ -97,34 +98,34 @@ class SystemSettings extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'tenant_id'                   => 'integer',
-        'maintenance_mode'            => 'boolean',
-        'registration_enabled'        => 'boolean',
+        'tenant_id' => 'integer',
+        'maintenance_mode' => 'boolean',
+        'registration_enabled' => 'boolean',
         'email_verification_required' => 'boolean',
-        'session_lifetime'            => 'integer',
-        'max_login_attempts'          => 'integer',
-        'lockout_duration'            => 'integer',
-        'allowed_file_types'          => 'array',
-        'max_file_size'               => 'integer',
-        'system_preferences'          => 'array',
-        'created_at'                  => 'immutable_datetime',
-        'updated_at'                  => 'datetime',
+        'session_lifetime' => 'integer',
+        'max_login_attempts' => 'integer',
+        'lockout_duration' => 'integer',
+        'allowed_file_types' => 'array',
+        'max_file_size' => 'integer',
+        'system_preferences' => 'array',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
      * Default values for attributes.
      */
     protected $attributes = [
-        'currency'                    => 'BRL',
-        'timezone'                    => 'America/Sao_Paulo',
-        'language'                    => 'pt-BR',
-        'maintenance_mode'            => false,
-        'registration_enabled'        => true,
+        'currency' => 'BRL',
+        'timezone' => 'America/Sao_Paulo',
+        'language' => 'pt-BR',
+        'maintenance_mode' => false,
+        'registration_enabled' => true,
         'email_verification_required' => true,
-        'session_lifetime'            => 120, // minutos
-        'max_login_attempts'          => 5,
-        'lockout_duration'            => 15, // minutos
-        'max_file_size'               => 2048, // KB
+        'session_lifetime' => 120, // minutos
+        'max_login_attempts' => 5,
+        'lockout_duration' => 15, // minutos
+        'max_file_size' => 2048, // KB
     ];
 
     /**
@@ -133,33 +134,33 @@ class SystemSettings extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'                   => 'required|integer|exists:tenants,id',
-            'company_name'                => 'required|string|max:255',
-            'contact_email'               => 'required|email:rfc,dns|max:255',
-            'phone'                       => 'nullable|string|max:20',
-            'website'                     => 'nullable|url|max:255',
-            'logo'                        => 'nullable|string|max:255',
-            'currency'                    => 'required|in:BRL,USD,EUR',
-            'timezone'                    => 'required|timezone',
-            'language'                    => 'required|in:pt-BR,en-US,es-ES',
-            'address_street'              => 'nullable|string|max:255',
-            'address_number'              => 'nullable|string|max:20',
-            'address_complement'          => 'nullable|string|max:100',
-            'address_neighborhood'        => 'nullable|string|max:100',
-            'address_city'                => 'nullable|string|max:100',
-            'address_state'               => 'nullable|string|max:50',
-            'address_zip_code'            => 'nullable|string|max:10',
-            'address_country'             => 'nullable|string|max:50',
-            'maintenance_mode'            => 'boolean',
-            'maintenance_message'         => 'nullable|string|max:500',
-            'registration_enabled'        => 'boolean',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'company_name' => 'required|string|max:255',
+            'contact_email' => 'required|email:rfc,dns|max:255',
+            'phone' => 'nullable|string|max:20',
+            'website' => 'nullable|url|max:255',
+            'logo' => 'nullable|string|max:255',
+            'currency' => 'required|in:BRL,USD,EUR',
+            'timezone' => 'required|timezone',
+            'language' => 'required|in:pt-BR,en-US,es-ES',
+            'address_street' => 'nullable|string|max:255',
+            'address_number' => 'nullable|string|max:20',
+            'address_complement' => 'nullable|string|max:100',
+            'address_neighborhood' => 'nullable|string|max:100',
+            'address_city' => 'nullable|string|max:100',
+            'address_state' => 'nullable|string|max:50',
+            'address_zip_code' => 'nullable|string|max:10',
+            'address_country' => 'nullable|string|max:50',
+            'maintenance_mode' => 'boolean',
+            'maintenance_message' => 'nullable|string|max:500',
+            'registration_enabled' => 'boolean',
             'email_verification_required' => 'boolean',
-            'session_lifetime'            => 'required|integer|min:5|max:10080', // 5 min a 1 semana
-            'max_login_attempts'          => 'required|integer|min:3|max:10',
-            'lockout_duration'            => 'required|integer|min:1|max:60',
-            'allowed_file_types'          => 'nullable|array',
-            'max_file_size'               => 'required|integer|min:1|max:10240', // Máximo 10MB
-            'system_preferences'          => 'nullable|array',
+            'session_lifetime' => 'required|integer|min:5|max:10080', // 5 min a 1 semana
+            'max_login_attempts' => 'required|integer|min:3|max:10',
+            'lockout_duration' => 'required|integer|min:1|max:60',
+            'allowed_file_types' => 'nullable|array',
+            'max_file_size' => 'required|integer|min:1|max:10240', // Máximo 10MB
+            'system_preferences' => 'nullable|array',
         ];
     }
 
@@ -168,7 +169,7 @@ class SystemSettings extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -176,17 +177,17 @@ class SystemSettings extends Model
      */
     public function getLogoUrlAttribute(): ?string
     {
-        if ( !$this->logo ) {
+        if (! $this->logo) {
             return null;
         }
 
         // Se for URL externa, retorna como está
-        if ( filter_var( $this->logo, FILTER_VALIDATE_URL ) ) {
+        if (filter_var($this->logo, FILTER_VALIDATE_URL)) {
             return $this->logo;
         }
 
         // Caso contrário, assume que é caminho do storage
-        return asset( 'storage/' . $this->logo );
+        return asset('storage/'.$this->logo);
     }
 
     /**
@@ -194,18 +195,18 @@ class SystemSettings extends Model
      */
     public function getFormattedPhoneAttribute(): ?string
     {
-        if ( !$this->phone ) {
+        if (! $this->phone) {
             return null;
         }
 
         // Remove todos os caracteres não numéricos
-        $phone = preg_replace( '/\D/', '', $this->phone );
+        $phone = preg_replace('/\D/', '', $this->phone);
 
         // Formatação para telefone brasileiro
-        if ( strlen( $phone ) === 11 ) {
-            return '(' . substr( $phone, 0, 2 ) . ') ' . substr( $phone, 2, 5 ) . '-' . substr( $phone, 7 );
-        } elseif ( strlen( $phone ) === 10 ) {
-            return '(' . substr( $phone, 0, 2 ) . ') ' . substr( $phone, 2, 4 ) . '-' . substr( $phone, 6 );
+        if (strlen($phone) === 11) {
+            return '('.substr($phone, 0, 2).') '.substr($phone, 2, 5).'-'.substr($phone, 7);
+        } elseif (strlen($phone) === 10) {
+            return '('.substr($phone, 0, 2).') '.substr($phone, 2, 4).'-'.substr($phone, 6);
         }
 
         return $this->phone;
@@ -216,7 +217,7 @@ class SystemSettings extends Model
      */
     public function getFullAddressAttribute(): string
     {
-        $parts = array_filter( [
+        $parts = array_filter([
             $this->address_street,
             $this->address_number,
             $this->address_complement,
@@ -225,9 +226,9 @@ class SystemSettings extends Model
             $this->address_state,
             $this->address_zip_code,
             $this->address_country,
-        ] );
+        ]);
 
-        return implode( ', ', $parts );
+        return implode(', ', $parts);
     }
 
     /**
@@ -235,10 +236,10 @@ class SystemSettings extends Model
      */
     public function getCurrencySymbolAttribute(): string
     {
-        return match ( $this->currency ) {
-            'BRL'   => 'R$',
-            'USD'   => '$',
-            'EUR'   => '€',
+        return match ($this->currency) {
+            'BRL' => 'R$',
+            'USD' => '$',
+            'EUR' => '€',
             default => $this->currency,
         };
     }
@@ -248,7 +249,7 @@ class SystemSettings extends Model
      */
     public function getLanguageNameAttribute(): string
     {
-        return match ( $this->language ) {
+        return match ($this->language) {
             'pt-BR' => 'Português (Brasil)',
             'en-US' => 'English (US)',
             'es-ES' => 'Español',
@@ -263,21 +264,21 @@ class SystemSettings extends Model
     {
         $timezoneNames = [
             'America/Sao_Paulo' => 'São Paulo (UTC-3)',
-            'America/New_York'  => 'Nova York (UTC-5)',
-            'Europe/London'     => 'Londres (UTC+0)',
-            'Europe/Paris'      => 'Paris (UTC+1)',
-            'Asia/Tokyo'        => 'Tóquio (UTC+9)',
+            'America/New_York' => 'Nova York (UTC-5)',
+            'Europe/London' => 'Londres (UTC+0)',
+            'Europe/Paris' => 'Paris (UTC+1)',
+            'Asia/Tokyo' => 'Tóquio (UTC+9)',
         ];
 
-        return $timezoneNames[ $this->timezone ] ?? $this->timezone;
+        return $timezoneNames[$this->timezone] ?? $this->timezone;
     }
 
     /**
      * Check if file type is allowed.
      */
-    public function isFileTypeAllowed( string $mimeType ): bool
+    public function isFileTypeAllowed(string $mimeType): bool
     {
-        if ( !$this->allowed_file_types ) {
+        if (! $this->allowed_file_types) {
             // Se não especificado, permite tipos comuns
             $defaultTypes = [
                 'image/jpeg',
@@ -290,16 +291,16 @@ class SystemSettings extends Model
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             ];
 
-            return in_array( $mimeType, $defaultTypes );
+            return in_array($mimeType, $defaultTypes);
         }
 
-        return in_array( $mimeType, $this->allowed_file_types );
+        return in_array($mimeType, $this->allowed_file_types);
     }
 
     /**
      * Check if file size is within limits.
      */
-    public function isFileSizeAllowed( int $fileSizeInKB ): bool
+    public function isFileSizeAllowed(int $fileSizeInKB): bool
     {
         return $fileSizeInKB <= $this->max_file_size;
     }
@@ -309,18 +310,18 @@ class SystemSettings extends Model
      */
     public function getFormattedSessionLifetimeAttribute(): string
     {
-        if ( $this->session_lifetime < 60 ) {
-            return $this->session_lifetime . ' minutos';
+        if ($this->session_lifetime < 60) {
+            return $this->session_lifetime.' minutos';
         }
 
-        $hours   = intdiv( $this->session_lifetime, 60 );
+        $hours = intdiv($this->session_lifetime, 60);
         $minutes = $this->session_lifetime % 60;
 
-        if ( $minutes === 0 ) {
-            return $hours . ' hora' . ( $hours > 1 ? 's' : '' );
+        if ($minutes === 0) {
+            return $hours.' hora'.($hours > 1 ? 's' : '');
         }
 
-        return $hours . 'h ' . $minutes . 'min';
+        return $hours.'h '.$minutes.'min';
     }
 
     /**
@@ -330,16 +331,16 @@ class SystemSettings extends Model
     {
         return [
             'email_verification_required' => $this->email_verification_required,
-            'session_lifetime'            => $this->session_lifetime,
-            'max_login_attempts'          => $this->max_login_attempts,
-            'lockout_duration'            => $this->lockout_duration,
+            'session_lifetime' => $this->session_lifetime,
+            'max_login_attempts' => $this->max_login_attempts,
+            'lockout_duration' => $this->lockout_duration,
         ];
     }
 
     /**
      * Update security settings.
      */
-    public function updateSecuritySettings( array $settings ): bool
+    public function updateSecuritySettings(array $settings): bool
     {
         $allowedKeys = [
             'email_verification_required',
@@ -348,9 +349,9 @@ class SystemSettings extends Model
             'lockout_duration',
         ];
 
-        $updateData = array_intersect_key( $settings, array_flip( $allowedKeys ) );
+        $updateData = array_intersect_key($settings, array_flip($allowedKeys));
 
-        return $this->update( $updateData );
+        return $this->update($updateData);
     }
 
     /**
@@ -371,5 +372,4 @@ class SystemSettings extends Model
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ];
     }
-
 }

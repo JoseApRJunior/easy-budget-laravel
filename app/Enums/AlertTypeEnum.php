@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum AlertTypeEnum: string
+enum AlertTypeEnum: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case PERFORMANCE = 'performance';
     case SECURITY = 'security';
     case AVAILABILITY = 'availability';
@@ -25,7 +27,7 @@ enum AlertTypeEnum: string
         };
     }
 
-    public function description(): string
+    public function getDescription(): string
     {
         return match ($this) {
             self::PERFORMANCE => 'Alertas relacionados à performance do sistema',
@@ -40,6 +42,18 @@ enum AlertTypeEnum: string
     public function color(): string
     {
         return match ($this) {
+            self::PERFORMANCE => 'warning',
+            self::SECURITY => 'danger',
+            self::AVAILABILITY => 'info',
+            self::RESOURCE => 'success',
+            self::BUSINESS => 'primary',
+            self::SYSTEM => 'secondary',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
             self::PERFORMANCE => '#f59e0b',
             self::SECURITY => '#ef4444',
             self::AVAILABILITY => '#3b82f6',
@@ -52,12 +66,42 @@ enum AlertTypeEnum: string
     public function icon(): string
     {
         return match ($this) {
-            self::PERFORMANCE => 'bi-speedometer2',
-            self::SECURITY => 'bi-shield-exclamation',
-            self::AVAILABILITY => 'bi-wifi',
-            self::RESOURCE => 'bi-server',
-            self::BUSINESS => 'bi-graph-up',
-            self::SYSTEM => 'bi-gear',
+            self::PERFORMANCE => 'speedometer2',
+            self::SECURITY => 'shield-exclamation',
+            self::AVAILABILITY => 'wifi',
+            self::RESOURCE => 'server',
+            self::BUSINESS => 'graph-up',
+            self::SYSTEM => 'gear',
         };
+    }
+
+    public function getIcon(): string
+    {
+        return 'bi-'.$this->icon();
+    }
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function isFinished(): bool
+    {
+        return false;
+    }
+
+    public function getMetadata(): array
+    {
+        return [
+            'value' => $this->value,
+            'label' => $this->label(),
+            'description' => $this->getDescription(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
+        ];
     }
 }

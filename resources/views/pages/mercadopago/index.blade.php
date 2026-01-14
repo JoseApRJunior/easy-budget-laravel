@@ -1,20 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-credit-card-2-front-fill me-2"></i>Integração com Mercado Pago
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url('/settings') }}">Configurações</a></li>
-                    <li class="breadcrumb-item active">Integração Mercado Pago</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Integração Mercado Pago"
+            icon="credit-card-2-front-fill"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Configurações' => url('/settings'),
+                'Mercado Pago' => '#'
+            ]">
+            <x-ui.button :href="url('/settings')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-light border-0">

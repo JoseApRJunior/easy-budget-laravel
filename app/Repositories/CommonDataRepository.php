@@ -4,97 +4,93 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Interfaces\RepositoryInterface;
+use App\DTOs\Common\CommonDataDTO;
 use App\Models\CommonData;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class CommonDataRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
     protected function makeModel(): Model
     {
-        return new CommonData();
+        return new CommonData;
+    }
+
+    /**
+     * Cria dados comuns a partir de um DTO.
+     */
+    public function createFromDTO(CommonDataDTO $dto): CommonData
+    {
+        return $this->model->newQuery()->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza dados comuns a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, CommonDataDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**
      * Cria dados comuns para cliente.
      */
-    public function createForCustomer( array $data, int $tenantId, int $customerId ): Model
+    public function createForCustomer(array $data, int $customerId): Model
     {
-        return $this->create( [
-            'tenant_id'           => $tenantId,
-            'customer_id'         => $customerId,
-            'type'                => $data[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL,
-            'first_name'          => $data[ 'first_name' ] ?? null,
-            'last_name'           => $data[ 'last_name' ] ?? null,
-            'cpf'                 => $data[ 'cpf' ] ?? null,
-            'birth_date'          => $data[ 'birth_date' ] ?? null,
-            'company_name'        => $data[ 'company_name' ] ?? null,
-            'cnpj'                => $data[ 'cnpj' ] ?? null,
-            'description'         => $data[ 'description' ] ?? null,
-            'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-            'profession_id'       => $data[ 'profession_id' ] ?? null,
-        ] );
+        $data['customer_id'] = $customerId;
+
+        return $this->createFromDTO(CommonDataDTO::fromRequest($data));
     }
 
     /**
      * Deleta por ID do cliente.
      */
-    public function deleteByCustomerId( int $customerId, int $tenantId ): bool
+    public function deleteByCustomerId(int $customerId): bool
     {
-        return $this->model->where( 'customer_id', $customerId )
-            ->where( 'tenant_id', $tenantId )
-            ->delete() > 0;
+        return $this->model->newQuery()->where('customer_id', $customerId)->delete() > 0;
     }
 
     /**
      * Cria dados comuns para provider.
      */
-    public function createForProvider( array $data, int $tenantId, int $providerId ): Model
+    public function createForProvider(array $data, int $providerId): Model
     {
-        return $this->create( [
-            'tenant_id'           => $tenantId,
-            'provider_id'         => $providerId,
-            'type'                => $data[ 'type' ] ?? CommonData::TYPE_INDIVIDUAL,
-            'first_name'          => $data[ 'first_name' ] ?? null,
-            'last_name'           => $data[ 'last_name' ] ?? null,
-            'cpf'                 => $data[ 'cpf' ] ?? null,
-            'birth_date'          => $data[ 'birth_date' ] ?? null,
-            'company_name'        => $data[ 'company_name' ] ?? null,
-            'cnpj'                => $data[ 'cnpj' ] ?? null,
-            'description'         => $data[ 'description' ] ?? null,
-            'area_of_activity_id' => $data[ 'area_of_activity_id' ] ?? null,
-            'profession_id'       => $data[ 'profession_id' ] ?? null,
-        ] );
+        $data['provider_id'] = $providerId;
+
+        return $this->createFromDTO(CommonDataDTO::fromRequest($data));
     }
 
     /**
      * Atualiza dados comuns para provider.
      */
-    public function updateForProvider( array $data, int $tenantId, int $providerId ): bool
+    public function updateForProvider(array $data, int $providerId): bool
     {
-        $commonData = $this->model->where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
+        $commonData = $this->model->newQuery()
+            ->where('provider_id', $providerId)
             ->first();
-        
-        if ( !$commonData ) {
+
+        if (! $commonData) {
             return false;
         }
-        
-        return $commonData->update( $data );
+
+        $data['provider_id'] = $providerId;
+
+        return $this->updateFromDTO($commonData->id, CommonDataDTO::fromRequest($data));
     }
 
     /**
      * Deleta por ID do provider.
      */
-    public function deleteByProviderId( int $providerId, int $tenantId ): bool
+    public function deleteByProviderId(int $providerId): bool
     {
-        return $this->model->where( 'provider_id', $providerId )
-            ->where( 'tenant_id', $tenantId )
+        return $this->model->newQuery()
+            ->where('provider_id', $providerId)
             ->delete() > 0;
     }
-
 }

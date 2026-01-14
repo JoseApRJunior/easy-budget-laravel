@@ -21,7 +21,7 @@
                                     @endif
                                 </div>
 
-                                @if( $integration[ 'last_sync' ] )
+                                @if( !empty($integration[ 'last_sync' ]) )
                                     <p class="text-muted small mb-3">
                                         Última sincronização:
                                         {{ \Carbon\Carbon::parse( $integration[ 'last_sync' ] )->diffForHumans() }}

@@ -44,6 +44,7 @@ class ProductInventory extends Model
         'tenant_id',
         'product_id',
         'quantity',
+        'reserved_quantity',
         'min_quantity',
         'max_quantity',
     ];
@@ -54,7 +55,8 @@ class ProductInventory extends Model
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'quantity'     => 0,
+        'quantity' => 0,
+        'reserved_quantity' => 0,
         'min_quantity' => 0,
         'max_quantity' => null,
     ];
@@ -65,14 +67,39 @@ class ProductInventory extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'    => 'integer',
-        'product_id'   => 'integer',
-        'quantity'     => 'integer',
+        'tenant_id' => 'integer',
+        'product_id' => 'integer',
+        'quantity' => 'integer',
+        'reserved_quantity' => 'integer',
         'min_quantity' => 'integer',
         'max_quantity' => 'integer',
-        'created_at'   => 'immutable_datetime',
-        'updated_at'   => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get available quantity (physical quantity - reserved quantity).
+     */
+    public function getAvailableQuantityAttribute(): int
+    {
+        return max(0, $this->quantity - $this->reserved_quantity);
+    }
+
+    /**
+     * Check if the product has low stock.
+     */
+    public function isLowStock(): bool
+    {
+        return $this->available_quantity <= $this->min_quantity;
+    }
+
+    /**
+     * Check if the product has high stock.
+     */
+    public function isHighStock(): bool
+    {
+        return $this->max_quantity > 0 && $this->quantity >= $this->max_quantity;
+    }
 
     /**
      * Regras de validação para o modelo ProductInventory.
@@ -82,9 +109,9 @@ class ProductInventory extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'    => 'required|exists:tenants,id',
-            'product_id'   => 'required|exists:products,id',
-            'quantity'     => 'required|integer|min:0',
+            'tenant_id' => 'required|exists:tenants,id',
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|integer|min:0',
             'min_quantity' => 'nullable|integer|min:0',
             'max_quantity' => 'nullable|integer|min:1',
         ];
@@ -95,7 +122,7 @@ class ProductInventory extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -103,7 +130,7 @@ class ProductInventory extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo( Product::class);
+        return $this->belongsTo(Product::class);
     }
 
     // ==================== SCOPES ÚTEIS ====================
@@ -115,9 +142,9 @@ class ProductInventory extends Model
      * @param  int  $productId
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeByProduct( $query, $productId )
+    public function scopeByProduct($query, $productId)
     {
-        return $query->where( 'product_id', $productId );
+        return $query->where('product_id', $productId);
     }
 
     /**
@@ -127,9 +154,9 @@ class ProductInventory extends Model
      * @param  int  $tenantId
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeByTenant( $query, $tenantId )
+    public function scopeByTenant($query, $tenantId)
     {
-        return $query->where( 'tenant_id', $tenantId );
+        return $query->where('tenant_id', $tenantId);
     }
 
     /**
@@ -138,9 +165,9 @@ class ProductInventory extends Model
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeLowStock( $query )
+    public function scopeLowStock($query)
     {
-        return $query->whereRaw( 'quantity <= min_quantity' );
+        return $query->whereRaw('(quantity - reserved_quantity) <= min_quantity');
     }
 
     /**
@@ -149,55 +176,31 @@ class ProductInventory extends Model
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeHighStock( $query )
+    public function scopeHighStock($query)
     {
-        return $query->whereRaw( 'quantity >= max_quantity' );
+        return $query->whereRaw('quantity >= max_quantity');
     }
 
     // ==================== MÉTODOS DE NEGÓCIO ====================
 
     /**
-     * Verifica se o produto está com estoque baixo.
-     *
-     * @return bool
-     */
-    public function isLowStock(): bool
-    {
-        return $this->quantity <= $this->min_quantity;
-    }
-
-    /**
-     * Verifica se o produto está com estoque alto.
-     *
-     * @return bool
-     */
-    public function isHighStock(): bool
-    {
-        return $this->max_quantity && $this->quantity >= $this->max_quantity;
-    }
-
-    /**
      * Verifica se o produto está dentro da faixa ideal de estoque.
-     *
-     * @return bool
      */
     public function isInOptimalRange(): bool
     {
-        return !$this->isLowStock() && !$this->isHighStock();
+        return ! $this->isLowStock() && ! $this->isHighStock();
     }
 
     /**
      * Retorna o status do estoque como string.
-     *
-     * @return string
      */
     public function getStockStatusAttribute(): string
     {
-        if ( $this->isLowStock() ) {
+        if ($this->isLowStock()) {
             return 'Baixo';
         }
 
-        if ( $this->isHighStock() ) {
+        if ($this->isHighStock()) {
             return 'Alto';
         }
 
@@ -206,16 +209,14 @@ class ProductInventory extends Model
 
     /**
      * Retorna a porcentagem de utilização do estoque.
-     *
-     * @return float
      */
     public function getStockUtilizationPercentageAttribute(): float
     {
-        if ( !$this->max_quantity ) {
+        if (! $this->max_quantity) {
             return 0;
         }
 
-        return round( ( $this->quantity / $this->max_quantity ) * 100, 2 );
+        return round(($this->quantity / $this->max_quantity) * 100, 2);
     }
 
     /**
@@ -254,5 +255,4 @@ class ProductInventory extends Model
 
         return $lastMovement?->created_at;
     }
-
 }

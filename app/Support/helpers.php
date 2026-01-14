@@ -8,11 +8,12 @@
  * Gera um token seguro no formato base64url, ideal para uso em URLs.
  *
  * @return string Token seguro com 32 bytes em formato base64url (43 caracteres).
+ *
  * @throws Exception Se a geração de bytes aleatórios falhar.
  */
 function generateSecureTokenUrl(): string
 {
-    return generateSecureToken( 32, 'base64url' );
+    return generateSecureToken(32, 'base64url');
 }
 
 /**
@@ -28,53 +29,53 @@ function generateSecureTokenUrl(): string
  *
  * Para tokens de verificação de e-mail e reset de senha, use 'base64url' com 32 bytes (43 caracteres).
  *
- * @param int $length Número de bytes aleatórios a gerar (padrão: 32).
- *                    Deve ser um inteiro positivo e não exceder 128 para evitar uso excessivo de memória.
- * @param string $format Formato do token ('hex', 'base64', 'base64url' ou 'alphanumeric').
- *                       Padrão: 'hex'. Recomendado: 'base64url' para e-mails.
+ * @param  int  $length  Número de bytes aleatórios a gerar (padrão: 32).
+ *                       Deve ser um inteiro positivo e não exceder 128 para evitar uso excessivo de memória.
+ * @param  string  $format  Formato do token ('hex', 'base64', 'base64url' ou 'alphanumeric').
+ *                          Padrão: 'hex'. Recomendado: 'base64url' para e-mails.
  * @return string Token seguro no formato especificado.
+ *
  * @throws InvalidArgumentException Se $length for inválido (não positivo ou muito grande) ou $format for inválido.
  * @throws Exception Se a geração de bytes aleatórios falhar (ex.: entropia insuficiente).
  */
-function generateSecureToken( int $length = 32, string $format = 'hex' ): string
+function generateSecureToken(int $length = 32, string $format = 'hex'): string
 {
-    if ( $length <= 0 ) {
-        throw new InvalidArgumentException( 'O comprimento deve ser um inteiro positivo.' );
+    if ($length <= 0) {
+        throw new InvalidArgumentException('O comprimento deve ser um inteiro positivo.');
     }
 
-    if ( $length > 128 ) {
-        throw new InvalidArgumentException( 'O comprimento não pode exceder 128 bytes para evitar uso excessivo de memória.' );
+    if ($length > 128) {
+        throw new InvalidArgumentException('O comprimento não pode exceder 128 bytes para evitar uso excessivo de memória.');
     }
 
-    if ( !in_array( $format, [ 'hex', 'base64', 'base64url', 'alphanumeric' ] ) ) {
-        throw new InvalidArgumentException( 'Formato inválido. Use "hex", "base64", "base64url" ou "alphanumeric".' );
+    if (! in_array($format, ['hex', 'base64', 'base64url', 'alphanumeric'])) {
+        throw new InvalidArgumentException('Formato inválido. Use "hex", "base64", "base64url" ou "alphanumeric".');
     }
 
-    $bytes = random_bytes( $length );
+    $bytes = random_bytes($length);
 
-    return match ( $format ) {
-        'hex'          => bin2hex( $bytes ),
-        'base64'       => base64_encode( $bytes ),
-        'base64url'    => rtrim( strtr( base64_encode( $bytes ), '+/', '-_' ), '=' ),
-        'alphanumeric' => generateAlphanumericToken( $length ),
+    return match ($format) {
+        'hex' => bin2hex($bytes),
+        'base64' => base64_encode($bytes),
+        'base64url' => rtrim(strtr(base64_encode($bytes), '+/', '-_'), '='),
+        'alphanumeric' => generateAlphanumericToken($length),
     };
 }
 
 /**
  * Gera um token alfanumérico seguro.
  *
- * @param int $length Comprimento do token.
- * @return string
+ * @param  int  $length  Comprimento do token.
  */
-function generateAlphanumericToken( int $length ): string
+function generateAlphanumericToken(int $length): string
 {
-    $alphabet       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    $alphabetLength = strlen( $alphabet );
-    $token          = '';
+    $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    $alphabetLength = strlen($alphabet);
+    $token = '';
 
-    for ( $i = 0; $i < $length; $i++ ) {
-        $index  = random_int( 0, $alphabetLength - 1 );
-        $token .= $alphabet[ $index ];
+    for ($i = 0; $i < $length; $i++) {
+        $index = random_int(0, $alphabetLength - 1);
+        $token .= $alphabet[$index];
     }
 
     return $token;
@@ -86,84 +87,84 @@ function generateAlphanumericToken( int $length ): string
  * Utilizado principalmente para validação de tokens de verificação de e-mail e reset de senha,
  * que são gerados no formato base64url para compatibilidade com URLs.
  *
- * @param string $token  O token recebido (ex.: via URL).
- * @param string $format Formato esperado: 'hex', 'base64', 'base64url' ou 'alphanumeric'.
- *                       Padrão: 'hex'. Para tokens de e-mail, use 'base64url'.
+ * @param  string  $token  O token recebido (ex.: via URL).
+ * @param  string  $format  Formato esperado: 'hex', 'base64', 'base64url' ou 'alphanumeric'.
+ *                          Padrão: 'hex'. Para tokens de e-mail, use 'base64url'.
  * @return string|null Token validado e normalizado, ou null se inválido.
  */
-function validateAndSanitizeToken( string $token, string $format = 'hex' ): ?string
+function validateAndSanitizeToken(string $token, string $format = 'hex'): ?string
 {
-    if ( empty( $token ) ) {
+    if (empty($token)) {
         return null;
     }
 
     $patterns = [
         // 32 bytes em hex → 64 caracteres hexadecimais (formato legado)
-        'hex'          => '/^[a-f0-9]{64}$/i',
+        'hex' => '/^[a-f0-9]{64}$/i',
 
         // 32 bytes em base64 → 43 ou 44 caracteres (com padding "=")
-        'base64'       => '/^[A-Za-z0-9+\/]{42,43}=*$/',
+        'base64' => '/^[A-Za-z0-9+\/]{42,43}=*$/',
 
         // 32 bytes em base64url → 43 caracteres, sem + / = (formato padrão para e-mails)
-        'base64url'    => '/^[A-Za-z0-9\-_]{43}$/',
+        'base64url' => '/^[A-Za-z0-9\-_]{43}$/',
 
         // Token alfanumérico genérico de 64 caracteres (formato legado)
         'alphanumeric' => '/^[a-zA-Z0-9]{64}$/',
     ];
 
-    if ( !isset( $patterns[ $format ] ) ) {
+    if (! isset($patterns[$format])) {
         return null;
     }
 
-    if ( !preg_match( $patterns[ $format ], $token ) ) {
+    if (! preg_match($patterns[$format], $token)) {
         return null;
     }
 
     // Normalização: hex em minúsculo, outros formatos mantidos
-    return $format === 'hex' ? strtolower( $token ) : $token;
+    return $format === 'hex' ? strtolower($token) : $token;
 }
 
-if ( !function_exists( 'money' ) ) {
-    function money( $value, $decimals = 2 )
+if (! function_exists('money')) {
+    function money($value, $decimals = 2)
     {
-        return app( App\Helpers\CurrencyHelper::class)->format( $value, $decimals );
+        return app(App\Helpers\CurrencyHelper::class)->format($value, $decimals);
     }
 }
 
-if ( !function_exists( 'format_date' ) ) {
-    function format_date( $date, $format = 'd/m/Y' )
+if (! function_exists('format_date')) {
+    function format_date($date, $format = 'd/m/Y')
     {
-        return app( App\Helpers\DateHelper::class)->formatDateOrDefault( $date, $format );
+        return app(App\Helpers\DateHelper::class)->formatDateOrDefault($date, $format);
     }
 }
 
 /**
  * Format month/year in Brazilian Portuguese
  */
-if ( !function_exists( 'month_year_pt' ) ) {
-    function month_year_pt( $date ): string
+if (! function_exists('month_year_pt')) {
+    function month_year_pt($date): string
     {
-        return \Carbon\Carbon::parse( $date )
-            ->locale( 'pt_BR' )
-            ->translatedFormat( 'F/Y' );
+        return \Carbon\Carbon::parse($date)
+            ->locale('pt_BR')
+            ->translatedFormat('F/Y');
     }
 }
 
 /**
  * Format time difference in human readable format
  */
-if ( !function_exists( 'time_diff' ) ) {
-    function time_diff( $datetime ): string
+if (! function_exists('time_diff')) {
+    function time_diff($datetime): string
     {
-        $now  = now();
-        $diff = $now->diff( $datetime );
+        $now = now();
+        $diff = $now->diff($datetime);
 
-        if ( $diff->days > 0 ) {
-            return $diff->days . ' dia' . ( $diff->days > 1 ? 's' : '' ) . ' atrás';
-        } elseif ( $diff->h > 0 ) {
-            return $diff->h . ' hora' . ( $diff->h > 1 ? 's' : '' ) . ' atrás';
-        } elseif ( $diff->i > 0 ) {
-            return $diff->i . ' minuto' . ( $diff->i > 1 ? 's' : '' ) . ' atrás';
+        if ($diff->days > 0) {
+            return $diff->days.' dia'.($diff->days > 1 ? 's' : '').' atrás';
+        } elseif ($diff->h > 0) {
+            return $diff->h.' hora'.($diff->h > 1 ? 's' : '').' atrás';
+        } elseif ($diff->i > 0) {
+            return $diff->i.' minuto'.($diff->i > 1 ? 's' : '').' atrás';
         } else {
             return 'agora mesmo';
         }
@@ -173,18 +174,18 @@ if ( !function_exists( 'time_diff' ) ) {
 /**
  * Limpa número do documento (CNPJ/CPF) removendo formatação
  */
-if ( !function_exists( 'clean_document_number' ) ) {
-    function clean_document_number( ?string $documentNumber ): ?string
+if (! function_exists('clean_document_number')) {
+    function clean_document_number(?string $documentNumber): ?string
     {
-        if ( empty( $documentNumber ) ) {
+        if (empty($documentNumber)) {
             return null;
         }
 
         // Remove all non-digit characters (points, hyphens, slashes)
-        $cleaned = preg_replace( '/[^0-9]/', '', $documentNumber );
+        $cleaned = preg_replace('/[^0-9]/', '', $documentNumber);
 
         // Ensure it's exactly the expected length
-        if ( strlen( $cleaned ) === 14 || strlen( $cleaned ) === 11 ) {
+        if (strlen($cleaned) === 14 || strlen($cleaned) === 11) {
             return $cleaned;
         }
 
@@ -196,110 +197,110 @@ if ( !function_exists( 'clean_document_number' ) ) {
 /**
  * Limpa número do documento (CNPJ/CPF) para busca parcial
  */
-if ( !function_exists( 'clean_document_partial' ) ) {
-    function clean_document_partial( ?string $documentNumber, int $minLength = 2 ): ?string
+if (! function_exists('clean_document_partial')) {
+    function clean_document_partial(?string $documentNumber, int $minLength = 2): ?string
     {
-        return \App\Helpers\DocumentHelper::cleanPartial( $documentNumber, $minLength );
+        return \App\Helpers\DocumentHelper::cleanPartial($documentNumber, $minLength);
     }
 }
 
 /**
  * Valida CPF
  */
-if ( !function_exists( 'validate_cpf' ) ) {
-    function validate_cpf( ?string $cpf ): bool
+if (! function_exists('validate_cpf')) {
+    function validate_cpf(?string $cpf): bool
     {
-        return \App\Helpers\ValidationHelper::isValidCpf( $cpf );
+        return \App\Helpers\ValidationHelper::isValidCpf($cpf);
     }
 }
 
 /**
  * Valida CNPJ
  */
-if ( !function_exists( 'validate_cnpj' ) ) {
-    function validate_cnpj( ?string $cnpj ): bool
+if (! function_exists('validate_cnpj')) {
+    function validate_cnpj(?string $cnpj): bool
     {
-        return \App\Helpers\ValidationHelper::isValidCnpj( $cnpj );
+        return \App\Helpers\ValidationHelper::isValidCnpj($cnpj);
     }
 }
 
 /**
  * Valida CEP
  */
-if ( !function_exists( 'validate_cep' ) ) {
-    function validate_cep( ?string $cep ): bool
+if (! function_exists('validate_cep')) {
+    function validate_cep(?string $cep): bool
     {
-        return \App\Helpers\ValidationHelper::isValidCep( $cep );
+        return \App\Helpers\ValidationHelper::isValidCep($cep);
     }
 }
 
 /**
  * Valida email
  */
-if ( !function_exists( 'validate_email' ) ) {
-    function validate_email( ?string $email ): bool
+if (! function_exists('validate_email')) {
+    function validate_email(?string $email): bool
     {
-        return \App\Helpers\ValidationHelper::isValidEmail( $email );
+        return \App\Helpers\ValidationHelper::isValidEmail($email);
     }
 }
 
 /**
  * Valida telefone
  */
-if ( !function_exists( 'validate_phone' ) ) {
-    function validate_phone( ?string $phone ): bool
+if (! function_exists('validate_phone')) {
+    function validate_phone(?string $phone): bool
     {
-        return \App\Helpers\ValidationHelper::isValidPhone( $phone );
+        return \App\Helpers\ValidationHelper::isValidPhone($phone);
     }
 }
 
 /**
  * Formata CPF
  */
-if ( !function_exists( 'format_cpf' ) ) {
-    function format_cpf( ?string $cpf ): ?string
+if (! function_exists('format_cpf')) {
+    function format_cpf(?string $cpf): ?string
     {
-        return \App\Helpers\ValidationHelper::formatCpf( $cpf );
+        return \App\Helpers\ValidationHelper::formatCpf($cpf);
     }
 }
 
 /**
  * Formata CNPJ
  */
-if ( !function_exists( 'format_cnpj' ) ) {
-    function format_cnpj( ?string $cnpj ): ?string
+if (! function_exists('format_cnpj')) {
+    function format_cnpj(?string $cnpj): ?string
     {
-        return \App\Helpers\ValidationHelper::formatCnpj( $cnpj );
+        return \App\Helpers\ValidationHelper::formatCnpj($cnpj);
     }
 }
 
 /**
  * Formata telefone
  */
-if ( !function_exists( 'format_phone' ) ) {
-    function format_phone( ?string $phone ): ?string
+if (! function_exists('format_phone')) {
+    function format_phone(?string $phone): ?string
     {
-        return \App\Helpers\ValidationHelper::formatPhone( $phone );
+        return \App\Helpers\ValidationHelper::formatPhone($phone);
     }
 }
 
 /**
  * Formata CEP
  */
-if ( !function_exists( 'format_cep' ) ) {
-    function format_cep( ?string $cep ): ?string
+if (! function_exists('format_cep')) {
+    function format_cep(?string $cep): ?string
     {
-        return \App\Helpers\ValidationHelper::formatCep( $cep );
+        return \App\Helpers\ValidationHelper::formatCep($cep);
     }
 }
 
 /**
  * Gera opções HTML para status de orçamento
  */
-if ( !function_exists( 'budget_status_options' ) ) {
-    function budget_status_options( $selectedStatus = '' )
+if (! function_exists('budget_status_options')) {
+    function budget_status_options($selectedStatus = '')
     {
-        return \App\Helpers\StatusHelper::budget_status_options( $selectedStatus );
+        return \App\Helpers\StatusHelper::budget_status_options($selectedStatus);
     }
 }
 

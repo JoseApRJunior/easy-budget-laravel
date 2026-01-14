@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Models;
@@ -47,12 +48,12 @@ class InvoiceItem extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tenant_id'  => 'integer',
+        'tenant_id' => 'integer',
         'invoice_id' => 'integer',
         'product_id' => 'integer',
-        'quantity'   => 'integer',
+        'quantity' => 'integer',
         'unit_price' => 'decimal:2',
-        'total'      => 'decimal:2',
+        'total' => 'decimal:2',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -72,7 +73,7 @@ class InvoiceItem extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -80,7 +81,7 @@ class InvoiceItem extends Model
      */
     public function invoice(): BelongsTo
     {
-        return $this->belongsTo( Invoice::class);
+        return $this->belongsTo(Invoice::class);
     }
 
     /**
@@ -88,7 +89,6 @@ class InvoiceItem extends Model
      */
     public function product(): BelongsTo
     {
-        return $this->belongsTo( Product::class);
+        return $this->belongsTo(Product::class);
     }
-
 }

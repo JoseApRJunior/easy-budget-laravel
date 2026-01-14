@@ -3,22 +3,20 @@
 @section('title', 'Detalhes do Agendamento')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h3 class="mb-2">
-                <i class="bi bi-calendar-check me-2"></i>
-                Detalhes do Agendamento #{{ $schedule->id }}
-            </h3>
-            <p class="text-muted mb-3">Informações completas do agendamento</p>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
-                    <li class="breadcrumb-item active">Detalhes</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Detalhes do Agendamento #{{ $schedule->id }}"
+            icon="calendar-check"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Agendamentos' => route('provider.schedules.index'),
+                'Detalhes' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="link" :href="route('provider.schedules.edit', $schedule)" variant="primary" icon="pencil" label="Editar" />
+            </div>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -111,10 +109,14 @@
                                         <tr>
                                             <th>Link Público:</th>
                                             <td>
-                                                <a href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}"
-                                                    target="_blank" class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-external-link-alt"></i> Ver Status
-                                                </a>
+                                                <x-ui.button 
+                                                    href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}" 
+                                                    target="_blank" 
+                                                    variant="outline-info" 
+                                                    size="sm"
+                                                    icon="fas fa-external-link-alt">
+                                                    Ver Status
+                                                </x-ui.button>
                                             </td>
                                         </tr>
                                     </table>
@@ -124,27 +126,36 @@
 
                         <!-- Footer -->
                         <div class="d-flex justify-content-between align-items-center mt-4">
-                            <a href="{{ url()->previous() }}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Voltar
-                            </a>
+                            <x-ui.button 
+                                href="{{ url()->previous() }}" 
+                                variant="secondary"
+                                icon="bi bi-arrow-left">
+                                Voltar
+                            </x-ui.button>
                             <small class="text-muted d-none d-md-block">
                                 Criado em: {{ $schedule->created_at->format('d/m/Y H:i') }}
                             </small>
                             <div class="d-flex gap-2">
                                 @can('update', $schedule)
-                                    <a href="{{ route('schedules.edit', $schedule) }}" class="btn btn-warning">
-                                        <i class="bi bi-pencil me-2"></i>Editar
-                                    </a>
+                                    <x-ui.button 
+                                        href="{{ route('schedules.edit', $schedule) }}" 
+                                        variant="warning"
+                                        icon="bi bi-pencil">
+                                        Editar
+                                    </x-ui.button>
                                 @endcan
                                 @can('delete', $schedule)
                                     <form action="{{ route('schedules.destroy', $schedule) }}" method="POST"
                                         class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger"
+                                        <x-ui.button 
+                                            type="submit"
+                                            variant="danger"
+                                            icon="bi bi-trash"
                                             onclick="return confirm('Tem certeza que deseja excluir este agendamento?')">
-                                            <i class="bi bi-trash me-2"></i>Excluir
-                                        </button>
+                                            Excluir
+                                        </x-ui.button>
                                     </form>
                                 @endcan
                             </div>

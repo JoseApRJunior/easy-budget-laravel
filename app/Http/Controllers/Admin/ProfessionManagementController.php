@@ -119,43 +119,30 @@ class ProfessionManagementController extends Controller
             'education_level' => 'nullable|string|max:50',
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $profession = new Profession;
-            $profession->fill($validated);
+        $profession = new Profession;
+        $profession->fill($validated);
 
-            if (empty($validated['code'])) {
-                $profession->code = $this->generateUniqueCode($validated['name']);
-            }
-
-            $profession->slug = $this->generateUniqueSlug($validated['name']);
-            $profession->save();
-
-            $this->cacheService->forgetPattern('professions.*');
-
-            DB::commit();
-
-            Log::info('Profession created', [
-                'profession_id' => $profession->id,
-                'name' => $profession->name,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return redirect()->route('admin.professions.index')
-                ->with('success', 'Profissão criada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating profession', [
-                'error' => $e->getMessage(),
-                'data' => $validated,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Erro ao criar profissão. Por favor, tente novamente.');
+        if (empty($validated['code'])) {
+            $profession->code = $this->generateUniqueCode($validated['name']);
         }
+
+        $profession->slug = $this->generateUniqueSlug($validated['name']);
+        $profession->save();
+
+        $this->cacheService->forgetPattern('professions.*');
+
+        DB::commit();
+
+        Log::info('Profession created', [
+            'profession_id' => $profession->id,
+            'name' => $profession->name,
+            'admin_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.professions.index')
+            ->with('success', 'Profissão criada com sucesso!');
     }
 
     public function show(Profession $profession): View
@@ -223,41 +210,27 @@ class ProfessionManagementController extends Controller
             'education_level' => 'nullable|string|max:50',
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            if ($profession->name !== $validated['name']) {
-                $profession->slug = $this->generateUniqueSlug($validated['name'], $profession->id);
-            }
-
-            $profession->fill($validated);
-            $profession->save();
-
-            $this->cacheService->forgetPattern('professions.*');
-
-            DB::commit();
-
-            Log::info('Profession updated', [
-                'profession_id' => $profession->id,
-                'name' => $profession->name,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return redirect()->route('admin.professions.show', $profession)
-                ->with('success', 'Profissão atualizada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error updating profession', [
-                'profession_id' => $profession->id,
-                'error' => $e->getMessage(),
-                'data' => $validated,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Erro ao atualizar profissão. Por favor, tente novamente.');
+        if ($profession->name !== $validated['name']) {
+            $profession->slug = $this->generateUniqueSlug($validated['name'], $profession->id);
         }
+
+        $profession->fill($validated);
+        $profession->save();
+
+        $this->cacheService->forgetPattern('professions.*');
+
+        DB::commit();
+
+        Log::info('Profession updated', [
+            'profession_id' => $profession->id,
+            'name' => $profession->name,
+            'admin_id' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.professions.show', $profession)
+            ->with('success', 'Profissão atualizada com sucesso!');
     }
 
     public function destroy(Profession $profession): JsonResponse
@@ -278,115 +251,74 @@ class ProfessionManagementController extends Controller
             ], 422);
         }
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $professionName = $profession->name;
-            $profession->delete();
+        $professionName = $profession->name;
+        $profession->delete();
 
-            $this->cacheService->forgetPattern('professions.*');
+        $this->cacheService->forgetPattern('professions.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Profession deleted', [
-                'profession_name' => $professionName,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Profession deleted', [
+            'profession_name' => $professionName,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Profissão excluída com sucesso!',
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting profession', [
-                'profession_id' => $profession->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao excluir profissão. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Profissão excluída com sucesso!',
+        ]);
     }
 
     public function toggleStatus(Profession $profession): JsonResponse
     {
         $this->authorize('manage-professions');
 
-        try {
-            $profession->is_active = ! $profession->is_active;
-            $profession->save();
+        $profession->is_active = ! $profession->is_active;
+        $profession->save();
 
-            $this->cacheService->forgetPattern('professions.*');
+        $this->cacheService->forgetPattern('professions.*');
 
-            Log::info('Profession status toggled', [
-                'profession_id' => $profession->id,
-                'name' => $profession->name,
-                'new_status' => $profession->is_active ? 'active' : 'inactive',
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Profession status toggled', [
+            'profession_id' => $profession->id,
+            'name' => $profession->name,
+            'new_status' => $profession->is_active ? 'active' : 'inactive',
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Status alterado com sucesso!',
-                'is_active' => $profession->is_active,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error toggling profession status', [
-                'profession_id' => $profession->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Status alterado com sucesso!',
+            'is_active' => $profession->is_active,
+        ]);
     }
 
     public function duplicate(Profession $profession): RedirectResponse
     {
         $this->authorize('manage-professions');
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $newProfession = $profession->replicate();
-            $newProfession->name = $profession->name.' (Cópia)';
-            $newProfession->code = $this->generateUniqueCode($newProfession->name);
-            $newProfession->slug = $this->generateUniqueSlug($newProfession->name);
-            $newProfession->is_active = false;
-            $newProfession->save();
+        $newProfession = $profession->replicate();
+        $newProfession->name = $profession->name.' (Cópia)';
+        $newProfession->code = $this->generateUniqueCode($newProfession->name);
+        $newProfession->slug = $this->generateUniqueSlug($newProfession->name);
+        $newProfession->is_active = false;
+        $newProfession->save();
 
-            $this->cacheService->forgetPattern('professions.*');
+        $this->cacheService->forgetPattern('professions.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Profession duplicated', [
-                'original_profession_id' => $profession->id,
-                'new_profession_id' => $newProfession->id,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Profession duplicated', [
+            'original_profession_id' => $profession->id,
+            'new_profession_id' => $newProfession->id,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.professions.edit', $newProfession)
-                ->with('success', 'Profissão duplicada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error duplicating profession', [
-                'profession_id' => $profession->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->with('error', 'Erro ao duplicar profissão. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.professions.edit', $newProfession)
+            ->with('success', 'Profissão duplicada com sucesso!');
     }
 
     public function export(Request $request)

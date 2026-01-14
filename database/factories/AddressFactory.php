@@ -20,14 +20,13 @@ class AddressFactory extends Factory
     public function definition(): array
     {
         return [
-            'tenant_id'      => Tenant::factory(),
-            'address'        => $this->faker->streetAddress,
+            'tenant_id' => Tenant::factory(),
+            'address' => $this->faker->streetAddress,
             'address_number' => $this->faker->buildingNumber,
-            'neighborhood'   => $this->faker->citySuffix,
-            'city'           => $this->faker->city,
-            'state'          => $this->faker->stateAbbr,
-            'cep'            => $this->faker->postcode,
+            'neighborhood' => $this->faker->citySuffix,
+            'city' => $this->faker->city,
+            'state' => $this->faker->stateAbbr,
+            'cep' => $this->faker->postcode,
         ];
     }
-
 }

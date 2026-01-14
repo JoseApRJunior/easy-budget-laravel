@@ -2,273 +2,324 @@
 
 @section('title', 'Orçamentos')
 
+@push('styles')
+<style>
+    /* Ocultar placeholder nativo do Chrome para inputs de data vazios */
+    input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+        color: transparent;
+    }
+    input[type="date"]:focus::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"]:valid::-webkit-datetime-edit-fields-wrapper {
+        color: inherit;
+    }
+</style>
+@endpush
+
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-file-earmark-text me-2"></i>Orçamentos
-                </h1>
-                <p class="text-muted">Lista de todos os orçamentos registrados no sistema</p>
+<div class="container-fluid py-4">
+    <x-layout.page-header
+        title="Lista de Orçamentos"
+        icon="file-earmark-text"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Orçamentos' => route('provider.budgets.dashboard'),
+            'Lista' => '#'
+        ]">
+        <p class="text-muted mb-0 small">Consulte e gerencie todos os orçamentos registrados no sistema.</p>
+    </x-layout.page-header>
+
+    <!-- Card de Filtros -->
+    <x-form.filter-form
+        id="budgetFilterForm"
+        :route="route('provider.budgets.index')"
+        :filters="$filters"
+    >
+        <x-form.filter-field
+            col="col-md-2"
+            name="code"
+            label="Código"
+            placeholder="Ex: ORC-001"
+            :filters="$filters"
+        />
+
+        <x-form.filter-field
+            type="date"
+            col="col-md-2"
+            name="start_date"
+            label="Cadastro Inicial"
+            :filters="$filters"
+        />
+
+        <x-form.filter-field
+            type="date"
+            col="col-md-2"
+            name="end_date"
+            label="Cadastro Final"
+            :filters="$filters"
+        />
+
+        <x-form.filter-field
+            col="col-md-3"
+            name="customer_name"
+            label="Cliente"
+            placeholder="Nome do cliente..."
+            :filters="$filters"
+        />
+
+        <x-form.filter-field
+            type="select"
+            col="col-md-2"
+            name="status"
+            label="Status"
+            :filters="$filters"
+            :options="['all' => 'Todos'] + collect(\App\Enums\BudgetStatus::cases())->mapWithKeys(fn($s) => [$s->value => $s->getDescription()])->toArray()"
+        />
+
+        <x-form.filter-field
+            type="select"
+            col="col-md-1"
+            name="per_page"
+            label="Itens"
+            :filters="$filters"
+            :options="[10 => '10', 20 => '20', 50 => '50']"
+        />
+    </x-form.filter-form>
+
+    <!-- Card de Tabela -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 py-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 d-flex align-items-center flex-wrap fw-bold text-dark">
+                    <span class="me-2">
+                        <i class="bi bi-list-ul me-1"></i>
+                        <span class="d-none d-sm-inline">Lista de Orçamentos</span>
+                        <span class="d-sm-none">Orçamentos</span>
+                    </span>
+                    <span class="text-muted small fw-normal">
+                        ({{ $budgets->total() }})
+                    </span>
+                </h5>
+                <x-resource.table-header-actions
+                    resource="budgets"
+                    :filters="$filters"
+                    createLabel="Novo"
+                    :showExport="false"
+                />
             </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Orçamentos</li>
-                </ol>
-            </nav>
         </div>
-
-        <!-- Card de Filtros -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('provider.budgets.index') }}" method="GET">
-                    <div class="row g-3">
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="filter_code">Código</label>
-                                <input type="text" class="form-control" id="filter_code" name="filter_code"
-                                    value="{{ request('filter_code') }}" placeholder="Código...">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="filter_start_date">Data Início</label>
-                                <input type="date" class="form-control" id="filter_start_date" name="filter_start_date"
-                                    value="{{ request('filter_start_date') }}">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="filter_end_date">Data Fim</label>
-                                <input type="date" class="form-control" id="filter_end_date" name="filter_end_date"
-                                    value="{{ request('filter_end_date') }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="filter_customer">Cliente</label>
-                                <input type="text" class="form-control" id="filter_customer" name="filter_customer"
-                                    value="{{ request('filter_customer') }}" placeholder="Nome do cliente...">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="filter_status">Status</label>
-                                <select class="form-control" id="filter_status" name="filter_status">
-                                    <option value="">Todos</option>
-                                    <option value="DRAFT" {{ request('filter_status') == 'DRAFT' ? 'selected' : '' }}>Rascunho</option>
-                                    <option value="SENT" {{ request('filter_status') == 'SENT' ? 'selected' : '' }}>Enviado</option>
-                                    <option value="APPROVED" {{ request('filter_status') == 'APPROVED' ? 'selected' : '' }}>Aprovado</option>
-                                    <option value="REJECTED" {{ request('filter_status') == 'REJECTED' ? 'selected' : '' }}>Rejeitado</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search me-1"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.budgets.index') }}" class="btn btn-secondary">
-                                    <i class="bi bi-x me-1"></i>Limpar
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Card de Tabela -->
-        <div class="card">
-            <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                        <h5 class="mb-0 d-flex align-items-center flex-wrap">
-                            <span class="me-2">
-                                <i class="bi bi-list-ul me-1"></i>
-                                <span class="d-none d-sm-inline">Lista de Orçamentos</span>
-                                <span class="d-sm-none">Orçamentos</span>
-                            </span>
-                            <span class="text-muted" style="font-size: 0.875rem;">
-                                ({{ $budgets->total() }})
-                            </span>
-                        </h5>
-                    </div>
-                    <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                        <div class="d-flex justify-content-start justify-content-lg-end">
-                            <a href="{{ route('provider.budgets.create') }}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-plus"></i>
-                                <span class="ms-1">Novo</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <!-- Desktop View -->
-                <div class="desktop-view">
-                    <div class="table-responsive">
-                        <table class="modern-table table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Cliente</th>
-                                    <th>Data</th>
-                                    <th>Vencimento</th>
-                                    <th>Valor</th>
-                                    <th>Status</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($budgets as $budget)
-                                    <tr>
-                                        <td>{{ $budget->code }}</td>
-                                        <td>
-                                            @if ($budget->customer && $budget->customer->commonData)
-                                                @if ($budget->customer->commonData->company_name)
-                                                    {{ $budget->customer->commonData->company_name }}
-                                                @else
-                                                    {{ $budget->customer->commonData->first_name }}
-                                                    {{ $budget->customer->commonData->last_name }}
-                                                @endif
-                                            @else
-                                                Cliente não informado
-                                            @endif
-                                        </td>
-                                        <td>{{ $budget->created_at->format('d/m/Y') }}</td>
-                                        <td>{{ $budget->due_date ? $budget->due_date->format('d/m/Y') : '-' }}</td>
-                                        <td>R$ {{ number_format($budget->total, 2, ',', '.') }}</td>
-                                        <td>
-                                            <span class="badge bg-secondary">{{ $budget->status->value }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="action-btn-group">
-                                                <a href="{{ route('provider.budgets.show', $budget->code) }}"
-                                                    class="action-btn action-btn-view" title="Visualizar">
-                                                    <i class="bi bi-eye-fill"></i>
-                                                </a>
-                                                <a href="{{ route('provider.budgets.edit', $budget->code) }}"
-                                                    class="action-btn action-btn-edit" title="Editar">
-                                                    <i class="bi bi-pencil-fill"></i>
-                                                </a>
-                                                <button type="button" class="action-btn action-btn-delete"
-                                                    data-bs-toggle="modal" data-bs-target="#deleteBudgetModal"
-                                                    data-budget-code="{{ $budget->code }}"
-                                                    data-budget-id="{{ $budget->id }}" title="Excluir">
-                                                    <i class="bi bi-trash-fill"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="text-center text-muted">
-                                            <i class="bi bi-inbox mb-2" aria-hidden="true" style="font-size: 2rem;"></i>
-                                            <br>
-                                            Nenhum orçamento encontrado.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Mobile View -->
-                <div class="mobile-view">
-                    <div class="list-group">
-                        @forelse($budgets as $budget)
-                            <a href="{{ route('provider.budgets.show', $budget->code) }}"
-                                class="list-group-item list-group-item-action py-3">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-file-earmark-text text-muted me-2 mt-1"></i>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold mb-2">{{ $budget->code }}</div>
-                                        <div class="small text-muted mb-2">
-                                            @if ($budget->customer && $budget->customer->commonData)
-                                                @if ($budget->customer->commonData->company_name)
-                                                    {{ $budget->customer->commonData->company_name }}
-                                                @else
-                                                    {{ $budget->customer->commonData->first_name }}
-                                                    {{ $budget->customer->commonData->last_name }}
-                                                @endif
-                                            @else
-                                                Cliente não informado
-                                            @endif
-                                        </div>
-                                        <div class="d-flex gap-2 flex-wrap">
-                                            <span class="badge bg-secondary">{{ $budget->status->value }}</span>
-                                            <span class="badge bg-success">R$ {{ number_format($budget->total, 2, ',', '.') }}</span>
+        <div class="card-body p-0">
+            <!-- Desktop View -->
+            <div class="desktop-view">
+                <div class="table-responsive">
+                    <table class="modern-table table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Vencimento</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($budgets as $budget)
+                            <tr>
+                                <td class="fw-bold text-dark">{{ $budget->code }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="text-truncate" style="max-width: 200px;">
+                                            @php
+                                                $customerName = 'Cliente não informado';
+                                                if ($budget->customer && $budget->customer->commonData) {
+                                                    $commonData = $budget->customer->commonData;
+                                                    $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                                }
+                                            @endphp
+                                            {{ $customerName ?: 'Cliente não informado' }}
                                         </div>
                                     </div>
-                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="text-center text-muted py-5">
-                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                <br>
-                                Nenhum orçamento encontrado.
-                            </div>
-                        @endforelse
-                    </div>
+                                </td>
+                                <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
+                                <td class="text-muted small">
+                                    @if($budget->due_date)
+                                        <span class="{{ $budget->due_date->isPast() ? 'text-danger fw-bold' : '' }}">
+                                            {{ $budget->due_date->format('d/m/Y') }}
+                                        </span>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="fw-bold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</td>
+                                <td>
+                                    <x-ui.status-badge :item="$budget" statusField="status" />
+                                </td>
+                                <td class="text-center">
+                                    <x-resource.action-buttons
+                                        :item="$budget"
+                                        resource="budgets"
+                                        identifier="code"
+                                        size="sm"
+                                    />
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7">
+                                    <x-resource.empty-state
+                                        title="Nenhum orçamento encontrado"
+                                        description="Não encontramos orçamentos com os filtros aplicados."
+                                        icon="file-earmark-text"
+                                    />
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            @if ($budgets instanceof \Illuminate\Pagination\LengthAwarePaginator && $budgets->hasPages())
-                @include('partials.components.paginator', ['p' => $budgets->appends(request()->query()), 'show_info' => true])
-            @endif
-        </div>
-    </div>
 
-    <!-- Modal de Confirmação de Exclusão -->
-    <div class="modal fade" id="deleteBudgetModal" tabindex="-1" aria-labelledby="deleteBudgetModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteBudgetModalLabel">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza que deseja excluir o orçamento <strong id="budgetCodeToDelete"></strong>?
-                    <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="deleteBudgetForm" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Excluir</button>
-                    </form>
+            <!-- Mobile View -->
+            <div class="mobile-view">
+                <div class="list-group list-group-flush">
+                    @forelse($budgets as $budget)
+                    <div class="list-group-item py-3">
+                        <a href="{{ route('provider.budgets.show', $budget->code) }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="avatar-circle-sm bg-light me-2">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-dark">{{ $budget->code }}</span>
+                                        <span class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</span>
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted ms-2"></i>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Cliente</small>
+                                <div class="text-dark fw-semibold">
+                                    @php
+                                        $customerName = 'Não informado';
+                                        if ($budget->customer && $budget->customer->commonData) {
+                                            $commonData = $budget->customer->commonData;
+                                            $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                        }
+                                    @endphp
+                                    {{ $customerName ?: 'Não informado' }}
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Valor Total</small>
+                                    <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</span>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <small class="text-muted d-block text-uppercase mb-1 small fw-bold">Status</small>
+                                    <x-ui.status-badge :item="$budget" />
+                                </div>
+                            </div>
+                        </a>
+                        <div class="d-flex justify-content-end">
+                            <x-resource.action-buttons
+                                :item="$budget"
+                                resource="budgets"
+                                identifier="code"
+                                size="sm"
+                            />
+                        </div>
+                    </div>
+                    @empty
+                    <div class="py-5">
+                        <x-resource.empty-state
+                            title="Nenhum orçamento encontrado"
+                            description="Não encontramos orçamentos com os filtros aplicados."
+                            icon="file-earmark-text"
+                        />
+                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>
+        @if ($budgets instanceof \Illuminate\Pagination\LengthAwarePaginator && $budgets->hasPages())
+        @include('partials.components.paginator', ['p' => $budgets->appends(request()->query()), 'show_info' => true])
+        @endif
     </div>
+</div>
+
+{{-- Modal de Exclusão --}}
+<x-ui.confirm-modal
+    id="deleteBudgetModal"
+    title="Excluir Orçamento"
+    message="Tem certeza que deseja excluir este orçamento? Esta ação não poderá ser desfeita."
+    confirmLabel="Excluir"
+    confirmVariant="danger"
+    method="DELETE"
+    route="provider.budgets.destroy"
+/>
+
 @endsection
 
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const deleteBudgetModal = document.getElementById('deleteBudgetModal');
-            if (deleteBudgetModal) {
-                deleteBudgetModal.addEventListener('show.bs.modal', function(event) {
-                    const button = event.relatedTarget;
-                    const budgetCode = button.getAttribute('data-budget-code');
-                    const budgetId = button.getAttribute('data-budget-id');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modal de Exclusão
+        const deleteModal = document.getElementById('deleteBudgetModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const budgetCode = button.getAttribute('data-budget-code') || button.getAttribute('data-item-id');
+                const form = this.querySelector('form');
+                const baseUrl = "{{ route('provider.budgets.destroy', ':code') }}";
+                form.action = baseUrl.replace(':code', encodeURIComponent(budgetCode));
+            });
+        }
 
-                    const budgetCodeToDelete = deleteBudgetModal.querySelector('#budgetCodeToDelete');
-                    const deleteForm = deleteBudgetModal.querySelector('#deleteBudgetForm');
+        // Validação de Datas
+        const filterForm = document.getElementById('budgetFilterForm');
+        if (filterForm) {
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
 
-                    budgetCodeToDelete.textContent = budgetCode;
-                    deleteForm.action = `{{ url('provider/budgets') }}/${budgetId}`;
-                });
-            }
-        });
-    </script>
+            const validateDates = () => {
+                const startDate = document.getElementsByName('filter_start_date')[0];
+                const endDate = document.getElementsByName('filter_end_date')[0];
+                if (!startDate || !endDate || !startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    const message = 'A data inicial não pode ser maior que a data final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.warning(message);
+                    } else {
+                        alert(message);
+                    }
+                    return false;
+                }
+                return true;
+            };
+
+            filterForm.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                    return;
+                }
+            });
+        }
+    });
+</script>
 @endpush

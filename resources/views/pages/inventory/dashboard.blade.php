@@ -1,367 +1,478 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Dashboard de Inventário')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="mb-4">
-        <h3 class="mb-2">
-            <i class="bi bi-speedometer2 me-2"></i>
-            Dashboard de Inventário
-        </h3>
-        <p class="text-muted mb-3">Visão geral do estoque e movimentações</p>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Inventário</li>
-            </ol>
-        </nav>
+<div class="container-fluid py-4">
+    <!-- Cabeçalho -->
+    <x-layout.page-header
+        title="Dashboard de Inventário"
+        icon="archive"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Inventário' => '#'
+        ]">
+        <p class="text-muted mb-0">Visão geral do seu estoque e movimentações com atalhos de gestão.</p>
+    </x-layout.page-header>
+
+    <!-- Cards de Métricas -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-primary bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-box text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Total Produtos</h6>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($totalProducts, 0, false) }}</h5>
+                    <div class="mt-2">
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="link" size="sm" label="Ver todos" icon="chevron-right" icon-right class="p-0 text-decoration-none" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-check-circle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque OK</h6>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($sufficientStockProducts, 0, false) }}</h5>
+                    <div class="mt-2">
+                        <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'sufficient'])" variant="link" size="sm" label="Ver produtos" icon="chevron-right" icon-right class="text-success p-0 text-decoration-none" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-warning bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Estoque Baixo</h6>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($lowStockProducts, 0, false) }}</h5>
+                    <div class="mt-2">
+                        <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-warning small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-danger bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-x-circle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Sem Estoque</h6>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($outOfStockProducts, 0, false) }}</h5>
+                    <div class="mt-2">
+                        <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-danger small text-decoration-none">Ver produtos <i class="bi bi-chevron-right ms-1"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-xl">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-circle bg-info bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-bookmark-check text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-0 small fw-bold text-uppercase">Reservados</h6>
+                    </div>
+                    <h5 class="mb-0 fw-bold text-body">{{ \App\Helpers\CurrencyHelper::format($reservedItemsCount, 0, false) }}</h5>
+                    <div class="mt-1 text-muted small">Total: {{ \App\Helpers\CurrencyHelper::format($totalReservedQuantity, 0, false) }} un.</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Ações Rápidas -->
-    <div class="row mb-4">
+    <div class="row g-3 mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Ações Rápidas</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('provider.inventory.index') }}" class="btn btn-primary">
-                            <i class="bi bi-list me-1"></i> Ver Inventário
-                        </a>
-                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-info">
-                            <i class="bi bi-arrow-left-right me-1"></i> Movimentações
-                        </a>
-                        <a href="{{ route('provider.inventory.stock-turnover') }}" class="btn btn-success">
-                            <i class="bi bi-graph-up me-1"></i> Giro de Estoque
-                        </a>
-                        <a href="{{ route('provider.inventory.most-used') }}" class="btn btn-warning">
-                            <i class="bi bi-star me-1"></i> Produtos Mais Usados
-                        </a>
-                        <a href="{{ route('provider.inventory.alerts') }}" class="btn btn-danger">
-                            <i class="bi bi-bell me-1"></i> Alertas
-                        </a>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-success bg-gradient me-3" style="width: 35px; height: 35px;">
+                            <i class="bi bi-currency-dollar text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-0 small fw-bold text-uppercase">Valor Total em Estoque</h6>
+                            <h3 class="mb-0 fw-bold text-success">{{ \App\Helpers\CurrencyHelper::format($totalInventoryValue) }}</h3>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Cards de Resumo -->
-    <div class="row g-3 mb-4">
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-info text-white">
+    <!-- Ações Rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header pt-3 bg-transparent border-0">
+                    <h6 class="mb-0 fw-bold text-body d-flex align-items-center">
+                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-lightning-charge text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        Ações Rápidas
+                    </h6>
+                </div>
                 <div class="card-body">
-                    <h4 class="mb-2">{{ $totalProducts }}</h4>
-                    <p class="mb-0">Total de Produtos</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index') }}" class="text-white text-decoration-none">
-                        Ver Detalhes <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $lowStockProducts }}</h4>
-                    <p class="mb-0">Estoque Baixo</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index', ['status' => 'low']) }}" class="text-white text-decoration-none">
-                        Ver Produtos <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $highStockProducts }}</h4>
-                    <p class="mb-0">Estoque Alto</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index', ['status' => 'high']) }}" class="text-white text-decoration-none">
-                        Ver Produtos <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">{{ $outOfStockProducts }}</h4>
-                    <p class="mb-0">Sem Estoque</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index', ['status' => 'out']) }}" class="text-white text-decoration-none">
-                        Ver Produtos <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h4 class="mb-2">R$ {{ number_format($totalInventoryValue, 2, ',', '.') }}</h4>
-                    <p class="mb-0">Valor Total do Estoque</p>
-                </div>
-                <div class="card-footer bg-transparent border-0">
-                    <a href="{{ route('provider.inventory.index') }}" class="text-white text-decoration-none">
-                        Ver Inventário <i class="bi bi-arrow-right"></i>
-                    </a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" icon="list" label="Ver Inventário" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="info" icon="arrow-left-right" label="Movimentações" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="success" icon="graph-up" label="Giro de Estoque" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="warning" icon="star" label="Produtos Mais Usados" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.alerts')" variant="danger" icon="bell" label="Alertas" size="sm" />
+                        <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" size="sm" />
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Produtos com Estoque Alto -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-arrow-up me-2"></i>Produtos com Estoque Alto</h5>
+    <!-- Tabelas de Alerta -->
+    <div class="row g-4 mb-5">
+        <!-- Estoque Baixo -->
+        <div class="col-12 col-xl-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold d-flex align-items-center">
+                        <div class="avatar-circle bg-warning bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-exclamation-triangle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        Estoque Baixo
+                    </h5>
+                    <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'low'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
-                <div class="card-body">
-                    @if($highStockItems->count() > 0)
-                        <!-- Desktop View -->
-                        <div class="table-responsive d-none d-md-block">
-                            <table class="table modern-table mb-0">
+                <div class="card-body p-0">
+                    <!-- Desktop View -->
+                    <div class="desktop-view d-none d-md-block">
+                        <div class="table-responsive">
+                            <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>SKU</th>
                                         <th>Produto</th>
-                                        <th>Quantidade Atual</th>
-                                        <th>Estoque Máximo</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
+                                        <th class="text-center">Qtd</th>
+                                        <th class="text-center">Mín</th>
+                                        <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($highStockItems as $item)
+                                    @forelse($lowStockItems as $item)
                                         <tr>
-                                            <td>{{ $item->product->sku }}</td>
-                                            <td>{{ $item->product->name }}</td>
-                                            <td>{{ $item->quantity }}</td>
-                                            <td>{{ $item->max_quantity }}</td>
-                                            <td><span class="badge bg-success">Estoque Alto</span></td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.inventory.movements', $item->product) }}" class="btn btn-info btn-sm">
-                                                        <i class="bi bi-list"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.inventory.adjust', $item->product) }}" class="btn btn-warning btn-sm">
-                                                        <i class="bi bi-sliders"></i>
-                                                    </a>
+                                                <div class="item-name-cell">
+                                                    <div class="fw-bold text-dark">{{ $item->product->name }}</div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <small class="text-muted text-code">{{ $item->product->sku }}</small>
+                                                        <span class="text-muted" style="font-size: 0.75rem;">• {{ $item->product->category->name ?? 'Geral' }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="fw-bold text-danger">{{ \App\Helpers\CurrencyHelper::format($item->available_quantity, 0, false) }}</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" title="Entrada" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                                 </div>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-muted small">
+                                                <div class="avatar-circle bg-success bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-check-circle text-white" style="font-size: 1.1rem;"></i>
+                                                </div>
+                                                Nenhum item com estoque baixo.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <!-- Mobile View -->
-                        <div class="mobile-view d-md-none">
-                            @foreach($highStockItems as $item)
-                                <div class="list-group-item">
+                    <!-- Mobile View -->
+                    <div class="mobile-view d-md-none">
+                        <div class="list-group list-group-flush">
+                            @forelse($lowStockItems as $item)
+                                <div class="list-group-item py-3 bg-transparent">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <div>
-                                            <h6 class="mb-1">{{ $item->product->name }}</h6>
-                                            <small class="text-muted">SKU: {{ $item->product->sku }}</small>
+                                            <div class="fw-bold text-dark small">{{ $item->product->name }}</div>
+                                            <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $item->product->sku }}</small>
                                         </div>
-                                        <span class="badge bg-success">Estoque Alto</span>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill">{{ \App\Helpers\CurrencyHelper::format($item->available_quantity, 0, false) }} un</span>
                                     </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Quantidade:</small> {{ $item->quantity }} / Máx: {{ $item->max_quantity }}
-                                    </div>
-                                    <div class="action-btn-group">
-                                        <a href="{{ route('provider.inventory.movements', $item->product) }}" class="btn btn-info btn-sm">
-                                            <i class="bi bi-list"></i> Movimentos
-                                        </a>
-                                        <a href="{{ route('provider.inventory.adjust', $item->product) }}" class="btn btn-warning btn-sm">
-                                            <i class="bi bi-sliders"></i> Ajustar
-                                        </a>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Mín: {{ \App\Helpers\CurrencyHelper::format($item->min_quantity, 0, false) }}</small>
+                                        <div class="d-flex gap-1">
+                                            <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="success" icon="plus" size="sm" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
+                                        </div>
                                     </div>
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="p-4 text-center text-muted small">
+                                    <div class="avatar-circle bg-success bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-check-circle text-white" style="font-size: 1.1rem;"></i>
+                                    </div>
+                                    Nenhum item com estoque baixo.
+                                </div>
+                            @endforelse
                         </div>
-                    @else
-                        <div class="alert alert-success mb-0">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Nenhum produto com estoque alto no momento.
-                        </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Produtos com Estoque Baixo -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Produtos com Estoque Baixo</h5>
+        <!-- Estoque Alto -->
+        <div class="col-12 col-xl-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold d-flex align-items-center">
+                        <div class="avatar-circle bg-primary bg-gradient me-2" style="width: 35px; height: 35px;">
+                            <i class="bi bi-arrow-up-circle text-white" style="font-size: 0.9rem;"></i>
+                        </div>
+                        Estoque Alto
+                    </h5>
+                    <x-ui.button type="link" :href="route('provider.inventory.index', ['status' => 'high'])" variant="link" size="sm" label="Ver todos" class="p-0 text-decoration-none" />
                 </div>
-                <div class="card-body">
-                    @if($lowStockItems->count() > 0)
-                        <!-- Desktop View -->
-                        <div class="table-responsive d-none d-md-block">
-                            <table class="table modern-table mb-0">
+                <div class="card-body p-0">
+                    <!-- Desktop View -->
+                    <div class="desktop-view d-none d-md-block">
+                        <div class="table-responsive">
+                            <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>SKU</th>
                                         <th>Produto</th>
-                                        <th>Quantidade Atual</th>
-                                        <th>Estoque Mínimo</th>
-                                        <th>Status</th>
-                                        <th>Ações</th>
+                                        <th class="text-center">Qtd</th>
+                                        <th class="text-center">Máx</th>
+                                        <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($lowStockItems as $item)
+                                    @forelse($highStockItems as $item)
                                         <tr>
-                                            <td>{{ $item->product->sku }}</td>
-                                            <td>{{ $item->product->name }}</td>
-                                            <td>{{ $item->quantity }}</td>
-                                            <td>{{ $item->min_quantity }}</td>
-                                            <td><span class="badge bg-warning">Estoque Baixo</span></td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.inventory.movements', $item->product) }}" class="btn btn-info btn-sm">
-                                                        <i class="bi bi-list"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.inventory.adjust', $item->product) }}" class="btn btn-success btn-sm">
-                                                        <i class="bi bi-plus"></i>
-                                                    </a>
+                                                <div class="item-name-cell">
+                                                    <div class="fw-bold text-dark">{{ $item->product->name }}</div>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <small class="text-muted text-code">{{ $item->product->sku }}</small>
+                                                        <span class="text-muted" style="font-size: 0.75rem;">• {{ $item->product->category->name ?? 'Geral' }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="fw-bold text-primary">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="small text-muted">{{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-ui.button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" title="Saída" />
+                                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" title="Ajustar" />
                                                 </div>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-muted small">
+                                                <div class="avatar-circle bg-info bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-info-circle text-white" style="font-size: 1.1rem;"></i>
+                                                </div>
+                                                Nenhum item com estoque alto.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <!-- Mobile View -->
-                        <div class="mobile-view d-md-none">
-                            @foreach($lowStockItems as $item)
-                                <div class="list-group-item">
+                    <!-- Mobile View -->
+                    <div class="mobile-view d-md-none">
+                        <div class="list-group list-group-flush">
+                            @forelse($highStockItems as $item)
+                                <div class="list-group-item py-3 bg-transparent">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <div>
-                                            <h6 class="mb-1">{{ $item->product->name }}</h6>
-                                            <small class="text-muted">SKU: {{ $item->product->sku }}</small>
+                                            <div class="fw-bold text-dark small">{{ $item->product->name }}</div>
+                                            <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $item->product->sku }}</small>
                                         </div>
-                                        <span class="badge bg-warning">Estoque Baixo</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }} un</span>
                                     </div>
-                                    <div class="mb-2">
-                                        <small class="text-muted">Quantidade:</small> {{ $item->quantity }} / Mín: {{ $item->min_quantity }}
-                                    </div>
-                                    <div class="action-btn-group">
-                                        <a href="{{ route('provider.inventory.movements', $item->product) }}" class="btn btn-info btn-sm">
-                                            <i class="bi bi-list"></i> Movimentos
-                                        </a>
-                                        <a href="{{ route('provider.inventory.adjust', $item->product) }}" class="btn btn-success btn-sm">
-                                            <i class="bi bi-plus"></i> Ajustar
-                                        </a>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Máx: {{ \App\Helpers\CurrencyHelper::format($item->max_quantity, 0, false) }}</small>
+                                        <div class="d-flex gap-1">
+                                            <x-ui.button type="link" :href="route('provider.inventory.exit', $item->product->sku)" variant="warning" icon="dash" size="sm" />
+                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="secondary" icon="sliders" size="sm" />
+                                        </div>
                                     </div>
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="p-4 text-center text-muted small">
+                                    <div class="avatar-circle bg-info bg-gradient mx-auto mb-2" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-info-circle text-white" style="font-size: 1.1rem;"></i>
+                                    </div>
+                                    Nenhum item com estoque alto.
+                                </div>
+                            @endforelse
                         </div>
-                    @else
-                        <div class="alert alert-success mb-0">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Nenhum produto com estoque baixo no momento.
-                        </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Movimentações Recentes -->
-    <div class="row">
+    <!-- Últimas Movimentações -->
+    <div class="row g-4 mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Movimentações Recentes</h5>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header pt-3 bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-clock-history me-2"></i>Últimas Movimentações
+                    </h5>
+                    <a href="{{ route('provider.inventory.movements') }}" class="btn btn-sm btn-link p-0 text-decoration-none text-primary">Ver histórico completo</a>
                 </div>
-                <div class="card-body">
-                    @if($recentMovements->count() > 0)
-                        <!-- Desktop View -->
-                        <div class="table-responsive d-none d-md-block">
-                            <table class="table modern-table mb-0">
+                <div class="card-body p-0">
+                    <!-- Desktop View -->
+                    <div class="desktop-view d-none d-md-block">
+                        <div class="table-responsive">
+                            <table class="modern-table table mb-0">
                                 <thead>
                                     <tr>
                                         <th>Data</th>
                                         <th>Produto</th>
-                                        <th>Tipo</th>
-                                        <th>Quantidade</th>
-                                        <th>Motivo</th>
+                                        <th class="text-center">Tipo</th>
+                                        <th class="text-center">Qtd</th>
                                         <th>Usuário</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($recentMovements as $movement)
+                                    @forelse($recentMovements as $movement)
                                         <tr>
-                                            <td>{{ $movement->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>{{ $movement->product->name }}</td>
-                                            <td>
-                                                @if($movement->type === 'entry')
-                                                    <span class="badge bg-success">Entrada</span>
-                                                @elseif($movement->type === 'exit')
-                                                    <span class="badge bg-danger">Saída</span>
-                                                @else
-                                                    <span class="badge bg-info">{{ ucfirst($movement->type) }}</span>
-                                                @endif
+                                            <td class="small text-muted">
+                                                {{ $movement->created_at->format('d/m/Y H:i') }}
                                             </td>
-                                            <td>{{ $movement->quantity }}</td>
-                                            <td>{{ $movement->reason }}</td>
-                                            <td>{{ $movement->user->name ?? 'Sistema' }}</td>
+                                            <td>
+                                                <div class="item-name-cell">
+                                                    <div class="fw-bold text-dark">{{ $movement->product->name }}</div>
+                                                    <small class="text-muted text-code">{{ $movement->product->sku }}</small>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                @php
+                                                    $statusClass = match($movement->type) {
+                                                        'entry' => 'badge-active',
+                                                        'exit' => 'badge-deleted',
+                                                        'adjustment' => 'badge-personal',
+                                                        'reservation' => 'badge-system',
+                                                        'cancellation' => 'badge-inactive',
+                                                        default => 'badge-system'
+                                                    };
+                                                    $statusLabel = match($movement->type) {
+                                                        'entry' => 'Entrada',
+                                                        'exit' => 'Saída',
+                                                        'adjustment' => 'Ajuste',
+                                                        'reservation' => 'Reserva',
+                                                        'cancellation' => 'Cancelamento',
+                                                        default => $movement->type
+                                                    };
+                                                @endphp
+                                                <span class="modern-badge {{ $statusClass }}">
+                                                    {{ $statusLabel }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center fw-bold small text-body">
+                                                {{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }}
+                                            </td>
+                                            <td class="small text-muted">
+                                                {{ $movement->user->name ?? 'Sistema' }}
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted small">
+                                                Nenhuma movimentação recente.
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <!-- Mobile View -->
-                        <div class="mobile-view d-md-none">
-                            @foreach($recentMovements as $movement)
-                                <div class="list-group-item">
+                    <!-- Mobile View -->
+                    <div class="mobile-view d-md-none">
+                        <div class="list-group list-group-flush">
+                            @forelse($recentMovements as $movement)
+                                <div class="list-group-item py-3 bg-transparent">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <div>
-                                            <h6 class="mb-1">{{ $movement->product->name }}</h6>
-                                            <small class="text-muted">{{ $movement->created_at->format('d/m/Y H:i') }}</small>
+                                            <div class="fw-bold text-dark small">{{ $movement->product->name }}</div>
+                                            <small class="text-muted text-code" style="font-size: 0.65rem;">{{ $movement->product->sku }}</small>
                                         </div>
-                                        @if($movement->type === 'entry')
-                                            <span class="badge bg-success">Entrada</span>
-                                        @elseif($movement->type === 'exit')
-                                            <span class="badge bg-danger">Saída</span>
-                                        @else
-                                            <span class="badge bg-info">{{ ucfirst($movement->type) }}</span>
-                                        @endif
+                                        <div class="text-end">
+                                            <div class="fw-bold text-dark small">{{ \App\Helpers\CurrencyHelper::format($movement->quantity, 0, false) }} un</div>
+                                            <small class="text-muted" style="font-size: 0.65rem;">{{ $movement->created_at->format('d/m/y H:i') }}</small>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <small class="text-muted">Quantidade:</small> {{ $movement->quantity }}<br>
-                                        <small class="text-muted">Motivo:</small> {{ $movement->reason }}<br>
-                                        <small class="text-muted">Usuário:</small> {{ $movement->user->name ?? 'Sistema' }}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        @php
+                                            $statusClass = match($movement->type) {
+                                                'entry' => 'badge-active',
+                                                'exit' => 'badge-deleted',
+                                                'adjustment' => 'badge-personal',
+                                                'reservation' => 'badge-system',
+                                                'cancellation' => 'badge-inactive',
+                                                default => 'badge-system'
+                                            };
+                                            $statusLabel = match($movement->type) {
+                                                'entry' => 'Entrada',
+                                                'exit' => 'Saída',
+                                                'adjustment' => 'Ajuste',
+                                                'reservation' => 'Reserva',
+                                                'cancellation' => 'Cancelamento',
+                                                default => $movement->type
+                                            };
+                                        @endphp
+                                        <span class="modern-badge {{ $statusClass }}">
+                                            {{ $statusLabel }}
+                                        </span>
+                                        <small class="text-muted" style="font-size: 0.7rem;">
+                                            <i class="bi bi-person me-1"></i>{{ explode(' ', $movement->user->name ?? 'Sistema')[0] }}
+                                        </small>
                                     </div>
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="p-4 text-center text-muted small">
+                                    Nenhuma movimentação recente.
+                                </div>
+                            @endforelse
                         </div>
-                    @else
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Nenhuma movimentação recente.
-                        </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>

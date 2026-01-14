@@ -1,25 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="main-container py-1">
-        <!-- Cabeçalho -->
-        <div class="text-center mb-5">
-            <h1 class="h2 fw-bold text-primary mb-3">{{ $plan->name }}</h1>
-            <p class="text-muted lead">{{ $plan->description }}</p>
-
-            <!-- Status Badge -->
-            <div class="mb-3">
-                @if ($plan->status)
-                    <span class="badge bg-success fs-6 px-3 py-2">
-                        <i class="bi bi-check-circle-fill me-1"></i>Plano Ativo
-                    </span>
-                @else
-                    <span class="badge bg-secondary fs-6 px-3 py-2">
-                        <i class="bi bi-pause-circle-fill me-1"></i>Plano Inativo
-                    </span>
-                @endif
-            </div>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            :title="$plan->name"
+            icon="gem"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => route('provider.plans.index'),
+                $plan->name => '#'
+            ]">
+            <p class="text-muted mb-0">{{ $plan->description }}</p>
+        </x-layout.page-header>
 
         <div class="row">
             <!-- Informações Principais -->
@@ -175,9 +167,12 @@
 
                 <!-- Botão voltar -->
                 <div class="text-center mt-3">
-                    <a href="{{ route('plans.index') }}" class="btn btn-outline-primary">
-                        <i class="bi bi-arrow-left me-2"></i>Voltar para Lista
-                    </a>
+                    <x-ui.button 
+                        href="{{ route('plans.index') }}" 
+                        variant="outline-primary"
+                        icon="bi bi-arrow-left">
+                        Voltar para Lista
+                    </x-ui.button>
                 </div>
             </div>
         </div>

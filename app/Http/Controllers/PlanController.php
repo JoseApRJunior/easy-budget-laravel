@@ -8,10 +8,8 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\PlanStoreRequest;
 use App\Http\Requests\PlanUpdateRequest;
 use App\Services\Domain\PlanService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -55,21 +53,16 @@ class PlanController extends Controller
      */
     public function index(Request $request): View
     {
-        try {
-            $filters = $request->only(['search', 'status', 'min_price', 'max_price']);
-            $result = $this->planService->getFilteredPlans($filters, []);
-            if (! $result->isSuccess()) {
-                abort(500, 'Erro ao carregar lista');
-            }
-
-            return view('pages.plan.index', [
-                'plans' => $result->getData(),
-                'filters' => $filters,
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@index', ['error' => $e->getMessage()]);
-            abort(500, 'Erro interno do servidor');
+        $filters = $request->only(['search', 'status', 'min_price', 'max_price']);
+        $result = $this->planService->getFilteredPlans($filters, []);
+        if (! $result->isSuccess()) {
+            abort(500, 'Erro ao carregar lista');
         }
+
+        return view('pages.plan.index', [
+            'plans' => $result->getData(),
+            'filters' => $filters,
+        ]);
     }
 
     /**
@@ -85,18 +78,12 @@ class PlanController extends Controller
      */
     public function store(PlanStoreRequest $request): RedirectResponse
     {
-        try {
-            $result = $this->planService->createPlan($request->validated());
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage())->withInput();
-            }
-
-            return redirect()->route('plans.index')->with('success', 'Plano criado com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@store', ['error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor')->withInput();
+        $result = $this->planService->createPlan($request->validated());
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage())->withInput();
         }
+
+        return redirect()->route('plans.index')->with('success', 'Plano criado com sucesso');
     }
 
     /**
@@ -104,19 +91,14 @@ class PlanController extends Controller
      */
     public function show(string $slug): View
     {
-        try {
-            $result = $this->planService->findBySlug($slug, []);
-            if (! $result->isSuccess()) {
-                abort(404, $result->getMessage());
-            }
-
-            return view('pages.plan.show', [
-                'plan' => $result->getData(),
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@show', ['slug' => $slug, 'error' => $e->getMessage()]);
-            abort(500, 'Erro interno do servidor');
+        $result = $this->planService->findBySlug($slug, []);
+        if (! $result->isSuccess()) {
+            abort(404, $result->getMessage());
         }
+
+        return view('pages.plan.show', [
+            'plan' => $result->getData(),
+        ]);
     }
 
     /**
@@ -124,19 +106,14 @@ class PlanController extends Controller
      */
     public function edit(string $slug): View
     {
-        try {
-            $result = $this->planService->findBySlug($slug, []);
-            if (! $result->isSuccess()) {
-                abort(404, $result->getMessage());
-            }
-
-            return view('pages.plan.edit', [
-                'plan' => $result->getData(),
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@edit', ['slug' => $slug, 'error' => $e->getMessage()]);
-            abort(500, 'Erro interno do servidor');
+        $result = $this->planService->findBySlug($slug, []);
+        if (! $result->isSuccess()) {
+            abort(404, $result->getMessage());
         }
+
+        return view('pages.plan.edit', [
+            'plan' => $result->getData(),
+        ]);
     }
 
     /**
@@ -144,18 +121,12 @@ class PlanController extends Controller
      */
     public function update(PlanUpdateRequest $request, string $slug): RedirectResponse
     {
-        try {
-            $result = $this->planService->updateBySlug($slug, $request->validated());
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage())->withInput();
-            }
-
-            return redirect()->route('plans.index')->with('success', 'Plano atualizado com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@update', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor')->withInput();
+        $result = $this->planService->updateBySlug($slug, $request->validated());
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage())->withInput();
         }
+
+        return redirect()->route('plans.index')->with('success', 'Plano atualizado com sucesso');
     }
 
     /**
@@ -163,18 +134,12 @@ class PlanController extends Controller
      */
     public function toggleStatus(string $slug): RedirectResponse
     {
-        try {
-            $result = $this->planService->toggleStatus($slug);
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage());
-            }
-
-            return redirect()->back()->with('success', $result->getData());
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@toggleStatus', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor');
+        $result = $this->planService->toggleStatus($slug);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage());
         }
+
+        return redirect()->back()->with('success', $result->getData());
     }
 
     /**
@@ -182,18 +147,12 @@ class PlanController extends Controller
      */
     public function destroy(string $slug): RedirectResponse
     {
-        try {
-            $result = $this->planService->deleteBySlug($slug);
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage());
-            }
-
-            return redirect()->route('plans.index')->with('success', 'Plano removido com sucesso');
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@destroy', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor');
+        $result = $this->planService->deleteBySlug($slug);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage());
         }
+
+        return redirect()->route('plans.index')->with('success', 'Plano removido com sucesso');
     }
 
     /**
@@ -201,47 +160,41 @@ class PlanController extends Controller
      */
     public function redirectToPayment(string $slug): RedirectResponse
     {
-        try {
-            $result = $this->planService->findBySlug($slug);
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage() ?? 'Plano não encontrado.');
-            }
-
-            $plan = $result->getData();
-            $user = auth()->user();
-            $tenantId = (int) ($user->tenant_id ?? 0);
-            $providerId = (int) ($user->provider->id ?? 0);
-
-            if (! $tenantId || ! $providerId) {
-                return redirect()->back()->withErrors('Tenant ou provider não encontrado para o usuário atual');
-            }
-
-            $subscription = \App\Models\PlanSubscription::create([
-                'tenant_id' => $tenantId,
-                'provider_id' => $providerId,
-                'plan_id' => (int) $plan->id,
-                'status' => \App\Models\PlanSubscription::STATUS_PENDING,
-                'transaction_amount' => (float) $plan->price,
-                'start_date' => now(),
-            ]);
-
-            $service = app(\App\Services\Infrastructure\PaymentMercadoPagoPlanService::class);
-            $pref = $service->createMercadoPagoPreference((int) $subscription->id);
-            if (! $pref->isSuccess()) {
-                return redirect()->route('plans.show', $slug)->withErrors($pref->getMessage());
-            }
-
-            $initPoint = $pref->getData()['init_point'] ?? null;
-            if (! $initPoint) {
-                return redirect()->route('plans.show', $slug)->withErrors('Link de pagamento indisponível');
-            }
-
-            return redirect()->away($initPoint);
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@redirectToPayment', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor');
+        $result = $this->planService->findBySlug($slug);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage() ?? 'Plano não encontrado.');
         }
+
+        $plan = $result->getData();
+        $user = auth()->user();
+        $tenantId = (int) ($user->tenant_id ?? 0);
+        $providerId = (int) ($user->provider->id ?? 0);
+
+        if (! $tenantId || ! $providerId) {
+            return redirect()->back()->withErrors('Tenant ou provider não encontrado para o usuário atual');
+        }
+
+        $subscription = \App\Models\PlanSubscription::create([
+            'tenant_id' => $tenantId,
+            'provider_id' => $providerId,
+            'plan_id' => (int) $plan->id,
+            'status' => \App\Models\PlanSubscription::STATUS_PENDING,
+            'transaction_amount' => (float) $plan->price,
+            'start_date' => now(),
+        ]);
+
+        $service = app(\App\Services\Infrastructure\PaymentMercadoPagoPlanService::class);
+        $pref = $service->createMercadoPagoPreference((int) $subscription->id);
+        if (! $pref->isSuccess()) {
+            return redirect()->route('plans.show', $slug)->withErrors($pref->getMessage());
+        }
+
+        $initPoint = $pref->getData()['init_point'] ?? null;
+        if (! $initPoint) {
+            return redirect()->route('plans.show', $slug)->withErrors('Link de pagamento indisponível');
+        }
+
+        return redirect()->away($initPoint);
     }
 
     /**
@@ -249,16 +202,10 @@ class PlanController extends Controller
      */
     public function cancelPendingSubscription(string $slug): RedirectResponse
     {
-        try {
-            // Lógica para cancelar assinatura pendente
-            // TODO: Implementar integração com serviço de assinaturas
+        // Lógica para cancelar assinatura pendente
+        // TODO: Implementar integração com serviço de assinaturas
 
-            return redirect()->route('plans.show', $slug)->with('success', 'Assinatura pendente cancelada.');
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@cancelPendingSubscription', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor');
-        }
+        return redirect()->route('plans.show', $slug)->with('success', 'Assinatura pendente cancelada.');
     }
 
     /**
@@ -266,39 +213,34 @@ class PlanController extends Controller
      */
     public function status(string $slug): View
     {
-        try {
-            $result = $this->planService->findBySlug($slug);
-            if (! $result->isSuccess()) {
-                abort(404, $result->getMessage());
-            }
-            $plan = $result->getData();
+        $result = $this->planService->findBySlug($slug);
+        if (! $result->isSuccess()) {
+            abort(404, $result->getMessage());
+        }
+        $plan = $result->getData();
 
-            $subscription = \App\Models\PlanSubscription::where('tenant_id', auth()->user()->tenant_id ?? null)
-                ->where('plan_id', (int) $plan->id)
+        $subscription = \App\Models\PlanSubscription::where('tenant_id', auth()->user()->tenant_id ?? null)
+            ->where('plan_id', (int) $plan->id)
+            ->orderByDesc('created_at')
+            ->first();
+
+        $payment = null;
+        if ($subscription) {
+            $payment = \App\Models\PaymentMercadoPagoPlan::where('plan_subscription_id', (int) $subscription->id)
                 ->orderByDesc('created_at')
                 ->first();
-
-            $payment = null;
-            if ($subscription) {
-                $payment = \App\Models\PaymentMercadoPagoPlan::where('plan_subscription_id', (int) $subscription->id)
-                    ->orderByDesc('created_at')
-                    ->first();
-            }
-
-            $payment = $payment ?: (object) ['status' => 'not_started'];
-
-            return view('pages.plan.status', [
-                'subscription' => (object) [
-                    'name' => $plan->name,
-                    'slug' => $slug,
-                    'transaction_amount' => (float) ($subscription->transaction_amount ?? $plan->price),
-                ],
-                'payment' => $payment,
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@status', ['slug' => $slug, 'error' => $e->getMessage()]);
-            abort(500, 'Erro interno do servidor');
         }
+
+        $payment = $payment ?: (object) ['status' => 'not_started'];
+
+        return view('pages.plan.status', [
+            'subscription' => (object) [
+                'name' => $plan->name,
+                'slug' => $slug,
+                'transaction_amount' => (float) ($subscription->transaction_amount ?? $plan->price),
+            ],
+            'payment' => $payment,
+        ]);
     }
 
     /**
@@ -306,21 +248,16 @@ class PlanController extends Controller
      */
     public function paymentStatus(Request $request): View
     {
-        try {
-            // Lógica para processar retorno do pagamento
-            // TODO: Implementar processamento de webhook/retorno
+        // Lógica para processar retorno do pagamento
+        // TODO: Implementar processamento de webhook/retorno
 
-            $status = $request->get('status', 'unknown');
-            $planSlug = $request->get('plan_slug', '');
+        $status = $request->get('status', 'unknown');
+        $planSlug = $request->get('plan_slug', '');
 
-            return view('pages.plan.payment-status', [
-                'status' => $status,
-                'plan_slug' => $planSlug,
-            ]);
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@paymentStatus', ['error' => $e->getMessage()]);
-            abort(500, 'Erro interno do servidor');
-        }
+        return view('pages.plan.payment-status', [
+            'status' => $status,
+            'plan_slug' => $planSlug,
+        ]);
     }
 
     /**
@@ -328,23 +265,17 @@ class PlanController extends Controller
      */
     public function activate(string $slug): RedirectResponse
     {
-        try {
-            $result = $this->planService->findBySlug($slug);
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage() ?? 'Plano não encontrado.');
-            }
-
-            $updateResult = $this->planService->updateBySlug($slug, ['status' => true]);
-            if (! $updateResult->isSuccess()) {
-                return redirect()->back()->withErrors($updateResult->getMessage());
-            }
-
-            return redirect()->back()->with('success', 'Plano ativado com sucesso.');
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@activate', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor');
+        $result = $this->planService->findBySlug($slug);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage() ?? 'Plano não encontrado.');
         }
+
+        $updateResult = $this->planService->updateBySlug($slug, ['status' => true]);
+        if (! $updateResult->isSuccess()) {
+            return redirect()->back()->withErrors($updateResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Plano ativado com sucesso.');
     }
 
     /**
@@ -352,22 +283,16 @@ class PlanController extends Controller
      */
     public function deactivate(string $slug): RedirectResponse
     {
-        try {
-            $result = $this->planService->findBySlug($slug);
-            if (! $result->isSuccess()) {
-                return redirect()->back()->withErrors($result->getMessage() ?? 'Plano não encontrado.');
-            }
-
-            $updateResult = $this->planService->updateBySlug($slug, ['status' => false]);
-            if (! $updateResult->isSuccess()) {
-                return redirect()->back()->withErrors($updateResult->getMessage());
-            }
-
-            return redirect()->back()->with('success', 'Plano desativado com sucesso.');
-        } catch (Exception $e) {
-            Log::error('Erro no PlanController@deactivate', ['slug' => $slug, 'error' => $e->getMessage()]);
-
-            return redirect()->back()->withErrors('Erro interno do servidor');
+        $result = $this->planService->findBySlug($slug);
+        if (! $result->isSuccess()) {
+            return redirect()->back()->withErrors($result->getMessage() ?? 'Plano não encontrado.');
         }
+
+        $updateResult = $this->planService->updateBySlug($slug, ['status' => false]);
+        if (! $updateResult->isSuccess()) {
+            return redirect()->back()->withErrors($updateResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Plano desativado com sucesso.');
     }
 }

@@ -12,7 +12,7 @@ class AreasOfActivitySeeder extends Seeder
         $now = now();
         $areas = [
             ['slug' => 'construcao-civil',     'name' => 'Construção Civil',      'is_active' => true, 'created_at' => $now],
-            ['slug' => 'hidraulica-saneamento','name' => 'Hidráulica e Saneamento','is_active' => true, 'created_at' => $now],
+            ['slug' => 'hidraulica-saneamento', 'name' => 'Hidráulica e Saneamento', 'is_active' => true, 'created_at' => $now],
             ['slug' => 'eletrica',             'name' => 'Elétrica',               'is_active' => true, 'created_at' => $now],
             ['slug' => 'pintura',              'name' => 'Pintura',                'is_active' => true, 'created_at' => $now],
             ['slug' => 'marcenaria',           'name' => 'Marcenaria',             'is_active' => true, 'created_at' => $now],
@@ -29,6 +29,6 @@ class AreasOfActivitySeeder extends Seeder
             ['slug' => 'outros',               'name' => 'Outros',                 'is_active' => true, 'created_at' => $now],
         ];
 
-        DB::table('areas_of_activity')->upsert($areas, ['slug'], ['name','is_active']);
+        DB::table('areas_of_activity')->upsert($areas, ['slug'], ['name', 'is_active']);
     }
 }

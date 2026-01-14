@@ -6,7 +6,6 @@ namespace Database\Factories;
 
 use App\Models\Customer;
 use App\Models\Tenant;
-use Database\Factories\CommonDataFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CustomerFactory extends Factory
@@ -22,8 +21,7 @@ class CustomerFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
-            'status'    => 'active',
+            'status' => 'active',
         ];
     }
-
 }

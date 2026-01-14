@@ -1,9 +1,18 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
+    <div class="container-fluid py-4">
         @php($activeTab = $activeTab ?? 'profile')
-        @include( 'partials.settings.header' )
+
+        <x-layout.page-header
+            title="Configurações do Sistema"
+            icon="gear"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Configurações' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Gerencie as preferências e configurações da sua conta e empresa</p>
+        </x-layout.page-header>
 
         <div class="row g-4">
             <!-- Menu Lateral -->

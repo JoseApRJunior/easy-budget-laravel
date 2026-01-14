@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BudgetShare extends Model
 {
@@ -56,7 +58,7 @@ class BudgetShare extends Model
         'permissions' => 'array',
         'expires_at' => 'datetime',
         'is_active' => 'boolean',
-        'status' => 'string',
+        'status' => \App\Enums\BudgetShareStatus::class,
         'access_count' => 'integer',
         'last_accessed_at' => 'datetime',
         'rejected_at' => 'datetime',
@@ -79,7 +81,7 @@ class BudgetShare extends Model
             'permissions' => 'nullable|array',
             'expires_at' => 'nullable|date|after:now',
             'is_active' => 'required|boolean',
-            'status' => 'required|string|in:active,rejected,expired',
+            'status' => 'required|string|in:active,approved,rejected,expired',
             'access_count' => 'required|integer|min:0',
         ];
     }
@@ -113,7 +115,7 @@ class BudgetShare extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->where('expires_at', '<=', now());
+        return $query->where('expires_at', '<=', Carbon::now());
     }
 
     /**
@@ -124,7 +126,7 @@ class BudgetShare extends Model
         return $query->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', Carbon::now());
             });
     }
 
@@ -134,7 +136,7 @@ class BudgetShare extends Model
     public function incrementAccessCount(): bool
     {
         $this->increment('access_count');
-        $this->last_accessed_at = now();
+        $this->last_accessed_at = Carbon::now();
 
         return $this->save();
     }
@@ -178,7 +180,7 @@ class BudgetShare extends Model
      */
     public function extendValidity(int $days): bool
     {
-        $this->expires_at = now()->addDays($days);
+        $this->expires_at = Carbon::now()->addDays($days);
 
         return $this->save();
     }

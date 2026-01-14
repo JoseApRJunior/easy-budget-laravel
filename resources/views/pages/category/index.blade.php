@@ -3,362 +3,255 @@
 @section('title', 'Categorias')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-tags me-2"></i>
-                    Categorias
-                </h1>
-                <p class="text-muted">Lista de suas categorias </p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.categories.dashboard') }}">Categorias</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
-                </ol>
-            </nav>
-        </div>
+<x-layout.page-container>
+    <x-layout.page-header
+        title="Categorias"
+        icon="tags"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Categorias' => route('provider.categories.dashboard'),
+            'Lista' => '#'
+        ]">
+        <p class="text-muted mb-0">Lista de suas categorias</p>
+    </x-layout.page-header>
 
-        <div class="row">
-            <div class="col-12">
-                <!-- Filtros de Busca -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="filtersFormCategories" method="GET" action="{{ route('provider.categories.index') }}">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="search">Buscar</label>
-                                        <input type="text" class="form-control" id="search" name="search"
-                                            value="{{ old('search', $filters['search'] ?? '') }}"
-                                            placeholder="Categoria, Subcategoria">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="active">Status</label>
-                                        <select class="form-control" id="active" name="active">
-                                            @php($selectedActive = request()->has('active') ? request('active') : '1')
-                                            <option value="1" {{ $selectedActive === '1' ? 'selected' : '' }}>
-                                                Ativo</option>
-                                            <option value="0" {{ $selectedActive === '0' ? 'selected' : '' }}>
-                                                Inativo
-                                            </option>
-                                            <option value=""
-                                                {{ $selectedActive === '' || $selectedActive === null ? 'selected' : '' }}>
-                                                Todos
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="per_page" class="text-nowrap">Por página</label>
-                                        <select class="form-control" id="per_page" name="per_page">
-                                            @php($pp = (int) request('per_page', 10))
-                                            <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
-                                            <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
-                                            <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="deleted">Registros</label>
-                                        <select name="deleted" id="deleted" class="form-control">
-                                            @php($selectedDeleted = request()->has('deleted') ? request('deleted') : 'current')
-                                            <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
-                                                Atuais
-                                            </option>
-                                            <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
-                                                Deletados
-                                            </option>
-                                            <option value=""
-                                                {{ $selectedDeleted === '' || $selectedDeleted === null ? 'selected' : '' }}>
-                                                Todos
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="d-flex gap-2 flex-nowrap">
-                                        <button type="submit" id="btnFilterCategories" class="btn btn-primary"
-                                            aria-label="Filtrar">
-                                            <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                        </button>
-                                        <a href="{{ route('provider.categories.index') }}" class="btn btn-secondary"
-                                            aria-label="Limpar filtros">
-                                            <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+    <!-- Filtros de Busca -->
+    <x-form.filter-form
+                id="filtersFormCategories"
+                :route="route('provider.categories.index')"
+                :filters="$filters"
+            >
+                <x-form.filter-field
+                    type="text"
+                    name="search"
+                    label="Buscar"
+                    placeholder="Categoria, Subcategoria"
+                    :filters="$filters"
+                />
 
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                                <h5 class="mb-0 d-flex align-items-center flex-wrap">
-                                    <span class="me-2">
-                                        <i class="bi bi-list-ul me-1"></i>
-                                        <span class="d-none d-sm-inline">Lista de Categorias</span>
-                                        <span class="d-sm-none">Categorias</span>
-                                    </span>
-                                    <span class="text-muted" style="font-size: 0.875rem;">
-                                        @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                                            ({{ $categories->total() }})
+                <x-form.filter-field
+                    type="select"
+                    name="active"
+                    label="Status"
+                    col="col-md-2"
+                    :options="[
+                        '1' => 'Ativo',
+                        '0' => 'Inativo',
+                        'all' => 'Todos'
+                    ]"
+                    :filters="$filters"
+                />
+
+                <x-form.filter-field
+                    type="select"
+                    name="per_page"
+                    label="Por página"
+                    col="col-md-2"
+                    :options="[
+                        10 => '10',
+                        20 => '20',
+                        50 => '50'
+                    ]"
+                    :filters="$filters"
+                />
+
+                <x-form.filter-field
+                    type="select"
+                    name="deleted"
+                    label="Registros"
+                    col="col-md-2"
+                    :options="[
+                        'current' => 'Atuais',
+                        'only' => 'Deletados',
+                        'all' => 'Todos'
+                    ]"
+                    :filters="$filters"
+                />
+
+                <x-form.filter-field
+                    type="date"
+                    name="start_date"
+                    label="Cadastro Inicial"
+                    col="col-md-2"
+                    :filters="$filters"
+                />
+
+                <x-form.filter-field
+                    type="date"
+                    name="end_date"
+                    label="Cadastro Final"
+                    col="col-md-2"
+                    :filters="$filters"
+                />
+            </x-form.filter-form>
+
+            <x-resource.resource-list-card
+                class="mt-3 mt-md-0"
+                title="Lista de Categorias"
+                mobileTitle="Categorias"
+                icon="list-ul"
+                :total="$categories instanceof \Illuminate\Pagination\LengthAwarePaginator ? $categories->total() : $categories->count()"
+            >
+                <x-slot:headerActions>
+                    <x-resource.table-header-actions
+                        resource="categories"
+                        :filters="$filters"
+                        createLabel="Nova"
+                    />
+                </x-slot:headerActions>
+
+                <x-slot:desktop>
+                    <x-resource.resource-table>
+                        <x-slot:thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Categoria Pai</th>
+                                <th width="120">Status</th>
+                                <th width="150">Criado em</th>
+                                <th width="150" class="text-center">Ações</th>
+                            </tr>
+                        </x-slot:thead>
+
+                        <x-slot:tbody>
+                            @forelse($categories as $category)
+                                <tr>
+                                    <td>
+                                        <x-resource.resource-info
+                                            :title="$category->name"
+                                            icon="tag"
+                                        />
+                                    </td>
+                                    <td>
+                                        @if ($category->parent_id && $category->parent)
+                                            <x-resource.resource-info
+                                                :title="$category->parent->name"
+                                                icon="folder2-open"
+                                            />
                                         @else
-                                            ({{ $categories->count() }})
+                                            <span class="small text-muted opacity-50">—</span>
                                         @endif
-                                    </span>
-                                </h5>
-                            </div>
-                            <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                                <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button"
-                                            id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-download me-1"></i> Exportar
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                                            <li>
-                                                <a class="dropdown-item"
-                                                    href="{{ route('provider.categories.export', array_merge(request()->query(), ['format' => 'xlsx', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
-                                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item"
-                                                    href="{{ route('provider.categories.export', array_merge(request()->query(), ['format' => 'pdf', 'deleted' => request('deleted') ?? '', 'search' => request('search') ?? ''])) }}">
-                                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <a href="{{ route('provider.categories.create') }}" class="btn btn-primary btn-sm">
-                                        <i class="bi bi-plus" aria-hidden="true"></i>
-                                        <span class="ms-1">Nova</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
+                                    </td>
+                                    <td>
+                                        <x-ui.status-badge :item="$category" />
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ $category->created_at?->format('d/m/Y H:i') ?? '—' }}
+                                        </small>
+                                    </td>
+                                    <x-resource.table-actions>
+                                        @php($parentIsTrashed = $category->parent_id && $category->parent && $category->parent->trashed())
+                                        <x-resource.action-buttons
+                                            :item="$category"
+                                            resource="categories"
+                                            identifier="slug"
+                                            :canDelete="$category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0"
+                                            :restoreBlocked="$parentIsTrashed"
+                                            restoreBlockedMessage="<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro."
+                                        />
+                                    </x-resource.table-actions>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5">
+                                        <x-resource.empty-state
+                                            resource="categorias"
+                                            :isTrashView="($filters['deleted'] ?? '') === 'only'"
+                                        />
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </x-slot:tbody>
+                    </x-resource.resource-table>
+                </x-slot:desktop>
 
-                        <!-- Mobile View -->
-                        <div class="mobile-view">
-                            <div class="list-group list-group-flush">
-                                @forelse($categories as $category)
-                                    <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                        class="list-group-item list-group-item-action py-3">
-                                        <div class="d-flex align-items-start">
-                                            <i class="bi bi-tag-fill text-muted me-2 mt-1"></i>
-                                            <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-2">
-                                                    {{ $category->parent ? $category->parent->name : $category->name }}
-                                                </div>
-                                                <div class="d-flex gap-2 flex-wrap mb-2">
-                                                    @if ($category->is_active)
-                                                        <span class="badge bg-success-subtle text-success">Ativo</span>
-                                                    @else
-                                                        <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                                    @endif
-                                                </div>
-                                                @if ($category->parent)
-                                                    <small class="text-muted">Subcategoria: {{ $category->name }}</small>
-                                                @endif
-                                            </div>
-                                            <i class="bi bi-chevron-right text-muted ms-2"></i>
-                                        </div>
-                                    </a>
-                                @empty
-                                    <div class="p-4 text-center text-muted">
-                                        <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                        <br>
-                                        @if (($filters['deleted'] ?? '') === 'only')
-                                            Nenhuma categoria deletada encontrada.
-                                        @else
-                                            Nenhuma categoria encontrada.
-                                        @endif
-                                    </div>
-                                @endforelse
-                            </div>
-                        </div>
+                <x-slot:mobile>
+                    @forelse($categories as $category)
+                            <x-resource.resource-mobile-item>
+                                <x-resource.resource-info
+                                    :title="$category->name"
+                                    icon="tag"
+                                />
 
-                        <!-- Versão Desktop: Tabela -->
-                        <div class="desktop-view">
-                            <div class="table-responsive">
-                                <table class="modern-table table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th width="60"><i class="bi bi-tag" aria-hidden="true"></i></th>
-                                            <th>Categoria</th>
-                                            <th>Subcategoria</th>
-                                            <th width="120">Status</th>
-                                            <th width="150">Criado em</th>
-                                            <th width="150" class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse( $categories as $category )
-                                            <tr>
-                                                <td>
-                                                    <div class="item-icon">
-                                                        <i class="bi bi-tag-fill"></i>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="item-name-cell">
-                                                        @if ($category->parent)
-                                                            {{ $category->parent->name }}
-                                                        @else
-                                                            {{ $category->name }}
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    @if ($category->parent)
-                                                        <span class="text-muted">{{ $category->name }}</span>
-                                                    @else
-                                                        <span class="text-muted">—</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="modern-badge {{ $category->is_active ? 'badge-active' : 'badge-inactive' }}">
-                                                        {{ $category->is_active ? 'Ativo' : 'Inativo' }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <small class="text-muted">
-                                                        {{ $category->created_at?->format('d/m/Y H:i') ?? '—' }}
-                                                    </small>
-                                                </td>
-                                                <td>
-                                                    <div class="action-btn-group">
-                                                        @if ($category->deleted_at)
-                                                            {{-- Categoria deletada: apenas restaurar --}}
-                                                            <form
-                                                                action="{{ route('provider.categories.restore', $category->slug) }}"
-                                                                method="POST" class="d-inline">
-                                                                @csrf
-                                                                <button type="submit" class="btn btn-success"
-                                                                    title="Restaurar" aria-label="Restaurar">
-                                                                    <i class="bi bi-arrow-counterclockwise"
-                                                                        aria-hidden="true"></i>
-                                                                </button>
-                                                            </form>
-                                                        @else
-                                                            {{-- Categoria ativa: show, edit, delete --}}
-                                                            <a href="{{ route('provider.categories.show', $category->slug) }}"
-                                                                class="btn btn-info" title="Visualizar"
-                                                                aria-label="Visualizar">
-                                                                <i class="bi bi-eye" aria-hidden="true"></i>
-                                                            </a>
-                                                            @php($canDelete = $category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0)
-                                                            <a href="{{ route('provider.categories.edit', $category->slug) }}"
-                                                                class="btn btn-primary" title="Editar"
-                                                                aria-label="Editar">
-                                                                <i class="bi bi-pencil-square" aria-hidden="true"></i>
-                                                            </a>
-                                                            @if ($canDelete)
-                                                                <button type="button" class="btn btn-danger"
-                                                                    data-bs-toggle="modal" data-bs-target="#deleteModal"
-                                                                    data-delete-url="{{ route('provider.categories.destroy', $category->slug) }}"
-                                                                    data-category-name="{{ $category->name }}"
-                                                                    title="Excluir" aria-label="Excluir">
-                                                                    <i class="bi bi-trash" aria-hidden="true"></i>
-                                                                </button>
-                                                            @endif
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center text-muted">
-                                                    <i class="bi bi-inbox mb-2" aria-hidden="true"
-                                                        style="font-size: 2rem;"></i>
-                                                    <br>
-                                                    @if (($filters['deleted'] ?? '') === 'only')
-                                                        Nenhuma categoria deletada encontrada.
-                                                        <br>
-                                                        <small>Você ainda não deletou nenhuma categoria.</small>
-                                                    @else
-                                                        Nenhuma categoria encontrada.
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                                <x-slot:description>
+                                    <div class="d-flex gap-2 flex-wrap mb-1">
+                                        <x-ui.status-badge :item="$category" />
+                                    </div>
+                                    @if ($category->parent_id && $category->parent)
+                                        <x-resource.resource-info
+                                            :title="'Pai: ' . $category->parent->name"
+                                            icon="arrow-return-right"
+                                            class="mt-1"
+                                        />
+                                    @endif
+                                </x-slot:description>
+
+                                <x-slot:footer>
+                                    <small class="text-muted">
+                                        {{ $category->created_at?->format('d/m/Y') ?? '—' }}
+                                    </small>
+                                </x-slot:footer>
+
+                                <x-slot:actions>
+                                    <x-resource.table-actions mobile>
+                                        <x-resource.action-buttons
+                                            :item="$category"
+                                            resource="categories"
+                                            identifier="slug"
+                                            :canDelete="$category->children_count === 0 && $category->services_count === 0 && $category->products_count === 0"
+                                            size="sm"
+                                        />
+                                    </x-resource.table-actions>
+                                </x-slot:actions>
+                            </x-resource.resource-mobile-item>
+                        @empty
+                            <x-resource.empty-state
+                                resource="categorias"
+                                :isTrashView="($filters['deleted'] ?? '') === 'only'"
+                            />
+                        @endforelse
+                    </x-slot:mobile>
+
+                <x-slot:footer>
                     @if ($categories instanceof \Illuminate\Pagination\LengthAwarePaginator && $categories->hasPages())
                         @include('partials.components.paginator', [
-                            'p' => $categories->appends(request()->query()),
+                            'p' => $categories->appends(collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()),
                             'show_info' => true,
                         ])
                     @endif
-                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Fechar"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Tem certeza de que deseja excluir a categoria <strong
-                                        id="deleteCategoryName"></strong>?
-                                    <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">Cancelar</button>
-                                    <form id="deleteForm" action="#" method="POST" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger">Excluir</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                </x-slot:footer>
+            </x-resource.resource-list-card>
+            {{-- Modais de Confirmação --}}
+            <x-ui.confirm-modal
+                id="deleteModal"
+                type="delete"
+                resource="categoria"
+                method="DELETE"
+            />
 
-    @push('scripts')
-        <script src="{{ asset('assets/js/category.js') }}?v={{ time() }}"></script>
-    @endpush
-    <div class="modal fade" id="confirmAllCategoriesModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Listar todas as categorias?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-confirm-all-categories">Listar todos</button>
-                </div>
-            </div>
-        </div>
-    </div>
+            <x-ui.confirm-modal
+                id="restoreModal"
+                type="restore"
+                resource="categoria"
+                method="POST"
+            />
+    </x-layout.page-container>
+
+    {{-- Modal de Confirmação para Listar Tudo --}}
+    <x-ui.modal
+        id="confirmAllCategoriesModal"
+        title="Listar todas as categorias?"
+    >
+        <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
+
+        <x-slot:footer>
+            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+            <x-ui.button type="button" class="btn-confirm-all-categories" label="Listar todos" />
+        </x-slot:footer>
+    </x-ui.modal>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('assets/js/category.js') }}?v={{ time() }}"></script>
+
+@endpush

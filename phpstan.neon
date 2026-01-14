@@ -1,5 +1,9 @@
+includes:
+    - vendor/nunomaduro/larastan/extension.neon
+    - vendor/tomasvotruba/bladestan/config/extension.neon
+
 parameters:
-    level: 1
+    level: 9
     paths:
     - app
     - bootstrap
@@ -17,6 +21,6 @@ parameters:
         - app/Support
         - app/Models
     excludePaths:
-        - old-system (?)
+        - old-system-legado
         - node_modules
         - vendor

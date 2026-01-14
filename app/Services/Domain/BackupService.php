@@ -9,14 +9,11 @@ use App\Models\Backup;
 use App\Repositories\BackupRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
 /**
  * Serviço para gerenciamento de backups do sistema
- * 
+ *
  * Este serviço gerencia a criação, armazenamento e restauração de backups
 do banco de dados e arquivos do sistema, com suporte a múltiplos
 destinos de armazenamento e agendamento automático.
@@ -35,23 +32,23 @@ class BackupService extends AbstractBaseService
     public function createFullBackup(string $type = 'manual', array $options = []): ServiceResult
     {
         try {
-            $backupName = 'backup_' . date('Y-m-d_H-i-s') . '_' . $type;
-            $backupPath = storage_path('app/backups/' . $backupName);
+            $backupName = 'backup_'.date('Y-m-d_H-i-s').'_'.$type;
+            $backupPath = storage_path('app/backups/'.$backupName);
 
             // Cria diretório se não existir
-            if (!file_exists(dirname($backupPath))) {
+            if (! file_exists(dirname($backupPath))) {
                 mkdir(dirname($backupPath), 0755, true);
             }
 
             // Cria backup do banco de dados
-            $dbBackup = $this->createDatabaseBackup($backupPath . '_database.sql');
-            if (!$dbBackup->isSuccess()) {
+            $dbBackup = $this->createDatabaseBackup($backupPath.'_database.sql');
+            if (! $dbBackup->isSuccess()) {
                 return $dbBackup;
             }
 
             // Cria backup dos arquivos
-            $filesBackup = $this->createFilesBackup($backupPath . '_files.zip', $options);
-            if (!$filesBackup->isSuccess()) {
+            $filesBackup = $this->createFilesBackup($backupPath.'_files.zip', $options);
+            if (! $filesBackup->isSuccess()) {
                 return $filesBackup;
             }
 
@@ -62,16 +59,16 @@ class BackupService extends AbstractBaseService
                 'created_at' => now()->toIso8601String(),
                 'tenant_id' => $this->tenantId(),
                 'created_by' => $this->authUser()->id ?? null,
-                'database_size' => filesize($backupPath . '_database.sql'),
-                'files_size' => filesize($backupPath . '_files.zip'),
-                'total_size' => filesize($backupPath . '_database.sql') + filesize($backupPath . '_files.zip'),
+                'database_size' => filesize($backupPath.'_database.sql'),
+                'files_size' => filesize($backupPath.'_files.zip'),
+                'total_size' => filesize($backupPath.'_database.sql') + filesize($backupPath.'_files.zip'),
             ];
 
-            file_put_contents($backupPath . '_manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
+            file_put_contents($backupPath.'_manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
 
             // Cria arquivo final compactado
             $finalBackup = $this->createFinalBackupArchive($backupPath, $backupName);
-            if (!$finalBackup->isSuccess()) {
+            if (! $finalBackup->isSuccess()) {
                 return $finalBackup;
             }
 
@@ -84,12 +81,12 @@ class BackupService extends AbstractBaseService
                 'backup_type' => 'full',
                 'tenant_id' => $this->tenantId(),
                 'created_by' => $this->authUser()->id ?? null,
-                'expires_at' => isset($options['retention_days']) 
-                    ? now()->addDays($options['retention_days']) 
+                'expires_at' => isset($options['retention_days'])
+                    ? now()->addDays($options['retention_days'])
                     : now()->addDays(30), // Padrão: 30 dias
             ]);
 
-            if (!$backupRecord->isSuccess()) {
+            if (! $backupRecord->isSuccess()) {
                 return $backupRecord;
             }
 
@@ -114,7 +111,7 @@ class BackupService extends AbstractBaseService
             $password = config('database.connections.mysql.password');
             $host = config('database.connections.mysql.host');
 
-            if (!$database || !$username) {
+            if (! $database || ! $username) {
                 return $this->error(OperationStatus::ERROR, 'Configurações do banco de dados não encontradas.');
             }
 
@@ -128,13 +125,13 @@ class BackupService extends AbstractBaseService
                 escapeshellarg($outputPath)
             );
 
-            exec($command . ' 2>&1', $output, $returnCode);
+            exec($command.' 2>&1', $output, $returnCode);
 
             if ($returnCode !== 0) {
-                return $this->error(OperationStatus::ERROR, 'Erro ao executar mysqldump: ' . implode("\n", $output));
+                return $this->error(OperationStatus::ERROR, 'Erro ao executar mysqldump: '.implode("\n", $output));
             }
 
-            if (!file_exists($outputPath) || filesize($outputPath) === 0) {
+            if (! file_exists($outputPath) || filesize($outputPath) === 0) {
                 return $this->error(OperationStatus::ERROR, 'Arquivo de backup do banco de dados vazio ou não criado.');
             }
 
@@ -151,8 +148,8 @@ class BackupService extends AbstractBaseService
     public function createFilesBackup(string $outputPath, array $options = []): ServiceResult
     {
         try {
-            $zip = new ZipArchive();
-            
+            $zip = new ZipArchive;
+
             if ($zip->open($outputPath, ZipArchive::CREATE) !== true) {
                 return $this->error(OperationStatus::ERROR, 'Não foi possível criar arquivo ZIP.');
             }
@@ -191,7 +188,7 @@ class BackupService extends AbstractBaseService
 
             $zip->close();
 
-            if (!file_exists($outputPath)) {
+            if (! file_exists($outputPath)) {
                 return $this->error(OperationStatus::ERROR, 'Arquivo ZIP não foi criado.');
             }
 
@@ -209,48 +206,50 @@ class BackupService extends AbstractBaseService
     {
         try {
             // Busca o backup
-            $backup = $this->find($backupId);
-            if (!$backup->isSuccess()) {
+            $backup = $this->findById($backupId);
+            if (! $backup->isSuccess()) {
                 return $backup;
             }
 
             $backupData = $backup->getData();
-            
-            if (!file_exists($backupData->file_path)) {
+
+            if (! file_exists($backupData->file_path)) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Arquivo de backup não encontrado.');
             }
 
             // Cria backup de segurança antes de restaurar
             $safetyBackup = $this->createFullBackup('safety_before_restore', ['retention_days' => 7]);
-            if (!$safetyBackup->isSuccess()) {
+            if (! $safetyBackup->isSuccess()) {
                 return $safetyBackup;
             }
 
             // Extrai arquivos do backup
-            $extractPath = storage_path('app/temp_restore_' . uniqid());
-            $zip = new ZipArchive();
-            
+            $extractPath = storage_path('app/temp_restore_'.uniqid());
+            $zip = new ZipArchive;
+
             if ($zip->open($backupData->file_path) !== true) {
                 return $this->error(OperationStatus::ERROR, 'Não foi possível abrir arquivo de backup.');
             }
-            
+
             $zip->extractTo($extractPath);
             $zip->close();
 
             // Restaura banco de dados
             if (isset($options['restore_database']) && $options['restore_database'] !== false) {
-                $dbRestore = $this->restoreDatabase($extractPath . '_database.sql');
-                if (!$dbRestore->isSuccess()) {
+                $dbRestore = $this->restoreDatabase($extractPath.'_database.sql');
+                if (! $dbRestore->isSuccess()) {
                     $this->cleanupTemporaryFiles($extractPath);
+
                     return $dbRestore;
                 }
             }
 
             // Restaura arquivos
             if (isset($options['restore_files']) && $options['restore_files'] !== false) {
-                $filesRestore = $this->restoreFiles($extractPath . '_files.zip');
-                if (!$filesRestore->isSuccess()) {
+                $filesRestore = $this->restoreFiles($extractPath.'_files.zip');
+                if (! $filesRestore->isSuccess()) {
                     $this->cleanupTemporaryFiles($extractPath);
+
                     return $filesRestore;
                 }
             }
@@ -326,13 +325,13 @@ class BackupService extends AbstractBaseService
                 if (file_exists($backup->file_path)) {
                     unlink($backup->file_path);
                 }
-                
+
                 // Remove registro do banco
                 $backup->delete();
                 $deletedCount++;
             }
 
-            return $this->success(['deleted_count' => $deletedCount], 
+            return $this->success(['deleted_count' => $deletedCount],
                 "{$deletedCount} backups expirados removidos com sucesso.");
 
         } catch (\Exception $e) {
@@ -346,9 +345,9 @@ class BackupService extends AbstractBaseService
     private function createFinalBackupArchive(string $backupPath, string $backupName): ServiceResult
     {
         try {
-            $finalPath = $backupPath . '.zip';
-            $zip = new ZipArchive();
-            
+            $finalPath = $backupPath.'.zip';
+            $zip = new ZipArchive;
+
             if ($zip->open($finalPath, ZipArchive::CREATE) !== true) {
                 return $this->error(OperationStatus::ERROR, 'Não foi possível criar arquivo ZIP final.');
             }
@@ -356,15 +355,15 @@ class BackupService extends AbstractBaseService
             // Adiciona componentes do backup
             $components = ['_database.sql', '_files.zip', '_manifest.json'];
             foreach ($components as $component) {
-                $componentPath = $backupPath . $component;
+                $componentPath = $backupPath.$component;
                 if (file_exists($componentPath)) {
-                    $zip->addFile($componentPath, $backupName . $component);
+                    $zip->addFile($componentPath, $backupName.$component);
                 }
             }
 
             $zip->close();
 
-            if (!file_exists($finalPath)) {
+            if (! file_exists($finalPath)) {
                 return $this->error(OperationStatus::ERROR, 'Arquivo ZIP final não foi criado.');
             }
 
@@ -386,9 +385,9 @@ class BackupService extends AbstractBaseService
         );
 
         foreach ($files as $file) {
-            if (!$file->isDir()) {
+            if (! $file->isDir()) {
                 $filePath = $file->getRealPath();
-                $relativePath = $baseName . '/' . substr($filePath, strlen($directory) + 1);
+                $relativePath = $baseName.'/'.substr($filePath, strlen($directory) + 1);
                 $zip->addFile($filePath, $relativePath);
             }
         }
@@ -400,7 +399,7 @@ class BackupService extends AbstractBaseService
     private function restoreDatabase(string $sqlFile): ServiceResult
     {
         try {
-            if (!file_exists($sqlFile)) {
+            if (! file_exists($sqlFile)) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Arquivo SQL não encontrado.');
             }
 
@@ -409,7 +408,7 @@ class BackupService extends AbstractBaseService
             $password = config('database.connections.mysql.password');
             $host = config('database.connections.mysql.host');
 
-            if (!$database || !$username) {
+            if (! $database || ! $username) {
                 return $this->error(OperationStatus::ERROR, 'Configurações do banco de dados não encontradas.');
             }
 
@@ -423,10 +422,10 @@ class BackupService extends AbstractBaseService
                 escapeshellarg($sqlFile)
             );
 
-            exec($command . ' 2>&1', $output, $returnCode);
+            exec($command.' 2>&1', $output, $returnCode);
 
             if ($returnCode !== 0) {
-                return $this->error(OperationStatus::ERROR, 'Erro ao executar mysql: ' . implode("\n", $output));
+                return $this->error(OperationStatus::ERROR, 'Erro ao executar mysql: '.implode("\n", $output));
             }
 
             return $this->success(null, 'Banco de dados restaurado com sucesso.');
@@ -442,23 +441,23 @@ class BackupService extends AbstractBaseService
     private function restoreFiles(string $zipFile): ServiceResult
     {
         try {
-            if (!file_exists($zipFile)) {
+            if (! file_exists($zipFile)) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Arquivo ZIP não encontrado.');
             }
 
-            $zip = new ZipArchive();
+            $zip = new ZipArchive;
             if ($zip->open($zipFile) !== true) {
                 return $this->error(OperationStatus::ERROR, 'Não foi possível abrir arquivo ZIP.');
             }
 
             // Extrai para diretório temporário primeiro
-            $tempPath = storage_path('app/temp_restore_files_' . uniqid());
+            $tempPath = storage_path('app/temp_restore_files_'.uniqid());
             $zip->extractTo($tempPath);
             $zip->close();
 
             // Move arquivos para locais apropriados
             // (Implementação específica depende da estrutura de diretórios)
-            
+
             $this->cleanupTemporaryFiles($tempPath);
 
             return $this->success(null, 'Arquivos restaurados com sucesso.');

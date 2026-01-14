@@ -87,17 +87,17 @@
             <h6 class="text-secondary border-bottom pb-2">RESUMO FINANCEIRO</h6>
             <div class="row small mt-3">
                 <div class="col-6">
-                    <p class="mb-1"><strong>Total Bruto:</strong> R$ {{ number_format( $budget->total_gross, 2, ',', '.' ) }}
+                    <p class="mb-1"><strong>Total Bruto:</strong> {{ \App\Helpers\CurrencyHelper::format($budget->total_gross) }}
                     </p>
-                    <p class="mb-1"><strong>Serviços Cancelados:</strong> R$
-                        {{ number_format( $budget->total_cancelled, 2, ',', '.' ) }}</p>
-                    <p class="mb-0"><strong>Serviços Parciais:</strong> R$
-                        {{ number_format( $budget->total_partial, 2, ',', '.' ) }}</p>
+                    <p class="mb-1"><strong>Serviços Cancelados:</strong>
+                        {{ \App\Helpers\CurrencyHelper::format($budget->total_cancelled) }}</p>
+                    <p class="mb-0"><strong>Serviços Parciais:</strong>
+                        {{ \App\Helpers\CurrencyHelper::format($budget->total_partial) }}</p>
                 </div>
                 <div class="col-6">
-                    <p class="mb-1"><strong>Total de Descontos:</strong> R$
-                        {{ number_format( $budget->total_discount, 2, ',', '.' ) }}</p>
-                    <p class="mb-1"><strong>Total Líquido:</strong> R$ {{ number_format( $budget->total_net, 2, ',', '.' ) }}
+                    <p class="mb-1"><strong>Total de Descontos:</strong>
+                        {{ \App\Helpers\CurrencyHelper::format($budget->total_discount) }}</p>
+                    <p class="mb-1"><strong>Total Líquido:</strong> {{ \App\Helpers\CurrencyHelper::format($budget->total_net) }}
                     </p>
                     <p class="mb-0"><strong>Data de Vencimento:</strong> {{ $budget->due_date->format( 'd/m/Y' ) }}</p>
                 </div>
@@ -136,24 +136,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach( $service->items as $item )
+                                    @foreach( $service->serviceItems as $item )
                                         <tr>
                                             <td>
-                                                <p class="fw-medium mb-0">{{ $item->name }}</p>
-                                                @if( $item->description )
-                                                    <small class="text-secondary">{{ $item->description }}</small>
+                                                <p class="fw-medium mb-0">{{ $item->product?->name ?? 'Produto não encontrado' }}</p>
+                                                @if( $item->product?->description )
+                                                    <small class="text-secondary">{{ $item->product->description }}</small>
                                                 @endif
                                             </td>
                                             <td class="text-center">{{ $item->quantity }}</td>
-                                            <td class="text-end">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
-                                            <td class="text-end">R$
-                                                {{ number_format( $item->quantity * $item->unit_value, 2, ',', '.' ) }}</td>
+                                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                                            <td class="text-end">
+                                                {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</td>
                                         </tr>
                                     @endforeach
                                     <tr>
                                         <td colspan="3" class="text-end border-top pt-2"><strong>Total do Serviço:</strong></td>
-                                        <td class="text-end border-top pt-2"><strong>R$
-                                                {{ number_format( $service->total, 2, ',', '.' ) }}</strong></td>
+                                        <td class="text-end border-top pt-2"><strong>
+                                                {{ \App\Helpers\CurrencyHelper::format($service->total) }}</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -185,7 +185,7 @@
                     <h6 class="mb-0">VALOR TOTAL DO ORÇAMENTO</h6>
                 </div>
                 <div class="col-6 text-end">
-                    <h4 class="mb-0">R$ {{ number_format( $budget->total_net, 2, ',', '.' ) }}</h4>
+                    <h4 class="mb-0">{{ \App\Helpers\CurrencyHelper::format($budget->total_net) }}</h4>
                 </div>
             </div>
         </div>

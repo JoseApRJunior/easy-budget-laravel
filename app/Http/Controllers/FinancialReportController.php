@@ -26,10 +26,10 @@ class FinancialReportController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
         $filters = $request->only(['period']);
-        
+
         $result = $this->financialReportService->getFinancialDashboard($tenantId, $filters);
-        
-        if (!$result->isSuccess()) {
+
+        if (! $result->isSuccess()) {
             abort(500, 'Erro ao carregar dashboard financeiro');
         }
 
@@ -61,10 +61,10 @@ class FinancialReportController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
         $filters = $request->only(['date_from', 'date_to', 'customer_id', 'status']);
-        
+
         $result = $this->financialReportService->getSalesReport($tenantId, $filters);
-        
-        if (!$result->isSuccess()) {
+
+        if (! $result->isSuccess()) {
             abort(500, 'Erro ao gerar relatório de vendas');
         }
 
@@ -84,9 +84,9 @@ class FinancialReportController extends Controller
     {
         $tenantId = auth()->user()->tenant_id;
         $filters = $request->only(['period']);
-        
+
         $result = $this->financialReportService->getFinancialDashboard($tenantId, $filters);
-        
+
         return response()->json([
             'success' => $result->isSuccess(),
             'data' => $result->getData(),

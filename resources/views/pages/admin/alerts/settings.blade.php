@@ -191,13 +191,6 @@
                                 <input type="number" class="form-control" name="auto_refresh"
                                        value="{{ $settings['interface']['auto_refresh'] }}" min="10">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Tema</label>
-                                <select class="form-control" name="theme">
-                                    <option value="light" {{ $settings['interface']['theme'] == 'light' ? 'selected' : '' }}>Claro</option>
-                                    <option value="dark" {{ $settings['interface']['theme'] == 'dark' ? 'selected' : '' }}>Escuro</option>
-                                </select>
-                            </div>
                         </div>
 
                         <div class="mb-3">

@@ -1,19 +1,39 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-file-earmark-text me-2"></i>Detalhes do Orçamento
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Início</a></li>
-                    <li class="breadcrumb-item active">{{ $budget->code }}</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Detalhes do Orçamento #{{ $budget->code }}"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Início' => url('/'),
+                $budget->code => '#'
+            ]">
+        </x-layout.page-header>
+
+        @if(isset($info) && $info)
+            <div class="alert alert-warning alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ $info }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-4 border-0 shadow-sm" role="alert">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
         <div class="row g-4 mb-4">
             <!-- Main Details -->
@@ -28,7 +48,12 @@
                             </div>
                             <div class="col-md-6">
                                 <small class="text-muted">Prestador</small>
-                                <h5 class="mb-0">{{ $budget->provider->company_name }}</h5>
+                                <h5 class="mb-0">
+                                    @php
+                                        $providerName = $budget->tenant->provider->commonData->display_name ?? ($budget->tenant->name ?? 'Prestador');
+                                    @endphp
+                                    {{ $providerName }}
+                                </h5>
                             </div>
                             <div class="col-md-2">
                                 <small class="text-muted">Status</small>
@@ -79,15 +104,17 @@
                         @endphp
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item d-flex justify-content-between">Total Bruto: <span
-                                    class="fw-semibold">R$ {{ number_format( $budget->total, 2, ',', '.' ) }}</span></li>
+                                    class="fw-semibold">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span></li>
                             @if( $cancelled_total > 0 )
                                 <li class="list-group-item d-flex justify-content-between text-danger">Cancelados: <span>- R$
-                                        {{ number_format( $cancelled_total, 2, ',', '.' ) }}</span></li>
+                                        {{ \App\Helpers\CurrencyHelper::format($cancelled_total) }}</span></li>
                             @endif
-                            <li class="list-group-item d-flex justify-content-between text-danger">Descontos: <span>- R$
-                                    {{ number_format( $total_discount, 2, ',', '.' ) }}</span></li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Desconto Aplicado
+                                <span class="badge bg-info rounded-pill">
+                                    {{ \App\Helpers\CurrencyHelper::format($total_discount) }}</span></li>
                             <li class="list-group-item d-flex justify-content-between h5 mb-0"><strong>Total:</strong>
-                                <strong class="text-success">R$ {{ number_format( $real_total, 2, ',', '.' ) }}</strong></li>
+                                <strong class="text-success">R$ {{ \App\Helpers\CurrencyHelper::format($real_total) }}</strong></li>
                         </ul>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
@@ -109,6 +136,15 @@
                             <div class="alert alert-info text-center">Este orçamento já foi
                                 {{ strtolower( $budget->status->getDescription() ) }}.</div>
                         @endif
+
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token]) }}" class="btn btn-outline-secondary" target="_blank">
+                                <i class="bi bi-printer me-2"></i>Imprimir Orçamento
+                            </a>
+                            <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>Baixar em PDF
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -137,12 +173,14 @@
                                 <div class="col-md-4">
                                     <ul class="list-group list-group-flush text-end">
                                         <li class="list-group-item">Total: <span class="fw-bold text-success">R$
-                                                {{ number_format( $service->total, 2, ',', '.' ) }}</span></li>
+                                                {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span></li>
                                         @if( $service->discount > 0 )
                                             <li class="list-group-item">Desconto: <span class="fw-bold text-danger">- R$
-                                                    {{ number_format( $service->discount, 2, ',', '.' ) }}</span></li>
-                                            <li class="list-group-item">Subtotal: <span class="fw-bold">R$
-                                                    {{ number_format( $service->total - $service->discount, 2, ',', '.' ) }}</span>
+                                                    {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span></li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Valor Final
+                                                <span class="badge bg-success rounded-pill">
+                                                    {{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount) }}</span>
                                             </li>
                                         @endif
                                     </ul>
@@ -161,22 +199,28 @@
     <div class="modal fade" id="approveBudgetModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route( 'budget.approve', $budget->id ) }}" method="POST">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Aprovar Orçamento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Você confirma a aprovação do orçamento <strong>{{ $budget->code }}</strong> no valor de <strong
-                                class="text-success">R$ {{ number_format( $real_total, 2, ',', '.' ) }}</strong>?</p>
-                        <p class="text-muted small">Ao aprovar, o prestador será notificado para iniciar o trabalho.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Confirmar Aprovação</button>
-                    </div>
-                </form>
+                    <form action="{{ route('budgets.public.choose-status.store') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="token" value="{{ $token }}">
+                        <input type="hidden" name="action" value="approve">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Aprovar Orçamento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Você confirma a aprovação do orçamento <strong>{{ $budget->code }}</strong> no valor de <strong
+                                    class="text-success">R$ {{ \App\Helpers\CurrencyHelper::format($real_total) }}</strong>?</p>
+                            <p class="text-muted small">Ao aprovar, o prestador será notificado para iniciar o trabalho.</p>
+                            <div class="form-group mt-3">
+                                <label for="approve_comment">Observações (opcional):</label>
+                                <textarea name="comment" id="approve_comment" class="form-control" rows="3" placeholder="Algum detalhe ou instrução adicional?"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Confirmar Aprovação</button>
+                        </div>
+                    </form>
             </div>
         </div>
     </div>
@@ -185,25 +229,27 @@
     <div class="modal fade" id="rejectBudgetModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route( 'budget.reject', $budget->id ) }}" method="POST">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title">Rejeitar Orçamento</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Tem certeza que deseja rejeitar o orçamento <strong>{{ $budget->code }}</strong>?</p>
-                        <div class="form-group">
-                            <label for="rejection_reason">Motivo (opcional):</label>
-                            <textarea name="rejection_reason" id="rejection_reason" class="form-control"
-                                rows="3"></textarea>
+                    <form action="{{ route('budgets.public.choose-status.store') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="token" value="{{ $token }}">
+                        <input type="hidden" name="action" value="reject">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Rejeitar Orçamento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Confirmar Rejeição</button>
-                    </div>
-                </form>
+                        <div class="modal-body">
+                            <p>Tem certeza que deseja rejeitar o orçamento <strong>{{ $budget->code }}</strong>?</p>
+                            <div class="form-group">
+                                <label for="rejection_reason">Motivo da Rejeição (opcional):</label>
+                                <textarea name="comment" id="rejection_reason" class="form-control"
+                                    rows="3" placeholder="Poderia nos informar o motivo da rejeição para que possamos melhorar?"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Confirmar Rejeição</button>
+                        </div>
+                    </form>
             </div>
         </div>
     </div>

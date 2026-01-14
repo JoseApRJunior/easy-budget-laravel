@@ -4,16 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Infrastructure;
 
-use App\Enums\OperationStatus;
-use App\Interfaces\MerchantOrderMercadoPagoServiceInterface;
-use App\Models\MerchantOrderMercadoPago;
-use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
-use App\Support\ServiceResult;
-use Exception;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
 /**
  * Serviço especializado para gerenciamento de merchant orders do MercadoPago.
  *
@@ -31,10 +21,7 @@ use Illuminate\Support\Facades\Log;
  * - Mapeamento de status entre sistemas
  *
  * @author IA - Kilo Code
+ *
  * @version 1.0.0
- * @package App\Services
  */
-class MerchantOrderMercadoPagoService extends AbstractBaseService
-{
-
-}
+class MerchantOrderMercadoPagoService extends AbstractBaseService {}

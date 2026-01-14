@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env( 'MAIL_MAILER', env( 'APP_ENV' ) === 'local' ? 'mailtrap' : 'log' ),
+    'default' => env('MAIL_MAILER', env('APP_ENV') === 'local' ? 'mailtrap' : 'log'),
 
     /*
     |--------------------------------------------------------------------------
@@ -37,32 +37,32 @@ return [
 
     'mailers' => [
 
-        'smtp'       => [
-            'transport'    => 'smtp',
-            'scheme'       => env( 'EMAIL_ENCRYPTION', env( 'MAIL_SCHEME' ) ),
-            'url'          => env( 'MAIL_URL' ),
-            'host'         => env( 'EMAIL_HOST', env( 'MAIL_HOST', '127.0.0.1' ) ),
-            'port'         => env( 'EMAIL_PORT', env( 'MAIL_PORT', 2525 ) ),
-            'username'     => env( 'EMAIL_USERNAME', env( 'MAIL_USERNAME' ) ),
-            'password'     => env( 'EMAIL_PASSWORD', env( 'MAIL_PASSWORD' ) ),
-            'timeout'      => null,
-            'local_domain' => env( 'MAIL_EHLO_DOMAIN', parse_url( (string) env( 'APP_URL', 'http://localhost' ), PHP_URL_HOST ) ),
-        ],
-
-        'mailtrap'   => [
+        'smtp' => [
             'transport' => 'smtp',
-            'host'      => env( 'MAILTRAP_HOST', 'smtp.mailtrap.io' ),
-            'port'      => env( 'MAILTRAP_PORT', 2525 ),
-            'username'  => env( 'MAILTRAP_USERNAME' ),
-            'password'  => env( 'MAILTRAP_PASSWORD' ),
-            'timeout'   => null,
+            'scheme' => env('EMAIL_ENCRYPTION', env('MAIL_SCHEME')),
+            'url' => env('MAIL_URL'),
+            'host' => env('EMAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
+            'port' => env('EMAIL_PORT', env('MAIL_PORT', 2525)),
+            'username' => env('EMAIL_USERNAME', env('MAIL_USERNAME')),
+            'password' => env('EMAIL_PASSWORD', env('MAIL_PASSWORD')),
+            'timeout' => null,
+            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
-        'ses'        => [
+        'mailtrap' => [
+            'transport' => 'smtp',
+            'host' => env('MAILTRAP_HOST', 'smtp.mailtrap.io'),
+            'port' => env('MAILTRAP_PORT', 2525),
+            'username' => env('MAILTRAP_USERNAME'),
+            'password' => env('MAILTRAP_PASSWORD'),
+            'timeout' => null,
+        ],
+
+        'ses' => [
             'transport' => 'ses',
         ],
 
-        'postmark'   => [
+        'postmark' => [
             'transport' => 'postmark',
             // 'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
             // 'client' => [
@@ -70,27 +70,27 @@ return [
             // ],
         ],
 
-        'resend'     => [
+        'resend' => [
             'transport' => 'resend',
         ],
 
-        'sendmail'   => [
+        'sendmail' => [
             'transport' => 'sendmail',
-            'path'      => env( 'MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i' ),
+            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
         ],
 
-        'log'        => [
+        'log' => [
             'transport' => 'log',
-            'channel'   => env( 'MAIL_LOG_CHANNEL' ),
+            'channel' => env('MAIL_LOG_CHANNEL'),
         ],
 
-        'array'      => [
+        'array' => [
             'transport' => 'array',
         ],
 
-        'failover'   => [
-            'transport'   => 'failover',
-            'mailers'     => [
+        'failover' => [
+            'transport' => 'failover',
+            'mailers' => [
                 'smtp',
                 'log',
             ],
@@ -98,13 +98,13 @@ return [
         ],
 
         'roundrobin' => [
-            'transport'   => 'roundrobin',
-            'mailers'     => [
+            'transport' => 'roundrobin',
+            'mailers' => [
                 'ses',
                 'postmark',
             ],
             'retry_after' => 60,
-        ]
+        ],
 
     ],
 
@@ -119,9 +119,9 @@ return [
     |
     */
 
-    'from'    => [
-        'address' => env( 'EMAIL_FROM', env( 'MAIL_FROM_ADDRESS', 'hello@example.com' ) ),
-        'name'    => env( 'EMAIL_FROM_NAME', env( 'MAIL_FROM_NAME', 'Example' ) )
+    'from' => [
+        'address' => env('EMAIL_FROM', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
+        'name' => env('EMAIL_FROM_NAME', env('MAIL_FROM_NAME', 'Example')),
     ],
 
 ];

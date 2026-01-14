@@ -34,47 +34,35 @@ class UserConfirmationTokenService extends AbstractBaseService
 {
     protected UserConfirmationTokenRepository $userConfirmationTokenRepository;
 
-    public function __construct( UserConfirmationTokenRepository $userConfirmationTokenRepository )
+    public function __construct(UserConfirmationTokenRepository $userConfirmationTokenRepository)
     {
+        parent::__construct($userConfirmationTokenRepository);
         $this->userConfirmationTokenRepository = $userConfirmationTokenRepository;
     }
 
     /**
      * Cria um novo token de confirmação para o usuário.
      *
-     * Este método implementa a lógica de persistência de tokens:
-     * 1. Remove tokens antigos do usuário automaticamente
-     * 2. Valida tipo de token suportado usando TokenType enum
-     * 3. Salva token no banco de dados
-     * 4. Retorna resultado usando ServiceResult
-     *
-     * @param User $user Usuário que receberá o token
-     * @param string $token Token de confirmação em formato base64url
-     * @param TokenType $type Tipo de token usando enum TokenType
-     * @param DateTime $expiresAt Data de expiração do token
+     * @param  User  $user  Usuário que receberá o token
+     * @param  string  $token  Token de confirmação
+     * @param  TokenType  $type  Tipo de token
+     * @param  DateTime  $expiresAt  Data de expiração
      * @return ServiceResult Resultado da operação
      */
-    public function createToken( User $user, string $token, TokenType $type, DateTime $expiresAt ): ServiceResult
+    public function createToken(User $user, string $token, TokenType $type, DateTime $expiresAt): ServiceResult
     {
-        return $this->createTokenInternal( $user, $token, $type, $expiresAt, false );
+        return $this->safeExecute(fn () => $this->createTokenInternal($user, $token, $type, $expiresAt, false));
     }
 
     /**
      * Cria um novo token de confirmação gerando automaticamente o token seguro.
      *
-     * Este método centraliza toda a lógica de criação de tokens:
-     * 1. Gera token seguro usando padrão criptograficamente seguro
-     * 2. Remove tokens antigos do usuário automaticamente
-     * 3. Valida tipo de token suportado usando TokenType enum
-     * 4. Salva token no banco de dados
-     * 5. Retorna resultado usando ServiceResult
-     *
-     * @param User $user Usuário que receberá o token
-     * @param TokenType $type Tipo de token usando enum TokenType
-     * @param int $expiresInMinutes Minutos até a expiração (padrão: 30)
-     * @param int $tokenLength Comprimento do token em bytes (padrão: 32)
-     * @param string $tokenFormat Formato do token (padrão: 'base64url')
-     * @return ServiceResult Resultado da operação com token gerado
+     * @param  User  $user  Usuário que receberá o token
+     * @param  TokenType  $type  Tipo de token
+     * @param  int  $expiresInMinutes  Minutos até a expiração
+     * @param  int  $tokenLength  Comprimento do token
+     * @param  string  $tokenFormat  Formato do token
+     * @return ServiceResult Resultado da operação
      */
     public function createTokenWithGeneration(
         User $user,
@@ -83,95 +71,71 @@ class UserConfirmationTokenService extends AbstractBaseService
         int $tokenLength = 32,
         string $tokenFormat = 'base64url',
     ): ServiceResult {
-        try {
-            // Validar tipo de token suportado usando enum
-            if ( !TokenType::isValid( $type->value ) ) {
-                return ServiceResult::error(
-                    \App\Enums\OperationStatus::INVALID_DATA,
-                    'Tipo de token não suportado. Tipos válidos: ' . implode( ', ', TokenType::getAllTypes() ),
-                );
+        return $this->safeExecute(function () use ($user, $type, $expiresInMinutes, $tokenLength, $tokenFormat) {
+            // Validar tipo de token suportado
+            if (! TokenType::isValid($type->value)) {
+                return $this->error(\App\Enums\OperationStatus::INVALID_DATA, 'Tipo de token não suportado.');
             }
 
-            // Gerar token seguro usando padrão criptograficamente seguro
-            $token     = $this->generateSecureToken( $tokenLength, $tokenFormat );
-            $expiresAt = now()->addMinutes( $expiresInMinutes );
+            // Gerar token seguro
+            $token = $this->generateSecureToken($tokenLength, $tokenFormat);
+            $expiresAt = now()->addMinutes($expiresInMinutes);
 
-            Log::info( 'Gerando token de confirmação', [
-                'user_id'      => $user->id,
-                'tenant_id'    => $user->tenant_id,
-                'email'        => $user->email,
-                'type'         => $type,
-                'expires_at'   => $expiresAt,
-                'token_length' => strlen( $token ),
-                'token_format' => $tokenFormat,
-            ] );
+            Log::info('Gerando token de confirmação', [
+                'user_id' => $user->id,
+                'type' => $type->value,
+            ]);
 
-            return $this->createTokenInternal( $user, $token, $type, $expiresAt, true );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao criar token de confirmação', [
-                'user_id'   => $user->id,
-                'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-                'type'      => $type,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
-            ] );
-
-            return ServiceResult::error(
-                \App\Enums\OperationStatus::ERROR,
-                'Erro interno ao criar token de confirmação. Tente novamente.',
-                null,
-                $e,
-            );
-        }
+            return $this->createTokenInternal($user, $token, $type, $expiresAt, true);
+        }, 'Erro ao gerar token de confirmação.');
     }
 
     /**
      * Gera um token seguro usando padrão criptograficamente seguro.
      *
-     * @param int $length Número de bytes aleatórios a gerar
-     * @param string $format Formato do token ('hex', 'base64', 'base64url' ou 'alphanumeric')
+     * @param  int  $length  Número de bytes aleatórios a gerar
+     * @param  string  $format  Formato do token ('hex', 'base64', 'base64url' ou 'alphanumeric')
      * @return string Token seguro no formato especificado
+     *
      * @throws Exception Se a geração de bytes aleatórios falhar
      */
-    private function generateSecureToken( int $length = 32, string $format = 'base64url' ): string
+    private function generateSecureToken(int $length = 32, string $format = 'base64url'): string
     {
-        if ( $length <= 0 ) {
-            throw new \InvalidArgumentException( 'O comprimento deve ser um inteiro positivo.' );
+        if ($length <= 0) {
+            throw new \InvalidArgumentException('O comprimento deve ser um inteiro positivo.');
         }
 
-        if ( $length > 128 ) {
-            throw new \InvalidArgumentException( 'O comprimento não pode exceder 128 bytes para evitar uso excessivo de memória.' );
+        if ($length > 128) {
+            throw new \InvalidArgumentException('O comprimento não pode exceder 128 bytes para evitar uso excessivo de memória.');
         }
 
-        if ( !in_array( $format, [ 'hex', 'base64', 'base64url', 'alphanumeric' ] ) ) {
-            throw new \InvalidArgumentException( 'Formato inválido. Use "hex", "base64", "base64url" ou "alphanumeric".' );
+        if (! in_array($format, ['hex', 'base64', 'base64url', 'alphanumeric'])) {
+            throw new \InvalidArgumentException('Formato inválido. Use "hex", "base64", "base64url" ou "alphanumeric".');
         }
 
-        $bytes = random_bytes( $length );
+        $bytes = random_bytes($length);
 
-        return match ( $format ) {
-            'hex'          => bin2hex( $bytes ),
-            'base64'       => base64_encode( $bytes ),
-            'base64url'    => rtrim( strtr( base64_encode( $bytes ), '+/', '-_' ), '=' ),
-            'alphanumeric' => $this->generateAlphanumericToken( $length ),
+        return match ($format) {
+            'hex' => bin2hex($bytes),
+            'base64' => base64_encode($bytes),
+            'base64url' => rtrim(strtr(base64_encode($bytes), '+/', '-_'), '='),
+            'alphanumeric' => $this->generateAlphanumericToken($length),
         };
     }
 
     /**
      * Gera um token alfanumérico seguro.
      *
-     * @param int $length Comprimento do token
+     * @param  int  $length  Comprimento do token
      * @return string Token alfanumérico
      */
-    private function generateAlphanumericToken( int $length ): string
+    private function generateAlphanumericToken(int $length): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        $token      = '';
+        $token = '';
 
-        for ( $i = 0; $i < $length; $i++ ) {
-            $token .= $characters[ random_int( 0, strlen( $characters ) - 1 ) ];
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $characters[random_int(0, strlen($characters) - 1)];
         }
 
         return $token;
@@ -182,15 +146,15 @@ class UserConfirmationTokenService extends AbstractBaseService
      *
      * Remove tokens antigos e cria um novo com os parâmetros fornecidos.
      *
-     * @param User $user Usuário proprietário do token
-     * @param string $token Token de confirmação em formato base64url
-     * @param TokenType $type Tipo de token usando enum TokenType
-     * @param DateTime $expiresAt Data de expiração do token
+     * @param  User  $user  Usuário proprietário do token
+     * @param  string  $token  Token de confirmação em formato base64url
+     * @param  TokenType  $type  Tipo de token usando enum TokenType
+     * @param  DateTime  $expiresAt  Data de expiração do token
      * @return ServiceResult Resultado da operação
      */
-    public function updateToken( User $user, string $token, TokenType $type, DateTime $expiresAt ): ServiceResult
+    public function updateToken(User $user, string $token, TokenType $type, DateTime $expiresAt): ServiceResult
     {
-        return $this->createToken( $user, $token, $type, $expiresAt );
+        return $this->createToken($user, $token, $type, $expiresAt);
     }
 
     /**
@@ -199,10 +163,10 @@ class UserConfirmationTokenService extends AbstractBaseService
      * Método de conveniência que usa as configurações padrão para
      * tokens de verificação de e-mail (30 minutos, 32 bytes, base64url).
      *
-     * @param User $user Usuário que receberá o token
+     * @param  User  $user  Usuário que receberá o token
      * @return ServiceResult Resultado da operação
      */
-    public function createEmailVerificationToken( User $user ): ServiceResult
+    public function createEmailVerificationToken(User $user): ServiceResult
     {
         return $this->createTokenWithGeneration(
             $user,
@@ -219,10 +183,10 @@ class UserConfirmationTokenService extends AbstractBaseService
      * Método de conveniência que usa as configurações padrão para
      * tokens de reset de senha (15 minutos, 32 bytes, base64url).
      *
-     * @param User $user Usuário que receberá o token
+     * @param  User  $user  Usuário que receberá o token
      * @return ServiceResult Resultado da operação
      */
-    public function createPasswordResetToken( User $user ): ServiceResult
+    public function createPasswordResetToken(User $user): ServiceResult
     {
         return $this->createTokenWithGeneration(
             $user,
@@ -242,97 +206,97 @@ class UserConfirmationTokenService extends AbstractBaseService
      * 3. Persistência do novo token
      * 4. Logging detalhado
      *
-     * @param User $user Usuário que receberá o token
-     * @param string $token Token de confirmação
-     * @param TokenType $type Tipo de token usando enum TokenType
-     * @param DateTime $expiresAt Data de expiração do token
-     * @param bool $isGeneratedToken Se o token foi gerado automaticamente (para logging)
+     * @param  User  $user  Usuário que receberá o token
+     * @param  string  $token  Token de confirmação
+     * @param  TokenType  $type  Tipo de token usando enum TokenType
+     * @param  DateTime  $expiresAt  Data de expiração do token
+     * @param  bool  $isGeneratedToken  Se o token foi gerado automaticamente (para logging)
      * @return ServiceResult Resultado da operação
      */
-    private function createTokenInternal( User $user, string $token, TokenType $type, DateTime $expiresAt, bool $isGeneratedToken = false ): ServiceResult
+    private function createTokenInternal(User $user, string $token, TokenType $type, DateTime $expiresAt, bool $isGeneratedToken = false): ServiceResult
     {
         try {
             // Validar tipo de token suportado usando enum
-            if ( !TokenType::isValid( $type->value ) ) {
+            if (! TokenType::isValid($type->value)) {
                 return ServiceResult::error(
                     \App\Enums\OperationStatus::INVALID_DATA,
-                    'Tipo de token não suportado. Tipos válidos: ' . implode( ', ', TokenType::getAllTypes() ),
+                    'Tipo de token não suportado. Tipos válidos: '.implode(', ', TokenType::getAllTypes()),
                 );
             }
 
             // 1. Remover tokens antigos do usuário automaticamente
-            Log::info( 'Removendo tokens antigos do usuário', [
-                'user_id'   => $user->id,
+            Log::info('Removendo tokens antigos do usuário', [
+                'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-                'type'      => $type,
-            ] );
+                'email' => $user->email,
+                'type' => $type,
+            ]);
 
-            $deletedCount = $this->userConfirmationTokenRepository->deleteByUserId( $user->id );
-            if ( $deletedCount > 0 ) {
-                Log::info( 'Tokens antigos removidos com sucesso', [
-                    'user_id'        => $user->id,
+            $deletedCount = $this->userConfirmationTokenRepository->deleteByUserId($user->id);
+            if ($deletedCount > 0) {
+                Log::info('Tokens antigos removidos com sucesso', [
+                    'user_id' => $user->id,
                     'tokens_deleted' => $deletedCount,
-                    'type'           => $type,
-                ] );
+                    'type' => $type,
+                ]);
             }
 
             // Logging específico baseado no tipo de criação
-            if ( $isGeneratedToken ) {
-                Log::info( 'Criando novo token de confirmação (gerado automaticamente)', [
-                    'user_id'      => $user->id,
-                    'tenant_id'    => $user->tenant_id,
-                    'email'        => $user->email,
-                    'type'         => $type,
-                    'expires_at'   => $expiresAt,
-                    'token_length' => strlen( $token ),
-                ] );
+            if ($isGeneratedToken) {
+                Log::info('Criando novo token de confirmação (gerado automaticamente)', [
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'email' => $user->email,
+                    'type' => $type,
+                    'expires_at' => $expiresAt,
+                    'token_length' => strlen($token),
+                ]);
             } else {
-                Log::info( 'Criando novo token de confirmação (fornecido externamente)', [
-                    'user_id'      => $user->id,
-                    'tenant_id'    => $user->tenant_id,
-                    'email'        => $user->email,
-                    'type'         => $type,
-                    'expires_at'   => $expiresAt,
-                    'token_length' => strlen( $token ),
-                ] );
+                Log::info('Criando novo token de confirmação (fornecido externamente)', [
+                    'user_id' => $user->id,
+                    'tenant_id' => $user->tenant_id,
+                    'email' => $user->email,
+                    'type' => $type,
+                    'expires_at' => $expiresAt,
+                    'token_length' => strlen($token),
+                ]);
             }
 
             // 2. Criar e salvar token
-            $confirmationToken = new UserConfirmationToken( [
-                'user_id'    => $user->id,
-                'tenant_id'  => $user->tenant_id,
-                'token'      => $token,
-                'expires_at' => $expiresAt,
-                'type'       => $type,
-            ] );
-
-            $savedToken = $this->userConfirmationTokenRepository->create( $confirmationToken->toArray() );
-
-            Log::info( 'Token de confirmação criado', [
-                'user_id'    => $user->id,
-                'tenant_id'  => $user->tenant_id,
-                'token_id'   => $savedToken->id,
-                'type'       => $type,
-                'expires_at' => $expiresAt,
-            ] );
-
-            return ServiceResult::success( [
-                'token'      => $token,
-                'expires_at' => $expiresAt,
-                'type'       => $type,
-                'user'       => $user,
-            ], 'Token de confirmação criado com sucesso.' );
-
-        } catch ( Exception $e ) {
-            Log::error( 'Erro ao criar token de confirmação', [
-                'user_id'   => $user->id,
+            $confirmationToken = new UserConfirmationToken([
+                'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,
-                'email'     => $user->email,
-                'type'      => $type,
-                'error'     => $e->getMessage(),
-                'trace'     => $e->getTraceAsString(),
-            ] );
+                'token' => $token,
+                'expires_at' => $expiresAt,
+                'type' => $type,
+            ]);
+
+            $savedToken = $this->userConfirmationTokenRepository->create($confirmationToken->toArray());
+
+            Log::info('Token de confirmação criado', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'token_id' => $savedToken->id,
+                'type' => $type,
+                'expires_at' => $expiresAt,
+            ]);
+
+            return ServiceResult::success([
+                'token' => $token,
+                'expires_at' => $expiresAt,
+                'type' => $type,
+                'user' => $user,
+            ], 'Token de confirmação criado com sucesso.');
+
+        } catch (Exception $e) {
+            Log::error('Erro ao criar token de confirmação', [
+                'user_id' => $user->id,
+                'tenant_id' => $user->tenant_id,
+                'email' => $user->email,
+                'type' => $type,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return ServiceResult::error(
                 \App\Enums\OperationStatus::ERROR,
@@ -359,5 +323,4 @@ class UserConfirmationTokenService extends AbstractBaseService
             'updated_at',
         ];
     }
-
 }

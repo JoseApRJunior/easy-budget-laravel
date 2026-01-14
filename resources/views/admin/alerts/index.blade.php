@@ -1,40 +1,31 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Gerenciamento de Alertas</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Gerenciamento de Alertas
-                </h1>
-                <p class="text-muted">Monitoramento e controle de alertas do sistema</p>
-            </div>
-            <div class="btn-group" role="group">
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Gerenciamento de Alertas"
+            icon="exclamation-triangle"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Alertas' => '#'
+            ]">
+            <div class="d-flex gap-2">
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-download"></i> Exportar
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Exportar
                     </button>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                         <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'excel') }}">
-                                <i class="bi bi-file-earmark-excel me-2"></i>Excel
+                                <i class="bi bi-file-earmark-excel me-2 text-success"></i>Excel
                             </a></li>
                         <li><a class="dropdown-item" href="{{ route('admin.alerts.export', 'csv') }}">
-                                <i class="bi bi-file-earmark-text me-2"></i>CSV
+                                <i class="bi bi-file-earmark-text me-2 text-primary"></i>CSV
                             </a></li>
                     </ul>
                 </div>
-                <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Novo Alerta
-                </a>
+                <x-ui.button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
         <div class="row mb-4">
@@ -157,12 +148,8 @@
                             <div class="form-group">
                                 <label>&nbsp;</label>
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-search"></i> Filtrar
-                                    </button>
-                                    <a href="{{ route('admin.alerts.index') }}" class="btn btn-secondary">
-                                        <i class="bi bi-x-circle"></i> Limpar
-                                    </a>
+                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                                    <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -243,19 +230,11 @@
                                         </td>
                                         <td>{{ $alert['created_at']->format('d/m/Y H:i') }}</td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('admin.alerts.show', $alert['id']) }}"
-                                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ route('admin.alerts.edit', $alert['id']) }}"
-                                                    class="btn btn-sm btn-outline-warning" title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="confirmDelete({{ $alert['id'] }})" title="Excluir">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                            <div class="d-flex gap-1">
+                                                <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" title="Ver Detalhes" />
+                                                <x-ui.button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
+                                                    onclick="confirmDelete({{ $alert['id'] }})" />
                                             </div>
                                         </td>
                                     </tr>
@@ -299,19 +278,11 @@
                                         </span><br>
                                         <strong>Data:</strong> {{ $alert['created_at']->format('d/m/Y H:i') }}
                                     </p>
-                                    <div class="btn-group w-100" role="group">
-                                        <a href="{{ route('admin.alerts.show', $alert['id']) }}"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> Ver
-                                        </a>
-                                        <a href="{{ route('admin.alerts.edit', $alert['id']) }}"
-                                            class="btn btn-sm btn-outline-warning">
-                                            <i class="bi bi-pencil"></i> Editar
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDelete({{ $alert['id'] }})">
-                                            <i class="bi bi-trash"></i> Excluir
-                                        </button>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
+                                        <x-ui.button type="link" :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
+                                        <x-ui.button variant="danger" size="sm" icon="trash" label="Excluir" class="flex-grow-1"
+                                            onclick="confirmDelete({{ $alert['id'] }})" />
                                     </div>
                                 </div>
                             </div>
@@ -345,12 +316,10 @@
                 @else
                     <!-- Empty State -->
                     <div class="text-center py-5">
-                        <i class="bi bi-inbox fa-3x text-muted mb-3"></i>
+                        <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                         <h5 class="text-muted">Nenhum alerta encontrado</h5>
-                        <p class="text-muted">Não há alertas para exibir com os filtros aplicados.</p>
-                        <a href="{{ route('admin.alerts.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-circle"></i> Criar Primeiro Alerta
-                        </a>
+                        <p class="text-muted mb-4">Não há alertas para exibir com os filtros aplicados.</p>
+                        <x-ui.button type="link" :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Criar Primeiro Alerta" />
                     </div>
                 @endif
             </div>
@@ -369,11 +338,11 @@
                     Tem certeza que deseja excluir este alerta? Esta ação não pode ser desfeita.
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <x-ui.button variant="secondary" label="Cancelar" data-bs-dismiss="modal" />
                     <form id="deleteForm" method="POST" style="display: inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Excluir</button>
+                        <x-ui.button type="submit" variant="danger" label="Excluir" />
                     </form>
                 </div>
             </div>

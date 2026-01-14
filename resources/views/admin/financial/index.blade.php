@@ -3,31 +3,20 @@
 @section('title', 'Controle Financeiro - Admin')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho Administrativo -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Controle Financeiro</li>
-                    </ol>
-                </nav>
-                <h1 class="h4">Controle Financeiro</h1>
-                <p class="text-muted">Monitoramento detalhado dos custos e receitas dos provedores</p>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Controle Financeiro"
+            icon="cash-stack"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Controle Financeiro' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportReports()" />
+                <x-ui.button type="button" variant="secondary" outline icon="bell" label="Alertas" onclick="refreshBudgetAlerts()" />
+                <x-ui.button :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
             </div>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary" onclick="exportReports()">
-                    <i class="fas fa-download"></i> Exportar Relatórios
-                </button>
-                <button type="button" class="btn btn-outline-secondary" onclick="refreshBudgetAlerts()">
-                    <i class="fas fa-bell"></i> Atualizar Alertas
-                </button>
-                <a href="{{ route('admin.enterprises.index') }}" class="btn btn-primary">
-                    <i class="fas fa-building"></i> Ver Empresas
-                </a>
-            </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Alertas de Orçamento -->
         @if (isset($budgetAlerts) && count($budgetAlerts) > 0)
@@ -218,12 +207,8 @@
                             <div class="form-group">
                                 <label>&nbsp;</label>
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-search"></i> Filtrar
-                                    </button>
-                                    <a href="{{ route('admin.financial.index') }}" class="btn btn-secondary">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </a>
+                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                                    <x-ui.button type="link" :href="route('admin.financial.index')" variant="secondary" icon="x-lg" label="Limpar" />
                                 </div>
                             </div>
                         </div>
@@ -241,9 +226,7 @@
                         <i class="fas fa-chart-bar me-2"></i>Desempenho dos Provedores
                     </h6>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('admin.financial.reports') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-chart-bar"></i> Relatórios Detalhados
-                        </a>
+                        <x-ui.button type="link" :href="route('admin.financial.reports')" variant="primary" size="sm" icon="chart-bar" label="Relatórios Detalhados" />
                     </div>
                 </div>
 
@@ -313,15 +296,9 @@
                                             <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
                                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="/admin/financial/providers/{{ $provider['id'] }}/details"
-                                                    class="btn btn-sm btn-outline-primary" title="Ver Detalhes">
-                                                    <i class="fas fa-chart-line"></i>
-                                                </a>
-                                                <a href="{{ route('admin.enterprises.show', $provider['id']) }}"
-                                                    class="btn btn-sm btn-outline-info" title="Ver Empresa">
-                                                    <i class="fas fa-building"></i>
-                                                </a>
+                                            <div class="d-flex gap-1">
+                                                <x-ui.button type="link" :href="'/admin/financial/providers/' . $provider['id'] . '/details'" variant="primary" size="sm" icon="chart-line" title="Ver Detalhes" />
+                                                <x-ui.button type="link" :href="route('admin.enterprises.show', $provider['id'])" variant="info" size="sm" icon="building" title="Ver Empresa" />
                                             </div>
                                         </td>
                                     </tr>
@@ -376,15 +353,9 @@
                                         @endphp
                                         <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
                                     </p>
-                                    <div class="btn-group w-100" role="group">
-                                        <a href="/admin/financial/providers/{{ $provider['id'] }}/details"
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-chart-line"></i> Detalhes
-                                        </a>
-                                        <a href="{{ route('admin.enterprises.show', $provider['id']) }}"
-                                            class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-building"></i> Empresa
-                                        </a>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <x-ui.button type="link" :href="'/admin/financial/providers/' . $provider['id'] . '/details'" variant="primary" size="sm" icon="chart-line" label="Detalhes" class="flex-grow-1" />
+                                        <x-ui.button type="link" :href="route('admin.enterprises.show', $provider['id'])" variant="info" size="sm" icon="building" label="Empresa" class="flex-grow-1" />
                                     </div>
                                 </div>
                             </div>
@@ -396,9 +367,7 @@
                         <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">Nenhum dado financeiro encontrado</h5>
                         <p class="text-muted">Não há dados para exibir com os filtros aplicados.</p>
-                        <a href="{{ route('admin.enterprises.index') }}" class="btn btn-primary">
-                            <i class="fas fa-building"></i> Ver Empresas
-                        </a>
+                        <x-ui.button type="link" :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
                     </div>
                 @endif
             </div>

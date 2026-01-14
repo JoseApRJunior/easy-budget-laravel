@@ -1,26 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-rulers me-2"></i>Unidades
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Unidades</li>
-                </ol>
-            </nav>
-        </div>
-
-        <!-- Botão de Adicionar -->
-        <div class="mb-4">
-            <a href="{{ route('admin.units.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Nova Unidade
-            </a>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Unidades"
+            icon="rulers"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Unidades' => '#'
+            ]">
+            <x-ui.button :href="route('admin.units.create')" variant="primary" icon="plus-circle" label="Nova Unidade" />
+        </x-layout.page-header>
 
         <!-- Tabela de Unidades -->
         <div class="card border-0 shadow-sm">

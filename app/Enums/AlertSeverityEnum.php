@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum AlertSeverityEnum: string
+enum AlertSeverityEnum: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
+    use \App\Traits\Enums\HasStatusEnumMethods;
+
     case INFO = 'info';
     case WARNING = 'warning';
     case ERROR = 'error';
@@ -21,7 +23,7 @@ enum AlertSeverityEnum: string
         };
     }
 
-    public function description(): string
+    public function getDescription(): string
     {
         return match ($this) {
             self::INFO => 'Informação geral, não requer ação imediata',
@@ -34,6 +36,16 @@ enum AlertSeverityEnum: string
     public function color(): string
     {
         return match ($this) {
+            self::INFO => 'info',
+            self::WARNING => 'warning',
+            self::ERROR => 'danger',
+            self::CRITICAL => 'danger',
+        };
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
             self::INFO => '#3b82f6',
             self::WARNING => '#f59e0b',
             self::ERROR => '#ef4444',
@@ -44,11 +56,16 @@ enum AlertSeverityEnum: string
     public function icon(): string
     {
         return match ($this) {
-            self::INFO => 'bi-info-circle',
-            self::WARNING => 'bi-exclamation-triangle',
-            self::ERROR => 'bi-x-circle',
-            self::CRITICAL => 'bi-exclamation-octagon',
+            self::INFO => 'info-circle',
+            self::WARNING => 'exclamation-triangle',
+            self::ERROR => 'x-circle',
+            self::CRITICAL => 'exclamation-octagon',
         };
+    }
+
+    public function getIcon(): string
+    {
+        return 'bi-'.$this->icon();
     }
 
     public function priority(): int
@@ -59,6 +76,16 @@ enum AlertSeverityEnum: string
             self::ERROR => 3,
             self::CRITICAL => 4,
         };
+    }
+
+    public function isActive(): bool
+    {
+        return true;
+    }
+
+    public function isFinished(): bool
+    {
+        return false;
     }
 
     public function shouldNotify(): bool
@@ -75,9 +102,27 @@ enum AlertSeverityEnum: string
     {
         return match ($this) {
             self::INFO => 0,
-            self::WARNING => 5, // 5 minutos
-            self::ERROR => 1, // 1 minuto
-            self::CRITICAL => 0, // Imediato
+            self::WARNING => 5,
+            self::ERROR => 1,
+            self::CRITICAL => 0,
         };
+    }
+
+    public function getMetadata(): array
+    {
+        return [
+            'value' => $this->value,
+            'label' => $this->label(),
+            'description' => $this->getDescription(),
+            'color' => $this->color(),
+            'color_hex' => $this->getColor(),
+            'icon' => $this->icon(),
+            'icon_class' => $this->getIcon(),
+            'priority' => $this->priority(),
+            'should_notify' => $this->shouldNotify(),
+            'notification_delay' => $this->notificationDelay(),
+            'is_active' => $this->isActive(),
+            'is_finished' => $this->isFinished(),
+        ];
     }
 }

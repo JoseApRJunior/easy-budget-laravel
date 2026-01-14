@@ -1,492 +1,264 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Movimentações de Estoque')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="mb-4">
-        <h3 class="mb-2">
-            <i class="bi bi-arrow-left-right me-2"></i>
-            Movimentações de Estoque
-        </h3>
-        <p class="text-muted mb-3">Histórico completo de movimentações de estoque</p>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.inventory.dashboard') }}">Inventário</a></li>
-                <li class="breadcrumb-item active">Movimentações</li>
-            </ol>
-        </nav>
-    </div>
+<x-layout.page-container>
+    <x-layout.page-header
+        title="Movimentações de Estoque"
+        icon="arrow-left-right"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Inventário' => route('provider.inventory.dashboard'),
+            'Movimentações' => '#'
+        ]">
+        <p class="text-muted mb-0">Histórico completo de movimentações de estoque</p>
+    </x-layout.page-header>
 
-    <!-- Filtros -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Filtros</h3>
-                    <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <form method="GET" action="{{ route('provider.inventory.movements') }}">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label for="product_id">Produto</label>
-                                    <select name="product_id" id="product_id" class="form-control select2">
-                                        <option value="">Todos os Produtos</option>
-                                        @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ request('product_id') == $product->id ? 'selected' : '' }}>
-                                            {{ $product->sku }} - {{ $product->name }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="type">Tipo</label>
-                                    <select name="type" id="type" class="form-control">
-                                        <option value="">Todos</option>
-                                        <option value="entry" {{ request('type') == 'entry' ? 'selected' : '' }}>Entrada</option>
-                                        <option value="exit" {{ request('type') == 'exit' ? 'selected' : '' }}>Saída</option>
-                                        <option value="adjustment" {{ request('type') == 'adjustment' ? 'selected' : '' }}>Ajuste</option>
-                                        <option value="reservation" {{ request('type') == 'reservation' ? 'selected' : '' }}>Reserva</option>
-                                        <option value="cancellation" {{ request('type') == 'cancellation' ? 'selected' : '' }}>Cancelamento</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="start_date">Data Inicial</label>
-                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="end_date">Data Final</label>
-                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <div class="form-group">
-                                        <button type="submit" class="btn btn-primary btn-block">
-                                            <i class="fas fa-search"></i> Filtrar
-                                        </button>
-                                        <a href="{{ route('provider.inventory.movements') }}" class="btn btn-secondary btn-block">
-                                            <i class="fas fa-times"></i> Limpar
-                                        </a>
+    <!-- Filtros de Busca -->
+    <x-form.filter-form
+        id="filtersFormMovements"
+        :route="route('provider.inventory.movements')"
+        :filters="$filters ?? request()->all()"
+    >
+        @if(request('product_id'))
+            <input type="hidden" name="product_id" value="{{ request('product_id') }}">
+        @endif
+        @if(request('sku'))
+            <input type="hidden" name="sku" value="{{ request('sku') }}">
+        @endif
+
+        <x-form.filter-field
+            col="col-md-3"
+            name="search"
+            label="Buscar Produto"
+            placeholder="Nome ou SKU"
+            :filters="$filters ?? request()->all()"
+            :value="request('search') ?? request('sku')"
+        />
+
+        <x-form.filter-field
+            type="select"
+            col="col-md-3"
+            name="type"
+            label="Tipo"
+            :filters="$filters ?? request()->all()"
+            :options="[
+                '' => 'Todos os Tipos',
+                'entry' => 'Entrada',
+                'exit' => 'Saída',
+                'adjustment' => 'Ajuste',
+                'reservation' => 'Reserva',
+                'cancellation' => 'Cancelamento'
+            ]"
+        />
+
+        <x-form.filter-field
+            type="date"
+            col="col-md-3"
+            name="start_date"
+            label="Data Inicial"
+            :filters="$filters ?? request()->all()"
+        />
+
+        <x-form.filter-field
+            type="date"
+            col="col-md-3"
+            name="end_date"
+            label="Data Final"
+            :filters="$filters ?? request()->all()"
+        />
+    </x-form.filter-form>
+
+    <x-resource.resource-list-card
+        title="Registros de Movimentação"
+        mobileTitle="Movimentações"
+        icon="arrow-left-right"
+        :total="$movements->total()"
+    >
+        <x-slot:headerActions>
+            <x-resource.table-header-actions
+                resource="inventory.movements"
+                exportRoute="provider.inventory.export-movements"
+                :filters="request()->all()"
+                :showCreate="false"
+            />
+        </x-slot:headerActions>
+
+        @if($movements->count() > 0)
+            <x-slot:desktop>
+                <x-resource.resource-table>
+                    <x-slot:thead>
+                        <tr>
+                            <th width="60"><i class="bi bi-clock" aria-hidden="true"></i></th>
+                            <th>Data/Hora</th>
+                            <th>Produto / SKU</th>
+                            <th class="text-center">Tipo</th>
+                            <th class="text-center">Quantidade</th>
+                            <th class="text-center">Saldo Atual</th>
+                            <th>Motivo</th>
+                            <th width="150" class="text-center">Ações</th>
+                        </tr>
+                    </x-slot:thead>
+
+                    <x-slot:tbody>
+                        @foreach($movements as $movement)
+                            <tr>
+                                <td>
+                                    <div class="item-icon">
+                                        <i class="bi bi-arrow-left-right"></i>
                                     </div>
+                                </td>
+                                <td>
+                                    <x-resource.table-cell-datetime :datetime="$movement->created_at" />
+                                </td>
+                                <td>
+                                    <x-resource.product-info :name="$movement->product->name" :sku="$movement->product->sku" />
+                                </td>
+                                <td class="text-center">
+                                    <x-ui.movement-type-badge :type="$movement->type" />
+                                </td>
+                                <td class="text-center">
+                                    <x-resource.movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
+                                </td>
+                                <td class="text-center fw-bold text-dark">
+                                    {{ \App\Helpers\CurrencyHelper::format($movement->new_quantity ?? 0, 0, false) }}
+                                </td>
+                                <td>
+                                    <small class="text-muted" title="{{ $movement->reason }}">
+                                        {{ Str::limit($movement->reason, 30) }}
+                                    </small>
+                                </td>
+                                <x-resource.table-actions>
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" icon="eye" title="Ver Detalhes" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" icon="box" title="Ver Inventário" />
+                                </x-resource.table-actions>
+                            </tr>
+                        @endforeach
+                    </x-slot:tbody>
+                </x-resource.resource-table>
+            </x-slot:desktop>
+
+            <x-slot:mobile>
+                    @foreach($movements as $movement)
+                        <x-resource.resource-mobile-item icon="arrow-left-right">
+                            <x-resource.resource-info
+                                :title="$movement->product->name"
+                                :subtitle="$movement->product->sku"
+                                icon="box"
+                                class="mb-2"
+                            />
+
+                            <x-slot:description>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <x-ui.movement-type-badge :type="$movement->type" />
+                                    <x-resource.movement-quantity :type="$movement->type" :quantity="$movement->quantity" />
                                 </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+                            </x-slot:description>
 
-    <!-- Resumo -->
-    <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="card bg-success">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_entries'], 2, ',', '.') }}</h4>
-                            <p>Total de Entradas</p>
-                            <small class="text-white-50">{{ $summary['count_entries'] }} movimentações</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-danger">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_exits'], 2, ',', '.') }}</h4>
-                            <p>Total de Saídas</p>
-                            <small class="text-white-50">{{ $summary['count_exits'] }} movimentações</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ $movements->total() }}</h4>
-                            <p>Total de Movimentações</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-warning">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['balance'], 2, ',', '.') }}</h4>
-                            <p>Saldo do Período</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                            <x-slot:footer>
+                                <x-resource.table-cell-datetime :datetime="$movement->created_at" :stack="false" />
+                            </x-slot:footer>
 
-    <div class="row mt-3">
-        <div class="col-lg-3 col-6">
-            <div class="card bg-secondary">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_adjustments'], 2, ',', '.') }}</h4>
-                            <p>Ajustes</p>
-                            <small class="text-white-50">{{ $summary['count_adjustments'] }} movimentações</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-info">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_reservations'], 2, ',', '.') }}</h4>
-                            <p>Reservas</p>
-                            <small class="text-white-50">{{ $summary['count_reservations'] }} movimentações</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="card bg-dark">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-12">
-                            <h4>{{ number_format($summary['total_cancellations'], 2, ',', '.') }}</h4>
-                            <p>Cancelamentos</p>
-                            <small class="text-white-50">{{ $summary['count_cancellations'] }} movimentações</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                            <x-slot:actions>
+                                <x-resource.table-actions mobile>
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" size="sm" icon="eye" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" size="sm" icon="box" />
+                                </x-resource.table-actions>
+                            </x-slot:actions>
+                        </x-resource.resource-mobile-item>
+                    @endforeach
+                </x-slot:mobile>
+        @else
+            <x-resource.empty-state
+                resource="movimentações"
+                :isTrashView="false"
+                message="Nenhuma movimentação de estoque encontrada para os filtros aplicados."
+            />
+            @endif
 
-    <!-- Tabela de Movimentações -->
-    <div class="row">
-        <div class="col-12">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Distribuição por Tipo (Quantidade de Movimentações)</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container"><canvas id="movementTypesChart" style="max-height: 200px;"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Volumes por Tipo (Somatório de Quantidades)</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container"><canvas id="movementTotalsChart" style="max-height: 200px;"></canvas></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-12 col-md-8">
-                            <h5 class="mb-0">
-                                <i class="bi bi-list-ul me-2"></i>Movimentações de Estoque
-                                <span class="text-muted">({{ $movements->total() }} registros)</span>
-                            </h5>
-                        </div>
-                        <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
-                            <a href="{{ route('provider.inventory.export-movements') }}?{{ request()->getQueryString() }}" class="btn btn-sm btn-success">
-                                <i class="bi bi-file-earmark-excel me-1"></i> Exportar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if($movements->count() > 0)
-                    <!-- Desktop View -->
-                    <div class="table-responsive d-none d-md-block">
-                        <table class="table modern-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Data/Hora</th>
-                                    <th>Produto</th>
-                                    <th>SKU</th>
-                                    <th>Tipo</th>
-                                    <th>Quantidade</th>
-                                    <th>Saldo Anterior</th>
-                                    <th>Saldo Atual</th>
-                                    <th>Motivo</th>
-                                    <th>Referência</th>
-                                    <th>Usuário</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($movements as $movement)
-                                <tr>
-                                    <td>{{ $movement->created_at->format('d/m/Y H:i') }}</td>
-                                    <td>
-                                        <a href="{{ route('provider.products.show', $movement->product->sku) }}" class="text-decoration-none">
-                                            {{ $movement->product->name }}
-                                        </a>
-                                    </td>
-                                    <td>{{ $movement->product->sku }}</td>
-                                    <td>
-                                        @if($movement->type === 'entry')
-                                        <span class="badge badge-success">
-                                            <i class="fas fa-plus"></i> Entrada
-                                        </span>
-                                        @elseif($movement->type === 'exit')
-                                        <span class="badge badge-danger">
-                                            <i class="fas fa-minus"></i> Saída
-                                        </span>
-                                        @elseif($movement->type === 'adjustment')
-                                        <span class="badge badge-warning">
-                                            <i class="fas fa-tools"></i> Ajuste
-                                        </span>
-                                        @elseif($movement->type === 'reservation')
-                                        <span class="badge badge-info">
-                                            <i class="fas fa-lock"></i> Reserva
-                                        </span>
-                                        @elseif($movement->type === 'cancellation')
-                                        <span class="badge badge-secondary">
-                                            <i class="fas fa-undo"></i> Cancelamento
-                                        </span>
-                                        @else
-                                        <span class="badge badge-light">
-                                            {{ ucfirst($movement->type) }}
-                                        </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($movement->type === 'entry')
-                                        <span class="text-success">+{{ number_format($movement->quantity, 2, ',', '.') }}</span>
-                                        @elseif($movement->type === 'exit' || $movement->type === 'subtraction')
-                                        <span class="text-danger">-{{ number_format($movement->quantity, 2, ',', '.') }}</span>
-                                        @else
-                                        {{ number_format($movement->quantity, 2, ',', '.') }}
-                                        @endif
-                                    </td>
-                                    <td>{{ number_format($movement->previous_quantity, 2, ',', '.') }}</td>
-                                    <td>
-                                        @php
-                                        $currentQuantity = $movement->previous_quantity;
-                                        if ($movement->type === 'entry') {
-                                        $currentQuantity += $movement->quantity;
-                                        } elseif ($movement->type === 'exit' || $movement->type === 'subtraction') {
-                                        $currentQuantity -= $movement->quantity;
-                                        }
-                                        @endphp
-                                        {{ number_format($currentQuantity, 2, ',', '.') }}
-                                    </td>
-                                    <td>
-                                        <small>{{ Str::limit($movement->reason, 50) }}</small>
-                                        @if(strlen($movement->reason) > 50)
-                                        <button type="button" class="btn btn-xs btn-link" data-toggle="modal" data-target="#reasonModal{{ $movement->id }}">
-                                            Ver mais
-                                        </button>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($movement->reference_type && $movement->reference_id)
-                                        @if($movement->reference_type === 'budget')
-                                        <a href="{{ route('budgets.show', $movement->reference_id) }}" class="btn btn-xs btn-info">
-                                            Orçamento #{{ $movement->reference_id }}
-                                        </a>
-                                        @elseif($movement->reference_type === 'service')
-                                        <a href="{{ route('services.show', $movement->reference_id) }}" class="btn btn-xs btn-info">
-                                            Serviço #{{ $movement->reference_id }}
-                                        </a>
-                                        @else
-                                        {{ ucfirst($movement->reference_type) }} #{{ $movement->reference_id }}
-                                        @endif
-                                        @else
-                                        <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <small>{{ $movement->user->name ?? 'Sistema' }}</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                                Mais Ações
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.products.show', $movement->product->sku) }}">
-                                                        <i class="bi bi-eye me-2"></i>Visualizar Produto
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.movements', ['product_id' => $movement->product_id]) }}">
-                                                        <i class="bi bi-list me-2"></i>Ver Movimentações
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.adjust', $movement->product->sku) }}">
-                                                        <i class="bi bi-sliders me-2"></i>Ajustar Estoque
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.entry', $movement->product->sku) }}">
-                                                        <i class="bi bi-plus me-2"></i>Entrada de Estoque
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item" href="{{ route('provider.inventory.exit', $movement->product->sku) }}">
-                                                        <i class="bi bi-dash me-2"></i>Saída de Estoque
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <!-- Modal para motivo completo -->
-                                @if(strlen($movement->reason) > 50)
-                                <div class="modal fade" id="reasonModal{{ $movement->id }}" tabindex="-1" role="dialog">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Motivo Completo</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>{{ $movement->reason }}</p>
-                                                <small class="text-muted">
-                                                    Registrado em: {{ $movement->created_at->format('d/m/Y H:i') }}
-                                                </small>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex justify-content-center">
-                        {{ $movements->appends(request()->except('page'))->links() }}
-                    </div>
-                    @else
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> Nenhuma movimentação encontrada com os filtros aplicados.
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+        <x-slot:footer>
+            @if ($movements instanceof \Illuminate\Pagination\LengthAwarePaginator && $movements->hasPages())
+                @include('partials.components.paginator', [
+                    'p' => $movements->appends(
+                        collect(request()->query())->map(fn($v) => is_null($v) ? '' : $v)->toArray()
+                    ),
+                    'show_info' => true,
+                ])
+            @endif
+        </x-slot:footer>
+    </x-resource.resource-list-card>
+</x-layout.page-container>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
-    $(document).ready(function() {
-        $('.select2').select2({
-            placeholder: 'Selecione um produto',
-            allowClear: true
-        });
-    });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var s = @json($summary);
-        var typesLabels = ['Entradas', 'Saídas', 'Ajustes', 'Reservas', 'Cancelamentos'];
-        var typesCounts = [s.count_entries || 0, s.count_exits || 0, s.count_adjustments || 0, s.count_reservations || 0, s.count_cancellations || 0];
-        var totalsValues = [s.total_entries || 0, s.total_exits || 0, s.total_adjustments || 0, s.total_reservations || 0, s.total_cancellations || 0];
-        var colors = ['#198754', '#dc3545', '#6c757d', '#0dcaf0', '#343a40'];
-        var ctx1 = document.getElementById('movementTypesChart');
-        if (ctx1) {
-            new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: typesLabels,
-                    datasets: [{
-                        data: typesCounts,
-                        backgroundColor: colors,
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                usePointStyle: true
-                            }
-                        }
-                    }
-                }
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const form = document.getElementById('filtersFormMovements');
+
+    if (!form || !startDate || !endDate) return;
+
+    const parseDate = (str) => {
+        if (!str) return null;
+        // Suporta YYYY-MM-DD (input date) ou DD/MM/AAAA (antigo)
+        if (str.includes('-')) {
+            const d = new Date(str);
+            return isNaN(d.getTime()) ? null : d;
         }
-        var ctx2 = document.getElementById('movementTotalsChart');
-        if (ctx2) {
-            new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: typesLabels,
-                    datasets: [{
-                        label: 'Quantidade',
-                        data: totalsValues,
-                        backgroundColor: colors
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+        const parts = str.split('/');
+        if (parts.length === 3) {
+            const d = new Date(parts[2], parts[1] - 1, parts[0]);
+            return isNaN(d.getTime()) ? null : d;
+        }
+        return null;
+    };
+
+    const validateDates = () => {
+        if (!startDate.value || !endDate.value) return true;
+
+        const start = parseDate(startDate.value);
+        const end = parseDate(endDate.value);
+
+        if (start && end && start > end) {
+            const message = 'A data inicial não pode ser maior que a data final.';
+            if (window.easyAlert) {
+                window.easyAlert.warning(message);
+            } else {
+                alert(message);
+            }
+            return false;
+        }
+        return true;
+    };
+
+    form.addEventListener('submit', function(e) {
+        if (!validateDates()) {
+            e.preventDefault();
+            return;
+        }
+
+        if (startDate.value && !endDate.value) {
+            e.preventDefault();
+            const message = 'Para filtrar por período, informe as datas inicial e final.';
+            if (window.easyAlert) {
+                window.easyAlert.error(message);
+            } else {
+                alert(message);
+            }
+            endDate.focus();
+        } else if (!startDate.value && endDate.value) {
+            e.preventDefault();
+            const message = 'Para filtrar por período, informe as datas inicial e final.';
+            if (window.easyAlert) {
+                window.easyAlert.error(message);
+            } else {
+                alert(message);
+            }
+            startDate.focus();
         }
     });
+});
 </script>
-@endsection
+@endpush

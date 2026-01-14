@@ -13,8 +13,8 @@ return [
     |
     */
 
-    'paths'      => [
-        resource_path( 'views' ),
+    'paths' => [
+        resource_path('views'),
     ],
 
     /*
@@ -28,9 +28,9 @@ return [
     |
     */
 
-    'compiled'   => env(
+    'compiled' => env(
         'VIEW_COMPILED_PATH',
-        realpath( storage_path( 'framework/views' ) ),
+        realpath(storage_path('framework/views')),
     ),
 
     /*
@@ -45,8 +45,8 @@ return [
     */
 
     'namespaces' => [
-        'mail'  => resource_path( 'views/vendor/mail' ),
-        'pages' => resource_path( 'views/pages' ),
+        'mail' => resource_path('views/vendor/mail'),
+        'pages' => resource_path('views/pages'),
     ],
 
     /*
@@ -60,7 +60,7 @@ return [
     |
     */
 
-    'engines'    => [
+    'engines' => [
         'blade' => 'Illuminate\View\Engines\BladeEngine',
     ],
 

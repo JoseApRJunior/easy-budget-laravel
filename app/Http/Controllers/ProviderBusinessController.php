@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\DTOs\Provider\ProviderUpdateDTO;
 use App\Http\Controllers\Abstracts\Controller;
-use App\Http\Requests\ProviderBusinessUpdateRequest;
+use App\Http\Requests\ProviderUpdateRequest;
 use App\Models\Provider;
 use App\Services\Application\ProviderManagementService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
@@ -30,38 +30,32 @@ class ProviderBusinessController extends Controller
      */
     public function edit(): View|RedirectResponse
     {
-        $user = Auth::user();
-        $provider = $user->provider;
+        $result = $this->providerManagementService->getProviderForUpdate();
 
-        if (! $provider) {
+        if (! $result->isSuccess()) {
             return redirect('/provider')
-                ->with('error', 'Provider não encontrado');
+                ->with('error', $result->getMessage());
         }
 
-        // Carregar relacionamentos necessários
-        $provider->load(['commonData', 'contact', 'address', 'businessData']);
+        $data = $result->getData();
 
         return view('pages.provider.business.edit', [
-            'provider' => $provider,
-            'areas_of_activity' => \App\Models\AreaOfActivity::all(),
-            'professions' => \App\Models\Profession::all(),
+            'provider' => $data['provider'],
+            'areas_of_activity' => $data['areas_of_activity'],
+            'professions' => $data['professions'],
         ]);
     }
 
     /**
      * Processa atualização dos dados empresariais.
      */
-    public function update(ProviderBusinessUpdateRequest $request): RedirectResponse
+    public function update(ProviderUpdateRequest $request): RedirectResponse
     {
-        $validated = $request->validated();
-
-        // Adicionar arquivo de logo aos dados validados se fornecido
-        if ($request->hasFile('logo')) {
-            $validated['logo'] = $request->file('logo');
-        }
+        // Criar DTO a partir do request validado
+        $dto = ProviderUpdateDTO::fromRequest($request->validated());
 
         // Usar o serviço para atualizar os dados empresariais
-        $result = $this->providerManagementService->updateProvider($validated);
+        $result = $this->providerManagementService->updateProvider($dto);
 
         // Verificar resultado do serviço
         if (! $result->isSuccess()) {

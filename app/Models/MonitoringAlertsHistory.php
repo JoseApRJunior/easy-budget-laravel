@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AlertSeverityEnum;
 use App\Enums\AlertTypeEnum;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -94,14 +95,14 @@ class MonitoringAlertsHistory extends Model
 
     public function scopeRecent($query, int $minutes = 60)
     {
-        return $query->where('created_at', '>=', now()->subMinutes($minutes));
+        return $query->where('created_at', '>=', Carbon::now()->subMinutes($minutes));
     }
 
-    public function markAsResolved(int $resolvedBy, string $resolutionNotes = null): bool
+    public function markAsResolved(int $resolvedBy, ?string $resolutionNotes = null): bool
     {
         return $this->update([
             'is_resolved' => true,
-            'resolved_at' => now(),
+            'resolved_at' => Carbon::now(),
             'resolved_by' => $resolvedBy,
             'resolution_notes' => $resolutionNotes,
         ]);
@@ -111,7 +112,7 @@ class MonitoringAlertsHistory extends Model
     {
         return $this->update([
             'notification_sent' => true,
-            'notification_sent_at' => now(),
+            'notification_sent_at' => Carbon::now(),
         ]);
     }
 

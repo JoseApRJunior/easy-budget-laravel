@@ -18,56 +18,47 @@ class ServiceResult
 {
     /**
      * Status da operação
-     *
-     * @var OperationStatus
      */
     private OperationStatus $status;
 
     /**
      * Mensagem da operação
-     *
-     * @var string
      */
     private string $message;
 
     /**
      * Dados da operação
-     *
-     * @var mixed
      */
     private mixed $data;
 
     /**
      * Erro da operação (se aplicável)
-     *
-     * @var Exception|null
      */
     private ?Exception $error = null;
 
     /**
      * Construtor privado para garantir uso através de métodos estáticos
      *
-     * @param OperationStatus $status Status da operação
-     * @param string $message Mensagem da operação
-     * @param mixed $data Dados da operação
-     * @param Exception|null $error Erro (se aplicável)
+     * @param  OperationStatus  $status  Status da operação
+     * @param  string  $message  Mensagem da operação
+     * @param  mixed  $data  Dados da operação
+     * @param  Exception|null  $error  Erro (se aplicável)
      */
-    private function __construct( OperationStatus $status, string $message, mixed $data = null, ?Exception $error = null )
+    private function __construct(OperationStatus $status, string $message, mixed $data = null, ?Exception $error = null)
     {
-        $this->status  = $status;
+        $this->status = $status;
         $this->message = $message;
-        $this->data    = $data;
-        $this->error   = $error;
+        $this->data = $data;
+        $this->error = $error;
     }
 
     /**
      * Cria um ServiceResult de sucesso
      *
-     * @param mixed $data Dados da operação
-     * @param string $message Mensagem personalizada (opcional)
-     * @return self
+     * @param  mixed  $data  Dados da operação
+     * @param  string  $message  Mensagem personalizada (opcional)
      */
-    public static function success( mixed $data = null, string $message = '' ): self
+    public static function success(mixed $data = null, string $message = ''): self
     {
         return new self(
             OperationStatus::SUCCESS,
@@ -79,20 +70,19 @@ class ServiceResult
     /**
      * Cria um ServiceResult de erro
      *
-     * @param OperationStatus|string $statusOrMessage Status ou mensagem de erro
-     * @param string $message Mensagem de erro (se $statusOrMessage for OperationStatus)
-     * @param mixed $data Dados adicionais
-     * @param Exception|null $exception Exceção original
-     * @return self
+     * @param  OperationStatus|string  $statusOrMessage  Status ou mensagem de erro
+     * @param  string  $message  Mensagem de erro (se $statusOrMessage for OperationStatus)
+     * @param  mixed  $data  Dados adicionais
+     * @param  Exception|null  $exception  Exceção original
      */
-    public static function error( OperationStatus|string $statusOrMessage, string $message = '', mixed $data = null, ?Exception $exception = null ): self
+    public static function error(OperationStatus|string $statusOrMessage, string $message = '', mixed $data = null, ?Exception $exception = null): self
     {
-        if ( $statusOrMessage instanceof OperationStatus ) {
+        if ($statusOrMessage instanceof OperationStatus) {
             $status = $statusOrMessage;
-            $msg    = $message ?: $status->getMessage();
+            $msg = $message ?: $status->getMessage();
         } else {
             $status = OperationStatus::ERROR;
-            $msg    = $statusOrMessage;
+            $msg = $statusOrMessage;
         }
 
         return new self(
@@ -106,11 +96,10 @@ class ServiceResult
     /**
      * Cria um ServiceResult para recurso não encontrado
      *
-     * @param string $resource Nome do recurso não encontrado
-     * @param mixed $data Dados adicionais
-     * @return self
+     * @param  string  $resource  Nome do recurso não encontrado
+     * @param  mixed  $data  Dados adicionais
      */
-    public static function notFound( string $resource, mixed $data = null ): self
+    public static function notFound(string $resource, mixed $data = null): self
     {
         return new self(
             OperationStatus::NOT_FOUND,
@@ -122,11 +111,10 @@ class ServiceResult
     /**
      * Cria um ServiceResult para dados inválidos
      *
-     * @param string $message Mensagem de erro de validação
-     * @param array $data Dados de erro de validação
-     * @return self
+     * @param  string  $message  Mensagem de erro de validação
+     * @param  array  $data  Dados de erro de validação
      */
-    public static function invalidData( string $message, array $data = [] ): self
+    public static function invalidData(string $message, array $data = []): self
     {
         return new self(
             OperationStatus::INVALID_DATA,
@@ -138,11 +126,10 @@ class ServiceResult
     /**
      * Cria um ServiceResult para acesso proibido
      *
-     * @param string $message Mensagem de erro de permissão
-     * @param mixed $data Dados adicionais
-     * @return self
+     * @param  string  $message  Mensagem de erro de permissão
+     * @param  mixed  $data  Dados adicionais
      */
-    public static function forbidden( string $message, mixed $data = null ): self
+    public static function forbidden(string $message, mixed $data = null): self
     {
         return new self(
             OperationStatus::FORBIDDEN,
@@ -168,13 +155,11 @@ class ServiceResult
      */
     public function isError(): bool
     {
-        return !$this->isSuccess();
+        return ! $this->isSuccess();
     }
 
     /**
      * Retorna o status da operação
-     *
-     * @return OperationStatus
      */
     public function getStatus(): OperationStatus
     {
@@ -183,8 +168,6 @@ class ServiceResult
 
     /**
      * Retorna a mensagem da operação
-     *
-     * @return string
      */
     public function getMessage(): string
     {
@@ -193,8 +176,6 @@ class ServiceResult
 
     /**
      * Retorna os dados da operação
-     *
-     * @return mixed
      */
     public function getData(): mixed
     {
@@ -203,8 +184,6 @@ class ServiceResult
 
     /**
      * Retorna o erro da operação (se houver)
-     *
-     * @return Exception|null
      */
     public function getError(): ?Exception
     {
@@ -213,8 +192,6 @@ class ServiceResult
 
     /**
      * Retorna os erros da operação (detalhes de validação, etc.)
-     *
-     * @return mixed
      */
     public function getErrors(): mixed
     {
@@ -223,28 +200,23 @@ class ServiceResult
 
     /**
      * Converte o ServiceResult para array
-     *
-     * @return array
      */
     public function toArray(): array
     {
         return [
             'success' => $this->isSuccess(),
-            'status'  => $this->status->value,
+            'status' => $this->status->value,
             'message' => $this->message,
-            'data'    => $this->data,
-            'error'   => $this->error ? $this->error->getMessage() : null
+            'data' => $this->data,
+            'error' => $this->error ? $this->error->getMessage() : null,
         ];
     }
 
     /**
      * Converte o ServiceResult para JSON
-     *
-     * @return string
      */
     public function toJson(): string
     {
-        return json_encode( $this->toArray() );
+        return json_encode($this->toArray());
     }
-
 }

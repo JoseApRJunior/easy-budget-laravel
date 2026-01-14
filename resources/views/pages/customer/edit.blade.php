@@ -3,26 +3,18 @@
 @section('title', 'Editar Cliente')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-pencil-square me-2"></i>Editar Cliente
-                </h1>
-                <p class="text-muted mb-0">Atualize as informações do cliente</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.customers.index') }}">Clientes</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route('provider.customers.show', $customer) }}">{{ $customer->commonData?->first_name }}</a>
-                    </li>
-                    <li class="breadcrumb-item active">Editar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Editar Cliente"
+            icon="pencil-square"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Clientes' => route('provider.customers.dashboard'),
+                $customer->commonData?->first_name ?? 'Cliente' => route('provider.customers.show', $customer),
+                'Editar' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Atualize as informações do cliente</p>
+        </x-layout.page-header>
 
         <form action="{{ route('provider.customers.update', $customer) }}" method="POST" id="customerForm">
             @csrf
@@ -32,12 +24,12 @@
                 <!-- Dados Pessoais -->
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-person me-2"></i>Dados Pessoais</h5>
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-person me-2 "></i>Dados Pessoais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="first_name" class="form-label">Nome</label>
+                                <label for="first_name" class="text-uppercase small fw-bold text-muted mb-2">Nome</label>
                                 <input type="text" class="form-control @error('first_name') is-invalid @enderror"
                                     id="first_name" name="first_name"
                                     value="{{ old('first_name', $customer->commonData?->first_name) }}" required>
@@ -47,7 +39,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="last_name" class="form-label">Sobrenome</label>
+                                <label for="last_name" class="text-uppercase small fw-bold text-muted mb-2">Sobrenome</label>
                                 <input type="text" class="form-control @error('last_name') is-invalid @enderror"
                                     id="last_name" name="last_name"
                                     value="{{ old('last_name', $customer->commonData?->last_name) }}" required>
@@ -57,11 +49,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="birth_date" class="form-label">Data de Nascimento</label>
+                                <label for="birth_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Nascimento</label>
                                 <input type="text" class="form-control @error('birth_date') is-invalid @enderror"
                                     id="birth_date" name="birth_date"
                                     value="{{ old('birth_date', $customer->commonData?->birth_date ? \Carbon\Carbon::parse($customer->commonData->birth_date)->format('d/m/Y') : '') }}"
-                                    placeholder="DD/MM/AAAA">
+                                    placeholder="DD/MM/AAAA" data-mask="00/00/0000">
                                 <div id="birth_date_js_error" class="text-danger small mt-1" style="display:none;"></div>
                                 @error('birth_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -69,7 +61,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="email_personal" class="form-label">Email Pessoal</label>
+                                <label for="email_personal" class="text-uppercase small fw-bold text-muted mb-2">Email Pessoal</label>
                                 <input type="email" class="form-control @error('email_personal') is-invalid @enderror"
                                     id="email_personal" name="email_personal"
                                     value="{{ old('email_personal', $customer->contact?->email_personal) }}" required>
@@ -79,10 +71,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="phone_personal" class="form-label">Telefone Pessoal</label>
+                                <label for="phone_personal" class="text-uppercase small fw-bold text-muted mb-2">Telefone Pessoal</label>
                                 <input type="tel" class="form-control @error('phone_personal') is-invalid @enderror"
                                     id="phone_personal" name="phone_personal"
-                                    value="{{ old('phone_personal', $customer->contact?->phone_personal) }}" required>
+                                    value="{{ old('phone_personal', $customer->contact?->phone_personal) }}" required
+                                    data-mask="(00) 00000-0000">
                                 @error('phone_personal')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -94,12 +87,12 @@
                 <!-- Dados Profissionais -->
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Dados Profissionais</h5>
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-briefcase me-2 "></i>Dados Profissionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="person_type" class="form-label">Tipo de Pessoa</label>
+                                <label for="person_type" class="text-uppercase small fw-bold text-muted mb-2">Tipo de Pessoa</label>
                                 <select name="person_type" id="person_type"
                                     class="form-select @error('person_type') is-invalid @enderror" required>
                                     <option value="">Selecione o tipo</option>
@@ -122,10 +115,10 @@
                             <!-- Campos PF -->
                             <div id="pf_fields">
                                 <div class="mb-3">
-                                    <label for="cpf" class="form-label">CPF</label>
+                                    <label for="cpf" class="text-uppercase small fw-bold text-muted mb-2">CPF</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
                                         id="cpf" name="cpf"
-                                        value="{{ old('cpf', $customer->commonData?->cpf) }}">
+                                        value="{{ format_cpf(old('cpf', $customer->commonData?->cpf)) }}">
                                     @error('cpf')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -135,7 +128,7 @@
                             <!-- Campos PJ -->
                             <div id="pj_fields">
                                 <div class="mb-3">
-                                    <label for="company_name" class="form-label">Razão Social</label>
+                                    <label for="company_name" class="text-uppercase small fw-bold text-muted mb-2">Razão Social</label>
                                     <input type="text" class="form-control @error('company_name') is-invalid @enderror"
                                         id="company_name" name="company_name"
                                         value="{{ old('company_name', $customer->commonData?->company_name) }}">
@@ -145,10 +138,10 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="cnpj" class="form-label">CNPJ</label>
+                                    <label for="cnpj" class="text-uppercase small fw-bold text-muted mb-2">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
                                         id="cnpj" name="cnpj"
-                                        value="{{ old('cnpj', $customer->commonData?->cnpj) }}">
+                                        value="{{ format_cnpj(old('cnpj', $customer->commonData?->cnpj)) }}" data-mask="00.000.000/0000-00">
                                     @error('cnpj')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -156,29 +149,30 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="area_of_activity_id" class="form-label">Área de Atuação</label>
-                                <select name="area_of_activity_id"
-                                    class="form-select @error('area_of_activity_id') is-invalid @enderror"
-                                    id="area_of_activity_id">
+                                <label for="area_of_activity_slug" class="text-uppercase small fw-bold text-muted mb-2">Área de Atuação</label>
+                                <select name="area_of_activity_slug"
+                                    class="form-select @error('area_of_activity_slug') is-invalid @enderror"
+                                    id="area_of_activity_slug">
                                     <option value="">Selecione uma área</option>
-                                    @foreach ($areas_of_activity as $area)
-                                        <option value="{{ $area->id }}"
-                                            {{ old('area_of_activity_id', $customer->commonData?->area_of_activity_id) == $area->id ? 'selected' : '' }}>
+                                    @foreach ($areas_of_activity ?? [] as $area)
+                                        <option value="{{ $area->slug }}"
+                                            {{ old('area_of_activity_slug', $customer->commonData?->areaOfActivity?->slug) == $area->slug ? 'selected' : '' }}>
                                             {{ $area->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('area_of_activity_id')
+                                @error('area_of_activity_slug')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="mb-3">
-                                <label for="profession_id" class="form-label">Profissão</label>
+                                <label for="profession_id" class="text-uppercase small fw-bold text-muted mb-2">Profissão</label>
                                 <select name="profession_id"
-                                    class="form-select @error('profession_id') is-invalid @enderror" id="profession_id">
+                                    class="form-select @error('profession_id') is-invalid @enderror"
+                                    id="profession_id">
                                     <option value="">Selecione uma profissão</option>
-                                    @foreach ($professions as $prof)
+                                    @foreach ($professions ?? [] as $prof)
                                         <option value="{{ $prof->id }}"
                                             {{ old('profession_id', $customer->commonData?->profession_id) == $prof->id ? 'selected' : '' }}>
                                             {{ $prof->name }}
@@ -191,7 +185,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="description" class="form-label">Descrição</label>
+                                <label for="description" class="text-uppercase small fw-bold text-muted mb-2">Descrição</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
                                     rows="3" maxlength="250" placeholder="Descrição do cliente...">{{ old('description', $customer->commonData?->description) }}</textarea>
                                 @error('description')
@@ -205,12 +199,12 @@
                 <!-- Contato -->
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-envelope me-2"></i>Contato</h5>
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-envelope me-2 "></i>Contato</h5>
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="email_business" class="form-label">Email Empresarial</label>
+                                <label for="email_business" class="text-uppercase small fw-bold text-muted mb-2">Email Empresarial</label>
                                 <input type="email" class="form-control @error('email_business') is-invalid @enderror"
                                     id="email_business" name="email_business"
                                     value="{{ old('email_business', $customer->contact?->email_business) }}">
@@ -220,7 +214,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="phone_business" class="form-label">Telefone Empresarial</label>
+                                <label for="phone_business" class="text-uppercase small fw-bold text-muted mb-2">Telefone Empresarial</label>
                                 <input type="tel" class="form-control @error('phone_business') is-invalid @enderror"
                                     id="phone_business" name="phone_business"
                                     value="{{ old('phone_business', $customer->contact?->phone_business) }}">
@@ -230,10 +224,10 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="website" class="form-label">Website</label>
-                                <input type="url" class="form-control @error('website') is-invalid @enderror"
+                                <label for="website" class="text-uppercase small fw-bold text-muted mb-2">Website</label>
+                                <input type="text" class="form-control @error('website') is-invalid @enderror"
                                     id="website" name="website"
-                                    value="{{ old('website', $customer->contact?->website) }}">
+                                    value="{{ old('website', $customer->contact?->website) }}" placeholder="ex: www.site.com.br">
                                 @error('website')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -245,23 +239,23 @@
                 <!-- Endereço -->
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Endereço</h5>
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-geo-alt me-2 "></i>Endereço</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="cep" class="form-label">CEP</label>
+                                    <label for="cep" class="text-uppercase small fw-bold text-muted mb-2">CEP</label>
                                     <input type="text" class="form-control @error('cep') is-invalid @enderror"
                                         id="cep" name="cep" data-cep-lookup
-                                        value="{{ old('cep', $customer->address?->cep) }}" required>
+                                        value="{{ old('cep', $customer->address?->cep) }}" required data-mask="00000-000">
                                     @error('cep')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="address_number" class="form-label">Número</label>
+                                    <label for="address_number" class="text-uppercase small fw-bold text-muted mb-2">Número</label>
                                     <input type="text"
                                         class="form-control @error('address_number') is-invalid @enderror"
                                         id="address_number" name="address_number"
@@ -273,7 +267,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="address" class="form-label">Endereço</label>
+                                <label for="address" class="text-uppercase small fw-bold text-muted mb-2">Endereço</label>
                                 <input type="text" class="form-control @error('address') is-invalid @enderror"
                                     id="address" name="address"
                                     value="{{ old('address', $customer->address?->address) }}" required>
@@ -283,7 +277,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="neighborhood" class="form-label">Bairro</label>
+                                <label for="neighborhood" class="text-uppercase small fw-bold text-muted mb-2">Bairro</label>
                                 <input type="text" class="form-control @error('neighborhood') is-invalid @enderror"
                                     id="neighborhood" name="neighborhood"
                                     value="{{ old('neighborhood', $customer->address?->neighborhood) }}" required>
@@ -294,7 +288,7 @@
 
                             <div class="row">
                                 <div class="col-md-8 mb-3">
-                                    <label for="city" class="form-label">Cidade</label>
+                                    <label for="city" class="text-uppercase small fw-bold text-muted mb-2">Cidade</label>
                                     <input type="text" class="form-control @error('city') is-invalid @enderror"
                                         id="city" name="city"
                                         value="{{ old('city', $customer->address?->city) }}" required>
@@ -304,7 +298,7 @@
                                 </div>
 
                                 <div class="col-md-4 mb-3">
-                                    <label for="state" class="form-label">Estado</label>
+                                    <label for="state" class="text-uppercase small fw-bold text-muted mb-2">Estado</label>
                                     <input type="text" class="form-control @error('state') is-invalid @enderror"
                                         id="state" name="state"
                                         value="{{ old('state', $customer->address?->state) }}" required>
@@ -320,13 +314,13 @@
                 <!-- Dados Empresariais Adicionais (PJ) -->
                 <div class="col-12" id="business-data-section" style="display: none;">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0"><i class="bi bi-building-gear me-2"></i>Dados Empresariais Adicionais</h5>
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold "><i class="bi bi-building-gear me-2 "></i>Dados Empresariais Adicionais</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="fantasy_name" class="form-label">Nome Fantasia</label>
+                                    <label for="fantasy_name" class="text-uppercase small fw-bold text-muted mb-2">Nome Fantasia</label>
                                     <input type="text"
                                         class="form-control @error('fantasy_name') is-invalid @enderror"
                                         id="fantasy_name" name="fantasy_name"
@@ -337,7 +331,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="founding_date" class="form-label">Data de Fundação</label>
+                                    <label for="founding_date" class="text-uppercase small fw-bold text-muted mb-2">Data de Fundação</label>
                                     <input type="text"
                                         class="form-control @error('founding_date') is-invalid @enderror"
                                         id="founding_date" name="founding_date"
@@ -349,7 +343,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="state_registration" class="form-label">Inscrição Estadual</label>
+                                    <label for="state_registration" class="text-uppercase small fw-bold text-muted mb-2">Inscrição Estadual</label>
                                     <input type="text"
                                         class="form-control @error('state_registration') is-invalid @enderror"
                                         id="state_registration" name="state_registration"
@@ -360,7 +354,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="municipal_registration" class="form-label">Inscrição Municipal</label>
+                                    <label for="municipal_registration" class="text-uppercase small fw-bold text-muted mb-2">Inscrição Municipal</label>
                                     <input type="text"
                                         class="form-control @error('municipal_registration') is-invalid @enderror"
                                         id="municipal_registration" name="municipal_registration"
@@ -371,7 +365,7 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="industry" class="form-label">Setor de Atuação</label>
+                                    <label for="industry" class="text-uppercase small fw-bold text-muted mb-2">Setor de Atuação</label>
                                     <input type="text" class="form-control @error('industry') is-invalid @enderror"
                                         id="industry" name="industry"
                                         value="{{ old('industry', $customer->businessData?->industry) }}">
@@ -381,22 +375,21 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="company_size" class="form-label">Porte da Empresa</label>
+                                    <label for="company_size" class="text-uppercase small fw-bold text-muted mb-2">Porte da Empresa</label>
                                     <select name="company_size"
                                         class="form-select @error('company_size') is-invalid @enderror"
                                         id="company_size">
                                         <option value="">Selecione</option>
-                                        <option value="micro"
-                                            {{ old('company_size', $customer->businessData?->company_size) == 'micro' ? 'selected' : '' }}>
+                                        @php
+                                            $currentSize = old('company_size', $customer->businessData?->company_size);
+                                        @endphp
+                                        <option value="micro" {{ $currentSize == 'micro' ? 'selected' : '' }}>
                                             Microempresa</option>
-                                        <option value="pequena"
-                                            {{ old('company_size', $customer->businessData?->company_size) == 'pequena' ? 'selected' : '' }}>
+                                        <option value="pequena" {{ $currentSize == 'pequena' ? 'selected' : '' }}>
                                             Pequena Empresa</option>
-                                        <option value="media"
-                                            {{ old('company_size', $customer->businessData?->company_size) == 'media' ? 'selected' : '' }}>
+                                        <option value="media" {{ $currentSize == 'media' ? 'selected' : '' }}>
                                             Média Empresa</option>
-                                        <option value="grande"
-                                            {{ old('company_size', $customer->businessData?->company_size) == 'grande' ? 'selected' : '' }}>
+                                        <option value="grande" {{ $currentSize == 'grande' ? 'selected' : '' }}>
                                             Grande Empresa</option>
                                     </select>
                                     @error('company_size')
@@ -405,7 +398,7 @@
                                 </div>
 
                                 <div class="col-12 mb-3">
-                                    <label for="notes" class="form-label">Observações</label>
+                                    <label for="notes" class="text-uppercase small fw-bold text-muted mb-2">Observações</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3"
                                         placeholder="Informações adicionais sobre o cliente...">{{ old('notes', $customer->businessData?->notes) }}</textarea>
                                     @error('notes')
@@ -428,12 +421,12 @@
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
                 <div>
-                    <a href="{{ url()->previous(route('provider.customers.index')) }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('provider.customers.show', $customer) }}" class="btn btn-outline-secondary shadow-sm">
                         <i class="bi bi-arrow-left me-2"></i>Cancelar
                     </a>
                 </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Salvar
+                <button type="submit" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-check-circle me-2"></i>Atualizar
                 </button>
             </div>
         </form>
@@ -462,13 +455,15 @@
                     new VanillaMask('phone_personal', 'phone');
                     new VanillaMask('phone_business', 'phone');
                     new VanillaMask('cep', 'cep');
+                    new VanillaMask('birth_date', 'date');
+                    new VanillaMask('founding_date', 'date');
 
                     // Inicializar máscara baseada no tipo de pessoa atual
                     const type = document.getElementById('person_type').value;
                     if (type === 'pf') {
-                        new VanillaMask('cpf', 'cpf');
+                        new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
                     } else if (type === 'pj') {
-                        new VanillaMask('cnpj', 'cnpj');
+                        new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
                     }
 
                     // Aplicar formatação aos valores existentes nos campos
@@ -493,9 +488,9 @@
                     if (typeof VanillaMask !== 'undefined') {
                         const type = this.value;
                         if (type === 'pf') {
-                            new VanillaMask('cpf', 'cpf');
+                            new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
                         } else if (type === 'pj') {
-                            new VanillaMask('cnpj', 'cnpj');
+                            new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
                         }
                     }
                 }, 200);

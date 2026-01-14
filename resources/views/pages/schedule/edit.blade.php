@@ -3,22 +3,17 @@
 @section('title', 'Editar Agendamento')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h3 class="mb-2">
-                <i class="bi bi-calendar-edit me-2"></i>
-                Editar Agendamento #{{ $schedule->id }}
-            </h3>
-            <p class="text-muted mb-3">Atualize as informações do agendamento</p>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
-                    <li class="breadcrumb-item active">Editar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Editar Agendamento #{{ $schedule->id }}"
+            icon="pencil"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Agendamentos' => route('provider.schedules.index'),
+                'Editar' => '#'
+            ]">
+            <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">

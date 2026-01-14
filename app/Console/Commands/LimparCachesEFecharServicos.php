@@ -22,20 +22,20 @@ class LimparCachesEFecharServicos extends Command
 
     public function handle()
     {
-        $this->info( '🧹 Limpando caches do Laravel...' );
+        $this->info('🧹 Limpando caches do Laravel...');
 
         // Limpar caches do Laravel
-        $this->callSilent( 'cache:clear' );
-        $this->callSilent( 'config:clear' );
-        $this->callSilent( 'route:clear' );
-        $this->callSilent( 'view:clear' );
-        $this->callSilent( 'event:clear' );
-        $this->callSilent( 'logs:clear' );
+        $this->callSilent('cache:clear');
+        $this->callSilent('config:clear');
+        $this->callSilent('route:clear');
+        $this->callSilent('view:clear');
+        $this->callSilent('event:clear');
+        $this->callSilent('logs:clear');
 
-        $this->info( '✅ Caches do Laravel limpos.' );
+        $this->info('✅ Caches do Laravel limpos.');
 
         // Encerrar processos
-        $this->info( '🛑 Encerrando processos PHP, Node.js e Python...' );
+        $this->info('🛑 Encerrando processos PHP, Node.js e Python...');
 
         $comandos = [
             'taskkill /F /IM php.exe',
@@ -50,25 +50,24 @@ class LimparCachesEFecharServicos extends Command
             'taskkill /F /IM msedge.exe',
         ];
 
-        if ( strtoupper( substr( PHP_OS, 0, 3 ) ) !== 'WIN' ) {
-            $this->warn( '⚠️ Este comando só é compatível com Windows.' );
+        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+            $this->warn('⚠️ Este comando só é compatível com Windows.');
 
             return;
         }
 
-        foreach ( $comandos as $cmd ) {
+        foreach ($comandos as $cmd) {
             $output = null;
             $result = null;
-            exec( $cmd, $output, $result );
+            exec($cmd, $output, $result);
 
-            if ( $result === 0 ) {
-                $this->line( "✅ Encerrado: $cmd" );
+            if ($result === 0) {
+                $this->line("✅ Encerrado: $cmd");
             } else {
-                $this->warn( "⚠️ Falha ao encerrar: $cmd" );
+                $this->warn("⚠️ Falha ao encerrar: $cmd");
             }
         }
 
-        $this->info( '✅ Processos encerrados.' );
+        $this->info('✅ Processos encerrados.');
     }
-
 }

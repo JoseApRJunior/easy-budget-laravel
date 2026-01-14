@@ -6,173 +6,172 @@ namespace App\Services\Infrastructure;
 
 use App\Models\Invoice;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class MetricsService
 {
     /**
      * Obtém métricas principais do dashboard
      */
-    public function getMetrics( int $userId, string $period, bool $forceRefresh = false ): array
+    public function getMetrics(int $userId, string $period, bool $forceRefresh = false): array
     {
-        $dateRange = $this->getDateRange( $period );
+        $dateRange = $this->getDateRange($period);
 
         return [
-            'receita_total'        => $this->calculateReceitaTotal( $userId, $dateRange ),
-            'despesas_totais'      => $this->calculateDespesasTotais( $userId, $dateRange ),
-            'saldo_atual'          => $this->calculateSaldoAtual( $userId, $dateRange ),
-            'transacoes_hoje'      => $this->countTransacoesHoje( $userId ),
-            'comparativo_anterior' => $this->getComparativoPeriodoAnterior( $userId, $period ),
-            'metas_alcancadas'     => $this->calculateMetasAlcancadas( $userId, $period ),
-            'period'               => $period,
-            'date_range'           => $dateRange
+            'receita_total' => $this->calculateReceitaTotal($userId, $dateRange),
+            'despesas_totais' => $this->calculateDespesasTotais($userId, $dateRange),
+            'saldo_atual' => $this->calculateSaldoAtual($userId, $dateRange),
+            'transacoes_hoje' => $this->countTransacoesHoje($userId),
+            'comparativo_anterior' => $this->getComparativoPeriodoAnterior($userId, $period),
+            'metas_alcancadas' => $this->calculateMetasAlcancadas($userId, $period),
+            'period' => $period,
+            'date_range' => $dateRange,
         ];
     }
 
     /**
      * Calcula receita total do período
      */
-    private function calculateReceitaTotal( int $userId, array $dateRange ): array
+    private function calculateReceitaTotal(int $userId, array $dateRange): array
     {
-        $receita = Invoice::where( 'tenant_id', $this->getTenantId( $userId ) )
-            ->where( 'transaction_amount', '>', 0 )
-            ->whereBetween( 'transaction_date', [ $dateRange[ 'start' ], $dateRange[ 'end' ] ] )
-            ->sum( 'transaction_amount' );
+        $receita = Invoice::where('tenant_id', $this->getTenantId($userId))
+            ->where('transaction_amount', '>', 0)
+            ->whereBetween('transaction_date', [$dateRange['start'], $dateRange['end']])
+            ->sum('transaction_amount');
 
-        $receitaAnterior = $this->getReceitaPeriodoAnterior( $userId, $dateRange );
+        $receitaAnterior = $this->getReceitaPeriodoAnterior($userId, $dateRange);
 
         return [
-            'valor'     => $receita,
-            'formatado' => 'R$ ' . number_format( $receita, 2, ',', '.' ),
-            'variacao'  => $this->calculateVariacao( $receita, $receitaAnterior ),
-            'tendencia' => $receita > $receitaAnterior ? 'up' : ( $receita < $receitaAnterior ? 'down' : 'stable' )
+            'valor' => $receita,
+            'formatado' => 'R$ '.number_format($receita, 2, ',', '.'),
+            'variacao' => $this->calculateVariacao($receita, $receitaAnterior),
+            'tendencia' => $receita > $receitaAnterior ? 'up' : ($receita < $receitaAnterior ? 'down' : 'stable'),
         ];
     }
 
     /**
      * Calcula despesas totais do período
      */
-    private function calculateDespesasTotais( int $userId, array $dateRange ): array
+    private function calculateDespesasTotais(int $userId, array $dateRange): array
     {
-        $despesas = abs( Invoice::where( 'tenant_id', $this->getTenantId( $userId ) )
-            ->where( 'transaction_amount', '<', 0 )
-            ->whereBetween( 'transaction_date', [ $dateRange[ 'start' ], $dateRange[ 'end' ] ] )
-            ->sum( 'transaction_amount' ) );
+        $despesas = abs(Invoice::where('tenant_id', $this->getTenantId($userId))
+            ->where('transaction_amount', '<', 0)
+            ->whereBetween('transaction_date', [$dateRange['start'], $dateRange['end']])
+            ->sum('transaction_amount'));
 
-        $despesasAnteriores = $this->getDespesasPeriodoAnterior( $userId, $dateRange );
+        $despesasAnteriores = $this->getDespesasPeriodoAnterior($userId, $dateRange);
 
         return [
-            'valor'     => $despesas,
-            'formatado' => 'R$ ' . number_format( $despesas, 2, ',', '.' ),
-            'variacao'  => $this->calculateVariacao( $despesas, $despesasAnteriores ),
-            'tendencia' => $despesas > $despesasAnteriores ? 'up' : ( $despesas < $despesasAnteriores ? 'down' : 'stable' )
+            'valor' => $despesas,
+            'formatado' => 'R$ '.number_format($despesas, 2, ',', '.'),
+            'variacao' => $this->calculateVariacao($despesas, $despesasAnteriores),
+            'tendencia' => $despesas > $despesasAnteriores ? 'up' : ($despesas < $despesasAnteriores ? 'down' : 'stable'),
         ];
     }
 
     /**
      * Calcula saldo atual (receitas - despesas)
      */
-    private function calculateSaldoAtual( int $userId, array $dateRange ): array
+    private function calculateSaldoAtual(int $userId, array $dateRange): array
     {
-        $receita  = $this->calculateReceitaTotal( $userId, $dateRange );
-        $despesas = $this->calculateDespesasTotais( $userId, $dateRange );
+        $receita = $this->calculateReceitaTotal($userId, $dateRange);
+        $despesas = $this->calculateDespesasTotais($userId, $dateRange);
 
-        $saldo = $receita[ 'valor' ] - $despesas[ 'valor' ];
+        $saldo = $receita['valor'] - $despesas['valor'];
 
         return [
-            'valor'               => $saldo,
-            'formatado'           => 'R$ ' . number_format( $saldo, 2, ',', '.' ),
-            'positivo'            => $saldo >= 0,
-            'porcentagem_receita' => $receita[ 'valor' ] > 0 ? round( ( $saldo / $receita[ 'valor' ] ) * 100, 1 ) : 0
+            'valor' => $saldo,
+            'formatado' => 'R$ '.number_format($saldo, 2, ',', '.'),
+            'positivo' => $saldo >= 0,
+            'porcentagem_receita' => $receita['valor'] > 0 ? round(($saldo / $receita['valor']) * 100, 1) : 0,
         ];
     }
 
     /**
      * Conta transações do dia atual
      */
-    private function countTransacoesHoje( int $userId ): array
+    private function countTransacoesHoje(int $userId): array
     {
-        $hoje   = Carbon::today();
+        $hoje = Carbon::today();
         $amanha = Carbon::tomorrow();
 
-        $count = Invoice::where( 'tenant_id', $this->getTenantId( $userId ) )
-            ->whereBetween( 'transaction_date', [ $hoje, $amanha ] )
+        $count = Invoice::where('tenant_id', $this->getTenantId($userId))
+            ->whereBetween('transaction_date', [$hoje, $amanha])
             ->count();
 
         return [
             'quantidade' => $count,
-            'formatado'  => number_format( $count )
+            'formatado' => number_format($count),
         ];
     }
 
     /**
      * Obtém comparativo com período anterior
      */
-    private function getComparativoPeriodoAnterior( int $userId, string $period ): array
+    private function getComparativoPeriodoAnterior(int $userId, string $period): array
     {
-        $currentRange  = $this->getDateRange( $period );
-        $previousRange = $this->getPreviousPeriodRange( $period );
+        $currentRange = $this->getDateRange($period);
+        $previousRange = $this->getPreviousPeriodRange($period);
 
-        $receitaAtual    = $this->calculateReceitaTotal( $userId, $currentRange );
-        $receitaAnterior = $this->calculateReceitaTotal( $userId, $previousRange );
+        $receitaAtual = $this->calculateReceitaTotal($userId, $currentRange);
+        $receitaAnterior = $this->calculateReceitaTotal($userId, $previousRange);
 
-        $despesasAtual      = $this->calculateDespesasTotais( $userId, $currentRange );
-        $despesasAnteriores = $this->calculateDespesasTotais( $userId, $previousRange );
+        $despesasAtual = $this->calculateDespesasTotais($userId, $currentRange);
+        $despesasAnteriores = $this->calculateDespesasTotais($userId, $previousRange);
 
         return [
-            'receita'  => [
-                'atual'    => $receitaAtual[ 'valor' ],
-                'anterior' => $receitaAnterior[ 'valor' ],
-                'variacao' => $receitaAtual[ 'variacao' ]
+            'receita' => [
+                'atual' => $receitaAtual['valor'],
+                'anterior' => $receitaAnterior['valor'],
+                'variacao' => $receitaAtual['variacao'],
             ],
             'despesas' => [
-                'atual'    => $despesasAtual[ 'valor' ],
-                'anterior' => $despesasAnteriores[ 'valor' ],
-                'variacao' => $despesasAtual[ 'variacao' ]
-            ]
+                'atual' => $despesasAtual['valor'],
+                'anterior' => $despesasAnteriores['valor'],
+                'variacao' => $despesasAtual['variacao'],
+            ],
         ];
     }
 
     /**
      * Calcula percentual de metas alcançadas
      */
-    private function calculateMetasAlcancadas( int $userId, string $period ): array
+    private function calculateMetasAlcancadas(int $userId, string $period): array
     {
         // Por enquanto retorna dados mock - implementar lógica de metas posteriormente
         return [
-            'receita'  => 85.5,
+            'receita' => 85.5,
             'despesas' => 92.3,
-            'saldo'    => 78.1
+            'saldo' => 78.1,
         ];
     }
 
     /**
      * Define range de datas baseado no período
      */
-    private function getDateRange( string $period ): array
+    private function getDateRange(string $period): array
     {
         $now = Carbon::now();
 
-        return match ( $period ) {
+        return match ($period) {
             'today' => [
                 'start' => $now->startOfDay(),
-                'end'   => $now->endOfDay()
+                'end' => $now->endOfDay(),
             ],
-            'week'  => [
-                'start'  => $now->startOfWeek(),
-                'end'    => $now->endOfWeek()
+            'week' => [
+                'start' => $now->startOfWeek(),
+                'end' => $now->endOfWeek(),
             ],
             'month' => [
                 'start' => $now->startOfMonth(),
-                'end'   => $now->endOfMonth()
+                'end' => $now->endOfMonth(),
             ],
-            'year'  => [
-                'start'  => $now->startOfYear(),
-                'end'    => $now->endOfYear()
+            'year' => [
+                'start' => $now->startOfYear(),
+                'end' => $now->endOfYear(),
             ],
             default => [
                 'start' => $now->startOfMonth(),
-                'end'   => $now->endOfMonth()
+                'end' => $now->endOfMonth(),
             ]
         };
     }
@@ -180,30 +179,30 @@ class MetricsService
     /**
      * Obtém range do período anterior
      */
-    private function getPreviousPeriodRange( string $period ): array
+    private function getPreviousPeriodRange(string $period): array
     {
         $now = Carbon::now();
 
-        return match ( $period ) {
+        return match ($period) {
             'today' => [
                 'start' => $now->subDay()->startOfDay(),
-                'end'   => $now->subDay()->endOfDay()
+                'end' => $now->subDay()->endOfDay(),
             ],
-            'week'  => [
-                'start'  => $now->subWeek()->startOfWeek(),
-                'end'    => $now->subWeek()->endOfWeek()
+            'week' => [
+                'start' => $now->subWeek()->startOfWeek(),
+                'end' => $now->subWeek()->endOfWeek(),
             ],
             'month' => [
                 'start' => $now->subMonth()->startOfMonth(),
-                'end'   => $now->subMonth()->endOfMonth()
+                'end' => $now->subMonth()->endOfMonth(),
             ],
-            'year'  => [
-                'start'  => $now->subYear()->startOfYear(),
-                'end'    => $now->subYear()->endOfYear()
+            'year' => [
+                'start' => $now->subYear()->startOfYear(),
+                'end' => $now->subYear()->endOfYear(),
             ],
             default => [
                 'start' => $now->subMonth()->startOfMonth(),
-                'end'   => $now->subMonth()->endOfMonth()
+                'end' => $now->subMonth()->endOfMonth(),
             ]
         };
     }
@@ -211,19 +210,19 @@ class MetricsService
     /**
      * Calcula variação percentual entre dois valores
      */
-    private function calculateVariacao( float $atual, float $anterior ): float
+    private function calculateVariacao(float $atual, float $anterior): float
     {
-        if ( $anterior == 0 ) {
+        if ($anterior == 0) {
             return $atual > 0 ? 100.0 : 0.0;
         }
 
-        return round( ( ( $atual - $anterior ) / $anterior ) * 100, 2 );
+        return round((($atual - $anterior) / $anterior) * 100, 2);
     }
 
     /**
      * Obtém receita do período anterior
      */
-    private function getReceitaPeriodoAnterior( int $userId, array $dateRange ): float
+    private function getReceitaPeriodoAnterior(int $userId, array $dateRange): float
     {
         // Implementar lógica específica se necessário
         return 0.0;
@@ -232,7 +231,7 @@ class MetricsService
     /**
      * Obtém despesas do período anterior
      */
-    private function getDespesasPeriodoAnterior( int $userId, array $dateRange ): float
+    private function getDespesasPeriodoAnterior(int $userId, array $dateRange): float
     {
         // Implementar lógica específica se necessário
         return 0.0;
@@ -241,10 +240,9 @@ class MetricsService
     /**
      * Obtém ID do tenant do usuário
      */
-    private function getTenantId( int $userId ): int
+    private function getTenantId(int $userId): int
     {
         // Por enquanto retorna 1 - implementar lógica de tenant posteriormente
         return 1;
     }
-
 }

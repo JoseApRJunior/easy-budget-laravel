@@ -91,6 +91,20 @@ class AIAnalyticsController extends Controller
 
     public function customers(Request $request)
     {
+        // Use the service to get insights which includes RFM segmentation
+        $insights = $this->aiAnalyticsService->getCustomerInsights();
+        $retention = $insights['retention_analysis'] ?? [];
+        $segments = $retention['segments'] ?? [];
+
+        // Determine main segment (the one with most customers)
+        $mainSegment = 'Indefinido';
+        if (!empty($segments)) {
+            $mainSegment = array_search(max($segments), $segments);
+        }
+
+        // We can still fetch basic counts if needed, or rely on service
+        // For consistency with previous response, let's keep the structure but enrich it
+
         $tenantId = (int) (auth()->user()->tenant_id ?? 0);
         $totalCustomers = Customer::where('tenant_id', $tenantId)->count();
         $activeCustomers = Customer::where('tenant_id', $tenantId)
@@ -102,14 +116,14 @@ class AIAnalyticsController extends Controller
             ->whereMonth('created_at', Carbon::now()->month)
             ->whereYear('created_at', Carbon::now()->year)
             ->count();
-        $churnRate = $totalCustomers > 0 ? round((($totalCustomers - $activeCustomers) / $totalCustomers) * 100, 2) : 0;
 
         return response()->json([
             'total_customers' => (int) $totalCustomers,
             'active_customers' => (int) $activeCustomers,
             'new_customers_month' => (int) $newCustomersMonth,
-            'churn_rate' => (float) $churnRate,
-            'main_segment' => 'Análise em progresso...',
+            'churn_rate' => (float) ($retention['churn_rate'] ?? 0),
+            'main_segment' => $mainSegment,
+            'segments' => $segments // Return full segments for charts
         ]);
     }
 

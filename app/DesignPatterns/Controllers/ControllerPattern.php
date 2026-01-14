@@ -177,19 +177,19 @@ class ControllerPattern
     {
         return [
             // Filtros básicos (todos os controllers)
-            'basic'      => [ 'search', 'status', 'created_at' ],
+            'basic' => ['search', 'status', 'created_at'],
 
             // Filtros de paginação (controllers com muitos dados)
-            'pagination' => [ 'sort_by', 'sort_direction', 'per_page', 'page' ],
+            'pagination' => ['sort_by', 'sort_direction', 'per_page', 'page'],
 
             // Filtros de data (controllers com dados temporais)
-            'date'       => [ 'date_from', 'date_to', 'period' ],
+            'date' => ['date_from', 'date_to', 'period'],
 
             // Filtros específicos por módulo
-            'customer'   => [ 'customer_type', 'priority_level', 'tags' ],
-            'product'    => [ 'category_id', 'active', 'price_min', 'price_max' ],
-            'budget'     => [ 'budget_status', 'due_date_from', 'due_date_to' ],
-            'invoice'    => [ 'invoice_status', 'payment_method' ],
+            'customer' => ['customer_type', 'priority_level', 'tags'],
+            'product' => ['category_id', 'active', 'price_min', 'price_max'],
+            'budget' => ['budget_status', 'due_date_from', 'due_date_to'],
+            'invoice' => ['invoice_status', 'payment_method'],
         ];
     }
 
@@ -200,20 +200,20 @@ class ControllerPattern
     {
         return [
             'create' => [
-                'name'        => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'active'      => 'sometimes|boolean',
+                'active' => 'sometimes|boolean',
             ],
 
             'update' => [
-                'name'        => 'required|string|max:255',
+                'name' => 'required|string|max:255',
                 'description' => 'nullable|string|max:1000',
-                'active'      => 'sometimes|boolean',
+                'active' => 'sometimes|boolean',
             ],
 
             'search' => [
-                'search'   => 'nullable|string|min:2|max:100',
-                'status'   => 'nullable|string|in:active,inactive,pending',
+                'search' => 'nullable|string|min:2|max:100',
+                'status' => 'nullable|string|in:active,inactive,pending',
                 'per_page' => 'nullable|integer|min:10|max:100',
             ],
         ];
@@ -225,12 +225,12 @@ class ControllerPattern
     public function getSuccessMessages(): array
     {
         return [
-            'created'     => 'Registro criado com sucesso.',
-            'updated'     => 'Registro atualizado com sucesso.',
-            'deleted'     => 'Registro excluído com sucesso.',
-            'restored'    => 'Registro restaurado com sucesso.',
-            'duplicated'  => 'Registro duplicado com sucesso.',
-            'activated'   => 'Registro ativado com sucesso.',
+            'created' => 'Registro criado com sucesso.',
+            'updated' => 'Registro atualizado com sucesso.',
+            'deleted' => 'Registro excluído com sucesso.',
+            'restored' => 'Registro restaurado com sucesso.',
+            'duplicated' => 'Registro duplicado com sucesso.',
+            'activated' => 'Registro ativado com sucesso.',
             'deactivated' => 'Registro desativado com sucesso.',
         ];
     }
@@ -242,28 +242,28 @@ class ControllerPattern
     {
         return [
             'index_accessed' => [
-                'action'  => 'Lista acessada',
-                'context' => [ 'filters', 'data_count', 'execution_time' ],
+                'action' => 'Lista acessada',
+                'context' => ['filters', 'data_count', 'execution_time'],
             ],
 
-            'show_accessed'  => [
-                'action'  => 'Detalhes visualizados',
-                'context' => [ 'resource_id', 'user_id' ],
+            'show_accessed' => [
+                'action' => 'Detalhes visualizados',
+                'context' => ['resource_id', 'user_id'],
             ],
 
-            'created'        => [
-                'action'  => 'Novo registro criado',
-                'context' => [ 'resource_id', 'user_id', 'data_summary' ],
+            'created' => [
+                'action' => 'Novo registro criado',
+                'context' => ['resource_id', 'user_id', 'data_summary'],
             ],
 
-            'updated'        => [
-                'action'  => 'Registro atualizado',
-                'context' => [ 'resource_id', 'user_id', 'changes_summary' ],
+            'updated' => [
+                'action' => 'Registro atualizado',
+                'context' => ['resource_id', 'user_id', 'changes_summary'],
             ],
 
-            'deleted'        => [
-                'action'  => 'Registro excluído',
-                'context' => [ 'resource_id', 'user_id' ],
+            'deleted' => [
+                'action' => 'Registro excluído',
+                'context' => ['resource_id', 'user_id'],
             ],
         ];
     }
@@ -490,5 +490,4 @@ class HybridModuleController extends Controller
 ✅ Suporte a API quando necessário
 ✅ Performance otimizada';
     }
-
 }

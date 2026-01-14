@@ -26,6 +26,6 @@ class UnitSeeder extends Seeder
             ['slug' => 'dia', 'name' => 'Dia',         'is_active' => true, 'created_at' => $now],
         ];
 
-        DB::table('units')->upsert($data, ['slug'], ['name','is_active']);
+        DB::table('units')->upsert($data, ['slug'], ['name', 'is_active']);
     }
 }

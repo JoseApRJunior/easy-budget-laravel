@@ -3,24 +3,17 @@
 @section('title', 'Relatório de Clientes')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-people me-2"></i>
-                    Relatório de Clientes
-                </h1>
-                <p class="text-muted">Visualize e analise todos os clientes cadastrados no sistema</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.reports.index') }}">Relatórios</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Clientes</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Relatório de Clientes"
+            icon="people"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Relatórios' => route('provider.reports.index'),
+                'Clientes' => '#'
+            ]">
+            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Filtros de Busca -->
         <div class="card mb-4">
@@ -47,30 +40,27 @@
                         </div>
 
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="start_date">Data de Cadastro Inicial</label>
-                                <input type="date" class="form-control" id="start_date" name="start_date"
-                                    value="{{ request('start_date') ?? '' }}">
-                            </div>
+                            <x-form.filter-field
+                                type="date"
+                                name="start_date"
+                                label="Data de Cadastro Inicial"
+                                :value="request('start_date')"
+                            />
                         </div>
 
                         <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="end_date">Data de Cadastro Final</label>
-                                <input type="date" class="form-control" id="end_date" name="end_date"
-                                    value="{{ request('end_date') ?? '' }}">
-                            </div>
+                            <x-form.filter-field
+                                type="date"
+                                name="end_date"
+                                label="Data de Cadastro Final"
+                                :value="request('end_date')"
+                            />
                         </div>
 
                         <div class="col-12">
-                            <div class="d-flex gap-2 flex-nowrap">
-                                <button type="submit" id="btnFilterCustomers" class="btn btn-primary" aria-label="Filtrar">
-                                    <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                </button>
-                                <a href="{{ route('provider.reports.customers') }}" class="btn btn-secondary"
-                                    aria-label="Limpar filtros">
-                                    <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                </a>
+                            <div class="d-flex gap-2">
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterCustomers" />
+                                <x-ui.button type="link" :href="route('provider.reports.customers')" variant="secondary" icon="x" label="Limpar" />
                             </div>
                         </div>
                     </div>
@@ -115,15 +105,9 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
-                                <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" title="Exportar PDF"
-                                        id="export-pdf">
-                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-sm" title="Exportar Excel"
-                                        id="export-excel">
-                                        <i class="bi bi-file-earmark-excel me-1"></i>Excel
-                                    </button>
+                                <div class="d-flex gap-1" role="group">
+                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
+                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
                                 </div>
                             </div>
                         </div>
@@ -215,15 +199,9 @@
                                                 </small>
                                             </td>
                                             <td>
-                                                <div class="action-btn-group">
-                                                    <a href="{{ route('provider.customers.show', $customer) }}"
-                                                        class="action-btn action-btn-view" title="Visualizar">
-                                                        <i class="bi bi-eye-fill"></i>
-                                                    </a>
-                                                    <a href="{{ route('provider.customers.edit', $customer) }}"
-                                                        class="action-btn action-btn-edit" title="Editar">
-                                                        <i class="bi bi-pencil-fill"></i>
-                                                    </a>
+                                                <div class="d-flex justify-content-center gap-1">
+                                                    <x-ui.button type="link" :href="route('provider.customers.show', $customer)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                    <x-ui.button type="link" :href="route('provider.customers.edit', $customer)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
                                                 </div>
                                             </td>
                                         </tr>
@@ -269,22 +247,92 @@
             window.location.href = url.toString();
         }
 
-        // Máscara para CPF/CNPJ
         document.addEventListener('DOMContentLoaded', function() {
+            const startDate = document.getElementById('start_date');
+            const endDate = document.getElementById('end_date');
+            const form = document.getElementById('filtersFormCustomers');
             const documentInput = document.getElementById('document');
+
+            if (!form || !startDate || !endDate) return;
+
+            if (typeof VanillaMask !== 'undefined') {
+                new VanillaMask('start_date', 'date');
+                new VanillaMask('end_date', 'date');
+            }
+
             if (documentInput) {
                 documentInput.addEventListener('input', function(e) {
                     let value = e.target.value.replace(/\D/g, '');
                     if (value.length <= 11) {
-                        // CPF
                         value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
                     } else {
-                        // CNPJ
                         value = value.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
                     }
                     e.target.value = value;
                 });
             }
+
+            const parseDate = (str) => {
+                if (!str) return null;
+                const parts = str.split('/');
+                if (parts.length === 3) {
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                return null;
+            };
+
+            const validateDates = (input) => {
+                if (!startDate.value || !endDate.value) return true;
+
+                const start = parseDate(startDate.value);
+                const end = parseDate(endDate.value);
+
+                if (start && end && start > end) {
+                    if (window.easyAlert) {
+                        window.easyAlert.warning('A data inicial não pode ser maior que a data final.');
+                    } else {
+                        alert('A data inicial não pode ser maior que a data final.');
+                    }
+                    if (input) input.value = '';
+                    return false;
+                }
+                return true;
+            };
+
+            startDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+            endDate.addEventListener('change', function() {
+                validateDates(this);
+            });
+
+            form.addEventListener('submit', function(e) {
+                if (!validateDates()) {
+                    e.preventDefault();
+                    return;
+                }
+
+                if (startDate.value && !endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
+                    }
+                    endDate.focus();
+                } else if (!startDate.value && endDate.value) {
+                    e.preventDefault();
+                    const message = 'Para filtrar por período, informe as datas inicial e final.';
+                    if (window.easyAlert) {
+                        window.easyAlert.error(message);
+                    } else {
+                        alert(message);
+                    }
+                    startDate.focus();
+                }
+            });
         });
     </script>
 @endpush

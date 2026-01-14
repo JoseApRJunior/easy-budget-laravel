@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
-use App\Models\Budget;
 use App\Models\BudgetTemplate;
 use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
@@ -14,25 +13,25 @@ class BudgetTemplateService
     /**
      * Cria um novo template.
      */
-    public function createTemplate( array $data, int $tenantId, int $userId ): ServiceResult
+    public function createTemplate(array $data, int $tenantId, int $userId): ServiceResult
     {
         try {
             DB::beginTransaction();
 
-            $template = BudgetTemplate::create( array_merge( $data, [
+            $template = BudgetTemplate::create(array_merge($data, [
                 'tenant_id' => $tenantId,
-                'user_id'   => $userId,
-            ] ) );
+                'user_id' => $userId,
+            ]));
 
             DB::commit();
 
-            return ServiceResult::success( $template, 'Template criado com sucesso.' );
+            return ServiceResult::success($template, 'Template criado com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao criar template: ' . $e->getMessage()
+                'Erro ao criar template: '.$e->getMessage()
             );
         }
     }
@@ -40,22 +39,22 @@ class BudgetTemplateService
     /**
      * Atualiza um template.
      */
-    public function updateTemplate( BudgetTemplate $template, array $data ): ServiceResult
+    public function updateTemplate(BudgetTemplate $template, array $data): ServiceResult
     {
         try {
             DB::beginTransaction();
 
-            $template->update( $data );
+            $template->update($data);
 
             DB::commit();
 
-            return ServiceResult::success( $template, 'Template atualizado com sucesso.' );
+            return ServiceResult::success($template, 'Template atualizado com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao atualizar template: ' . $e->getMessage()
+                'Erro ao atualizar template: '.$e->getMessage()
             );
         }
     }
@@ -63,10 +62,10 @@ class BudgetTemplateService
     /**
      * Exclui um template.
      */
-    public function deleteTemplate( BudgetTemplate $template ): ServiceResult
+    public function deleteTemplate(BudgetTemplate $template): ServiceResult
     {
         try {
-            if ( !$template->canBeDeleted() ) {
+            if (! $template->canBeDeleted()) {
                 return ServiceResult::error(
                     'Template não pode ser excluído pois possui dependências.',
                 );
@@ -78,13 +77,13 @@ class BudgetTemplateService
 
             DB::commit();
 
-            return ServiceResult::success( null, 'Template excluído com sucesso.' );
+            return ServiceResult::success(null, 'Template excluído com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao excluir template: ' . $e->getMessage()
+                'Erro ao excluir template: '.$e->getMessage()
             );
         }
     }
@@ -99,17 +98,17 @@ class BudgetTemplateService
         try {
             DB::beginTransaction();
 
-            $budget = $template->createBudgetFromTemplate( $overrides );
+            $budget = $template->createBudgetFromTemplate($overrides);
 
             DB::commit();
 
-            return ServiceResult::success( $budget, 'Orçamento criado a partir do template.' );
+            return ServiceResult::success($budget, 'Orçamento criado a partir do template.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao criar orçamento: ' . $e->getMessage()
+                'Erro ao criar orçamento: '.$e->getMessage()
             );
         }
     }
@@ -117,40 +116,40 @@ class BudgetTemplateService
     /**
      * Lista templates disponíveis.
      */
-    public function listTemplates( int $tenantId, array $filters = [] ): ServiceResult
+    public function listTemplates(int $tenantId, array $filters = []): ServiceResult
     {
         try {
-            $query = BudgetTemplate::where( 'tenant_id', $tenantId )
+            $query = BudgetTemplate::where('tenant_id', $tenantId)
                 ->active();
 
             // Aplicar filtros
-            if ( isset( $filters[ 'category' ] ) ) {
-                $query->byCategory( $filters[ 'category' ] );
+            if (isset($filters['category'])) {
+                $query->byCategory($filters['category']);
             }
 
-            if ( isset( $filters[ 'is_public' ] ) ) {
-                if ( $filters[ 'is_public' ] ) {
+            if (isset($filters['is_public'])) {
+                if ($filters['is_public']) {
                     $query->public();
                 } else {
                     $query->private();
                 }
             }
 
-            if ( isset( $filters[ 'search' ] ) ) {
-                $query->where( function ( $q ) use ( $filters ) {
-                    $q->where( 'name', 'like', '%' . $filters[ 'search' ] . '%' )
-                        ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
-                } );
+            if (isset($filters['search'])) {
+                $query->where(function ($q) use ($filters) {
+                    $q->where('name', 'like', '%'.$filters['search'].'%')
+                        ->orWhere('description', 'like', '%'.$filters['search'].'%');
+                });
             }
 
             // Ordenação
-            $sortBy = $filters[ 'sort_by' ] ?? 'recent';
-            switch ( $sortBy ) {
+            $sortBy = $filters['sort_by'] ?? 'recent';
+            switch ($sortBy) {
                 case 'most_used':
                     $query->mostUsed();
                     break;
                 case 'name':
-                    $query->orderBy( 'name' );
+                    $query->orderBy('name');
                     break;
                 case 'recent':
                 default:
@@ -160,11 +159,11 @@ class BudgetTemplateService
 
             $templates = $query->get();
 
-            return ServiceResult::success( $templates, 'Templates listados com sucesso.' );
+            return ServiceResult::success($templates, 'Templates listados com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             return ServiceResult::error(
-                'Erro ao listar templates: ' . $e->getMessage()
+                'Erro ao listar templates: '.$e->getMessage()
             );
         }
     }
@@ -172,16 +171,16 @@ class BudgetTemplateService
     /**
      * Obtém preview de um template.
      */
-    public function getTemplatePreview( BudgetTemplate $template, array $variables = [] ): ServiceResult
+    public function getTemplatePreview(BudgetTemplate $template, array $variables = []): ServiceResult
     {
         try {
-            $preview = $template->getPreview( $variables );
+            $preview = $template->getPreview($variables);
 
-            return ServiceResult::success( $preview, 'Preview gerado com sucesso.' );
+            return ServiceResult::success($preview, 'Preview gerado com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             return ServiceResult::error(
-                'Erro ao gerar preview: ' . $e->getMessage()
+                'Erro ao gerar preview: '.$e->getMessage()
             );
         }
     }
@@ -189,22 +188,22 @@ class BudgetTemplateService
     /**
      * Duplica um template.
      */
-    public function duplicateTemplate( BudgetTemplate $template, int $userId ): ServiceResult
+    public function duplicateTemplate(BudgetTemplate $template, int $userId): ServiceResult
     {
         try {
             DB::beginTransaction();
 
-            $newTemplate = $template->duplicate( $userId );
+            $newTemplate = $template->duplicate($userId);
 
             DB::commit();
 
-            return ServiceResult::success( $newTemplate, 'Template duplicado com sucesso.' );
+            return ServiceResult::success($newTemplate, 'Template duplicado com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao duplicar template: ' . $e->getMessage()
+                'Erro ao duplicar template: '.$e->getMessage()
             );
         }
     }
@@ -212,25 +211,25 @@ class BudgetTemplateService
     /**
      * Obtém estatísticas de uso de templates.
      */
-    public function getTemplateStats( int $tenantId ): ServiceResult
+    public function getTemplateStats(int $tenantId): ServiceResult
     {
         try {
             $stats = [
-                'total_templates'  => BudgetTemplate::where( 'tenant_id', $tenantId )->count(),
-                'active_templates' => BudgetTemplate::where( 'tenant_id', $tenantId )->active()->count(),
-                'public_templates' => BudgetTemplate::where( 'tenant_id', $tenantId )->public()->count(),
-                'total_usage'      => BudgetTemplate::where( 'tenant_id', $tenantId )->sum( 'usage_count' ),
-                'categories'       => BudgetTemplate::where( 'tenant_id', $tenantId )
-                    ->selectRaw( 'category, COUNT(*) as count' )
-                    ->groupBy( 'category' )
-                    ->pluck( 'count', 'category' ),
+                'total_templates' => BudgetTemplate::where('tenant_id', $tenantId)->count(),
+                'active_templates' => BudgetTemplate::where('tenant_id', $tenantId)->active()->count(),
+                'public_templates' => BudgetTemplate::where('tenant_id', $tenantId)->public()->count(),
+                'total_usage' => BudgetTemplate::where('tenant_id', $tenantId)->sum('usage_count'),
+                'categories' => BudgetTemplate::where('tenant_id', $tenantId)
+                    ->selectRaw('category, COUNT(*) as count')
+                    ->groupBy('category')
+                    ->pluck('count', 'category'),
             ];
 
-            return ServiceResult::success( $stats, 'Estatísticas obtidas com sucesso.' );
+            return ServiceResult::success($stats, 'Estatísticas obtidas com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             return ServiceResult::error(
-                'Erro ao obter estatísticas: ' . $e->getMessage()
+                'Erro ao obter estatísticas: '.$e->getMessage()
             );
         }
     }
@@ -238,22 +237,22 @@ class BudgetTemplateService
     /**
      * Cria templates padrão para um tenant.
      */
-    public function createDefaultTemplates( int $tenantId, int $userId ): ServiceResult
+    public function createDefaultTemplates(int $tenantId, int $userId): ServiceResult
     {
         try {
             DB::beginTransaction();
 
-            BudgetTemplate::createDefaultTemplates( $tenantId, $userId );
+            BudgetTemplate::createDefaultTemplates($tenantId, $userId);
 
             DB::commit();
 
-            return ServiceResult::success( null, 'Templates padrão criados com sucesso.' );
+            return ServiceResult::success(null, 'Templates padrão criados com sucesso.');
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             return ServiceResult::error(
-                'Erro ao criar templates padrão: ' . $e->getMessage()
+                'Erro ao criar templates padrão: '.$e->getMessage()
             );
         }
     }
@@ -261,19 +260,19 @@ class BudgetTemplateService
     /**
      * Valida dados de um template.
      */
-    public function validateTemplateData( array $data ): ServiceResult
+    public function validateTemplateData(array $data): ServiceResult
     {
         $rules = BudgetTemplate::businessRules();
 
-        $validator = \Illuminate\Support\Facades\Validator::make( $data, $rules );
+        $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
 
-        if ( $validator->fails() ) {
+        if ($validator->fails()) {
             return ServiceResult::error(
-                'Dados inválidos: ' . implode( ', ', $validator->errors()->all() )
+                'Dados inválidos: '.implode(', ', $validator->errors()->all())
             );
         }
 
-        return ServiceResult::success( $data, 'Dados válidos.' );
+        return ServiceResult::success($data, 'Dados válidos.');
     }
 
     /**
@@ -287,37 +286,36 @@ class BudgetTemplateService
     /**
      * Obtém variáveis sugeridas para um tipo de template.
      */
-    public function getSuggestedVariables( string $category ): array
+    public function getSuggestedVariables(string $category): array
     {
         $suggestions = [
-            'produto'     => [
-                'produto_nome'      => 'Nome do Produto',
+            'produto' => [
+                'produto_nome' => 'Nome do Produto',
                 'produto_descricao' => 'Descrição do Produto',
-                'produto_preco'     => 'Preço do Produto',
+                'produto_preco' => 'Preço do Produto',
                 'produto_categoria' => 'Categoria do Produto',
             ],
-            'servico'     => [
-                'servico_nome'      => 'Nome do Serviço',
+            'servico' => [
+                'servico_nome' => 'Nome do Serviço',
                 'servico_descricao' => 'Descrição do Serviço',
-                'servico_valor'     => 'Valor do Serviço',
-                'servico_horas'     => 'Horas Estimadas',
+                'servico_valor' => 'Valor do Serviço',
+                'servico_horas' => 'Horas Estimadas',
             ],
-            'projeto'     => [
-                'projeto_nome'      => 'Nome do Projeto',
+            'projeto' => [
+                'projeto_nome' => 'Nome do Projeto',
                 'projeto_descricao' => 'Descrição do Projeto',
-                'projeto_valor'     => 'Valor do Projeto',
-                'projeto_prazo'     => 'Prazo de Entrega',
-                'cliente_nome'      => 'Nome do Cliente',
+                'projeto_valor' => 'Valor do Projeto',
+                'projeto_prazo' => 'Prazo de Entrega',
+                'cliente_nome' => 'Nome do Cliente',
             ],
             'consultoria' => [
-                'consultoria_tema'     => 'Tema da Consultoria',
+                'consultoria_tema' => 'Tema da Consultoria',
                 'consultoria_objetivo' => 'Objetivo da Consultoria',
-                'consultoria_valor'    => 'Valor da Consultoria',
-                'consultoria_horas'    => 'Horas de Consultoria',
+                'consultoria_valor' => 'Valor da Consultoria',
+                'consultoria_horas' => 'Horas de Consultoria',
             ],
         ];
 
-        return $suggestions[ $category ] ?? [];
+        return $suggestions[$category] ?? [];
     }
-
 }

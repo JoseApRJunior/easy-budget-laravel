@@ -3,195 +3,190 @@
 @section('title', 'Editar Serviço')
 
 @section('content')
-<div class="container-fluid py-1">
-    {{-- Cabeçalho --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">
-                <i class="bi bi-pencil-square me-2"></i>Editar Serviço
-            </h1>
-            <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
-        </div>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('provider.services.show', $service->code) }}">{{ $service->code }}</a></li>
-                <li class="breadcrumb-item active">Editar</li>
-            </ol>
-        </nav>
-    </div>
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2" aria-hidden="true"></i>
-                        <strong>Código do Serviço:</strong> {{ $service->code }}
-                        <span class="ms-3"><strong>Status:</strong>
-                            <span class="badge" style="background-color: {{ $service->serviceStatus->getColor() }}">
-                                {{ $service->serviceStatus->getDescription() }}
-                            </span>
-                        </span>
-                    </div>
+<x-layout.page-container>
+    <x-layout.page-header
+        title="Editar Serviço"
+        icon="tools"
+        :breadcrumb-items="[
+            'Dashboard' => route('provider.dashboard'),
+            'Serviços' => route('provider.services.dashboard'),
+            $service->code => route('provider.services.show', $service->code),
+            'Editar' => '#'
+        ]">
+        <p class="text-muted mb-0">Atualize as informações do serviço {{ $service->code }}</p>
+    </x-layout.page-header>
+    <x-layout.grid-row>
+        <x-layout.grid-col size="col-12">
+            <x-resource.resource-list-card
+                title="Dados do Serviço"
+                icon="tools"
+                padding="p-4"
+            >
+                <x-ui.alert type="info">
+                    <strong>Código do Serviço:</strong> {{ $service->code }}
+                    <span class="ms-3"><strong>Status:</strong>
+                        <x-ui.status-badge :item="$service" />
+                    </span>
+                </x-ui.alert>
 
-                    <form id="serviceForm" method="POST" action="{{ route('provider.services.update', $service->code) }}">
-                        @csrf
-                        @method('PUT')
+                <form id="serviceForm" method="POST" action="{{ route('provider.services.update', $service->code) }}">
+                    @csrf
+                    @method('PUT')
 
-                        <!-- Informações Básicas -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="budget_id" class="form-label">
-                                        Orçamento <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select @error('budget_id') is-invalid @enderror"
-                                        id="budget_id"
-                                        name="budget_id"
-                                        required disabled>
-                                        <option value="">Selecione um orçamento</option>
-                                        @foreach($budgets as $budgetOption)
-                                        <option value="{{ $budgetOption->id }}"
-                                            {{ (old('budget_id', $service->budget_id) == $budgetOption->id) ? 'selected' : '' }}>
-                                            {{ $budgetOption->code }} - R$ {{ number_format($budgetOption->total, 2, ',', '.') }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                    <input type="hidden" name="budget_id" value="{{ old('budget_id', $service->budget_id) }}">
-                                    @error('budget_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                    <!-- Informações Básicas -->
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-6">
+                            <div class="mb-3">
+                                <label for="budget_id" class="form-label small fw-bold text-muted text-uppercase">
+                                    Orçamento <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select tom-select @error('budget_id') is-invalid @enderror"
+                                    id="budget_id"
+                                    name="budget_id"
+                                    required disabled>
+                                    <option value="">Selecione um orçamento</option>
+                                    @foreach($budgets as $budgetOption)
+                                    <option value="{{ $budgetOption->id }}"
+                                        {{ (old('budget_id', $service->budget_id) == $budgetOption->id) ? 'selected' : '' }}>
+                                        {{ $budgetOption->code }} - {{ \App\Helpers\CurrencyHelper::format($budgetOption->total) }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                <input type="hidden" name="budget_id" value="{{ old('budget_id', $service->budget_id) }}">
+                                @error('budget_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
+                        </x-layout.grid-col>
 
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="category_id" class="form-label">
-                                        Categoria <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select @error('category_id') is-invalid @enderror"
-                                        id="category_id"
-                                        name="category_id"
-                                        required>
-                                        <option value="">Selecione uma categoria</option>
-                                        @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ old('category_id', $service->category_id) == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                    @error('category_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                        <x-layout.grid-col size="col-md-6">
+                            <div class="mb-3">
+                                <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">
+                                    Categoria <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select tom-select @error('category_id') is-invalid @enderror"
+                                    id="category_id"
+                                    name="category_id"
+                                    required>
+                                    <option value="">Selecione uma categoria</option>
+                                    @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id', $service->category_id) == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('category_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                        </div>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="code" class="form-label">
-                                        Código do Serviço
-                                    </label>
-                                    <input type="text"
-                                        class="form-control"
-                                        id="code"
-                                        name="code"
-                                        value="{{ old('code', $service->code) }}"
-                                        readonly>
-                                    <div class="form-text">O código não pode ser alterado.</div>
-                                </div>
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-6">
+                            <div class="mb-3">
+                                <label for="code" class="form-label small fw-bold text-muted text-uppercase">
+                                    Código do Serviço
+                                </label>
+                                <input type="text"
+                                    class="form-control"
+                                    id="code"
+                                    name="code"
+                                    value="{{ old('code', $service->code) }}"
+                                    readonly>
+                                <div class="form-text">O código não pode ser alterado.</div>
                             </div>
+                        </x-layout.grid-col>
 
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="status" class="form-label">
-                                        Status <span class="text-danger">*</span>
-                                    </label>
-                                    <select class="form-select @error('status') is-invalid @enderror"
-                                        id="status"
-                                        name="status"
-                                        required>
-                                        @foreach($statusOptions as $status)
-                                        <option value="{{ $status->value }}"
-                                            {{ old('status', $service->status->value ?? $service->serviceStatus->value) == $status->value ? 'selected' : '' }}>
-                                            {{ $status->getDescription() }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                    @error('status')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                        <x-layout.grid-col size="col-md-6">
+                            <div class="mb-3">
+                                <label for="service_statuses_id" class="form-label small fw-bold text-muted text-uppercase">
+                                    Status <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select tom-select @error('status') is-invalid @enderror"
+                                    id="status"
+                                    name="status"
+                                    required>
+                                    @foreach($statusOptions as $status)
+                                    <option value="{{ $status->value }}"
+                                        {{ old('status', $service->status->value) == $status->value ? 'selected' : '' }}>
+                                        {{ $status->getDescription() }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                        </div>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
-                        <!-- Descrição e Detalhes -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="mb-3">
-                                    <label for="description" class="form-label">Descrição</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror"
-                                        id="description"
-                                        name="description"
-                                        rows="3"
-                                        placeholder="Descreva o serviço a ser realizado...">{{ old('description', $service->description) }}</textarea>
-                                    @error('description')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                    <!-- Descrição e Detalhes -->
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
+                                <textarea class="form-control @error('description') is-invalid @enderror"
+                                    id="description"
+                                    name="description"
+                                    rows="3"
+                                    placeholder="Descreva o serviço a ser realizado...">{{ old('description', $service->description) }}</textarea>
+                                @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                        </div>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
-                        <!-- Valores e Datas -->
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="discount" class="form-label">Desconto (R$)</label>
-                                    <input type="text"
-                                        inputmode="numeric"
-                                        class="form-control @error('discount') is-invalid @enderror"
-                                        id="discount"
-                                        name="discount"
-                                        value="{{ old('discount', number_format($service->discount, 2, ',', '.')) }}"
-                                        placeholder="0,00">
-                                    @error('discount')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                    <!-- Valores e Datas -->
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-4">
+                            <div class="mb-3">
+                                <label for="discount" class="form-label small fw-bold text-muted text-uppercase">Desconto (R$)</label>
+                                <input type="text"
+                                    inputmode="numeric"
+                                    class="form-control currency-brl @error('discount') is-invalid @enderror"
+                                    id="discount"
+                                    name="discount"
+                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('discount', $service->discount)), 2, false) }}"
+                                    placeholder="0,00">
+                                @error('discount')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
+                        </x-layout.grid-col>
 
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="total" class="form-label">Total (R$)</label>
-                                    <input type="text"
-                                        inputmode="numeric"
-                                        class="form-control @error('total') is-invalid @enderror"
-                                        id="total"
-                                        name="total"
-                                        value="{{ old('total', number_format($service->total, 2, ',', '.')) }}"
-                                        placeholder="0,00">
-                                    @error('total')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                        <x-layout.grid-col size="col-md-4">
+                            <div class="mb-3">
+                                <label for="total" class="form-label small fw-bold text-muted text-uppercase">Total (R$)</label>
+                                <input type="text"
+                                    inputmode="numeric"
+                                    class="form-control @error('total') is-invalid @enderror"
+                                    id="total"
+                                    name="total"
+                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat(old('total', $service->total)), 2, false) }}"
+                                    placeholder="0,00">
+                                @error('total')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
+                        </x-layout.grid-col>
 
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label for="due_date" class="form-label">Data de Vencimento</label>
-                                    <input type="date"
-                                        class="form-control @error('due_date') is-invalid @enderror"
-                                        id="due_date"
-                                        name="due_date"
-                                        value="{{ old('due_date', $service->due_date?->format('Y-m-d')) }}">
-                                    @error('due_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                        <x-layout.grid-col size="col-md-4">
+                            <div class="mb-3">
+                                <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento</label>
+                                <input type="date"
+                                    class="form-control @error('due_date') is-invalid @enderror"
+                                    id="due_date"
+                                    name="due_date"
+                                    min="{{ date('Y-m-d') }}"
+                                    value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $service->due_date?->format('Y-m-d')), 'Y-m-d', $service->due_date?->format('Y-m-d') ?? '') }}">
+                                @error('due_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
-                        </div>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {
                                 try {
@@ -205,45 +200,20 @@
                                             new VanillaMask(el, 'currency');
                                         });
                                     }
-                                    var form = document.querySelector('form');
-                                    if (form) {
-                                        form.addEventListener('submit', function() {
-                                            var fields = [];
-                                            var discountEl = document.querySelector('[name="discount"]');
-                                            var totalEl = document.querySelector('[name="total"]');
-                                            if (discountEl) fields.push(discountEl);
-                                            if (totalEl) fields.push(totalEl);
-                                            document.querySelectorAll('.unit-value').forEach(function(el) {
-                                                fields.push(el);
-                                            });
-                                            document.querySelectorAll('.item-total').forEach(function(el) {
-                                                fields.push(el);
-                                            });
-                                            fields.forEach(function(input) {
-                                                if (window.parseCurrencyBRLToNumber) {
-                                                    var num = window.parseCurrencyBRLToNumber(input.value);
-                                                    input.value = Number.isFinite(num) ? num.toFixed(2) : '0.00';
-                                                }
-                                            });
-                                        });
-                                    }
                                 } catch (e) {}
                             });
                         </script>
 
                         <!-- Produtos/Serviços -->
-                        <div class="row">
-                            <div class="col-12">
+                        <x-layout.grid-row>
+                            <x-layout.grid-col size="col-12">
                                 <h5 class="mb-3">
                                     <i class="bi bi-box-seam me-2" aria-hidden="true"></i>
                                     Produtos/Serviços
                                 </h5>
 
                                 <div class="mb-3">
-                                    <button type="button" class="btn btn-success btn-sm" id="addItem" aria-label="Adicionar Item">
-                                        <i class="bi bi-plus me-1" aria-hidden="true"></i>
-                                        Adicionar Item
-                                    </button>
+                                    <x-ui.button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" />
                                 </div>
 
                                 <div id="itemsContainer">
@@ -251,22 +221,22 @@
                                     @php($oldItems = old('items'))
                                     @if(is_array($oldItems) && count($oldItems) > 0)
                                     @foreach($oldItems as $index => $old)
-                                    <div class="item-row border rounded p-3 mb-3 bg-light">
-                                        <div class="row align-items-end">
-                                            <div class="col-md-4">
+                                    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
+                                        <x-layout.grid-row class="align-items-end">
+                                            <x-layout.grid-col size="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
-                                                <select class="form-select product-select" name="items[{{ $index }}][product_id]" required>
+                                                <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
                                                     @foreach($products as $product)
                                                     <option value="{{ $product->id }}"
                                                         data-price="{{ $product->price }}"
                                                         {{ (string)($old['product_id'] ?? '') === (string)$product->id ? 'selected' : '' }}>
-                                                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                                     </option>
                                                     @endforeach
                                                 </select>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Quantidade</label>
                                                 <div class="input-group">
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
@@ -280,65 +250,59 @@
                                                         required>
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Valor Unit.</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control unit-value"
+                                                    class="form-control unit-value currency-brl"
                                                     name="items[{{ $index }}][unit_value]"
-                                                    value="{{ $old['unit_value'] ?? '' }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['unit_value'] ?? 0), 2, false) }}"
                                                     required readonly>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Total</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control item-total"
+                                                    class="form-control item-total currency-brl"
                                                     name="items[{{ $index }}][total]"
-                                                    value="{{ $old['total'] ?? '' }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format(\App\Helpers\CurrencyHelper::unformat($old['total'] ?? 0), 2, false) }}"
                                                     readonly>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 @if(!empty($old['id']))
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $old['id'] }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
                                                 @else
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="create">
                                                 @endif
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
-                                                    <i class="bi bi-trash" aria-hidden="true"></i>
-                                                    <span>Excluir</span>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
-                                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                                    <span>Desfazer</span>
-                                                </button>
-                                            </div>
-                                            <div class="col-12 mt-2">
+                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-12" class="mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
-                                            </div>
-                                        </div>
+                                            </x-layout.grid-col>
+                                        </x-layout.grid-row>
                                     </div>
                                     @endforeach
                                     @else
                                     @foreach($service->serviceItems as $index => $item)
-                                    <div class="item-row border rounded p-3 mb-3 bg-light">
-                                        <div class="row align-items-end">
-                                            <div class="col-md-4">
+                                    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
+                                        <x-layout.grid-row class="align-items-end">
+                                            <x-layout.grid-col size="col-md-4">
                                                 <label class="form-label">Produto/Serviço</label>
-                                                <select class="form-select product-select" name="items[{{ $index }}][product_id]" required>
+                                                <select class="form-select product-select tom-select" name="items[{{ $index }}][product_id]" required>
                                                     <option value="">Selecione um produto</option>
                                                     @foreach($products as $product)
                                                     <option value="{{ $product->id }}"
                                                         data-price="{{ $product->price }}"
                                                         {{ $item->product_id == $product->id ? 'selected' : '' }}>
-                                                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                                                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                                                     </option>
                                                     @endforeach
                                                 </select>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Quantidade</label>
                                                 <div class="input-group">
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-decrement" aria-label="Diminuir">-</button>
@@ -352,69 +316,57 @@
                                                         required>
                                                     <button type="button" class="btn btn-outline-secondary btn-sm quantity-increment" aria-label="Aumentar">+</button>
                                                 </div>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Valor Unit.</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control unit-value"
+                                                    class="form-control unit-value currency-brl"
                                                     name="items[{{ $index }}][unit_value]"
-                                                    value="{{ number_format($item->unit_value, 2, ',', '.') }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, false) }}"
                                                     required readonly>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <label class="form-label">Total</label>
                                                 <input type="text"
                                                     inputmode="numeric"
-                                                    class="form-control item-total"
+                                                    class="form-control item-total currency-brl"
                                                     name="items[{{ $index }}][total]"
-                                                    value="{{ number_format($item->total, 2, ',', '.') }}"
+                                                    value="{{ \App\Helpers\CurrencyHelper::format($item->total, 2, false) }}"
                                                     readonly>
-                                            </div>
-                                            <div class="col-md-2">
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-md-2">
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
-                                                    <i class="bi bi-trash"></i>
-                                                    <span>Excluir</span>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
-                                                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                                                    <span>Desfazer</span>
-                                                </button>
-                                            </div>
-                                            <div class="col-12 mt-2">
+                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                                            </x-layout.grid-col>
+                                            <x-layout.grid-col size="col-12" class="mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
-                                            </div>
-                                        </div>
+                                            </x-layout.grid-col>
+                                        </x-layout.grid-row>
                                     </div>
                                     @endforeach
                                     @endif
                                 </div>
-                            </div>
-                        </div>
+                            </x-layout.grid-col>
+                        </x-layout.grid-row>
 
-                        {{-- Botões de Ação (Footer) --}}
-                        <div class="d-flex justify-content-between mt-4">
-                            <div>
-                                <a href="{{ url()->previous(route('provider.services.index')) }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2"></i>Cancelar
-                                </a>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle me-2"></i>Salvar
-                            </button>
-                        </div>
+                        <x-layout.grid-row class="mt-4">
+                            <x-layout.grid-col size="col-12 text-end">
+                                <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="outline-secondary" icon="x" label="Cancelar" />
+                                <x-ui.button type="submit" variant="primary" icon="check-lg" label="Salvar Alterações" />
+                            </x-layout.grid-col>
+                        </x-layout.grid-row>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 
 <!-- Template para novos itens -->
 <template id="itemTemplate">
-    <div class="item-row border rounded p-3 mb-3 bg-light">
+    <div class="item-row border rounded p-3 mb-3 bg-body-secondary">
         <div class="row align-items-end">
             <div class="col-md-4">
                 <label class="form-label">Produto/Serviço</label>
@@ -422,7 +374,7 @@
                     <option value="">Selecione um produto</option>
                     @foreach($products as $product)
                     <option value="{{ $product->id }}" data-price="{{ $product->price }}">
-                        {{ $product->name }} - R$ {{ number_format($product->price, 2, ',', '.') }}
+                        {{ $product->name }} - {{ \App\Helpers\CurrencyHelper::format($product->price) }}
                     </option>
                     @endforeach
                 </select>
@@ -460,14 +412,8 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-item w-100 d-flex align-items-center justify-content-center gap-2 mt-2 mt-md-0" aria-label="Excluir">
-                    <i class="bi bi-trash"></i>
-                    <span>Excluir</span>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm undo-item w-100 d-flex align-items-center justify-content-center gap-2 d-none" aria-label="Desfazer">
-                    <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                    <span>Desfazer</span>
-                </button>
+                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
             </div>
             <div class="col-12 mt-2">
                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
@@ -498,6 +444,13 @@
             });
 
             container.appendChild(clone);
+
+            // Inicializar TomSelect no novo item
+            const newSelect = container.querySelector(`.item-row:last-child .product-select`);
+            if (newSelect && window.initTomSelect) {
+                window.initTomSelect(newSelect);
+            }
+
             itemIndex++;
 
             // Adicionar listeners para cálculos
@@ -616,6 +569,12 @@
                     });
                 }
 
+                // Inicializar máscaras no novo item
+                if (window.VanillaMask) {
+                    new VanillaMask(unitValueInput, 'currency');
+                    new VanillaMask(totalInput, 'currency');
+                }
+
                 // Inicializar cálculos para itens existentes
                 calculateTotal();
             }
@@ -647,7 +606,7 @@
             if (dEl) {
                 discount = window.parseCurrencyBRLToNumber ? (window.parseCurrencyBRLToNumber(dEl.value) || 0) : (parseFloat((dEl.value || '0').replace(/\./g, '').replace(',', '.')) || 0);
             }
-            const finalTotal = sum - discount;
+            const finalTotal = Math.max(0, sum - discount);
 
             var totalEl = document.getElementById('total');
             if (totalEl) {
@@ -686,8 +645,11 @@
                         unitValueInput.value = window.formatCurrencyBRL(price || '0');
                     } else {
                         var v = parseFloat(price || '0');
-                        unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '';
+                        unitValueInput.value = isFinite(v) ? (v.toFixed(2)).replace('.', ',') : '0,00';
                     }
+
+                    // Disparar evento input para atualizar máscara e cálculos
+                    unitValueInput.dispatchEvent(new Event('input', { bubbles: true }));
                     calculateTotal();
                 });
             }
@@ -794,31 +756,5 @@
 </script>
 @endpush
 
-@push('styles')
-<style>
-    .remove-item.btn {
-        transition: transform .05s ease-in-out, box-shadow .2s ease;
-    }
 
-    .remove-item.btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, .08);
-    }
-
-    .item-row .soft-disabled {
-        opacity: .5;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .remove-item.btn.btn-outline-danger {
-            color: #f28b82;
-            border-color: #f28b82;
-        }
-
-        .remove-item.btn.btn-outline-danger:hover {
-            background-color: rgba(220, 53, 69, .15);
-        }
-    }
-</style>
-@endpush
 @endsection

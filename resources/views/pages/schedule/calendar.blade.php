@@ -3,24 +3,20 @@
 @section('title', 'Calendário de Agendamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-calendar-check me-2"></i>
-                    Calendário de Agendamentos
-                </h1>
-                <p class="text-muted">Visualização em calendário dos agendamentos do sistema</p>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Calendário de Agendamentos"
+            icon="calendar3"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Agendamentos' => route('provider.schedules.index'),
+                'Calendário' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="list-ul" label="Ver Lista" />
+                <x-ui.button type="link" :href="route('provider.schedules.create')" variant="primary" icon="plus-circle" label="Novo Agendamento" />
             </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Calendário</li>
-                </ol>
-            </nav>
-        </div>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">

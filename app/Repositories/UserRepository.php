@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\User\UserDTO;
 use App\Models\User;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,23 +19,41 @@ use Illuminate\Database\Eloquent\Model;
  */
 class UserRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
     protected function makeModel(): Model
     {
-        return new User();
+        return new User;
+    }
+
+    /**
+     * Cria um novo usuário a partir de um DTO.
+     */
+    public function createFromDTO(UserDTO $dto): User
+    {
+        return $this->model->newQuery()->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza um usuário a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, UserDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
     }
 
     /**
      * Encontra usuário por email independentemente do tenant (busca global).
      *
-     * @param string $email Email do usuário
+     * @param  string  $email  Email do usuário
      * @return User|null Usuário encontrado ou null
      */
-    public function findByEmail( string $email ): ?User
+    public function findByEmail(string $email): ?User
     {
-        return $this->model->withoutTenant()->where( 'email', $email )->first();
+        return $this->model->withoutTenant()->where('email', $email)->first();
     }
 
     /**
@@ -43,19 +63,22 @@ class UserRepository extends AbstractTenantRepository
      */
     public function findActive(): Collection
     {
-        return $this->getAllByTenant( [ 'is_active' => true ] );
+        return $this->model->newQuery()->where('is_active', true)->get();
     }
 
     /**
      * Valida se email é único dentro do tenant atual.
      *
-     * @param string $email Email a ser verificado
-     * @param int|null $excludeId ID do usuário a ser excluído da verificação
+     * @param  string  $email  Email a ser verificado
+     * @param  int|null  $excludeId  ID do usuário a ser excluído da verificação
      * @return bool True se é único, false caso contrário
      */
-    public function isEmailUnique( string $email, ?int $excludeId = null ): bool
+    public function isEmailUnique(string $email, ?int $excludeId = null): bool
     {
-        return $this->isUniqueInTenant( 'email', $email, $excludeId );
+        return ! $this->model->newQuery()
+            ->where('email', $email)
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->exists();
     }
 
     /**
@@ -65,19 +88,22 @@ class UserRepository extends AbstractTenantRepository
      */
     public function countAdmins(): int
     {
-        return $this->countByTenant( [ 'role' => 'admin' ] );
+        return $this->model->newQuery()->where('role', 'admin')->count();
     }
 
     /**
      * Verifica se slug existe dentro do tenant atual.
      *
-     * @param string $slug Slug a ser verificado
-     * @param int|null $excludeId ID do usuário a ser excluído da verificação
+     * @param  string  $slug  Slug a ser verificado
+     * @param  int|null  $excludeId  ID do usuário a ser excluído da verificação
      * @return bool True se existe, false caso contrário
      */
-    public function existsBySlug( string $slug, ?int $excludeId = null ): bool
+    public function existsBySlug(string $slug, ?int $excludeId = null): bool
     {
-        return !$this->isUniqueInTenant( 'slug', $slug, $excludeId );
+        return $this->model->newQuery()
+            ->where('slug', $slug)
+            ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
+            ->exists();
     }
 
     /**
@@ -87,7 +113,7 @@ class UserRepository extends AbstractTenantRepository
      */
     public function first(): ?User
     {
-        return $this->model->first();
+        return $this->model->newQuery()->first();
     }
 
     /**
@@ -97,7 +123,6 @@ class UserRepository extends AbstractTenantRepository
      */
     public function last(): ?User
     {
-        return $this->model->latest()->first();
+        return $this->model->newQuery()->latest()->first();
     }
-
 }

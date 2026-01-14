@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Infrastructure;
@@ -14,13 +15,17 @@ class ServicePdfService
     {
         $html = View::make('pages.service.public.print', array_merge(compact('service'), $extras))->render();
 
+        $margins = config('theme.pdf.margins');
+
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4',
-            'margin_left' => 15,
-            'margin_right' => 15,
-            'margin_top' => 16,
-            'margin_bottom' => 16,
+            'margin_left' => $margins['left'],
+            'margin_right' => $margins['right'],
+            'margin_top' => $margins['top'],
+            'margin_bottom' => $margins['bottom'],
+            'margin_header' => $margins['header'],
+            'margin_footer' => $margins['footer'],
         ]);
 
         $mpdf->WriteHTML($html);
@@ -36,6 +41,7 @@ class ServicePdfService
     public function generateHash(string $pdfPath): string
     {
         $content = Storage::get($pdfPath);
+
         return hash('sha256', $content);
     }
 }

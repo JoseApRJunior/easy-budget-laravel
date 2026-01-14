@@ -2,9 +2,10 @@
 
 namespace App\Repositories;
 
+use App\DTOs\Inventory\InventoryMovementDTO;
 use App\Models\InventoryMovement;
-use App\Models\Product;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -14,32 +15,34 @@ use Illuminate\Support\Collection;
  */
 class InventoryMovementRepository extends AbstractTenantRepository
 {
-    /**
-     * Create a new repository instance.
-     */
-    public function __construct( InventoryMovement $model )
-    {
-        $this->model = $model;
-    }
+    use RepositoryFiltersTrait;
 
     /**
-     * Create a new model instance.
+     * Define o Model a ser utilizado pelo Repositório.
      */
     protected function makeModel(): Model
     {
-        return new InventoryMovement();
+        return new InventoryMovement;
+    }
+
+    /**
+     * Cria uma movimentação de inventário a partir de um DTO.
+     */
+    public function createFromDTO(InventoryMovementDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
     }
 
     /**
      * Retorna movimentações por produto
      */
-    public function getByProduct( int $productId, int $perPage = 20 ): LengthAwarePaginator
+    public function getByProduct(int $productId, int $perPage = 20): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->with( [ 'product' ] )
-            ->where( 'product_id', $productId )
-            ->orderBy( 'created_at', 'desc' )
-            ->paginate( $perPage );
+            ->with(['product'])
+            ->where('product_id', $productId)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     // Usando implementação padrão do AbstractTenantRepository
@@ -48,96 +51,72 @@ class InventoryMovementRepository extends AbstractTenantRepository
     // Métodos específicos podem ser adicionados conforme necessário
 
     /**
-     * Cria uma movimentação de inventário
-     */
-    public function create( array $data ): InventoryMovement
-    {
-        return $this->model->create( $data );
-    }
-
-    /**
      * Retorna estatísticas de movimentações por período
      */
-    public function getStatisticsByPeriod( ?string $startDate = null, ?string $endDate = null ): array
+    public function getStatisticsByPeriod(?string $startDate = null, ?string $endDate = null): array
     {
         $query = $this->model->newQuery();
 
-        if ( $startDate ) {
-            $query->whereDate( 'created_at', '>=', $startDate );
-        }
+        $this->applyDateRangeFilter($query, ['start_date' => $startDate, 'end_date' => $endDate], 'created_at', 'start_date', 'end_date');
 
-        if ( $endDate ) {
-            $query->whereDate( 'created_at', '<=', $endDate );
-        }
-
-        $movementsIn  = $query->clone()->where( 'type', 'in' );
-        $movementsOut = $query->clone()->where( 'type', 'out' );
+        $movementsIn = $query->clone()->where('type', 'in');
+        $movementsOut = $query->clone()->where('type', 'out');
 
         return [
             'total_movements' => $query->count(),
-            'total_in'        => $movementsIn->count(),
-            'total_out'       => $movementsOut->count(),
-            'quantity_in'     => $movementsIn->sum( 'quantity' ),
-            'quantity_out'    => $movementsOut->sum( 'quantity' ),
-            'net_movement'    => $movementsIn->sum( 'quantity' ) - $movementsOut->sum( 'quantity' ),
+            'total_in' => $movementsIn->count(),
+            'total_out' => $movementsOut->count(),
+            'quantity_in' => $movementsIn->sum('quantity'),
+            'quantity_out' => $movementsOut->sum('quantity'),
+            'net_movement' => $movementsIn->sum('quantity') - $movementsOut->sum('quantity'),
         ];
     }
 
     /**
      * Retorna movimentações recentes
      */
-    public function getRecentMovements( int $limit = 10 ): Collection
+    public function getRecentMovements(int $limit = 10): Collection
     {
         return $this->model->newQuery()
-            ->with( [ 'product' ] )
-            ->orderBy( 'created_at', 'desc' )
-            ->limit( $limit )
+            ->with(['product'])
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
             ->get();
     }
 
     /**
      * Retorna produtos mais movimentados
      */
-    public function getMostMovedProducts( int $limit = 10, ?string $startDate = null, ?string $endDate = null ): Collection
+    public function getMostMovedProducts(int $limit = 10, ?string $startDate = null, ?string $endDate = null): Collection
     {
-        return $this->model->newQuery()
-            ->selectRaw( 'product_id, SUM(quantity) as total_quantity, COUNT(*) as movement_count' )
-            ->when( $startDate, function ( $query ) use ( $startDate ) {
-                $query->whereDate( 'created_at', '>=', $startDate );
-            } )
-            ->when( $endDate, function ( $query ) use ( $endDate ) {
-                $query->whereDate( 'created_at', '<=', $endDate );
-            } )
-            ->groupBy( 'product_id' )
-            ->orderByDesc( 'total_quantity' )
-            ->limit( $limit )
-            ->with( [ 'product' ] )
+        $query = $this->model->newQuery()
+            ->selectRaw('product_id, SUM(quantity) as total_quantity, COUNT(*) as movement_count');
+
+        $this->applyDateRangeFilter($query, ['start_date' => $startDate, 'end_date' => $endDate], 'created_at', 'start_date', 'end_date');
+
+        return $query->groupBy('product_id')
+            ->orderByDesc('total_quantity')
+            ->limit($limit)
+            ->with(['product'])
             ->get();
     }
 
     /**
      * Retorna resumo de movimentações por tipo
      */
-    public function getSummaryByType( ?string $startDate = null, ?string $endDate = null ): array
+    public function getSummaryByType(?string $startDate = null, ?string $endDate = null): array
     {
         $query = $this->model->newQuery();
 
-        if ( $startDate ) {
-            $query->whereDate( 'created_at', '>=', $startDate );
-        }
+        $this->applyDateRangeFilter($query, ['start_date' => $startDate, 'end_date' => $endDate], 'created_at', 'start_date', 'end_date');
 
-        if ( $endDate ) {
-            $query->whereDate( 'created_at', '<=', $endDate );
-        }
-
-        $summary = $query->selectRaw( 'type, COUNT(*) as count, SUM(quantity) as total_quantity' )
-            ->groupBy( 'type' )
+        $summary = $query->selectRaw('type, COUNT(*) as count, SUM(quantity) as total_quantity')
+            ->groupBy('type')
             ->get();
 
         return [
-            'in'  => $summary->where( 'type', 'in' )->first(),
-            'out' => $summary->where( 'type', 'out' )->first(),
+            'in' => $summary->where('type', 'in')->first(),
+            'out' => $summary->where('type', 'out')->first(),
         ];
     }
-
 }

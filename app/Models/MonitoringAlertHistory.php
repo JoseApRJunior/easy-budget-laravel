@@ -62,17 +62,17 @@ class MonitoringAlertHistory extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'metric_value'         => 'decimal:3',
-        'threshold_value'      => 'decimal:3',
-        'additional_data'      => 'array',
-        'is_resolved'          => 'boolean',
-        'tenant_id'            => 'integer',
-        'resolved_by'          => 'integer',
-        'notification_sent'    => 'boolean',
-        'resolved_at'          => 'immutable_datetime',
+        'metric_value' => 'decimal:3',
+        'threshold_value' => 'decimal:3',
+        'additional_data' => 'array',
+        'is_resolved' => 'boolean',
+        'tenant_id' => 'integer',
+        'resolved_by' => 'integer',
+        'notification_sent' => 'boolean',
+        'resolved_at' => 'immutable_datetime',
         'notification_sent_at' => 'immutable_datetime',
-        'created_at'           => 'immutable_datetime',
-        'updated_at'           => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -81,21 +81,21 @@ class MonitoringAlertHistory extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'            => 'required|integer|exists:tenants,id',
-            'alert_type'           => 'required|in:performance,error,security,availability,resource',
-            'severity'             => 'required|in:low,medium,high,critical',
-            'middleware_name'      => 'required|string|max:100',
-            'endpoint'             => 'nullable|string|max:255',
-            'metric_name'          => 'required|string|max:100',
-            'metric_value'         => 'required|numeric|min:0',
-            'threshold_value'      => 'required|numeric|min:0',
-            'message'              => 'required|string',
-            'additional_data'      => 'nullable|array',
-            'is_resolved'          => 'boolean',
-            'resolved_at'          => 'nullable|date',
-            'resolved_by'          => 'nullable|integer|exists:users,id',
-            'resolution_notes'     => 'nullable|string',
-            'notification_sent'    => 'boolean',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'alert_type' => 'required|in:performance,error,security,availability,resource',
+            'severity' => 'required|in:low,medium,high,critical',
+            'middleware_name' => 'required|string|max:100',
+            'endpoint' => 'nullable|string|max:255',
+            'metric_name' => 'required|string|max:100',
+            'metric_value' => 'required|numeric|min:0',
+            'threshold_value' => 'required|numeric|min:0',
+            'message' => 'required|string',
+            'additional_data' => 'nullable|array',
+            'is_resolved' => 'boolean',
+            'resolved_at' => 'nullable|date',
+            'resolved_by' => 'nullable|integer|exists:users,id',
+            'resolution_notes' => 'nullable|string',
+            'notification_sent' => 'boolean',
             'notification_sent_at' => 'nullable|date',
         ];
     }
@@ -105,7 +105,7 @@ class MonitoringAlertHistory extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -113,84 +113,84 @@ class MonitoringAlertHistory extends Model
      */
     public function resolvedBy(): BelongsTo
     {
-        return $this->belongsTo( User::class, 'resolved_by' );
+        return $this->belongsTo(User::class, 'resolved_by');
     }
 
     /**
      * Scope para alertas não resolvidos.
      */
-    public function scopeUnresolved( $query )
+    public function scopeUnresolved($query)
     {
-        return $query->where( 'is_resolved', false );
+        return $query->where('is_resolved', false);
     }
 
     /**
      * Scope para alertas resolvidos.
      */
-    public function scopeResolved( $query )
+    public function scopeResolved($query)
     {
-        return $query->where( 'is_resolved', true );
+        return $query->where('is_resolved', true);
     }
 
     /**
      * Scope para alertas por tipo.
      */
-    public function scopeByType( $query, string $type )
+    public function scopeByType($query, string $type)
     {
-        return $query->where( 'alert_type', $type );
+        return $query->where('alert_type', $type);
     }
 
     /**
      * Scope para alertas por severidade.
      */
-    public function scopeBySeverity( $query, string $severity )
+    public function scopeBySeverity($query, string $severity)
     {
-        return $query->where( 'severity', $severity );
+        return $query->where('severity', $severity);
     }
 
     /**
      * Scope para alertas críticos e high.
      */
-    public function scopeCritical( $query )
+    public function scopeCritical($query)
     {
-        return $query->whereIn( 'severity', [ 'high', 'critical' ] );
+        return $query->whereIn('severity', ['high', 'critical']);
     }
 
     /**
      * Scope para alertas por período.
      */
-    public function scopePeriod( $query, Carbon $startDate, Carbon $endDate )
+    public function scopePeriod($query, Carbon $startDate, Carbon $endDate)
     {
-        return $query->whereBetween( 'created_at', [ $startDate, $endDate ] );
+        return $query->whereBetween('created_at', [$startDate, $endDate]);
     }
 
     /**
      * Scope para alertas por middleware.
      */
-    public function scopeByMiddleware( $query, string $middlewareName )
+    public function scopeByMiddleware($query, string $middlewareName)
     {
-        return $query->where( 'middleware_name', $middlewareName );
+        return $query->where('middleware_name', $middlewareName);
     }
 
     /**
      * Scope para alertas por endpoint.
      */
-    public function scopeByEndpoint( $query, string $endpoint )
+    public function scopeByEndpoint($query, string $endpoint)
     {
-        return $query->where( 'endpoint', $endpoint );
+        return $query->where('endpoint', $endpoint);
     }
 
     /**
      * Marca o alerta como resolvido.
      */
-    public function markAsResolved( User $user, string $notes = null ): void
+    public function markAsResolved(User $user, ?string $notes = null): void
     {
-        $this->update( [
-            'is_resolved'      => true,
-            'resolved_at'      => now(),
-            'resolved_by'      => $user->id,
+        $this->update([
+            'is_resolved' => true,
+            'resolved_at' => Carbon::now(),
+            'resolved_by' => $user->id,
             'resolution_notes' => $notes,
-        ] );
+        ]);
     }
 
     /**
@@ -204,11 +204,11 @@ class MonitoringAlertHistory extends Model
     /**
      * Obtém estatísticas de alertas por período.
      */
-    public static function getAlertStats( int $tenantId, Carbon $startDate, Carbon $endDate ): array
+    public static function getAlertStats(int $tenantId, Carbon $startDate, Carbon $endDate): array
     {
-        return static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->selectRaw( '
+        return static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->selectRaw('
                 COUNT(*) as total_alerts,
                 COUNT(CASE WHEN is_resolved = 1 THEN 1 END) as resolved_alerts,
                 COUNT(CASE WHEN is_resolved = 0 THEN 1 END) as unresolved_alerts,
@@ -221,7 +221,7 @@ class MonitoringAlertHistory extends Model
                 COUNT(CASE WHEN alert_type = "security" THEN 1 END) as security_alerts,
                 COUNT(CASE WHEN alert_type = "availability" THEN 1 END) as availability_alerts,
                 COUNT(CASE WHEN alert_type = "resource" THEN 1 END) as resource_alerts
-            ' )
+            ')
             ->first()
             ->toArray();
     }
@@ -229,14 +229,14 @@ class MonitoringAlertHistory extends Model
     /**
      * Obtém alertas mais frequentes por middleware.
      */
-    public static function getMostFrequentMiddlewares( int $tenantId, Carbon $startDate, Carbon $endDate, int $limit = 10 ): array
+    public static function getMostFrequentMiddlewares(int $tenantId, Carbon $startDate, Carbon $endDate, int $limit = 10): array
     {
-        return static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->selectRaw( 'middleware_name, COUNT(*) as alert_count, MAX(severity) as max_severity' )
-            ->groupBy( 'middleware_name' )
-            ->orderBy( 'alert_count', 'desc' )
-            ->limit( $limit )
+        return static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->selectRaw('middleware_name, COUNT(*) as alert_count, MAX(severity) as max_severity')
+            ->groupBy('middleware_name')
+            ->orderBy('alert_count', 'desc')
+            ->limit($limit)
             ->get()
             ->toArray();
     }
@@ -244,16 +244,16 @@ class MonitoringAlertHistory extends Model
     /**
      * Obtém tempo médio de resolução de alertas.
      */
-    public static function getAverageResolutionTime( int $tenantId, Carbon $startDate, Carbon $endDate ): float
+    public static function getAverageResolutionTime(int $tenantId, Carbon $startDate, Carbon $endDate): float
     {
-        $result = static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->where( 'is_resolved', true )
-            ->whereNotNull( 'resolved_at' )
-            ->selectRaw( 'AVG(TIMESTAMPDIFF(MINUTE, created_at, resolved_at)) as avg_resolution_time' )
+        $result = static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->where('is_resolved', true)
+            ->whereNotNull('resolved_at')
+            ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, resolved_at)) as avg_resolution_time')
             ->first();
 
-        return round( $result->avg_resolution_time ?? 0, 2 );
+        return round($result->avg_resolution_time ?? 0, 2);
     }
 
     /**
@@ -261,7 +261,7 @@ class MonitoringAlertHistory extends Model
      */
     public function requiresNotification(): bool
     {
-        return !$this->notification_sent && in_array( $this->severity, [ 'high', 'critical' ] );
+        return ! $this->notification_sent && in_array($this->severity, ['high', 'critical']);
     }
 
     /**
@@ -269,10 +269,10 @@ class MonitoringAlertHistory extends Model
      */
     public function markNotificationAsSent(): void
     {
-        $this->update( [
-            'notification_sent'    => true,
-            'notification_sent_at' => now(),
-        ] );
+        $this->update([
+            'notification_sent' => true,
+            'notification_sent_at' => Carbon::now(),
+        ]);
     }
 
     /**
@@ -282,7 +282,7 @@ class MonitoringAlertHistory extends Model
     {
         return sprintf(
             '[%s] %s - %s: %.3f (threshold: %.3f) - %s',
-            strtoupper( $this->severity ),
+            strtoupper($this->severity),
             $this->alert_type,
             $this->metric_name,
             $this->metric_value,
@@ -290,5 +290,4 @@ class MonitoringAlertHistory extends Model
             $this->is_resolved ? 'RESOLVIDO' : 'PENDENTE'
         );
     }
-
 }

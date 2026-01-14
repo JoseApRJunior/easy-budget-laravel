@@ -31,13 +31,6 @@ export default {
                surface: "#9facb9",
                text: "#1e293b",
             },
-            dark: {
-               primary: "#093172",
-               secondary: "#1e293b",
-               background: "#58667a",
-               surface: "#334155",
-               text: "#f8fafc",
-            },
             status: {
                success: "#059669",
                error: "#dc2626",

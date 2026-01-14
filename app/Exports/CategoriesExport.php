@@ -39,7 +39,7 @@ class CategoriesExport implements FromCollection, ShouldAutoSize, WithHeadings, 
 
     public function map($category): array
     {
-        $categoryName    = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
+        $categoryName = $category->parent_id ? ($category->parent->name ?? '-') : $category->name;
         $subcategoryName = $category->parent_id ? $category->name : '—';
 
         return [

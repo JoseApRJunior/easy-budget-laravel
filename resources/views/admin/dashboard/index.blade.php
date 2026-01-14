@@ -3,30 +3,27 @@
 @section('title', 'Admin Dashboard - EasyBudget')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">Admin Dashboard</h1>
-                        <p class="text-muted mb-0">Visão geral do sistema EasyBudget MultiTenancy</p>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <select class="form-select form-select-sm" id="period-selector" style="width: auto;">
-                            <option value="week" {{ $currentPeriod === 'week' ? 'selected' : '' }}>Última Semana</option>
-                            <option value="month" {{ $currentPeriod === 'month' ? 'selected' : '' }}>Último Mês</option>
-                            <option value="quarter" {{ $currentPeriod === 'quarter' ? 'selected' : '' }}>Último Trimestre
-                            </option>
-                            <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
-                        </select>
-                        <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
-                            <i class="bi bi-arrow-clockwise"></i> Atualizar
-                        </button>
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Admin Dashboard"
+            icon="speedometer2"
+            :breadcrumb-items="[
+                'Admin' => '#'
+            ]">
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select" id="period-selector" style="width: auto;">
+                    <option value="week" {{ $currentPeriod === 'week' ? 'selected' : '' }}>Última Semana</option>
+                    <option value="month" {{ $currentPeriod === 'month' ? 'selected' : '' }}>Último Mês</option>
+                    <option value="quarter" {{ $currentPeriod === 'quarter' ? 'selected' : '' }}>Último Trimestre</option>
+                    <option value="year" {{ $currentPeriod === 'year' ? 'selected' : '' }}>Último Ano</option>
+                </select>
+                <x-ui.button 
+                    variant="primary" 
+                    onclick="refreshDashboard()"
+                    icon="arrow-clockwise"
+                    label="Atualizar" />
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- System Alerts -->
         @if (count($alerts) > 0)
@@ -277,18 +274,10 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-gear me-1"></i> Gerenciar Planos
-                            </a>
-                            <a href="{{ route('admin.tenants.index') }}" class="btn btn-outline-success btn-sm">
-                                <i class="bi bi-building me-1"></i> Gerenciar Tenants
-                            </a>
-                            <a href="{{ route('admin.global-settings.index') }}" class="btn btn-outline-info btn-sm">
-                                <i class="bi bi-sliders me-1"></i> Configurações Globais
-                            </a>
-                            <a href="{{ route('admin.reports.index') }}" class="btn btn-outline-warning btn-sm">
-                                <i class="bi bi-file-earmark-text me-1"></i> Ver Relatórios
-                            </a>
+                            <x-ui.button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" />
+                            <x-ui.button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" />
+                            <x-ui.button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" />
+                            <x-ui.button type="link" :href="route('admin.reports.index')" variant="warning" size="sm" icon="file-earmark-text" label="Ver Relatórios" />
                         </div>
                     </div>
                 </div>
@@ -301,9 +290,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Atividades Recentes do Sistema</h6>
-                        <a href="{{ route('admin.audit.logs') }}" class="btn btn-outline-primary btn-sm">
-                            Ver todas
-                        </a>
+                        <x-ui.button type="link" :href="route('admin.audit.logs')" variant="primary" size="sm" label="Ver todas" />
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">

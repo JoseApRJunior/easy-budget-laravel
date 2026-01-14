@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
  * servindo como ponto de partida para repositórios específicos. Implementa
  * o contrato BaseRepositoryInterface garantindo consistência em toda aplicação.
  *
- * @package App\Repositories\Abstracts
  *
  * @example Implementação de um repositório específico:
  * ```php
@@ -47,21 +46,21 @@ abstract class AbstractBaseRepository implements BaseRepositoryInterface
     {
         $modelClass = $this->getModelClass();
 
-        if ( !class_exists( $modelClass ) ) {
-            throw new \InvalidArgumentException( "Modelo {$modelClass} não encontrado." );
+        if (! class_exists($modelClass)) {
+            throw new \InvalidArgumentException("Modelo {$modelClass} não encontrado.");
         }
 
-        return new $modelClass();
+        return new $modelClass;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function find( int $id ): ?Model
+    public function find(int $id): ?Model
     {
         try {
-            return $this->getModel()->findOrFail( $id );
-        } catch ( ModelNotFoundException $e ) {
+            return $this->getModel()->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
             return null;
         }
     }
@@ -77,23 +76,23 @@ abstract class AbstractBaseRepository implements BaseRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function create( array $data ): Model
+    public function create(array $data): Model
     {
-        return $this->getModel()->create( $data );
+        return $this->getModel()->create($data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function update( int $id, array $data ): ?Model
+    public function update(int $id, array $data): ?Model
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (! $model) {
             return null;
         }
 
-        $model->update( $data );
+        $model->update($data);
 
         return $model->fresh();
     }
@@ -101,11 +100,11 @@ abstract class AbstractBaseRepository implements BaseRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function delete( int $id ): bool
+    public function delete(int $id): bool
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (! $model) {
             return false;
         }
 
@@ -115,12 +114,12 @@ abstract class AbstractBaseRepository implements BaseRepositoryInterface
     /**
      * Busca múltiplos registros por IDs.
      *
-     * @param array<int> $ids Lista de IDs a buscar.
+     * @param  array<int>  $ids  Lista de IDs a buscar.
      * @return Collection<Model> Coleção de modelos encontrados.
      */
-    public function findMany( array $ids ): Collection
+    public function findMany(array $ids): Collection
     {
-        return $this->getModel()->whereIn( 'id', $ids )->get();
+        return $this->getModel()->whereIn('id', $ids)->get();
     }
 
     /**
@@ -136,12 +135,11 @@ abstract class AbstractBaseRepository implements BaseRepositoryInterface
     /**
      * Verifica se existe registro com determinado ID.
      *
-     * @param int $id ID a verificar.
+     * @param  int  $id  ID a verificar.
      * @return bool True se existe.
      */
-    public function exists( int $id ): bool
+    public function exists(int $id): bool
     {
-        return $this->getModel()->where( 'id', $id )->exists();
+        return $this->getModel()->where('id', $id)->exists();
     }
-
 }

@@ -1,39 +1,22 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h3 mb-0 text-gray-800">
-                            <i class="bi bi-journal-text me-2"></i>
-                            {{ $title ?? 'Logs de E-mail' }}
-                        </h1>
-                        <p class="text-muted mt-1">Visualize e monitore os logs de atividades de e-mail</p>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="refreshLogs()">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Atualizar
-                        </button>
-                        <button type="button" class="btn btn-outline-info" onclick="exportLogs()">
-                            <i class="bi bi-download me-1"></i>
-                            Exportar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="clearLogs()">
-                            <i class="bi bi-trash me-1"></i>
-                            Limpar Logs
-                        </button>
-                        <a href="{{ route('mailtrap.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
-                            Voltar ao Dashboard
-                        </a>
-                    </div>
-                </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            :title="$title ?? 'Logs de E-mail'"
+            icon="journal-text"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Mailtrap' => route('mailtrap.index'),
+                'Logs' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="button" variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshLogs()" />
+                <x-ui.button type="button" variant="success" icon="download" label="Exportar CSV" onclick="exportLogs()" />
+                <x-ui.button type="button" variant="danger" icon="trash" label="Limpar Logs" onclick="clearLogs()" />
+                <x-ui.button :href="route('mailtrap.index')" variant="secondary" icon="arrow-left" label="Voltar" />
             </div>
-        </div>
+        </x-layout.page-header>
 
         <!-- Filtros e Controles -->
         <div class="row mb-4">
@@ -68,10 +51,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-grid">
-                                    <button type="button" class="btn btn-primary" onclick="applyFilters()">
-                                        <i class="bi bi-funnel me-1"></i>
-                                        Aplicar Filtros
-                                    </button>
+                                    <x-ui.button type="button" variant="primary" icon="funnel" onclick="applyFilters()" label="Aplicar Filtros" />
                                 </div>
                             </div>
                         </div>
@@ -185,11 +165,9 @@
                                                         @endif
                                                     </div>
                                                     <div class="log-actions">
-                                                        <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                            onclick="showLogDetails({{ json_encode($log) }})"
-                                                            title="Ver detalhes">
-                                                            <i class="bi bi-eye"></i>
-                                                        </button>
+                                                        <x-ui.button type="button" variant="info" size="sm" icon="eye"
+                                                    onclick="showLogDetails({{ json_encode($log) }})"
+                                                    title="Ver detalhes" />
                                                     </div>
                                                 </div>
                                                 <div class="log-message">

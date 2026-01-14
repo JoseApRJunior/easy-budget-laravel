@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'global'               => [
+    'global' => [
         /*
         |--------------------------------------------------------------------------
         | Remetente Padrão Global
@@ -22,10 +22,10 @@ return [
         | definido para um tenant específico.
         |
         */
-        'default'          => [
-            'name'     => env( 'MAIL_FROM_NAME', 'Easy Budget' ),
-            'email'    => env( 'MAIL_FROM_ADDRESS', 'noreply@easybudget.com' ),
-            'reply_to' => env( 'MAIL_REPLY_TO', null ),
+        'default' => [
+            'name' => env('MAIL_FROM_NAME', 'Easy Budget'),
+            'email' => env('MAIL_FROM_ADDRESS', 'noreply@easybudget.com'),
+            'reply_to' => env('MAIL_REPLY_TO', null),
         ],
 
         /*
@@ -38,10 +38,10 @@ return [
         |
         */
         'security_headers' => [
-            'X-Mailer'         => 'Easy Budget Laravel Mail System',
-            'X-Application'    => 'Easy Budget',
+            'X-Mailer' => 'Easy Budget Laravel Mail System',
+            'X-Application' => 'Easy Budget',
             'List-Unsubscribe' => null, // Será definido dinamicamente se necessário
-            'Return-Path'      => null, // Será definido com o remetente padrão
+            'Return-Path' => null, // Será definido com o remetente padrão
         ],
 
         /*
@@ -52,12 +52,12 @@ return [
         | Configurações para validação de remetentes e conteúdo de e-mail.
         |
         */
-        'validation'       => [
-            'allowed_domains'             => env( 'EMAIL_ALLOWED_DOMAINS', 'easybudget.com,localhost' ),
-            'blocked_domains'             => env( 'EMAIL_BLOCKED_DOMAINS', '' ),
-            'require_domain_verification' => env( 'EMAIL_REQUIRE_DOMAIN_VERIFICATION', false ),
-            'max_email_length'            => env( 'EMAIL_MAX_LENGTH', 320 ), // RFC 5321
-            'max_name_length'             => env( 'EMAIL_MAX_NAME_LENGTH', 100 ),
+        'validation' => [
+            'allowed_domains' => env('EMAIL_ALLOWED_DOMAINS', 'easybudget.com,localhost'),
+            'blocked_domains' => env('EMAIL_BLOCKED_DOMAINS', ''),
+            'require_domain_verification' => env('EMAIL_REQUIRE_DOMAIN_VERIFICATION', false),
+            'max_email_length' => env('EMAIL_MAX_LENGTH', 320), // RFC 5321
+            'max_name_length' => env('EMAIL_MAX_NAME_LENGTH', 100),
         ],
     ],
 
@@ -70,7 +70,7 @@ return [
     | Cada tenant pode ter seu próprio remetente configurado.
     |
     */
-    'tenants'              => [
+    'tenants' => [
         /*
         |--------------------------------------------------------------------------
         | Habilita Remetentes Personalizáveis
@@ -80,7 +80,7 @@ return [
         | ou se devem usar apenas o remetente global padrão.
         |
         */
-        'customizable' => env( 'EMAIL_TENANT_CUSTOMIZABLE', true ),
+        'customizable' => env('EMAIL_TENANT_CUSTOMIZABLE', true),
 
         /*
         |--------------------------------------------------------------------------
@@ -91,10 +91,10 @@ return [
         | por empresa.
         |
         */
-        'validation'   => [
-            'require_verification'   => env( 'EMAIL_TENANT_VERIFICATION_REQUIRED', true ),
-            'auto_verify_domains'    => env( 'EMAIL_TENANT_AUTO_VERIFY', false ),
-            'allowed_tenant_domains' => env( 'EMAIL_TENANT_ALLOWED_DOMAINS', '' ),
+        'validation' => [
+            'require_verification' => env('EMAIL_TENANT_VERIFICATION_REQUIRED', true),
+            'auto_verify_domains' => env('EMAIL_TENANT_AUTO_VERIFY', false),
+            'allowed_tenant_domains' => env('EMAIL_TENANT_ALLOWED_DOMAINS', ''),
         ],
 
         /*
@@ -105,9 +105,9 @@ return [
         | Configurações de cache para remetentes por tenant.
         |
         */
-        'cache'        => [
-            'enabled'    => env( 'EMAIL_TENANT_CACHE_ENABLED', true ),
-            'ttl'        => env( 'EMAIL_TENANT_CACHE_TTL', 3600 ), // 1 hora
+        'cache' => [
+            'enabled' => env('EMAIL_TENANT_CACHE_ENABLED', true),
+            'ttl' => env('EMAIL_TENANT_CACHE_TTL', 3600), // 1 hora
             'key_prefix' => 'email_sender_tenant_',
         ],
     ],
@@ -120,18 +120,18 @@ return [
     | Controle de taxa de envio de e-mails para prevenir spam e abuso.
     |
     */
-    'rate_limiting'        => [
-        'enabled'    => env( 'EMAIL_RATE_LIMITING_ENABLED', true ),
+    'rate_limiting' => [
+        'enabled' => env('EMAIL_RATE_LIMITING_ENABLED', true),
 
         /*
         |--------------------------------------------------------------------------
         | Limites por Usuário
         |--------------------------------------------------------------------------
         */
-        'per_user'   => [
-            'max_per_minute' => env( 'EMAIL_RATE_LIMIT_PER_USER_MINUTE', 10 ),
-            'max_per_hour'   => env( 'EMAIL_RATE_LIMIT_PER_USER_HOUR', 100 ),
-            'max_per_day'    => env( 'EMAIL_RATE_LIMIT_PER_USER_DAY', 500 ),
+        'per_user' => [
+            'max_per_minute' => env('EMAIL_RATE_LIMIT_PER_USER_MINUTE', 10),
+            'max_per_hour' => env('EMAIL_RATE_LIMIT_PER_USER_HOUR', 100),
+            'max_per_day' => env('EMAIL_RATE_LIMIT_PER_USER_DAY', 500),
         ],
 
         /*
@@ -140,9 +140,9 @@ return [
         |--------------------------------------------------------------------------
         */
         'per_tenant' => [
-            'max_per_minute' => env( 'EMAIL_RATE_LIMIT_PER_TENANT_MINUTE', 50 ),
-            'max_per_hour'   => env( 'EMAIL_RATE_LIMIT_PER_TENANT_HOUR', 500 ),
-            'max_per_day'    => env( 'EMAIL_RATE_LIMIT_PER_TENANT_DAY', 2000 ),
+            'max_per_minute' => env('EMAIL_RATE_LIMIT_PER_TENANT_MINUTE', 50),
+            'max_per_hour' => env('EMAIL_RATE_LIMIT_PER_TENANT_HOUR', 500),
+            'max_per_day' => env('EMAIL_RATE_LIMIT_PER_TENANT_DAY', 2000),
         ],
 
         /*
@@ -150,10 +150,10 @@ return [
         | Limites Globais
         |--------------------------------------------------------------------------
         */
-        'global'     => [
-            'max_per_minute' => env( 'EMAIL_RATE_LIMIT_GLOBAL_MINUTE', 200 ),
-            'max_per_hour'   => env( 'EMAIL_RATE_LIMIT_GLOBAL_HOUR', 2000 ),
-            'max_per_day'    => env( 'EMAIL_RATE_LIMIT_GLOBAL_DAY', 10000 ),
+        'global' => [
+            'max_per_minute' => env('EMAIL_RATE_LIMIT_GLOBAL_MINUTE', 200),
+            'max_per_hour' => env('EMAIL_RATE_LIMIT_GLOBAL_HOUR', 2000),
+            'max_per_day' => env('EMAIL_RATE_LIMIT_GLOBAL_DAY', 10000),
         ],
 
         /*
@@ -161,10 +161,10 @@ return [
         | Configurações de Bloqueio
         |--------------------------------------------------------------------------
         */
-        'blocking'   => [
-            'block_duration_minutes' => env( 'EMAIL_RATE_LIMIT_BLOCK_DURATION', 15 ),
-            'max_blocked_attempts'   => env( 'EMAIL_RATE_LIMIT_MAX_BLOCKED_ATTEMPTS', 5 ),
-            'notification_enabled'   => env( 'EMAIL_RATE_LIMIT_NOTIFICATION_ENABLED', true ),
+        'blocking' => [
+            'block_duration_minutes' => env('EMAIL_RATE_LIMIT_BLOCK_DURATION', 15),
+            'max_blocked_attempts' => env('EMAIL_RATE_LIMIT_MAX_BLOCKED_ATTEMPTS', 5),
+            'notification_enabled' => env('EMAIL_RATE_LIMIT_NOTIFICATION_ENABLED', true),
         ],
     ],
 
@@ -177,18 +177,18 @@ return [
     |
     */
     'content_sanitization' => [
-        'enabled'     => env( 'EMAIL_CONTENT_SANITIZATION_ENABLED', true ),
+        'enabled' => env('EMAIL_CONTENT_SANITIZATION_ENABLED', true),
 
         /*
         |--------------------------------------------------------------------------
         | HTML Sanitization
         |--------------------------------------------------------------------------
         */
-        'html'        => [
-            'allowed_tags'       => '<p><br><strong><em><u><h1><h2><h3><h4><h5><h6><ul><ol><li><a><img><table><thead><tbody><tfoot><tr><th><td><caption><blockquote><cite><code><pre><span><div>',
+        'html' => [
+            'allowed_tags' => '<p><br><strong><em><u><h1><h2><h3><h4><h5><h6><ul><ol><li><a><img><table><thead><tbody><tfoot><tr><th><td><caption><blockquote><cite><code><pre><span><div>',
             'allowed_attributes' => 'href,src,alt,title,class,id,style,width,height,border,cellpadding,cellspacing,bgcolor',
-            'remove_empty_tags'  => true,
-            'fix_invalid_html'   => true,
+            'remove_empty_tags' => true,
+            'fix_invalid_html' => true,
         ],
 
         /*
@@ -196,11 +196,11 @@ return [
         | Text Sanitization
         |--------------------------------------------------------------------------
         */
-        'text'        => [
-            'max_length'             => env( 'EMAIL_TEXT_MAX_LENGTH', 10000 ),
-            'remove_null_bytes'      => true,
+        'text' => [
+            'max_length' => env('EMAIL_TEXT_MAX_LENGTH', 10000),
+            'remove_null_bytes' => true,
             'normalize_line_endings' => true,
-            'strip_dangerous_chars'  => true,
+            'strip_dangerous_chars' => true,
         ],
 
         /*
@@ -209,9 +209,9 @@ return [
         |--------------------------------------------------------------------------
         */
         'attachments' => [
-            'max_size'           => env( 'EMAIL_ATTACHMENT_MAX_SIZE', 10485760 ), // 10MB
-            'allowed_extensions' => [ 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif' ],
-            'scan_for_viruses'   => env( 'EMAIL_ATTACHMENT_SCAN_VIRUSES', false ),
+            'max_size' => env('EMAIL_ATTACHMENT_MAX_SIZE', 10485760), // 10MB
+            'allowed_extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif'],
+            'scan_for_viruses' => env('EMAIL_ATTACHMENT_SCAN_VIRUSES', false),
         ],
     ],
 
@@ -223,23 +223,23 @@ return [
     | Configurações para auditoria e monitoramento de segurança.
     |
     */
-    'security_logging'     => [
-        'enabled'        => env( 'EMAIL_SECURITY_LOGGING_ENABLED', true ),
-        'channel'        => env( 'EMAIL_SECURITY_LOG_CHANNEL', 'daily' ),
-        'level'          => env( 'EMAIL_SECURITY_LOG_LEVEL', 'warning' ),
+    'security_logging' => [
+        'enabled' => env('EMAIL_SECURITY_LOGGING_ENABLED', true),
+        'channel' => env('EMAIL_SECURITY_LOG_CHANNEL', 'daily'),
+        'level' => env('EMAIL_SECURITY_LOG_LEVEL', 'warning'),
 
         /*
         |--------------------------------------------------------------------------
         | Eventos para Logar
         |--------------------------------------------------------------------------
         */
-        'events'         => [
-            'sender_validation_failed'   => true,
-            'rate_limit_exceeded'        => true,
-            'suspicious_content'         => true,
+        'events' => [
+            'sender_validation_failed' => true,
+            'rate_limit_exceeded' => true,
+            'suspicious_content' => true,
             'domain_verification_failed' => true,
-            'unauthorized_access'        => true,
-            'configuration_changed'      => true,
+            'unauthorized_access' => true,
+            'configuration_changed' => true,
         ],
 
         /*
@@ -248,9 +248,9 @@ return [
         |--------------------------------------------------------------------------
         */
         'sensitive_data' => [
-            'passwords'     => true,
-            'tokens'        => true,
-            'api_keys'      => true,
+            'passwords' => true,
+            'tokens' => true,
+            'api_keys' => true,
             'email_content' => false, // Cuidado: pode impactar debugging
         ],
     ],
@@ -263,8 +263,8 @@ return [
     | Configurações para monitoramento proativo e alertas de segurança.
     |
     */
-    'monitoring'           => [
-        'enabled' => env( 'EMAIL_MONITORING_ENABLED', true ),
+    'monitoring' => [
+        'enabled' => env('EMAIL_MONITORING_ENABLED', true),
 
         /*
         |--------------------------------------------------------------------------
@@ -272,9 +272,9 @@ return [
         |--------------------------------------------------------------------------
         */
         'metrics' => [
-            'emails_sent_per_hour'         => true,
-            'failed_emails_per_hour'       => true,
-            'rate_limit_hits_per_hour'     => true,
+            'emails_sent_per_hour' => true,
+            'failed_emails_per_hour' => true,
+            'rate_limit_hits_per_hour' => true,
             'suspicious_activity_per_hour' => true,
         ],
 
@@ -283,19 +283,19 @@ return [
         | Alertas Automáticos
         |--------------------------------------------------------------------------
         */
-        'alerts'  => [
-            'high_failure_rate'   => [
-                'enabled'              => true,
-                'threshold_percent'    => 10,
+        'alerts' => [
+            'high_failure_rate' => [
+                'enabled' => true,
+                'threshold_percent' => 10,
                 'notification_channel' => 'email',
             ],
-            'rate_limit_abuse'    => [
-                'enabled'              => true,
-                'threshold_per_hour'   => 50,
+            'rate_limit_abuse' => [
+                'enabled' => true,
+                'threshold_per_hour' => 50,
                 'notification_channel' => 'email',
             ],
             'suspicious_patterns' => [
-                'enabled'              => true,
+                'enabled' => true,
                 'notification_channel' => 'email',
             ],
         ],
@@ -309,10 +309,10 @@ return [
     | Configurações específicas para ambientes de desenvolvimento e teste.
     |
     */
-    'development'          => [
-        'override_recipients'   => env( 'EMAIL_DEV_OVERRIDE_RECIPIENTS', false ),
-        'log_all_emails'        => env( 'EMAIL_DEV_LOG_ALL', false ),
-        'disable_rate_limiting' => env( 'EMAIL_DEV_DISABLE_RATE_LIMITING', false ),
-        'test_recipients'       => explode( ',', env( 'EMAIL_TEST_RECIPIENTS', '' ) ),
+    'development' => [
+        'override_recipients' => env('EMAIL_DEV_OVERRIDE_RECIPIENTS', false),
+        'log_all_emails' => env('EMAIL_DEV_LOG_ALL', false),
+        'disable_rate_limiting' => env('EMAIL_DEV_DISABLE_RATE_LIMITING', false),
+        'test_recipients' => explode(',', env('EMAIL_TEST_RECIPIENTS', '')),
     ],
 ];

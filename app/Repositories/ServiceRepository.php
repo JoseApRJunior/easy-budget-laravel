@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Service\ServiceDTO;
 use App\Models\Service;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use App\Repositories\Traits\RepositoryFiltersTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,179 +20,255 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ServiceRepository extends AbstractTenantRepository
 {
+    use RepositoryFiltersTrait;
+
     /**
      * Define o Model a ser utilizado pelo Repositório.
      */
     protected function makeModel(): Model
     {
-        return new Service();
+        return new Service;
+    }
+
+    /**
+     * Gera código único para o serviço dentro do tenant.
+     * Padrão: SERV-2026-01-000001
+     */
+    public function generateUniqueCode(): string
+    {
+        $year = date('Y');
+        $month = date('m');
+
+        $lastService = $this->getLastServiceByMonth($year, $month);
+
+        $sequential = 1;
+        if ($lastService) {
+            $sequential = $this->extractSequentialNumber($lastService->code) + 1;
+        }
+
+        return sprintf(
+            'SERV-%s-%s-%06d',
+            $year,
+            $month,
+            $sequential
+        );
+    }
+
+    /**
+     * Busca o último serviço criado em um determinado mês/ano.
+     */
+    public function getLastServiceByMonth(string $year, string $month): ?Service
+    {
+        return $this->model->newQuery()
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->where('code', 'LIKE', 'SERV-%')
+            ->orderBy('id', 'desc')
+            ->first();
+    }
+
+    /**
+     * Extrai o número sequencial de um código.
+     * Padrão esperado: SERV-YYYY-MM-XXXXXX
+     */
+    private function extractSequentialNumber(string $code): int
+    {
+        $parts = explode('-', $code);
+
+        // Formato legado com Tenant ID: [0]SERV, [1]T1, [2]2025, [3]11, [4]000001
+        if (count($parts) >= 5) {
+            return (int) $parts[4];
+        }
+
+        // Padrão correto: [0]SERV, [1]2025, [2]11, [3]000001
+        if (count($parts) >= 4) {
+            return (int) $parts[3];
+        }
+
+        // Caso seja o padrão antigo SRV000001
+        if (str_starts_with($code, 'SRV') && ! str_contains($code, '-')) {
+            return (int) filter_var($code, FILTER_SANITIZE_NUMBER_INT);
+        }
+
+        return 1;
     }
 
     /**
      * Lista serviços por status dentro do tenant atual.
-     *
-     * @param array<string> $statuses Lista de status
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
-     * @return Collection<Service> Coleção de serviços
      */
-    public function listByStatuses( array $statuses, ?array $orderBy = null, ?int $limit = null ): Collection
+    public function listByStatuses(array $statuses, ?array $orderBy = null, ?int $limit = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'status' => $statuses ],
-            $orderBy,
-            $limit,
-        );
+        return $this->model->newQuery()
+            ->whereIn('status', $statuses)
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->when($limit, fn ($q) => $q->limit($limit))
+            ->get();
     }
 
     /**
      * Lista serviços por provider dentro do tenant atual.
-     *
-     * @param int $providerId ID do provider
-     * @param array<string, string>|null $orderBy Ordenação
-     * @return Collection<Service> Coleção de serviços
      */
-    public function listByProviderId( int $providerId, ?array $orderBy = null ): Collection
+    public function listByProviderId(int $providerId, ?array $orderBy = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'provider_id' => $providerId ],
-            $orderBy,
-        );
+        return $this->model->newQuery()
+            ->where('provider_id', $providerId)
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->get();
     }
 
     /**
      * Conta serviços agrupados por status dentro do tenant atual.
-     *
-     * @return array<string, int> Array com status como chave e count como valor
      */
     public function countByStatus(): array
     {
-        return $this->model
-            ->selectRaw( 'status, COUNT(*) as count' )
-            ->groupBy( 'status' )
-            ->pluck( 'count', 'status' )
+        return $this->model->newQuery()
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
             ->toArray();
     }
 
     /**
+     * Soma o valor total de todos os serviços dentro do tenant atual.
+     */
+    public function sumTotal(): float
+    {
+        return (float) $this->model->newQuery()->sum('total');
+    }
+
+    /**
      * Conta serviços ativos dentro do tenant atual.
-     *
-     * @return int Número de serviços ativos
      */
     public function countActive(): int
     {
-        return $this->countByTenant( [ 'status' => 'active' ] );
+        return $this->model->newQuery()
+            ->where('status', 'active')
+            ->count();
     }
 
     /**
      * Conta serviços por categoria dentro do tenant atual.
-     *
-     * @param int $categoryId ID da categoria
-     * @return int Número de serviços na categoria
      */
-    public function countByCategory( int $categoryId ): int
+    public function countByCategory(int $categoryId): int
     {
-        return $this->countByTenant( [ 'category_id' => $categoryId ] );
+        return $this->model->newQuery()
+            ->where('category_id', $categoryId)
+            ->count();
+    }
+
+    /**
+     * Atualiza o status de todos os serviços vinculados a um orçamento.
+     */
+    public function updateStatusByBudgetId(int $budgetId, string $status): void
+    {
+        $this->model->newQuery()->where('budget_id', $budgetId)->update(['status' => $status]);
+    }
+
+    /**
+     * Busca um serviço por código com relações opcionais.
+     */
+    public function findByCode(string $code, array $with = []): ?Service
+    {
+        return $this->model->newQuery()
+            ->where('code', $code)
+            ->when(! empty($with), fn ($q) => $q->with($with))
+            ->first();
     }
 
     /**
      * Busca serviços ativos dentro do tenant atual.
-     *
-     * @param array<string, string>|null $orderBy Ordenação
-     * @return Collection<Service> Serviços ativos
      */
-    public function findActive( ?array $orderBy = null ): Collection
+    public function findActive(?array $orderBy = null): Collection
     {
-        return $this->getAllByTenant(
-            [ 'status' => 'active' ],
-            $orderBy,
-        );
+        return $this->model->newQuery()
+            ->where('status', 'active')
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy))
+            ->get();
+    }
+
+    /**
+     * Retorna serviços paginados com filtros avançados.
+     */
+    public function getPaginated(
+        array $filters = [],
+        int $perPage = 15,
+        array $with = [],
+        ?array $orderBy = null,
+    ): \Illuminate\Pagination\LengthAwarePaginator {
+        return $this->model->newQuery()
+            ->when(! empty($with), fn ($q) => $q->with($with))
+            ->tap(fn ($q) => $this->applyAllServiceFilters($q, $filters))
+            ->tap(fn ($q) => $this->applySoftDeleteFilter($q, $filters))
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy), fn ($q) => $q->latest())
+            ->paginate($this->getEffectivePerPage($filters, $perPage));
     }
 
     /**
      * Busca serviços com filtros avançados, paginação e eager loading.
-     *
-     * @param array<string, mixed> $filters Filtros (status, category_id, date_from, date_to, search)
-     * @param array<string, string>|null $orderBy Ordenação
-     * @param int|null $limit Limite de registros
-     * @return Collection<Service> Coleção de serviços filtrados
      */
-    public function getFiltered( array $filters = [], ?array $orderBy = null, ?int $limit = null ): Collection
+    public function getFiltered(array $filters = [], ?array $orderBy = null, ?int $limit = null): Collection
     {
-        $query = $this->model->newQuery();
-
-        // Aplicar filtros
-        if ( !empty( $filters[ 'status' ] ) ) {
-            $query->where( 'status', $filters[ 'status' ] );
-        }
-
-        if ( !empty( $filters[ 'category_id' ] ) ) {
-            $query->where( 'category_id', $filters[ 'category_id' ] );
-        }
-
-        if ( !empty( $filters[ 'date_from' ] ) ) {
-            $query->whereDate( 'created_at', '>=', $filters[ 'date_from' ] );
-        }
-
-        if ( !empty( $filters[ 'date_to' ] ) ) {
-            $query->whereDate( 'created_at', '<=', $filters[ 'date_to' ] );
-        }
-
-        if ( !empty( $filters[ 'search' ] ) ) {
-            $query->where( function ( $q ) use ( $filters ) {
-                $q->where( 'code', 'like', '%' . $filters[ 'search' ] . '%' )
-                    ->orWhere( 'description', 'like', '%' . $filters[ 'search' ] . '%' );
-            } );
-        }
-
-        // Eager loading padrão
-        $query->with( [ 'category', 'budget.customer', 'serviceStatus' ] );
-
-        // Ordenação
-        if ( $orderBy ) {
-            foreach ( $orderBy as $field => $direction ) {
-                $query->orderBy( $field, $direction );
-            }
-        } else {
-            $query->orderBy( 'created_at', 'desc' );
-        }
-
-        // Limite
-        if ( $limit ) {
-            $query->limit( $limit );
-        }
-
-        return $query->get();
+        return $this->model->newQuery()
+            ->tap(fn ($q) => $this->applyAllServiceFilters($q, $filters))
+            ->with(['category', 'budget.customer'])
+            ->when($orderBy, fn ($q) => $this->applyOrderBy($q, $orderBy), fn ($q) => $q->latest())
+            ->when($limit, fn ($q) => $q->limit($limit))
+            ->get();
     }
 
     /**
-     * Busca um serviço por código com eager loading opcional.
-     *
-     * @param string $code Código do serviço
-     * @param array<string> $with Relacionamentos para eager loading
-     * @return Service|null Serviço encontrado ou null
+     * Aplica todos os filtros de serviço.
      */
-    public function findByCode( string $code, array $with = [] ): ?Service
+    protected function applyAllServiceFilters(Builder $query, array $filters): void
     {
-        $query = $this->model->where( 'code', $code );
-
-        if ( !empty( $with ) ) {
-            $query->with( $with );
+        if (isset($filters['status']) && $filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
         }
 
-        return $query->first();
+        if (isset($filters['category_id']) && $filters['category_id'] !== 'all') {
+            $query->where('category_id', $filters['category_id']);
+        }
+
+        if (isset($filters['price_min'])) {
+            $query->where('total', '>=', $filters['price_min']);
+        }
+
+        if (isset($filters['price_max'])) {
+            $query->where('total', '<=', $filters['price_max']);
+        }
+
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'date_from', 'date_to');
+        $this->applyDateRangeFilter($query, $filters, 'created_at', 'start_date', 'end_date');
+        $this->applySearchFilter($query, $filters, ['code', 'description']);
     }
 
     /**
-     * Busca um serviço por código dentro do tenant atual.
-     *
-     * @param string $code Código do serviço
-     * @param array<string> $with Relacionamentos para eager loading
-     * @return Service|null Serviço encontrado ou null
+     * Busca serviços de um mês específico por tenant.
      */
-    public function findByCodeWithTenant( string $code, array $with = [] ): ?Service
+    public function getServicesByMonth(int $month, int $year): Collection
     {
-        return $this->findByCode( $code, $with );
+        return $this->model->newQuery()
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $month)
+            ->get();
     }
 
+    /**
+     * Cria um serviço a partir de um DTO.
+     */
+    public function createFromDTO(ServiceDTO $dto): Model
+    {
+        return $this->create($dto->toDatabaseArray());
+    }
+
+    /**
+     * Atualiza um serviço a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, ServiceDTO $dto): ?Model
+    {
+        $data = $dto->toDatabaseArray();
+        $filteredData = array_filter($data, fn ($value) => $value !== null);
+
+        return $this->update($id, $filteredData);
+    }
 }

@@ -12,10 +12,11 @@ class SimpleCustomerSeeder extends Seeder
     public function run(): void
     {
         $tenant = Tenant::first();
-        $user   = User::where( 'tenant_id', $tenant->id )->first();
+        $user = User::where('tenant_id', $tenant->id)->first();
 
-        if ( !$tenant || !$user ) {
-            $this->command->info( 'Tenant or User not found. Please run other seeders first.' );
+        if (! $tenant || ! $user) {
+            $this->command->info('Tenant or User not found. Please run other seeders first.');
+
             return;
         }
 
@@ -23,24 +24,23 @@ class SimpleCustomerSeeder extends Seeder
         $customers = [
             [
                 'tenant_id' => $tenant->id,
-                'status'    => 'active',
+                'status' => 'active',
             ],
             [
                 'tenant_id' => $tenant->id,
-                'status'    => 'active',
+                'status' => 'active',
             ],
             [
                 'tenant_id' => $tenant->id,
-                'status'    => 'active',
+                'status' => 'active',
             ],
         ];
 
-        foreach ( $customers as $customerData ) {
-            Customer::create( $customerData );
+        foreach ($customers as $customerData) {
+            Customer::create($customerData);
         }
 
-        $this->command->info( 'Test customers created successfully!' );
-        $this->command->info( 'Customers created: ' . Customer::where( 'tenant_id', $tenant->id )->count() );
+        $this->command->info('Test customers created successfully!');
+        $this->command->info('Customers created: '.Customer::where('tenant_id', $tenant->id)->count());
     }
-
 }

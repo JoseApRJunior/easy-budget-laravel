@@ -13,8 +13,8 @@ class AliasServiceProvider extends ServiceProvider
     public function register()
     {
         $loader = AliasLoader::getInstance();
-        $loader->alias( 'Currency', \App\Helpers\CurrencyHelper::class);
-        $loader->alias( 'DateHelper', \App\Helpers\DateHelper::class);
+        $loader->alias('Currency', \App\Helpers\CurrencyHelper::class);
+        $loader->alias('DateHelper', \App\Helpers\DateHelper::class);
     }
 
     /**
@@ -24,5 +24,4 @@ class AliasServiceProvider extends ServiceProvider
     {
         //
     }
-
 }

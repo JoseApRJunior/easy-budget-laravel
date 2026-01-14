@@ -8,12 +8,6 @@ class EmailService
 {
     /**
      * Send email notification
-     *
-     * @param string $to
-     * @param string $subject
-     * @param string $content
-     * @param array $data
-     * @return ServiceResult
      */
     public function send(string $to, string $subject, string $content, array $data = []): ServiceResult
     {
@@ -24,12 +18,12 @@ class EmailService
                 'to' => $to,
                 'subject' => $subject,
                 'content' => $content,
-                'data' => $data
+                'data' => $data,
             ]);
-            
+
             return ServiceResult::success([], 'Email sent successfully');
         } catch (\Exception $e) {
-            return ServiceResult::error('Failed to send email: ' . $e->getMessage());
+            return ServiceResult::error('Failed to send email: '.$e->getMessage());
         }
     }
 }

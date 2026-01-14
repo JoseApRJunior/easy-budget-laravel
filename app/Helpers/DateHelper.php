@@ -41,32 +41,60 @@ class DateHelper
     }
 
     /**
-     * Converte data de nascimento do formato brasileiro para Y-m-d
+     * Converte data de qualquer formato comum (BR ou ISO) para objeto Carbon.
      */
-    public static function parseBirthDate(?string $birthDate): ?string
+    public static function toCarbon($date): ?Carbon
     {
-        if (empty($birthDate)) {
+        if (empty($date)) {
             return null;
         }
 
-        // Se já estiver no formato Y-m-d, retorna como está
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthDate)) {
-            return $birthDate;
+        if ($date instanceof Carbon) {
+            return $date;
         }
 
-        // Converte do formato DD/MM/YYYY para Y-m-d
-        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $birthDate, $matches)) {
-            $day = $matches[1];
-            $month = $matches[2];
-            $year = $matches[3];
+        // Limpar espaços extras
+        $date = trim($date);
 
-            // Valida se é uma data válida
-            if (checkdate((int) $month, (int) $day, (int) $year)) {
-                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+        // Se já estiver no formato YYYY-MM-DD
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches)) {
+            if (checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1])) {
+                return Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
             }
         }
 
-        // Se não conseguir converter, retorna null para evitar erro
-        return null;
+        // Converte do formato DD/MM/YYYY ou DD-MM-YYYY
+        if (preg_match('/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/', $date, $matches)) {
+            $day = (int) $matches[1];
+            $month = (int) $matches[2];
+            $year = (int) $matches[3];
+
+            if (checkdate($month, $day, $year)) {
+                return Carbon::createFromFormat('d/m/Y', str_replace('-', '/', $date))->startOfDay();
+            }
+        }
+
+        try {
+            return Carbon::parse($date)->startOfDay();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Converte data para o formato Y-m-d para persistência ou filtros de banco.
+     */
+    public static function parseDate(?string $date): ?string
+    {
+        $carbon = self::toCarbon($date);
+        return $carbon ? $carbon->format('Y-m-d') : null;
+    }
+
+    /**
+     * @deprecated Use parseDate instead
+     */
+    public static function parseBirthDate(?string $date): ?string
+    {
+        return self::parseDate($date);
     }
 }

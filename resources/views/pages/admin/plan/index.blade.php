@@ -1,18 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-box-seam me-2"></i>Gerenciamento de Planos</h1>
-        <div>
-            <a href="{{ route('admin.plans.create') }}" class="btn btn-primary me-2">
-                <i class="bi bi-plus-circle me-1"></i>Novo Plano
-            </a>
-            <a href="{{ route('admin.plans.export', ['format' => 'csv']) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-download me-1"></i>Exportar
-            </a>
+<div class="container-fluid py-4">
+    <x-layout.page-header
+        title="Gerenciamento de Planos"
+        icon="box-seam"
+        :breadcrumb-items="[
+            'Dashboard' => route('admin.dashboard'),
+            'Planos' => '#'
+        ]">
+        <div class="d-flex gap-2">
+            <x-ui.button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
         </div>
-    </div>
+    </x-layout.page-header>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
@@ -44,7 +45,7 @@
             <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5 class="card-title">Receita Mensal</h5>
-                    <h3>R$ {{ number_format($stats['monthly_revenue'], 2, ',', '.') }}</h3>
+                    <h3>{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</h3>
                 </div>
             </div>
         </div>
@@ -86,13 +87,9 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search me-1"></i>Filtrar
-                        </button>
-                        <a href="{{ route('admin.plans.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle me-1"></i>Limpar
-                        </a>
+                    <div class="col-12 d-flex gap-2">
+                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="secondary" icon="x-circle" label="Limpar" />
                     </div>
                 </div>
             </form>
@@ -128,7 +125,7 @@
                                         @endif
                                     </td>
                                     <td>{{ Str::limit($plan->description, 50) }}</td>
-                                    <td>R$ {{ number_format($plan->price, 2, ',', '.') }}</td>
+                                    <td>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
                                     <td>
                                         @php
                                             $statusClass = match($plan->status) {
@@ -145,22 +142,13 @@
                                     </td>
                                     <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.plans.show', $plan) }}" class="btn btn-sm btn-primary" title="Ver detalhes">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ route('admin.plans.edit', $plan) }}" class="btn btn-sm btn-warning" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a href="{{ route('admin.plans.subscribers', $plan) }}" class="btn btn-sm btn-info" title="Assinantes">
-                                                <i class="bi bi-people"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger" 
+                                        <div class="d-flex gap-1">
+                                            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                            <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" size="sm" icon="people" title="Assinantes" />
+                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
                                                     onclick="confirmDelete('{{ route('admin.plans.destroy', $plan) }}')" 
-                                                    title="Excluir"
-                                                    {{ $plan->planSubscriptions()->exists() ? 'disabled' : '' }}>
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                                    :disabled="$plan->planSubscriptions()->exists()" />
                                         </div>
                                     </td>
                                 </tr>
@@ -196,11 +184,11 @@
                 <p class="text-danger"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <x-ui.button type="submit" variant="danger" label="Excluir" />
                 </form>
             </div>
         </div>

@@ -120,21 +120,42 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
     protected function getCompanyData(): array
     {
         if ($this->tenant) {
+            try {
+                // Busca o tenant sem escopos globais para garantir acesso em jobs de fila
+                $tenantData = Tenant::withoutGlobalScopes()
+                    ->with(['provider.commonData', 'provider.contact'])
+                    ->find($this->tenant->id);
+
+                if ($tenantData && $tenantData->provider && $tenantData->provider->commonData) {
+                    $common = $tenantData->provider->commonData;
+                    $contact = $tenantData->provider->contact;
+
+                    return [
+                        'company_name' => $common->company_name ?? $tenantData->name,
+                        'address_line1' => $common->address_line1,
+                        'address_line2' => $common->address_line2,
+                        'city' => $common->city,
+                        'state' => $common->state,
+                        'postal_code' => $common->postal_code,
+                        'phone' => $contact?->phone_business ?? $contact?->phone_personal,
+                        'email' => $contact?->email_business ?? $contact?->email_personal,
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Fallback silencioso
+            }
+
             return [
                 'company_name' => $this->tenant->name,
                 'email' => null,
-                'email_business' => null,
                 'phone' => null,
-                'phone_business' => null,
             ];
         }
 
         return [
             'company_name' => config('app.name', 'Easy Budget'),
             'email' => null,
-            'email_business' => null,
             'phone' => null,
-            'phone_business' => null,
         ];
     }
 
@@ -177,6 +198,8 @@ abstract class BaseEmail extends Mailable implements ShouldQueue
             'email' => $this->getUserEmail(),
             'company_data' => $this->getCompanyData(),
             'support_email' => $this->getSupportEmail(),
+            'isSystemEmail' => true,
+            'statusColor' => '#0d6efd',
         ];
     }
 

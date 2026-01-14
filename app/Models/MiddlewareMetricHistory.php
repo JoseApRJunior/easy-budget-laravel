@@ -63,20 +63,20 @@ class MiddlewareMetricHistory extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'response_time'    => 'float',
-        'memory_usage'     => 'integer',
-        'cpu_usage'        => 'float',
-        'status_code'      => 'integer',
-        'tenant_id'        => 'integer',
-        'user_id'          => 'integer',
-        'ip_address'       => 'string',
-        'user_agent'       => 'string',
-        'request_size'     => 'integer',
-        'response_size'    => 'integer',
+        'response_time' => 'float',
+        'memory_usage' => 'integer',
+        'cpu_usage' => 'float',
+        'status_code' => 'integer',
+        'tenant_id' => 'integer',
+        'user_id' => 'integer',
+        'ip_address' => 'string',
+        'user_agent' => 'string',
+        'request_size' => 'integer',
+        'response_size' => 'integer',
         'database_queries' => 'integer',
-        'cache_hits'       => 'integer',
-        'cache_misses'     => 'integer',
-        'created_at'       => 'datetime',
+        'cache_hits' => 'integer',
+        'cache_misses' => 'integer',
+        'created_at' => 'datetime',
     ];
 
     /**
@@ -85,23 +85,23 @@ class MiddlewareMetricHistory extends Model
     public static function businessRules(): array
     {
         return [
-            'tenant_id'        => 'required|integer|exists:tenants,id',
-            'middleware_name'  => 'required|string|max:100',
-            'endpoint'         => 'required|string|max:255',
-            'method'           => 'required|string|in:GET,POST,PUT,PATCH,DELETE',
-            'response_time'    => 'required|numeric|min:0|max:999999.999',
-            'memory_usage'     => 'required|integer|min:0',
-            'cpu_usage'        => 'nullable|numeric|min:0|max:100.00',
-            'status_code'      => 'required|integer|min:100|max:599',
-            'error_message'    => 'nullable|string',
-            'user_id'          => 'nullable|integer|exists:users,id',
-            'ip_address'       => 'nullable|string|max:45',
-            'user_agent'       => 'nullable|string',
-            'request_size'     => 'nullable|integer|min:0',
-            'response_size'    => 'nullable|integer|min:0',
+            'tenant_id' => 'required|integer|exists:tenants,id',
+            'middleware_name' => 'required|string|max:100',
+            'endpoint' => 'required|string|max:255',
+            'method' => 'required|string|in:GET,POST,PUT,PATCH,DELETE',
+            'response_time' => 'required|numeric|min:0|max:999999.999',
+            'memory_usage' => 'required|integer|min:0',
+            'cpu_usage' => 'nullable|numeric|min:0|max:100.00',
+            'status_code' => 'required|integer|min:100|max:599',
+            'error_message' => 'nullable|string',
+            'user_id' => 'nullable|integer|exists:users,id',
+            'ip_address' => 'nullable|string|max:45',
+            'user_agent' => 'nullable|string',
+            'request_size' => 'nullable|integer|min:0',
+            'response_size' => 'nullable|integer|min:0',
             'database_queries' => 'nullable|integer|min:0',
-            'cache_hits'       => 'nullable|integer|min:0',
-            'cache_misses'     => 'nullable|integer|min:0',
+            'cache_hits' => 'nullable|integer|min:0',
+            'cache_misses' => 'nullable|integer|min:0',
         ];
     }
 
@@ -117,7 +117,7 @@ class MiddlewareMetricHistory extends Model
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
@@ -125,73 +125,73 @@ class MiddlewareMetricHistory extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
      * Scope para filtrar por período de tempo.
      */
-    public function scopePeriod( $query, Carbon $startDate, Carbon $endDate )
+    public function scopePeriod($query, Carbon $startDate, Carbon $endDate)
     {
-        return $query->whereBetween( 'created_at', [ $startDate, $endDate ] );
+        return $query->whereBetween('created_at', [$startDate, $endDate]);
     }
 
     /**
      * Scope para métricas de um middleware específico.
      */
-    public function scopeByMiddleware( $query, string $middlewareName )
+    public function scopeByMiddleware($query, string $middlewareName)
     {
-        return $query->where( 'middleware_name', $middlewareName );
+        return $query->where('middleware_name', $middlewareName);
     }
 
     /**
      * Scope para métricas de um endpoint específico.
      */
-    public function scopeByEndpoint( $query, string $endpoint )
+    public function scopeByEndpoint($query, string $endpoint)
     {
-        return $query->where( 'endpoint', $endpoint );
+        return $query->where('endpoint', $endpoint);
     }
 
     /**
      * Scope para métricas por método HTTP.
      */
-    public function scopeByMethod( $query, string $method )
+    public function scopeByMethod($query, string $method)
     {
-        return $query->where( 'method', $method );
+        return $query->where('method', $method);
     }
 
     /**
      * Scope para métricas por status code.
      */
-    public function scopeByStatusCode( $query, int $statusCode )
+    public function scopeByStatusCode($query, int $statusCode)
     {
-        return $query->where( 'status_code', $statusCode );
+        return $query->where('status_code', $statusCode);
     }
 
     /**
      * Scope para métricas com erro (status >= 400).
      */
-    public function scopeWithErrors( $query )
+    public function scopeWithErrors($query)
     {
-        return $query->where( 'status_code', '>=', 400 );
+        return $query->where('status_code', '>=', 400);
     }
 
     /**
      * Scope para métricas bem-sucedidas (status < 400).
      */
-    public function scopeSuccessful( $query )
+    public function scopeSuccessful($query)
     {
-        return $query->where( 'status_code', '<', 400 );
+        return $query->where('status_code', '<', 400);
     }
 
     /**
      * Calcula estatísticas de performance para um período.
      */
-    public static function getPerformanceStats( int $tenantId, Carbon $startDate, Carbon $endDate ): array
+    public static function getPerformanceStats(int $tenantId, Carbon $startDate, Carbon $endDate): array
     {
-        return static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->selectRaw( '
+        return static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->selectRaw('
                 COUNT(*) as total_requests,
                 AVG(response_time) as avg_response_time,
                 MIN(response_time) as min_response_time,
@@ -203,7 +203,7 @@ class MiddlewareMetricHistory extends Model
                 AVG(cache_misses) as avg_cache_misses,
                 COUNT(CASE WHEN status_code >= 400 THEN 1 END) as error_count,
                 COUNT(CASE WHEN status_code < 400 THEN 1 END) as success_count
-            ' )
+            ')
             ->first()
             ->toArray();
     }
@@ -211,14 +211,14 @@ class MiddlewareMetricHistory extends Model
     /**
      * Obtém os endpoints mais utilizados.
      */
-    public static function getTopEndpoints( int $tenantId, Carbon $startDate, Carbon $endDate, int $limit = 10 ): array
+    public static function getTopEndpoints(int $tenantId, Carbon $startDate, Carbon $endDate, int $limit = 10): array
     {
-        return static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->selectRaw( 'endpoint, method, COUNT(*) as request_count, AVG(response_time) as avg_response_time' )
-            ->groupBy( 'endpoint', 'method' )
-            ->orderBy( 'request_count', 'desc' )
-            ->limit( $limit )
+        return static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->selectRaw('endpoint, method, COUNT(*) as request_count, AVG(response_time) as avg_response_time')
+            ->groupBy('endpoint', 'method')
+            ->orderBy('request_count', 'desc')
+            ->limit($limit)
             ->get()
             ->toArray();
     }
@@ -226,14 +226,14 @@ class MiddlewareMetricHistory extends Model
     /**
      * Obtém os middlewares com pior performance.
      */
-    public static function getSlowestMiddlewares( int $tenantId, Carbon $startDate, Carbon $endDate, int $limit = 10 ): array
+    public static function getSlowestMiddlewares(int $tenantId, Carbon $startDate, Carbon $endDate, int $limit = 10): array
     {
-        return static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->selectRaw( 'middleware_name, COUNT(*) as request_count, AVG(response_time) as avg_response_time, AVG(memory_usage) as avg_memory_usage' )
-            ->groupBy( 'middleware_name' )
-            ->orderBy( 'avg_response_time', 'desc' )
-            ->limit( $limit )
+        return static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->selectRaw('middleware_name, COUNT(*) as request_count, AVG(response_time) as avg_response_time, AVG(memory_usage) as avg_memory_usage')
+            ->groupBy('middleware_name')
+            ->orderBy('avg_response_time', 'desc')
+            ->limit($limit)
             ->get()
             ->toArray();
     }
@@ -241,17 +241,17 @@ class MiddlewareMetricHistory extends Model
     /**
      * Calcula taxa de erro por período.
      */
-    public static function getErrorRate( int $tenantId, Carbon $startDate, Carbon $endDate ): float
+    public static function getErrorRate(int $tenantId, Carbon $startDate, Carbon $endDate): float
     {
-        $stats = static::where( 'tenant_id', $tenantId )
-            ->period( $startDate, $endDate )
-            ->selectRaw( '
+        $stats = static::where('tenant_id', $tenantId)
+            ->period($startDate, $endDate)
+            ->selectRaw('
                 COUNT(*) as total,
                 COUNT(CASE WHEN status_code >= 400 THEN 1 END) as errors
-            ' )
+            ')
             ->first();
 
-        return $stats->total > 0 ? ( $stats->errors / $stats->total ) * 100 : 0;
+        return $stats->total > 0 ? ($stats->errors / $stats->total) * 100 : 0;
     }
 
     /**
@@ -260,7 +260,7 @@ class MiddlewareMetricHistory extends Model
     public function isPerformanceIssue(): bool
     {
         // Considera problema se tempo de resposta > 5s ou uso de CPU > 80%
-        return $this->response_time > 5000.0 || ( $this->cpu_usage && $this->cpu_usage > 80.0 );
+        return $this->response_time > 5000.0 || ($this->cpu_usage && $this->cpu_usage > 80.0);
     }
 
     /**
@@ -282,9 +282,8 @@ class MiddlewareMetricHistory extends Model
             $this->endpoint,
             $this->middleware_name,
             $this->response_time,
-            $this->memory_usage ? round( $this->memory_usage / 1024 / 1024, 2 ) : 0,
+            $this->memory_usage ? round($this->memory_usage / 1024 / 1024, 2) : 0,
             $this->isError() ? 'ERRO' : 'OK'
         );
     }
-
 }

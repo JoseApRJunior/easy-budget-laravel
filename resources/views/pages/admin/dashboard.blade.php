@@ -1,20 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4">
-                    <i class="bi bi-speedometer2 me-2"></i>{{ $page_title }}
-                    <span
-                        class="badge bg-{{ $system_status['health'] == 'healthy' ? 'success' : ($system_status['health'] == 'warning' ? 'warning' : 'danger') }} ms-2">
-                        {{ $system_status['health'] == 'healthy'
-                            ? 'Saudável'
-                            : ($system_status['health'] == 'warning'
-                                ? 'Atenção'
-                                : 'Crítico') }}
-                    </span>
-                </h2>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            :title="$page_title"
+            icon="speedometer2"
+            :breadcrumb-items="[
+                'Admin' => '#',
+                'Dashboard' => '#'
+            ]">
+            <span class="badge bg-{{ $system_status['health'] == 'healthy' ? 'success' : ($system_status['health'] == 'warning' ? 'warning' : 'danger') }} ms-2">
+                {{ $system_status['health'] == 'healthy' ? 'Saudável' : ($system_status['health'] == 'warning' ? 'Atenção' : 'Crítico') }}
+            </span>
+        </x-layout.page-header>
 
                 <!-- Alertas Críticos -->
                 @if (count($alerts) > 0)
@@ -38,7 +36,7 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body text-center">
                                 <i class="bi bi-graph-up text-primary fs-1 mb-3"></i>
-                                <h3 class="text-primary mb-1">{{ number_format($kpis['total_requests']) }}</h3>
+                                <h3 class="text-primary mb-1">{{ \App\Helpers\CurrencyHelper::format($kpis['total_requests'], 0, false) }}</h3>
                                 <h6 class="text-muted mb-0">Requisições (24h)</h6>
                                 <small
                                     class="text-{{ str_starts_with($kpis['growth_rate'], '+') ? 'success' : 'danger' }}">
@@ -54,7 +52,7 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body text-center">
                                 <i class="bi bi-check-circle text-success fs-1 mb-3"></i>
-                                <h3 class="text-success mb-1">{{ number_format($kpis['success_rate'], 1) }}%</h3>
+                                <h3 class="text-success mb-1">{{ \App\Helpers\CurrencyHelper::format($kpis['success_rate'], 1, false) }}%</h3>
                                 <h6 class="text-muted mb-0">Taxa de Sucesso</h6>
                                 <small class="text-{{ $kpis['success_rate'] >= 95 ? 'success' : 'warning' }}">
                                     <i
@@ -69,7 +67,7 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body text-center">
                                 <i class="bi bi-lightning text-warning fs-1 mb-3"></i>
-                                <h3 class="text-warning mb-1">{{ number_format($kpis['avg_response_time'], 1) }}ms</h3>
+                                <h3 class="text-warning mb-1">{{ \App\Helpers\CurrencyHelper::format($kpis['avg_response_time'], 1, false) }}ms</h3>
                                 <h6 class="text-muted mb-0">Tempo Médio</h6>
                                 <small class="text-{{ $kpis['avg_response_time'] < 50 ? 'success' : 'info' }}">
                                     <i class="bi bi-speedometer2"></i>
@@ -148,15 +146,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <a href="/admin/monitoring" class="btn btn-outline-secondary">
-                                        <i class="bi bi-graph-up me-2 text-primary"></i>Ver Métricas Técnicas
-                                    </a>
-                                    <a href="/admin/alerts" class="btn btn-outline-secondary">
-                                        <i class="bi bi-bell me-2 text-warning"></i>Gerenciar Alertas
-                                    </a>
-                                    <button class="btn btn-outline-secondary" onclick="refreshData()">
-                                        <i class="bi bi-arrow-clockwise me-2 text-success"></i>Atualizar Dados
-                                    </button>
+                                    <x-ui.button type="link" href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" />
+                                    <x-ui.button type="link" href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" />
+                                    <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar Dados" onclick="refreshData()" />
                                 </div>
                             </div>
                         </div>
@@ -178,9 +170,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')

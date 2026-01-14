@@ -29,13 +29,13 @@ class Notification extends Model
         'subject',
         'sent_at',
         'created_at',
-        'updated_at'
+        'updated_at',
     ];
 
     protected $casts = [
-        'sent_at'    => 'datetime',
+        'sent_at' => 'datetime',
         'created_at' => 'immutable_datetime',
-        'updated_at' => 'immutable_datetime'
+        'updated_at' => 'immutable_datetime',
     ];
 
     /**
@@ -45,12 +45,11 @@ class Notification extends Model
     {
         return [
             'tenant_id' => 'required|integer|exists:tenants,id',
-            'type'      => 'required|string|max:50',
-            'email'     => 'required|email|max:255',
-            'message'   => 'required|string|max:65535',
-            'subject'   => 'required|string|max:255',
-            'sent_at'   => 'nullable|datetime',
+            'type' => 'required|string|max:50',
+            'email' => 'required|email|max:255',
+            'message' => 'required|string|max:65535',
+            'subject' => 'required|string|max:255',
+            'sent_at' => 'nullable|datetime',
         ];
     }
-
 }

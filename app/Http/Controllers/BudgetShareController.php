@@ -59,28 +59,6 @@ class BudgetShareController extends Controller
     }
 
     /**
-     * Rejeita um compartilhamento (recusa o acesso)
-     */
-    public function rejectShare(string $token): RedirectResponse
-    {
-        try {
-            $result = $this->budgetShareService->rejectShare($token);
-
-            if (! $result->isSuccess()) {
-                return redirect()->back()
-                    ->with('error', $this->getServiceErrorMessage($result, 'Erro ao rejeitar compartilhamento'));
-            }
-
-            return redirect()->route('budgets.public.shared.view', ['token' => $token])
-                ->with('success', 'Compartilhamento rejeitado com sucesso.');
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Erro ao rejeitar compartilhamento: '.$e->getMessage());
-        }
-    }
-
-    /**
      * Lista todos os compartilhamentos do tenant
      */
     public function index(Request $request): View
@@ -118,8 +96,11 @@ class BudgetShareController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $selectedBudgetId = $request->query('budget_id');
+
         return view('pages.budget-share.create', [
             'budgets' => $budgets,
+            'selectedBudgetId' => $selectedBudgetId,
         ]);
     }
 
@@ -131,31 +112,24 @@ class BudgetShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        try {
-            $result = $this->budgetShareService->createShare([
-                'budget_id' => $request->input('budget_id'),
-                'expires_at' => $request->input('expires_at'),
-                'permissions' => $request->input('permissions', ['view']),
-                'notes' => $request->input('notes'),
-                'created_by' => $user->id,
-            ]);
+        $result = $this->budgetShareService->createShare([
+            'budget_id' => $request->input('budget_id'),
+            'expires_at' => $request->input('expires_at'),
+            'permissions' => $request->input('permissions', ['view']),
+            'notes' => $request->input('notes'),
+            'created_by' => $user->id,
+        ]);
 
-            if ($result->isSuccess()) {
-                return $this->redirectSuccess(
-                    'provider.budgets.shares.index',
-                    'Compartilhamento criado com sucesso!'
-                );
-            }
-
-            return redirect()->back()
-                ->withInput()
-                ->with('error', $this->getServiceErrorMessage($result, 'Erro ao criar compartilhamento'));
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erro ao criar compartilhamento: '.$e->getMessage());
+        if ($result->isSuccess()) {
+            return $this->redirectSuccess(
+                'provider.budgets.shares.index',
+                'Compartilhamento criado com sucesso!'
+            );
         }
+
+        return redirect()->back()
+            ->withInput()
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao criar compartilhamento'));
     }
 
     /**
@@ -169,7 +143,7 @@ class BudgetShareController extends Controller
         $result = $this->budgetShareService->find($id);
 
         if (! $result->isSuccess()) {
-            return $this->redirectWithError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
+            return $this->redirectError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
         }
 
         return view('pages.budget-share.show', [
@@ -189,7 +163,7 @@ class BudgetShareController extends Controller
         $result = $this->budgetShareService->find($id);
 
         if (! $result->isSuccess()) {
-            return $this->redirectWithError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
+            return $this->redirectError('provider.budget-shares.index', $this->getServiceErrorMessage($result, 'Compartilhamento não encontrado'));
         }
 
         // Obtém orçamentos disponíveis
@@ -213,27 +187,20 @@ class BudgetShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        try {
-            $result = $this->budgetShareService->update($id, [
-                'budget_id' => $request->input('budget_id'),
-                'expires_at' => $request->input('expires_at'),
-                'permissions' => $request->input('permissions', ['view']),
-                'notes' => $request->input('notes'),
-                'status' => $request->input('status', 'active'),
-                'updated_by' => $user->id,
-            ]);
+        $result = $this->budgetShareService->update($id, [
+            'budget_id' => $request->input('budget_id'),
+            'expires_at' => $request->input('expires_at'),
+            'permissions' => $request->input('permissions', ['view']),
+            'notes' => $request->input('notes'),
+            'status' => $request->input('status', 'active'),
+            'updated_by' => $user->id,
+        ]);
 
-            return $this->redirectWithServiceResult(
-                'provider.budget-shares.index',
-                $result,
-                'Compartilhamento atualizado com sucesso!'
-            );
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erro ao atualizar compartilhamento: '.$e->getMessage());
-        }
+        return $this->redirectWithServiceResult(
+            'provider.budget-shares.index',
+            $result,
+            'Compartilhamento atualizado com sucesso!'
+        );
     }
 
     /**
@@ -244,19 +211,13 @@ class BudgetShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        try {
-            $result = $this->budgetShareService->revokeShare($id);
+        $result = $this->budgetShareService->revokeShare($id);
 
-            return $this->redirectWithServiceResult(
-                'provider.budget-shares.index',
-                $result,
-                'Compartilhamento revogado com sucesso!'
-            );
-
-        } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Erro ao revogar compartilhamento: '.$e->getMessage());
-        }
+        return $this->redirectWithServiceResult(
+            'provider.budget-shares.index',
+            $result,
+            'Compartilhamento revogado com sucesso!'
+        );
     }
 
     /**
@@ -264,28 +225,21 @@ class BudgetShareController extends Controller
      */
     public function access(Request $request, string $token): View
     {
-        try {
-            $result = $this->budgetShareService->validateAccess($token);
+        $result = $this->budgetShareService->validateAccess($token);
 
-            if (! $result->isSuccess()) {
-                return view('pages.budget-share.invalid', [
-                    'error' => $this->getServiceErrorMessage($result, 'Link de compartilhamento inválido ou expirado'),
-                ]);
-            }
-
-            $shareData = $result->getData();
-
-            return view('pages.budget-share.public', [
-                'budget' => $shareData['budget'],
-                'budgetShare' => $shareData['share'],
-                'permissions' => $shareData['permissions'],
-            ]);
-
-        } catch (\Exception $e) {
+        if (! $result->isSuccess()) {
             return view('pages.budget-share.invalid', [
-                'error' => 'Erro ao acessar orçamento compartilhado',
+                'error' => $this->getServiceErrorMessage($result, 'Link de compartilhamento inválido ou expirado'),
             ]);
         }
+
+        $shareData = $result->getData();
+
+        return view('pages.budget-share.public', [
+            'budget' => $shareData['budget'],
+            'budgetShare' => $shareData['share'],
+            'permissions' => $shareData['permissions'],
+        ]);
     }
 
     /**
@@ -296,35 +250,138 @@ class BudgetShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        try {
-            $result = $this->budgetShareService->renewToken((int) $id);
+        $result = $this->budgetShareService->renewToken((int) $id);
 
-            return $this->jsonResponse($result);
-
-        } catch (\Exception $e) {
-            return $this->jsonError('Erro ao regenerar token: '.$e->getMessage());
-        }
+        return $this->jsonResponse($result);
     }
 
     /**
      * Aprova um orçamento via compartilhamento
      */
-    public function approve(string $token): RedirectResponse
+    public function approve(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        try {
-            $result = $this->budgetShareService->approveBudget($token);
+        $result = $this->budgetShareService->approveBudget($token);
 
-            if ($result->isSuccess()) {
-                return redirect()->route('budget-share.access', $token)
-                    ->with('success', 'Orçamento aprovado com sucesso!');
-            }
-
-            return redirect()->route('budget-share.access', $token)
-                ->with('error', $this->getServiceErrorMessage($result, 'Erro ao aprovar orçamento'));
-
-        } catch (\Exception $e) {
-            return redirect()->route('budget-share.access', $token)
-                ->with('error', 'Erro ao aprovar orçamento: '.$e->getMessage());
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
         }
+
+        if ($result->isSuccess()) {
+            return redirect()->route('budgets.public.shared.view', $token)
+                ->with('success', 'Orçamento aprovado com sucesso!');
+        }
+
+        return redirect()->route('budgets.public.shared.view', $token)
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao aprovar orçamento'));
+    }
+
+    /**
+     * Rejeita um orçamento via compartilhamento
+     */
+    public function reject(string $token, Request $request): JsonResponse|RedirectResponse
+    {
+        $result = $this->budgetShareService->rejectBudget($token);
+
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
+        }
+
+        if ($result->isSuccess()) {
+            return redirect()->route('budgets.public.shared.view', $token)
+                ->with('success', 'Orçamento rejeitado com sucesso!');
+        }
+
+        return redirect()->route('budgets.public.shared.view', $token)
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao rejeitar orçamento'));
+    }
+
+    /**
+     * Cancela um orçamento via compartilhamento
+     */
+    public function cancel(string $token, Request $request): JsonResponse|RedirectResponse
+    {
+        $result = $this->budgetShareService->cancelBudget($token);
+
+        if ($request->expectsJson()) {
+            return $this->jsonResponse($result);
+        }
+
+        if ($result->isSuccess()) {
+            return redirect()->route('budgets.public.shared.view', $token)
+                ->with('success', 'Orçamento cancelado com sucesso!');
+        }
+
+        return redirect()->route('budgets.public.shared.view', $token)
+            ->with('error', $this->getServiceErrorMessage($result, 'Erro ao cancelar orçamento'));
+    }
+
+    /**
+     * Adiciona um comentário ao orçamento
+     */
+    public function addComment(string $token, Request $request): JsonResponse
+    {
+        $request->validate([
+            'comment' => 'required|string|max:1000',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+
+        $result = $this->budgetShareService->addComment($token, $request->only(['comment', 'name', 'email']));
+
+        return $this->jsonResponse($result);
+    }
+
+    /**
+     * Download do PDF do orçamento via compartilhamento
+     */
+    public function downloadPdf(string $token, Request $request)
+    {
+        $result = $this->budgetShareService->validateAccess($token);
+
+        if (! $result->isSuccess()) {
+            abort(403, 'Acesso negado ou link expirado.');
+        }
+
+        $shareData = $result->getData();
+        $budget = $shareData['budget'];
+        $share = $shareData['share'];
+
+        // Carregar relações necessárias para o PDF
+        $budget->load([
+            'customer.commonData',
+            'customer.contact',
+            'customer.address',
+            'services.serviceItems',
+            'services.category',
+        ]);
+
+        // Obter dados do prestador (dono do orçamento)
+        $provider = $budget->tenant->provider()->with(['commonData', 'contact', 'address', 'businessData'])->first();
+
+        $html = view('pages.budget.pdf_budget', compact('budget', 'provider'))->render();
+
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 12,
+            'margin_right' => 12,
+            'margin_top' => 14,
+            'margin_bottom' => 14,
+            'margin_header' => 8,
+            'margin_footer' => 8,
+        ]);
+
+        $mpdf->SetHeader('Orçamento #'.$budget->code.'||Gerado em: '.now()->format('d/m/Y'));
+        $mpdf->SetFooter('Página {PAGENO} de {nb}|Acesso Público via Link Seguro|'.config('app.url'));
+
+        $mpdf->WriteHTML($html);
+
+        $filename = "orcamento_{$budget->code}.pdf";
+        $content = $mpdf->Output('', 'S');
+
+        return response($content, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+        ]);
     }
 }

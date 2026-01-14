@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Abstracts\Controller;
@@ -12,7 +14,7 @@ use Illuminate\View\View;
 class ConfirmablePasswordController extends Controller
 {
     /**
-     * Show the confirm password view.
+     * Mostrar a tela de confirmação de senha.
      */
     public function show(): View
     {
@@ -20,7 +22,7 @@ class ConfirmablePasswordController extends Controller
     }
 
     /**
-     * Confirm the user's password.
+     * Confirmar a senha do usuário.
      */
     public function store(Request $request): RedirectResponse
     {

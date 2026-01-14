@@ -17,13 +17,12 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        return [ 
-            'tenant_id'  => Tenant::factory(),
-            'email'      => $this->faker->unique()->safeEmail,
-            'password'   => bcrypt( 'password' ),
-            'is_active'  => $this->faker->boolean,
-            'logo'       => $this->faker->imageUrl,
+        return [
+            'tenant_id' => Tenant::factory(),
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => bcrypt('password'),
+            'is_active' => $this->faker->boolean,
+            'logo' => $this->faker->imageUrl,
         ];
     }
-
 }

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Schedule\ScheduleDTO;
+use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Models\Schedule;
 use App\Repositories\Abstracts\AbstractTenantRepository;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -17,126 +20,158 @@ class ScheduleRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Schedule();
+        return new Schedule;
     }
 
     /**
      * Get the latest schedule for a specific service.
-     *
-     * @param int $serviceId
-     * @return Schedule|null
      */
-    public function findLatestByServiceId( int $serviceId ): ?Schedule
+    public function findLatestByServiceId(int $serviceId): ?Schedule
     {
         return $this->model
-            ->where( 'service_id', $serviceId )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->where('service_id', $serviceId)
             ->latest()
             ->first();
     }
 
     /**
      * Get schedules by service ID with pagination.
-     *
-     * @param int $serviceId
-     * @param int $perPage
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getByServiceIdPaginated( int $serviceId, int $perPage = 15 )
+    public function getByServiceIdPaginated(int $serviceId, int $perPage = 15)
     {
         return $this->model
-            ->where( 'service_id', $serviceId )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
+            ->where('service_id', $serviceId)
             ->latest()
-            ->paginate( $perPage );
+            ->paginate($perPage);
     }
 
     /**
      * Get upcoming schedules for a tenant.
-     *
-     * @param int $limit
-     * @return Collection
      */
-    public function getUpcomingSchedules( int $limit = 10 ): Collection
+    public function getUpcomingSchedules(int $limit = 10): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->where( 'start_date_time', '>', now() )
-            ->with( [ 'service', 'service.customer' ] )
-            ->orderBy( 'start_date_time', 'asc' )
-            ->limit( $limit )
+            ->where('start_date_time', '>', now())
+            ->with(['service', 'service.customer'])
+            ->orderBy('start_date_time', 'asc')
+            ->limit($limit)
             ->get();
     }
 
     /**
      * Get schedules for a specific date range.
-     *
-     * @param string $startDate
-     * @param string $endDate
-     * @return Collection
      */
-    public function getByDateRange( string $startDate, string $endDate ): Collection
+    public function getByDateRange(string $startDate, string $endDate): Collection
     {
         return $this->model
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->whereBetween( 'start_date_time', [ $startDate, $endDate ] )
-            ->with( [ 'service', 'service.customer' ] )
-            ->orderBy( 'start_date_time', 'asc' )
+            ->whereBetween('start_date_time', [$startDate, $endDate])
+            ->with(['service', 'service.customer'])
+            ->orderBy('start_date_time', 'asc')
             ->get();
     }
 
     /**
-     * Check for scheduling conflicts.
-     *
-     * @param int $serviceId
-     * @param string $startDateTime
-     * @param string $endDateTime
-     * @param int|null $excludeId
-     * @return bool
+     * Get schedules by date range with relations.
      */
-    public function hasConflict( int $serviceId, string $startDateTime, string $endDateTime, ?int $excludeId = null ): bool
+    public function getByDateRangeWithRelations(string $startDate, string $endDate, array $filters = []): Collection
     {
         $query = $this->model
-            ->where( 'service_id', $serviceId )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->where( function ( Builder $query ) use ( $startDateTime, $endDateTime ) {
-                $query->where( function ( Builder $q ) use ( $startDateTime, $endDateTime ) {
-                    $q->where( 'start_date_time', '<', $endDateTime )
-                        ->where( 'end_date_time', '>', $startDateTime );
-                } );
-            } );
+            ->whereBetween('start_date_time', [$startDate, $endDate])
+            ->with(['service', 'service.customer', 'confirmationToken']);
 
-        if ( $excludeId ) {
-            $query->where( 'id', '!=', $excludeId );
+        $this->applyAllScheduleFilters($query, $filters);
+
+        return $query->orderBy('start_date_time', 'asc')->get();
+    }
+
+    /**
+     * Verifica conflitos de horário.
+     */
+    public function hasConflict(string $startTime, string $endTime, ?int $serviceId = null, ?int $excludeScheduleId = null): bool
+    {
+        $query = $this->model
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($q) use ($startTime, $endTime) {
+                $q->where('start_date_time', '<', $endTime)
+                    ->where('end_date_time', '>', $startTime);
+            });
+
+        if ($serviceId) {
+            $query->where('service_id', $serviceId);
+        }
+
+        if ($excludeScheduleId) {
+            $query->where('id', '!=', $excludeScheduleId);
         }
 
         return $query->exists();
     }
 
     /**
-     * Create a new schedule.
-     *
-     * @param array $data
-     * @return Schedule
+     * Busca eventos de hoje.
      */
-    public function create( array $data ): Schedule
+    public function getTodayEvents(int $limit = 5): Collection
     {
-        $data[ 'tenant_id' ] = $this->getCurrentTenantId();
-        return $this->model->create( $data );
+        return $this->model
+            ->whereDate('start_date_time', now()->toDateString())
+            ->with(['service', 'service.customer'])
+            ->orderBy('start_date_time', 'asc')
+            ->limit($limit)
+            ->get();
     }
 
     /**
-     * Delete a schedule.
-     *
-     * @param int $id
-     * @return bool
+     * Obtém estatísticas de agendamentos.
      */
-    public function delete( int $id ): bool
+    public function getStats(): array
     {
-        return $this->model
-            ->where( 'id', $id )
-            ->where( 'tenant_id', $this->getCurrentTenantId() )
-            ->delete();
+        return [
+            'total' => $this->model->count(),
+            'upcoming' => $this->model->where('status', '!=', 'cancelled')->where('start_date_time', '>=', now())->count(),
+            'today' => $this->model->whereDate('start_date_time', now()->toDateString())->count(),
+            'by_status' => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
+        ];
     }
 
+    /**
+     * Get recent upcoming schedules with relations.
+     */
+    public function getRecentUpcoming(int $limit = 10): Collection
+    {
+        return $this->model
+            ->where('status', '!=', 'cancelled')
+            ->where('start_date_time', '>=', now()->subDays(1))
+            ->orderBy('start_date_time')
+            ->limit($limit)
+            ->with(['service.customer', 'service'])
+            ->get();
+    }
+
+    /**
+     * Aplica todos os filtros de agendamento.
+     */
+    protected function applyAllScheduleFilters(Builder $query, array $filters): void
+    {
+        // Filtro de busca
+        if (! empty($filters['location'])) {
+            $query->where('location', 'like', '%'.$filters['location'].'%');
+        }
+
+        // Filtros básicos
+        $basicFilters = array_intersect_key($filters, array_flip(['service_id', 'status']));
+        $this->applyFilters($query, $basicFilters);
+
+        // Filtro de soft delete
+        $this->applySoftDeleteFilter($query, $filters);
+    }
+
+    public function createFromDTO(ScheduleDTO $dto): Model
+    {
+        return $this->create($dto->toArrayWithoutNulls());
+    }
+
+    public function updateFromDTO(int $id, ScheduleUpdateDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
+    }
 }

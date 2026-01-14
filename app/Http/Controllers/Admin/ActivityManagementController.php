@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\ActivitiesExport;
 use App\Http\Controllers\Abstracts\Controller;
-use App\Models\Activity;
+use App\Models\AreaOfActivity;
 use App\Models\Category;
 use App\Models\Tenant;
 use App\Services\Shared\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -38,7 +39,7 @@ class ActivityManagementController extends Controller
         $sortOrder = $request->get('sort_order', 'asc');
         $perPage = $request->get('per_page', 25);
 
-        $query = Activity::with(['category', 'tenant'])
+        $query = AreaOfActivity::with(['category', 'tenant'])
             ->withCount(['products', 'services']);
 
         if ($search) {
@@ -69,7 +70,7 @@ class ActivityManagementController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'type']);
 
-        $activityTypes = Activity::select('type')
+        $activityTypes = AreaOfActivity::select('type')
             ->distinct()
             ->pluck('type')
             ->filter()
@@ -137,10 +138,8 @@ class ActivityManagementController extends Controller
             'requirements' => 'nullable|string|max:1000',
         ]);
 
-        try {
-            DB::beginTransaction();
-
-            $activity = new Activity;
+        $activity = DB::transaction(function () use ($validated) {
+            $activity = new AreaOfActivity;
             $activity->fill($validated);
 
             if (empty($validated['code'])) {
@@ -152,32 +151,21 @@ class ActivityManagementController extends Controller
 
             $this->cacheService->forgetPattern('activities.*');
 
-            DB::commit();
+            return $activity;
+        });
 
-            Log::info('Activity created', [
-                'activity_id' => $activity->id,
-                'name' => $activity->name,
-                'category_id' => $activity->category_id,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity created', [
+            'activity_id' => $activity->id,
+            'name' => $activity->name,
+            'category_id' => $activity->category_id,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.activities.index')
-                ->with('success', 'Atividade criada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating activity', [
-                'error' => $e->getMessage(),
-                'data' => $validated,
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->withInput()
-                ->with('error', 'Erro ao criar atividade. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.activities.index')
+            ->with('success', 'Atividade criada com sucesso!');
     }
 
-    public function show(Activity $activity): View
+    public function show(AreaOfActivity $activity): View
     {
         $this->authorize('manage-activities');
 
@@ -200,7 +188,7 @@ class ActivityManagementController extends Controller
         ));
     }
 
-    public function edit(Activity $activity): View
+    public function edit(AreaOfActivity $activity): View
     {
         $this->authorize('manage-activities');
 
@@ -224,7 +212,7 @@ class ActivityManagementController extends Controller
         ));
     }
 
-    public function update(Request $request, Activity $activity): RedirectResponse
+    public function update(Request $request, AreaOfActivity $activity): RedirectResponse
     {
         $this->authorize('manage-activities');
 
@@ -287,7 +275,7 @@ class ActivityManagementController extends Controller
         }
     }
 
-    public function destroy(Activity $activity): JsonResponse
+    public function destroy(AreaOfActivity $activity): JsonResponse
     {
         $this->authorize('manage-activities');
 
@@ -305,115 +293,74 @@ class ActivityManagementController extends Controller
             ], 422);
         }
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $activityName = $activity->name;
-            $activity->delete();
+        $activityName = $activity->name;
+        $activity->delete();
 
-            $this->cacheService->forgetPattern('activities.*');
+        $this->cacheService->forgetPattern('activities.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Activity deleted', [
-                'activity_name' => $activityName,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity deleted', [
+            'activity_name' => $activityName,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Atividade excluída com sucesso!',
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting activity', [
-                'activity_id' => $activity->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao excluir atividade. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Atividade excluída com sucesso!',
+        ]);
     }
 
-    public function toggleStatus(Activity $activity): JsonResponse
+    public function toggleStatus(AreaOfActivity $activity): JsonResponse
     {
         $this->authorize('manage-activities');
 
-        try {
-            $activity->is_active = ! $activity->is_active;
-            $activity->save();
+        $activity->is_active = ! $activity->is_active;
+        $activity->save();
 
-            $this->cacheService->forgetPattern('activities.*');
+        $this->cacheService->forgetPattern('activities.*');
 
-            Log::info('Activity status toggled', [
-                'activity_id' => $activity->id,
-                'name' => $activity->name,
-                'new_status' => $activity->is_active ? 'active' : 'inactive',
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity status toggled', [
+            'activity_id' => $activity->id,
+            'name' => $activity->name,
+            'new_status' => $activity->is_active ? 'active' : 'inactive',
+            'admin_id' => auth()->id(),
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Status alterado com sucesso!',
-                'is_active' => $activity->is_active,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error toggling activity status', [
-                'activity_id' => $activity->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao alterar status. Por favor, tente novamente.',
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Status alterado com sucesso!',
+            'is_active' => $activity->is_active,
+        ]);
     }
 
-    public function duplicate(Activity $activity): RedirectResponse
+    public function duplicate(AreaOfActivity $activity): RedirectResponse
     {
         $this->authorize('manage-activities');
 
-        try {
-            DB::beginTransaction();
+        DB::beginTransaction();
 
-            $newActivity = $activity->replicate();
-            $newActivity->name = $activity->name.' (Cópia)';
-            $newActivity->code = $this->generateUniqueCode($newActivity->name);
-            $newActivity->slug = $this->generateUniqueSlug($newActivity->name);
-            $newActivity->is_active = false;
-            $newActivity->save();
+        $newActivity = $activity->replicate();
+        $newActivity->name = $activity->name.' (Cópia)';
+        $newActivity->code = $this->generateUniqueCode($newActivity->name);
+        $newActivity->slug = $this->generateUniqueSlug($newActivity->name);
+        $newActivity->is_active = false;
+        $newActivity->save();
 
-            $this->cacheService->forgetPattern('activities.*');
+        $this->cacheService->forgetPattern('activities.*');
 
-            DB::commit();
+        DB::commit();
 
-            Log::info('Activity duplicated', [
-                'original_activity_id' => $activity->id,
-                'new_activity_id' => $newActivity->id,
-                'admin_id' => auth()->id(),
-            ]);
+        Log::info('Activity duplicated', [
+            'original_activity_id' => $activity->id,
+            'new_activity_id' => $newActivity->id,
+            'admin_id' => auth()->id(),
+        ]);
 
-            return redirect()->route('admin.activities.edit', $newActivity)
-                ->with('success', 'Atividade duplicada com sucesso!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error duplicating activity', [
-                'activity_id' => $activity->id,
-                'error' => $e->getMessage(),
-                'admin_id' => auth()->id(),
-            ]);
-
-            return back()->with('error', 'Erro ao duplicar atividade. Por favor, tente novamente.');
-        }
+        return redirect()->route('admin.activities.edit', $newActivity)
+            ->with('success', 'Atividade duplicada com sucesso!');
     }
 
     public function export(Request $request)
@@ -426,7 +373,7 @@ class ActivityManagementController extends Controller
         $type = $request->get('type');
         $status = $request->get('status');
 
-        $query = Activity::with(['category', 'tenant'])
+        $query = AreaOfActivity::with(['category', 'tenant'])
             ->withCount(['products', 'services']);
 
         if ($search) {
@@ -469,7 +416,7 @@ class ActivityManagementController extends Controller
         $categoryId = $request->get('category_id');
         $excludeId = $request->get('exclude_id');
 
-        $query = Activity::where('category_id', $categoryId)
+        $query = AreaOfActivity::where('category_id', $categoryId)
             ->where('is_active', true)
             ->orderBy('name');
 
@@ -488,7 +435,7 @@ class ActivityManagementController extends Controller
 
         $activityId = $request->get('activity_id');
 
-        $activity = Activity::find($activityId, ['id', 'name', 'price', 'cost', 'duration', 'unit']);
+        $activity = AreaOfActivity::find($activityId, ['id', 'name', 'price', 'cost', 'duration', 'unit']);
 
         if (! $activity) {
             return response()->json([
@@ -515,7 +462,7 @@ class ActivityManagementController extends Controller
         $counter = 1;
 
         while (true) {
-            $query = Activity::where('code', $code);
+            $query = AreaOfActivity::where('code', $code);
 
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
@@ -539,7 +486,7 @@ class ActivityManagementController extends Controller
         $counter = 1;
 
         while (true) {
-            $query = Activity::where('slug', $slug);
+            $query = AreaOfActivity::where('slug', $slug);
 
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
@@ -560,22 +507,22 @@ class ActivityManagementController extends Controller
     {
         return Cache::remember('admin.activities.statistics', 300, function () {
             return [
-                'total' => Activity::count(),
-                'active' => Activity::where('is_active', true)->count(),
-                'inactive' => Activity::where('is_active', false)->count(),
-                'with_products' => Activity::has('products')->count(),
-                'with_services' => Activity::has('services')->count(),
-                'by_type' => Activity::select('type', DB::raw('count(*) as count'))
+                'total' => AreaOfActivity::count(),
+                'active' => AreaOfActivity::where('is_active', true)->count(),
+                'inactive' => AreaOfActivity::where('is_active', false)->count(),
+                'with_products' => AreaOfActivity::has('products')->count(),
+                'with_services' => AreaOfActivity::has('services')->count(),
+                'by_type' => AreaOfActivity::select('type', DB::raw('count(*) as count'))
                     ->groupBy('type')
                     ->pluck('count', 'type')
                     ->toArray(),
-                'avg_price' => Activity::where('price', '>', 0)->avg('price') ?? 0,
-                'avg_cost' => Activity::where('cost', '>', 0)->avg('cost') ?? 0,
+                'avg_price' => AreaOfActivity::where('price', '>', 0)->avg('price') ?? 0,
+                'avg_cost' => AreaOfActivity::where('cost', '>', 0)->avg('cost') ?? 0,
             ];
         });
     }
 
-    protected function getActivityDetailedStatistics(Activity $activity): array
+    protected function getActivityDetailedStatistics(AreaOfActivity $activity): array
     {
         return [
             'total_products' => $activity->products()->count(),
@@ -598,7 +545,7 @@ class ActivityManagementController extends Controller
         ];
     }
 
-    protected function getRecentActivityRecords(Activity $activity)
+    protected function getRecentActivityRecords(AreaOfActivity $activity)
     {
         $products = $activity->products()
             ->with(['tenant', 'category'])

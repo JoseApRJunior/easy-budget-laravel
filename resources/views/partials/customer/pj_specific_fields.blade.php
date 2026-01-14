@@ -80,8 +80,8 @@
 
 <div class="mb-3">
   <label for="company_website" class="form-label">Website</label>
-  <input type="url" class="form-control @error( 'company_website' ) is-invalid @enderror" id="company_website"
-    name="company_website" value="{{ old( 'company_website', $customer->company_website ?? '' ) }}">
+  <input type="text" class="form-control @error( 'company_website' ) is-invalid @enderror" id="company_website"
+    name="company_website" value="{{ old( 'company_website', $customer->company_website ?? '' ) }}" placeholder="ex: www.site.com.br">
   @error( 'company_website' )
     <div class="invalid-feedback">{{ $message }}</div>
   @enderror

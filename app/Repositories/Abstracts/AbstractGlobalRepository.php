@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Repositories\Abstracts;
@@ -21,7 +22,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * Implementa diretamente BaseRepositoryInterface e GlobalRepositoryInterface
  * sem herança desnecessária, promovendo menor acoplamento e maior flexibilidade.
  *
- * @package App\Repositories\Abstracts
  *
  * @example Exemplo de implementação concreta:
  * ```php
@@ -38,7 +38,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  *     }
  * }
  * ```
- *
  * @example Uso típico em um Controller:
  * ```php
  * class CategoryController extends Controller
@@ -83,11 +82,11 @@ abstract class AbstractGlobalRepository implements BaseRepositoryInterface, Glob
     /**
      * {@inheritdoc}
      */
-    public function find( int $id ): ?Model
+    public function find(int $id): ?Model
     {
         try {
-            return $this->model->findOrFail( $id );
-        } catch ( ModelNotFoundException $e ) {
+            return $this->model->findOrFail($id);
+        } catch (ModelNotFoundException $e) {
             return null;
         }
     }
@@ -103,34 +102,35 @@ abstract class AbstractGlobalRepository implements BaseRepositoryInterface, Glob
     /**
      * {@inheritdoc}
      */
-    public function create( array $data ): Model
+    public function create(array $data): Model
     {
-        return $this->model->create( $data );
+        return $this->model->create($data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function update( int $id, array $data ): ?Model
+    public function update(int $id, array $data): ?Model
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (! $model) {
             return null;
         }
 
-        $model->update( $data );
+        $model->update($data);
+
         return $model->fresh();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function delete( int $id ): bool
+    public function delete(int $id): bool
     {
-        $model = $this->find( $id );
+        $model = $this->find($id);
 
-        if ( !$model ) {
+        if (! $model) {
             return false;
         }
 
@@ -144,9 +144,9 @@ abstract class AbstractGlobalRepository implements BaseRepositoryInterface, Glob
     /**
      * {@inheritdoc}
      */
-    public function findGlobal( int $id ): ?Model
+    public function findGlobal(int $id): ?Model
     {
-        return $this->find( $id );
+        return $this->find($id);
     }
 
     /**
@@ -161,17 +161,17 @@ abstract class AbstractGlobalRepository implements BaseRepositoryInterface, Glob
         $query = $this->model->newQuery();
 
         // Aplica filtros usando trait
-        $this->applyFilters( $query, $criteria );
+        $this->applyFilters($query, $criteria);
 
         // Aplica ordenação usando trait
-        $this->applyOrderBy( $query, $orderBy );
+        $this->applyOrderBy($query, $orderBy);
 
         // Aplica paginação manual
-        if ( $offset !== null ) {
-            $query->offset( $offset );
+        if ($offset !== null) {
+            $query->offset($offset);
         }
-        if ( $limit !== null ) {
-            $query->limit( $limit );
+        if ($limit !== null) {
+            $query->limit($limit);
         }
 
         return $query->get();
@@ -184,51 +184,50 @@ abstract class AbstractGlobalRepository implements BaseRepositoryInterface, Glob
     /**
      * {@inheritdoc}
      */
-    public function createGlobal( array $data ): Model
+    public function createGlobal(array $data): Model
     {
-        return $this->create( $data );
+        return $this->create($data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function updateGlobal( int $id, array $data ): ?Model
+    public function updateGlobal(int $id, array $data): ?Model
     {
-        return $this->update( $id, $data );
+        return $this->update($id, $data);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function deleteGlobal( int $id ): bool
+    public function deleteGlobal(int $id): bool
     {
-        return $this->delete( $id );
+        return $this->delete($id);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function paginateGlobal( int $perPage = 15, array $filters = [] ): LengthAwarePaginator
+    public function paginateGlobal(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $query = $this->model->newQuery();
 
         // Aplica filtros usando trait
-        $this->applyFilters( $query, $filters );
+        $this->applyFilters($query, $filters);
 
-        return $query->paginate( $perPage );
+        return $query->paginate($perPage);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function countGlobal( array $filters = [] ): int
+    public function countGlobal(array $filters = []): int
     {
         $query = $this->model->newQuery();
 
         // Aplica filtros usando trait
-        $this->applyFilters( $query, $filters );
+        $this->applyFilters($query, $filters);
 
         return $query->count();
     }
-
 }

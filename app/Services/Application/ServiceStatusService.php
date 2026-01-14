@@ -22,15 +22,11 @@ use App\Support\ServiceResult;
  * - Validar se um status é válido
  * - Obter metadados dos status (nome, cor, ícone, etc.)
  * - Gerenciar transições de status
- *
- * @package App\Services
  */
 class ServiceStatusService
 {
     /**
      * Obtém todos os status de serviço disponíveis.
-     *
-     * @return array
      */
     public function getAllStatuses(): array
     {
@@ -39,128 +35,111 @@ class ServiceStatusService
 
     /**
      * Obtém um status específico pelo seu valor.
-     *
-     * @param string $value
-     * @return ServiceStatus|null
      */
-    public function getStatusByValue( string $value ): ?ServiceStatus
+    public function getStatusByValue(string $value): ?ServiceStatus
     {
-        return ServiceStatus::tryFrom( $value );
+        return ServiceStatus::tryFrom($value);
     }
 
     /**
      * Verifica se um valor de status é válido.
-     *
-     * @param string $value
-     * @return bool
      */
-    public function isValidStatus( string $value ): bool
+    public function isValidStatus(string $value): bool
     {
-        return ServiceStatus::tryFrom( $value ) !== null;
+        return ServiceStatus::tryFrom($value) !== null;
     }
 
     /**
      * Obtém os metadados de um status específico.
-     *
-     * @param string $value
-     * @return ServiceResult
      */
-    public function getStatusMetadata( string $value ): ServiceResult
+    public function getStatusMetadata(string $value): ServiceResult
     {
-        $status = $this->getStatusByValue( $value );
+        $status = $this->getStatusByValue($value);
 
-        if ( $status === null ) {
-            return $this->error( "Status inválido: {$value}" );
+        if ($status === null) {
+            return $this->error("Status inválido: {$value}");
         }
 
-        return $this->success( [
-            'value'       => $status->value,
-            'name'        => $status->getDescription(),
-            'color'       => $status->getColor(),
-            'icon'        => $status->getIcon(),
+        return $this->success([
+            'value' => $status->value,
+            'name' => $status->getDescription(),
+            'color' => $status->getColor(),
+            'icon' => $status->getIcon(),
             'order_index' => 0,
-            'is_active'   => $status->isActive(),
-        ], 'Metadados do status obtidos com sucesso' );
+            'is_active' => $status->isActive(),
+        ], 'Metadados do status obtidos com sucesso');
     }
 
     /**
      * Obtém todas as opções de status formatadas para uso em selects/forms.
-     *
-     * @return array
      */
     public function getStatusOptions(): array
     {
         $options = [];
-        foreach ( ServiceStatus::cases() as $status ) {
-            $options[ $status->value ] = [
+        foreach (ServiceStatus::cases() as $status) {
+            $options[$status->value] = [
                 'value' => $status->value,
                 'label' => $status->getDescription(),
                 'color' => $status->getColor(),
-                'icon'  => $status->getIcon(),
+                'icon' => $status->getIcon(),
             ];
         }
+
         return $options;
     }
 
     /**
      * Retorna transições permitidas para um status
      */
-    public function getAllowedTransitions( string $currentStatus ): ServiceResult
+    public function getAllowedTransitions(string $currentStatus): ServiceResult
     {
-        $status = ServiceStatus::tryFrom( $currentStatus );
+        $status = ServiceStatus::tryFrom($currentStatus);
 
-        if ( !$status ) {
-            return $this->error( 'Status atual inválido', [ 'status' => $currentStatus ] );
+        if (! $status) {
+            return $this->error('Status atual inválido', ['status' => $currentStatus]);
         }
 
-        $transitions = ServiceStatus::getAllowedTransitions( $status->value );
+        $transitions = ServiceStatus::getAllowedTransitions($status->value);
 
-        return $this->success( $transitions, 'Transições permitidas recuperadas' );
+        return $this->success($transitions, 'Transições permitidas recuperadas');
     }
 
     /**
      * Verifica se uma transição é permitida
      */
-    public function canTransitionTo( string $currentStatus, string $targetStatus ): ServiceResult
+    public function canTransitionTo(string $currentStatus, string $targetStatus): ServiceResult
     {
-        $current = ServiceStatus::tryFrom( $currentStatus );
-        $target  = ServiceStatus::tryFrom( $targetStatus );
+        $current = ServiceStatus::tryFrom($currentStatus);
+        $target = ServiceStatus::tryFrom($targetStatus);
 
-        if ( !$current || !$target ) {
-            return $this->error( 'Status inválido', [
+        if (! $current || ! $target) {
+            return $this->error('Status inválido', [
                 'current' => $currentStatus,
-                'target'  => $targetStatus
-            ] );
+                'target' => $targetStatus,
+            ]);
         }
 
-        $transitions   = ServiceStatus::getAllowedTransitions( $current->value );
-        $canTransition = in_array( $target->value, $transitions );
+        $transitions = ServiceStatus::getAllowedTransitions($current->value);
+        $canTransition = in_array($target->value, $transitions);
 
-        return $this->success( $canTransition, $canTransition ? 'Transição permitida' : 'Transição não permitida' );
+        return $this->success($canTransition, $canTransition ? 'Transição permitida' : 'Transição não permitida');
     }
 
     /**
      * Retorna um ServiceResult de sucesso.
      *
-     * @param mixed $data
-     * @param string $message
-     * @return ServiceResult
+     * @param  mixed  $data
      */
-    private function success( $data, string $message = 'Operação realizada com sucesso' ): ServiceResult
+    private function success($data, string $message = 'Operação realizada com sucesso'): ServiceResult
     {
-        return new ServiceResult( OperationStatus::SUCCESS, $message, $data );
+        return ServiceResult::success($data, $message);
     }
 
     /**
      * Retorna um ServiceResult de erro.
-     *
-     * @param string $message
-     * @param array $context
-     * @return ServiceResult
      */
-    private function error( string $message, array $context = [] ): ServiceResult
+    private function error(string $message, array $context = []): ServiceResult
     {
-        return new ServiceResult( OperationStatus::ERROR, $message, $context );
+        return ServiceResult::error(OperationStatus::ERROR, $message, $context);
     }
-
 }

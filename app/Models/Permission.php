@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Role;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Custom Permission model: global, aplicável a todos os tenants sem scoping por tenant_id.
@@ -38,10 +37,10 @@ class Permission extends Model
     ];
 
     protected $casts = [
-        'name'        => 'string',
+        'name' => 'string',
         'description' => 'string',
-        'created_at'  => 'immutable_datetime',
-        'updated_at'  => 'datetime',
+        'created_at' => 'immutable_datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -50,7 +49,7 @@ class Permission extends Model
     public static function businessRules(): array
     {
         return [
-            'name'        => 'required|string|max:255|unique:permissions,name',
+            'name' => 'required|string|max:255|unique:permissions,name',
             'description' => 'nullable|string|max:500',
         ];
     }
@@ -58,12 +57,10 @@ class Permission extends Model
     /**
      * Relationship com roles - global, sem tenant scoping.
      * Relação many-to-many usando tabela role_permissions com tenant_id para scoping em assignments.
-     *
-     * @return BelongsToMany
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany( Role::class, 'role_permissions' );
+        return $this->belongsToMany(Role::class, 'role_permissions');
     }
 
     /**
@@ -71,17 +68,16 @@ class Permission extends Model
      * Since user_permissions table doesn't exist, users are accessed via roles.
      * Assignments scoped por tenant through role assignments.
      *
-     * @return BelongsToMany
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function users(): User
+    public function users()
     {
-        return User::whereHas( 'roles', function ( $query ) {
-            $query->whereHas( 'permissions', function ( $query ) {
-                $query->where( 'permission_id', $this->id );
-            } );
-        } );
+        return User::whereHas('roles', function ($query) {
+            $query->whereHas('permissions', function ($query) {
+                $query->where('permission_id', $this->id);
+            });
+        });
     }
-
 }
 
 /**

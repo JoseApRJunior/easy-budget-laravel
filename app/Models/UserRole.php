@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Role;
-use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -37,9 +34,9 @@ class UserRole extends Pivot
      * @var array<string, string>
      */
     protected $casts = [
-        'user_id'    => 'integer',
-        'role_id'    => 'integer',
-        'tenant_id'  => 'integer',
+        'user_id' => 'integer',
+        'role_id' => 'integer',
+        'tenant_id' => 'integer',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -50,8 +47,8 @@ class UserRole extends Pivot
     public static function businessRules(): array
     {
         return [
-            'user_id'   => 'required|integer|exists:users,id',
-            'role_id'   => 'required|integer|exists:roles,id',
+            'user_id' => 'required|integer|exists:users,id',
+            'role_id' => 'required|integer|exists:roles,id',
             'tenant_id' => 'required|integer|exists:tenants,id',
         ];
     }
@@ -62,8 +59,8 @@ class UserRole extends Pivot
     public static function createRules(): array
     {
         return [
-            'user_id'   => 'required|integer|exists:users,id',
-            'role_id'   => 'required|integer|exists:roles,id',
+            'user_id' => 'required|integer|exists:users,id',
+            'role_id' => 'required|integer|exists:roles,id',
             'tenant_id' => 'required|integer|exists:tenants,id',
         ];
     }
@@ -74,8 +71,8 @@ class UserRole extends Pivot
     public static function updateRules(): array
     {
         return [
-            'user_id'   => 'required|integer|exists:users,id',
-            'role_id'   => 'required|integer|exists:roles,id',
+            'user_id' => 'required|integer|exists:users,id',
+            'role_id' => 'required|integer|exists:roles,id',
             'tenant_id' => 'required|integer|exists:tenants,id',
         ];
     }
@@ -92,7 +89,7 @@ class UserRole extends Pivot
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo( User::class);
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -100,7 +97,7 @@ class UserRole extends Pivot
      */
     public function role(): BelongsTo
     {
-        return $this->belongsTo( Role::class);
+        return $this->belongsTo(Role::class);
     }
 
     /**
@@ -108,13 +105,13 @@ class UserRole extends Pivot
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
      * Verifica se esta atribuição de role está ativa para o tenant especificado.
      */
-    public function isActiveForTenant( int $tenantId ): bool
+    public function isActiveForTenant(int $tenantId): bool
     {
         return $this->tenant_id === $tenantId;
     }
@@ -122,25 +119,24 @@ class UserRole extends Pivot
     /**
      * Scope para buscar UserRoles por tenant.
      */
-    public function scopeForTenant( $query, int $tenantId )
+    public function scopeForTenant($query, int $tenantId)
     {
-        return $query->where( 'tenant_id', $tenantId );
+        return $query->where('tenant_id', $tenantId);
     }
 
     /**
      * Scope para buscar UserRoles por usuário.
      */
-    public function scopeForUser( $query, int $userId )
+    public function scopeForUser($query, int $userId)
     {
-        return $query->where( 'user_id', $userId );
+        return $query->where('user_id', $userId);
     }
 
     /**
      * Scope para buscar UserRoles por role.
      */
-    public function scopeForRole( $query, int $roleId )
+    public function scopeForRole($query, int $roleId)
     {
-        return $query->where( 'role_id', $roleId );
+        return $query->where('role_id', $roleId);
     }
-
 }

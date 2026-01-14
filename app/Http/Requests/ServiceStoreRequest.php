@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\ServiceStatus;
+use App\Models\Budget;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ServiceStoreRequest extends FormRequest
@@ -13,6 +14,51 @@ class ServiceStoreRequest extends FormRequest
     public function authorize(): bool
     {
         return \Illuminate\Support\Facades\Auth::check();
+    }
+
+    /**
+     * Prepara os dados para validação.
+     */
+    protected function prepareForValidation(): void
+    {
+        // due_date: converter dd/mm/aaaa para yyyy-mm-dd e tratar vazio
+        if (isset($this->due_date)) {
+            $due = trim((string) $this->due_date);
+            if ($due === '') {
+                $this->merge(['due_date' => null]);
+            } else {
+                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $due, $m)) {
+                    $iso = $m[3].'-'.str_pad($m[2], 2, '0', STR_PAD_LEFT).'-'.str_pad($m[1], 2, '0', STR_PAD_LEFT);
+                    $this->merge(['due_date' => $iso]);
+                }
+            }
+        }
+
+        // Normalizar itens: remover máscara BRL de unit_value e garantir número
+        if (is_array($this->items ?? null)) {
+            $items = $this->items;
+            foreach ($items as $i => $item) {
+                if (isset($item['unit_value'])) {
+                    $items[$i]['unit_value'] = \App\Helpers\CurrencyHelper::unformat($item['unit_value']);
+                }
+                if (isset($item['quantity'])) {
+                    $items[$i]['quantity'] = (float) $item['quantity'];
+                }
+            }
+            $this->merge(['items' => $items]);
+        }
+
+        if ($this->has('discount')) {
+            $this->merge([
+                'discount' => \App\Helpers\CurrencyHelper::unformat($this->discount),
+            ]);
+        }
+
+        if ($this->has('total')) {
+            $this->merge([
+                'total' => \App\Helpers\CurrencyHelper::unformat($this->total),
+            ]);
+        }
     }
 
     /**
@@ -74,6 +120,26 @@ class ServiceStoreRequest extends FormRequest
     }
 
     /**
+     * Validação adicional após regras padrão (skill: budget-lifecycle-rules).
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->any()) {
+                return;
+            }
+
+            $budgetId = $this->input('budget_id');
+
+            // Verificar se orçamento está editável
+            $budget = Budget::find($budgetId);
+            if ($budget && ! $budget->canBeEdited()) {
+                $validator->errors()->add('budget_id', 'Este orçamento não pode mais receber serviços porque está com status '.$budget->status->label().'. Orçamentos só podem ser editados quando estão em rascunho ou rejeitados.');
+            }
+        });
+    }
+
+    /**
      * Retorna os dados validados e processados para uso no service.
      *
      * @return array<string, mixed>
@@ -85,46 +151,5 @@ class ServiceStoreRequest extends FormRequest
         unset($data['service_statuses_id']);
 
         return $data;
-    }
-
-    /**
-     * Normaliza dados antes da validação (datas e valores mascarados).
-     */
-    protected function prepareForValidation(): void
-    {
-        // due_date: converter dd/mm/aaaa para yyyy-mm-dd e tratar vazio
-        if (isset($this->due_date)) {
-            $due = trim((string) $this->due_date);
-            if ($due === '') {
-                $this->merge(['due_date' => null]);
-            } else {
-                if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $due, $m)) {
-                    $iso = $m[3].'-'.str_pad($m[2], 2, '0', STR_PAD_LEFT).'-'.str_pad($m[1], 2, '0', STR_PAD_LEFT);
-                    $this->merge(['due_date' => $iso]);
-                }
-            }
-        }
-
-        // Normalizar itens: remover máscara BRL de unit_value e garantir número
-        if (is_array($this->items ?? null)) {
-            $items = $this->items;
-            foreach ($items as $i => $item) {
-                if (isset($item['unit_value'])) {
-                    $digits = preg_replace('/\D/', '', (string) $item['unit_value']);
-                    $num = ((int) ($digits ?: '0')) / 100;
-                    $items[$i]['unit_value'] = $num;
-                }
-                if (isset($item['quantity'])) {
-                    $items[$i]['quantity'] = (float) $item['quantity'];
-                }
-            }
-            $this->merge(['items' => $items]);
-        }
-
-        if (isset($this->discount)) {
-            $digits = preg_replace('/\D/', '', (string) $this->discount);
-            $num = ((int) ($digits ?: '0')) / 100;
-            $this->merge(['discount' => $num]);
-        }
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\DTOs\Provider\ProviderDTO;
 use App\Models\Provider;
 use App\Models\User;
 use App\Repositories\Abstracts\AbstractTenantRepository;
@@ -22,59 +23,242 @@ class ProviderRepository extends AbstractTenantRepository
      */
     protected function makeModel(): Model
     {
-        return new Provider();
+        return new Provider;
     }
 
     /**
-     * Busca provedor por ID de usuário dentro do tenant atual.
-     *
-     * @param int $userId
-     * @return Provider|null
+     * Cria um novo provider a partir de um DTO.
      */
-    public function findByUserId( int $userId ): ?Provider
+    public function createFromDTO(ProviderDTO $dto): Provider
     {
-        return $this->model->where( 'user_id', $userId )->first();
+        return $this->create($dto->toArray());
+    }
+
+    /**
+     * Atualiza um provider a partir de um DTO.
+     */
+    public function updateFromDTO(int $id, ProviderDTO $dto): ?Model
+    {
+        return $this->update($id, $dto->toArrayWithoutNulls());
+    }
+
+    /**
+     * Busca provedor por user_id dentro do tenant atual.
+     */
+    public function findByUserId(int $userId): ?Provider
+    {
+        return $this->model->newQuery()->where('user_id', $userId)->first();
     }
 
     /**
      * Busca provedor por slug dentro do tenant atual.
-     *
-     * @param string $slug
-     * @return Provider|null
      */
-    public function findBySlug( string $slug ): ?Provider
+    public function findBySlug(string $slug, bool $withTrashed = false): ?Provider
     {
-        return $this->findByTenantAndSlug( $slug );
+        $query = $this->model->newQuery()->where('slug', $slug);
+
+        if ($withTrashed) {
+            $query->withTrashed();
+        }
+
+        return $query->first();
     }
 
     /**
-     * Busca Provider por user_id com tenant específico.
+     * Busca Provider por user_id dentro do tenant atual.
      */
-    public function findByUserIdAndTenant( int $userId, int $tenantId ): ?Provider
+    public function findByUserIdWithRelations(int $userId): ?Provider
     {
-        return Provider::where( 'user_id', $userId )
-            ->where( 'tenant_id', $tenantId )
-            ->with( [ 'user', 'commonData', 'contact', 'address', 'businessData' ] )
+        return $this->model->newQuery()
+            ->where('user_id', $userId)
+            ->with(['user', 'commonData', 'contact', 'address', 'businessData'])
             ->first();
     }
 
     /**
      * Verifica disponibilidade de email.
      */
-    public function isEmailAvailable( string $email, int $excludeUserId, int $tenantId ): bool
+    public function isEmailAvailable(string $email, int $excludeUserId): bool
     {
-        return !User::where( 'email', $email )
-            ->where( 'tenant_id', $tenantId )
-            ->where( 'id', '!=', $excludeUserId )
+        return ! User::query()
+            ->where('email', $email)
+            ->where('id', '!=', $excludeUserId)
             ->exists();
     }
 
     /**
-     * Busca Provider com relacionamentos específicos.
+     * Busca Provider com relacionamentos específicos, bypassando o escopo de tenant.
+     * Útil para operações administrativas globais.
      */
-    public function findWithRelations( int $providerId, array $relations = [] ): ?Provider
+    public function findGlobalWithRelations(int $providerId, array $relations = []): ?Provider
     {
-        return Provider::with( $relations )->find( $providerId );
+        return $this->model->newQuery()
+            ->withoutGlobalScopes()
+            ->with($relations)
+            ->find($providerId);
     }
 
+    /**
+     * Busca Provider com relacionamentos específicos dentro do escopo do tenant.
+     */
+    public function findWithRelations(int $providerId, array $relations = []): ?Provider
+    {
+        return $this->model->with($relations)->find($providerId);
+    }
+
+    /**
+     * Obtém estatísticas do dashboard para o provider.
+     */
+    public function getDashboardStats(): array
+    {
+        return [
+            'total_customers' => \App\Models\Customer::query()->count(),
+            'total_budgets' => \App\Models\Budget::query()->count(),
+            'total_invoices' => \App\Models\Invoice::query()->count(),
+            'total_services' => \App\Models\Service::query()->count(),
+        ];
+    }
+
+    /**
+     * Busca provedores para a área administrativa com filtros.
+     * Bypassa o escopo de tenant se necessário.
+     */
+    public function getAdminPaginated(array $filters = [], int $perPage = 25): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = $this->model->newQuery()
+            ->withoutGlobalScopes() // Bypassa o escopo de tenant para administradores
+            ->with(['tenant', 'user', 'commonData', 'address', 'planSubscriptions.plan'])
+            ->withCount(['customers', 'budgets', 'services', 'invoices']);
+
+        if (isset($filters['search']) && ! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                // Busca no usuário associado
+                $q->whereHas('user', function ($uq) use ($search) {
+                    $uq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })
+                    // Busca nos dados comuns
+                    ->orWhereHas('commonData', function ($cq) use ($search) {
+                        $cq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%")
+                            ->orWhere('cpf', 'like', "%{$search}%")
+                            ->orWhere('cnpj', 'like', "%{$search}%");
+                    })
+                    // Busca nos contatos
+                    ->orWhereHas('contact', function ($conq) use ($search) {
+                        $conq->where('email_personal', 'like', "%{$search}%")
+                            ->orWhere('phone_personal', 'like', "%{$search}%")
+                            ->orWhere('email_business', 'like', "%{$search}%")
+                            ->orWhere('phone_business', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if (isset($filters['status']) && $filters['status'] !== 'all') {
+            $query->whereHas('user', function ($q) use ($filters) {
+                $q->where('is_active', $filters['status'] === 'active');
+            });
+        }
+
+        if (isset($filters['tenant_id']) && ! empty($filters['tenant_id'])) {
+            $query->where('tenant_id', $filters['tenant_id']);
+        }
+
+        if (isset($filters['plan_id']) && ! empty($filters['plan_id'])) {
+            $query->where('plan_id', $filters['plan_id']);
+        }
+
+        $sortBy = $filters['sort_by'] ?? 'name';
+        $sortOrder = $filters['sort_order'] ?? 'asc';
+
+        return $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+    }
+
+    /**
+     * Obtém estatísticas globais de provedores para o admin.
+     */
+    public function getGlobalStatistics(): array
+    {
+        return [
+            'total' => $this->model->withoutGlobalScopes()->count(),
+            'active' => $this->model->withoutGlobalScopes()->where('is_active', true)->count(),
+            'inactive' => $this->model->withoutGlobalScopes()->where('is_active', false)->count(),
+            'with_customers' => $this->model->withoutGlobalScopes()->has('customers')->count(),
+            'with_budgets' => $this->model->withoutGlobalScopes()->has('budgets')->count(),
+            'with_services' => $this->model->withoutGlobalScopes()->has('services')->count(),
+            'with_invoices' => $this->model->withoutGlobalScopes()->has('invoices')->count(),
+            'by_tenant' => $this->model->withoutGlobalScopes()
+                ->select('tenant_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+                ->groupBy('tenant_id')
+                ->with('tenant:id,name')
+                ->get(),
+            'by_plan' => $this->model->withoutGlobalScopes()
+                ->select('plan_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+                ->groupBy('plan_id')
+                ->with('plan:id,name')
+                ->get(),
+        ];
+    }
+
+    /**
+     * Busca provedores ativos do tenant com filtro de pesquisa.
+     */
+    public function getActiveWithSearch(?string $search = null): array
+    {
+        $query = $this->model->newQuery()
+            ->whereHas('user', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->with(['commonData', 'contact', 'user'])
+            ->orderBy('id');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                // User
+                $q->whereHas('user', function ($uq) use ($search) {
+                    $uq->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })
+                    // CommonData
+                    ->orWhereHas('commonData', function ($cq) use ($search) {
+                        $cq->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('company_name', 'like', "%{$search}%")
+                            ->orWhere('cpf', 'like', "%{$search}%")
+                            ->orWhere('cnpj', 'like', "%{$search}%");
+                    })
+                    // Contact
+                    ->orWhereHas('contact', function ($conq) use ($search) {
+                        $conq->where('email_personal', 'like', "%{$search}%")
+                            ->orWhere('phone_personal', 'like', "%{$search}%")
+                            ->orWhere('email_business', 'like', "%{$search}%")
+                            ->orWhere('phone_business', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->get()->map(function ($provider) {
+            $name = $provider->commonData?->company_name
+                ?? ($provider->commonData ? "{$provider->commonData->first_name} {$provider->commonData->last_name}" : $provider->user?->name);
+
+            $email = $provider->contact?->email_business
+                ?? $provider->contact?->email_personal
+                ?? $provider->user?->email;
+
+            $phone = $provider->contact?->phone_business
+                ?? $provider->contact?->phone_personal;
+
+            $document = $provider->commonData?->cnpj ?? $provider->commonData?->cpf;
+
+            return [
+                'id' => $provider->id,
+                'name' => trim($name),
+                'email' => $email,
+                'phone' => $phone,
+                'document' => $document,
+            ];
+        })->toArray();
+    }
 }

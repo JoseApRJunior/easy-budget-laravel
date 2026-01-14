@@ -3,34 +3,18 @@
 @section('title', 'Dashboard de Compartilhamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-share-fill me-2"></i>Dashboard de Compartilhamentos
-                </h1>
-                <p class="text-muted mb-0">
-                    Visão geral dos compartilhamentos de orçamentos com métricas de acesso e performance.
-                </p>
-            </div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.budgets.index') }}">Orçamentos</a>
-                    </li>
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('provider.budgets.shares.index') }}">Compartilhamentos</a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        Dashboard
-                    </li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dashboard de Compartilhamentos"
+            icon="share-fill"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('provider.budgets.index'),
+                'Compartilhamentos' => route('provider.budgets.shares.index'),
+                'Dashboard' => '#'
+            ]">
+            <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         @php
             $totalShares = $stats['total_shares'] ?? 0;
@@ -131,9 +115,12 @@
                         <h5 class="mb-0">
                             <i class="bi bi-clock-history me-2"></i>Compartilhamentos Recentes
                         </h5>
-                        <a href="{{ route('provider.budgets.shares.index') }}" class="btn btn-sm btn-outline-primary">
+                        <x-ui.button 
+                            href="{{ route('provider.budgets.shares.index') }}" 
+                            variant="primary" 
+                            size="sm">
                             Ver todos
-                        </a>
+                        </x-ui.button>
                     </div>
                     <div class="card-body">
                         @if ($recentShares instanceof \Illuminate\Support\Collection && $recentShares->isNotEmpty())
@@ -206,10 +193,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('provider.budgets.shares.show', $share->id) }}"
-                                                        class="btn btn-sm btn-outline-secondary">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
+                                                    <x-ui.button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="info" size="sm" icon="eye" title="Visualizar Orçamento" />
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -307,25 +291,16 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.shares.create') }}" class="btn btn-success w-100">
-                                    <i class="bi bi-plus-circle me-2"></i>Novo Compartilhamento
-                                </a>
+                                <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Compartilhamento" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.shares.index') }}"
-                                    class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-list me-2"></i>Gerenciar Compartilhamentos
-                                </a>
+                                <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="primary" outline icon="list" label="Gerenciar Compartilhamentos" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.budgets.index') }}" class="btn btn-outline-secondary w-100">
-                                    <i class="bi bi-file-earmark-text me-2"></i>Ver Orçamentos
-                                </a>
+                                <x-ui.button type="link" :href="route('provider.budgets.index')" variant="secondary" outline icon="file-earmark-text" label="Ver Orçamentos" class="w-100" />
                             </div>
                             <div class="col-md-3">
-                                <a href="{{ route('provider.reports.budgets') }}" class="btn btn-outline-info w-100">
-                                    <i class="bi bi-graph-up me-2"></i>Relatórios
-                                </a>
+                                <x-ui.button type="link" :href="route('provider.reports.budgets')" variant="info" outline icon="graph-up" label="Relatórios" class="w-100" />
                             </div>
                         </div>
                     </div>

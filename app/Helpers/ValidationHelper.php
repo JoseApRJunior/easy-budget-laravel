@@ -12,7 +12,7 @@ class ValidationHelper
     public static function isValidCpf(?string $cpf): bool
     {
         if (empty($cpf)) {
-            return false;
+            return true;
         }
 
         $cpf = preg_replace('/[^0-9]/', '', $cpf);
@@ -41,7 +41,7 @@ class ValidationHelper
     public static function isValidCnpj(?string $cnpj): bool
     {
         if (empty($cnpj)) {
-            return false;
+            return true;
         }
 
         $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
@@ -50,64 +50,22 @@ class ValidationHelper
             return false;
         }
 
-        $length = strlen($cnpj) - 2;
-        $numbers = substr($cnpj, 0, $length);
-        $digits = substr($cnpj, $length);
-        $sum = 0;
-        $pos = $length - 7;
+        $base = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
 
-        for ($i = $length; $i >= 1; $i--) {
-            $sum += $numbers[$length - $i] * $pos--;
-            if ($pos < 2) {
-                $pos = 9;
+        for ($t = 12; $t < 14; $t++) {
+            $d = 0;
+            $c = 0;
+            for ($i = (13 - $t); $i < 13; $i++) {
+                $d += $cnpj[$c] * $base[$i];
+                $c++;
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ($cnpj[$c] != $d) {
+                return false;
             }
         }
 
-        $result = $sum % 11 < 2 ? 0 : 11 - $sum % 11;
-
-        if ($result != $digits[0]) {
-            return false;
-        }
-
-        $length = $length + 1;
-        $numbers = substr($cnpj, 0, $length);
-        $sum = 0;
-        $pos = $length - 7;
-
-        for ($i = $length; $i >= 1; $i--) {
-            $sum += $numbers[$length - $i] * $pos--;
-            if ($pos < 2) {
-                $pos = 9;
-            }
-        }
-
-        $result = $sum % 11 < 2 ? 0 : 11 - $sum % 11;
-
-        return $result == $digits[1];
-    }
-
-    /**
-     * Valida CEP.
-     */
-    public static function isValidCep(?string $cep): bool
-    {
-        if (empty($cep)) {
-            return false;
-        }
-
-        return preg_match('/^\d{5}-?\d{3}$/', $cep) === 1;
-    }
-
-    /**
-     * Valida email.
-     */
-    public static function isValidEmail(?string $email): bool
-    {
-        if (empty($email)) {
-            return false;
-        }
-
-        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+        return true;
     }
 
     /**
@@ -116,58 +74,36 @@ class ValidationHelper
     public static function isValidPhone(?string $phone): bool
     {
         if (empty($phone)) {
-            return false;
+            return true;
         }
 
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
-        // Aceita: (11) 98888-8888, (11) 8888-8888, 11988888888, 1188888888
-        return strlen($phone) >= 10 && strlen($phone) <= 11;
+        // Telefones brasileiros têm 10 ou 11 dígitos
+        if (strlen($phone) < 10 || strlen($phone) > 11) {
+            return false;
+        }
+
+        // Não permite números repetidos (ex.: 1111111111)
+        if (preg_match('/^(\d)\1+$/', $phone)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
-     * Valida data de nascimento (deve ser anterior a hoje e pessoa maior de 18 anos).
+     * Valida CEP brasileiro.
      */
-    public static function isValidBirthDate(?string $birthDate, int $minAge = 18): bool
+    public static function isValidCep(?string $cep): bool
     {
-        if (empty($birthDate)) {
-            return false;
+        if (empty($cep)) {
+            return true;
         }
 
-        try {
-            // Usa DateHelper para converter a data para formato padrão
-            $parsedDate = DateHelper::parseBirthDate($birthDate);
-            if ($parsedDate === null) {
-                return false;
-            }
+        $cep = preg_replace('/[^0-9]/', '', $cep);
 
-            $date = \Carbon\Carbon::parse($parsedDate);
-            $today = \Carbon\Carbon::today();
-
-            // Deve ser anterior a hoje
-            if ($date >= $today) {
-                return false;
-            }
-
-            // Verifica idade mínima (data de nascimento até hoje)
-            $age = $date->diffInYears($today);
-
-            return $age >= $minAge;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    /**
-     * Valida URL.
-     */
-    public static function isValidUrl(?string $url): bool
-    {
-        if (empty($url)) {
-            return false;
-        }
-
-        return filter_var($url, FILTER_VALIDATE_URL) !== false;
+        return strlen($cep) === 8;
     }
 
     /**
@@ -220,7 +156,7 @@ class ValidationHelper
     }
 
     /**
-     * Formata telefone brasileiro.
+     * Formata telefone ( (00) 00000-0000 ou (00) 0000-0000 ).
      */
     public static function formatPhone(?string $phone): ?string
     {

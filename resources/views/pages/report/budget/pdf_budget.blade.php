@@ -11,27 +11,54 @@
                 <!-- Coluna da Esquerda - Informações da Empresa -->
                 <td style="width: 50%; vertical-align: top;">
                     <div class="company-info">
-                        <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
-                            {{ auth()->user()->company_name }}
-                        </h2>
-                        <div class="company-details">
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">➤</span>
-                                <span>{{ auth()->user()->address }}</span>
+                        @if($provider && $provider->commonData)
+                            <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
+                                {{ $provider->commonData->company_name ?: ($provider->commonData->first_name . ' ' . $provider->commonData->last_name) }}
+                            </h2>
+                            <div class="company-details">
+                                @if($provider->address)
+                                    <div style="margin-bottom: 5px; font-size: 11px;">
+                                        <span style="margin-right: 8px;">➤</span>
+                                        <span>
+                                            {{ $provider->address->street }}, {{ $provider->address->number }}
+                                            @if($provider->address->complement) - {{ $provider->address->complement }} @endif
+                                            <br>
+                                            {{ $provider->address->neighborhood }} - {{ $provider->address->city }}/{{ $provider->address->state }}
+                                        </span>
+                                    </div>
+                                @endif
+                                <div style="margin-bottom: 5px; font-size: 11px;">
+                                    <span style="margin-right: 8px;">⚑</span>
+                                    <span>
+                                        @if($provider->commonData->cnpj)
+                                            CNPJ: {{ \App\Helpers\DocumentHelper::formatCnpj($provider->commonData->cnpj) }}
+                                        @elseif($provider->commonData->cpf)
+                                            CPF: {{ \App\Helpers\DocumentHelper::formatCpf($provider->commonData->cpf) }}
+                                        @endif
+                                    </span>
+                                </div>
+                                @if($provider->contact)
+                                    <div style="margin-bottom: 5px; font-size: 11px;">
+                                        <span style="margin-right: 8px;">☎</span>
+                                        <span>{{ $provider->contact->phone_personal ?: $provider->contact->phone_business }}</span>
+                                    </div>
+                                    <div style="margin-bottom: 5px; font-size: 11px;">
+                                        <span style="margin-right: 8px;">✉</span>
+                                        <span>{{ $provider->contact->email_personal ?: $provider->contact->email_business }}</span>
+                                    </div>
+                                @endif
                             </div>
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">⚑</span>
-                                <span>@if(auth()->user()->cnpj)CNPJ: {{ auth()->user()->cnpj }}@else CPF: {{ auth()->user()->cpf }}@endif</span>
+                        @else
+                            <h2 style="font-size: 24px; margin-bottom: 15px; color: #2c3e50;">
+                                {{ auth()->user()->name }}
+                            </h2>
+                            <div class="company-details">
+                                <div style="margin-bottom: 5px; font-size: 11px;">
+                                    <span style="margin-right: 8px;">✉</span>
+                                    <span>{{ auth()->user()->email }}</span>
+                                </div>
                             </div>
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">☎</span>
-                                <span>@if(auth()->user()->phone_business){{ auth()->user()->phone_business }}@else{{ auth()->user()->phone }}@endif</span>
-                            </div>
-                            <div style="margin-bottom: 5px; font-size: 11px;">
-                                <span style="margin-right: 8px;">✉</span>
-                                <span>@if(auth()->user()->email_business){{ auth()->user()->email_business }}@else{{ auth()->user()->email }}@endif</span>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </td>
                 <!-- Coluna da Direita - Informações do Relatório -->
@@ -101,7 +128,7 @@
                         {{ \Carbon\Carbon::parse($budget->due_date)->format('d/m/Y') }}
                     </td>
                     <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">R$
-                        {{ number_format($budget->total, 2, ',', '.') }}
+                        {{ \App\Helpers\CurrencyHelper::format($budget->total) }}
                     </td>
                     <td style="width: 15%; text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
                         <span style="color: {{ $budget->color }} !important; border-bottom: 2px solid {{ $budget->color }} !important;">
@@ -117,7 +144,7 @@
                         <strong>Total:</strong>
                     </td>
                     <td style="text-align: right; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;">
-                        <strong>R$ {{ number_format($totals['sum'], 2, ',', '.') }}</strong>
+                        <strong>{{ \App\Helpers\CurrencyHelper::format($totals['sum']) }}</strong>
                     </td>
                     <td style="text-align: left; padding: 8px; font-size: 11px; border-bottom: 1px solid #dee2e6;"></td>
                 </tr>
@@ -137,11 +164,11 @@
                 </td>
                 <td style="width: 33.33%; text-align: center;">
                     <span style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Valor Total:</span>
-                    <span style="font-size: 14px; font-weight: bold; color: #333;">R$ {{ number_format($totals['sum'], 2, ',', '.') }}</span>
+                    <span style="font-size: 14px; font-weight: bold; color: #333;">{{ \App\Helpers\CurrencyHelper::format($totals['sum']) }}</span>
                 </td>
                 <td style="width: 33.33%; text-align: center;">
                     <span style="display: block; font-size: 11px; color: #666; margin-bottom: 5px;">Média por Orçamento:</span>
-                    <span style="font-size: 14px; font-weight: bold; color: #333;">R$ {{ number_format($totals['avg'], 2, ',', '.') }}</span>
+                    <span style="font-size: 14px; font-weight: bold; color: #333;">{{ \App\Helpers\CurrencyHelper::format($totals['avg']) }}</span>
                 </td>
             </tr>
         </table>

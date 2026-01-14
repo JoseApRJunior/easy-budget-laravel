@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class BudgetAttachment extends Model
 {
@@ -133,7 +135,7 @@ class BudgetAttachment extends Model
     public function incrementDownloadCount(): bool
     {
         $this->increment('download_count');
-        $this->last_downloaded_at = now();
+        $this->last_downloaded_at = Carbon::now();
 
         return $this->save();
     }

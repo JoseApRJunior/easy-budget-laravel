@@ -3,24 +3,19 @@
 @section('title', 'Agendamentos')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-calendar-check me-2"></i>
-                    Agendamentos
-                </h1>
-                <p class="text-muted">Lista de agendamentos do sistema</p>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Agendamentos"
+            icon="calendar-check"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Agendamentos' => '#'
+            ]">
+            <div class="d-flex gap-2">
+                <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="secondary" icon="calendar3" label="Ver Calendário" />
+                <x-ui.button type="link" :href="route('provider.schedules.create')" variant="primary" icon="plus-circle" label="Novo Agendamento" />
             </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.schedules.index') }}">Agendamentos</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Listar</li>
-                </ol>
-            </nav>
-        </div>
+        </x-layout.page-header>
 
         <div class="row">
             <div class="col-12">
@@ -207,27 +202,19 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <div class="action-btn-group">
-                                                        <a href="{{ route('provider.schedules.show', $schedule->id) }}"
-                                                            class="action-btn action-btn-view" title="Visualizar">
-                                                            <i class="bi bi-eye-fill"></i>
-                                                        </a>
+                                                    <div class="d-flex justify-content-center gap-1">
+                                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                                         @php($canEdit = true)
                                                         @php($canDelete = true)
                                                         @if ($canEdit)
-                                                            <a href="{{ route('provider.schedules.edit', $schedule->id) }}"
-                                                                class="action-btn action-btn-edit" title="Editar">
-                                                                <i class="bi bi-pencil-fill"></i>
-                                                            </a>
+                                                            <x-ui.button type="link" :href="route('provider.schedules.edit', $schedule->id)" variant="primary" size="sm" icon="pencil" title="Editar" />
                                                         @endif
                                                         @if ($canDelete)
-                                                            <button type="button" class="action-btn action-btn-delete"
+                                                            <x-ui.button type="button" variant="danger" size="sm" icon="trash"
                                                                 data-bs-toggle="modal" data-bs-target="#deleteModal"
                                                                 data-delete-url="{{ route('provider.schedules.destroy', $schedule->id) }}"
                                                                 data-schedule-name="{{ $schedule->service->description ?? $schedule->service->code }}"
-                                                                title="Excluir">
-                                                                <i class="bi bi-trash-fill"></i>
-                                                            </button>
+                                                                title="Excluir" />
                                                         @endif
                                                     </div>
                                                 </td>

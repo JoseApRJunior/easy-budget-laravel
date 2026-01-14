@@ -2,9 +2,20 @@
 
 @section( 'title', 'Status do Pagamento' )
 
-@section( 'content' )
-  <div class="container-fluid">
-    <div class="row justify-content-center">
+@section('content')
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Status do Pagamento"
+            icon="credit-card"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Planos' => route('provider.plans.index'),
+                'Status do Pagamento' => '#'
+            ]">
+            <p class="text-muted mb-0">Confira o status da sua transação</p>
+        </x-layout.page-header>
+
+        <div class="row justify-content-center">
       <div class="col-md-8">
         <div class="card">
           <div class="card-header">

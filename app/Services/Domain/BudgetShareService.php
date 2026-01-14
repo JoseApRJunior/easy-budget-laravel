@@ -4,96 +4,172 @@ declare(strict_types=1);
 
 namespace App\Services\Domain;
 
+use App\DTOs\Budget\BudgetShareDTO;
 use App\Enums\OperationStatus;
 use App\Models\Budget;
 use App\Models\BudgetShare;
+use App\Repositories\BudgetRepository;
 use App\Repositories\BudgetShareRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Services\Infrastructure\EmailService;
 use App\Support\ServiceResult;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 class BudgetShareService extends AbstractBaseService
 {
     public function __construct(
         private BudgetShareRepository $budgetShareRepository,
+        private BudgetRepository $budgetRepository,
         private EmailService $emailService,
     ) {
         parent::__construct($budgetShareRepository);
     }
 
     /**
-     * Rejeita um compartilhamento (recusa o acesso)
+     * Aprova o orçamento vinculado ao compartilhamento
      */
-    public function rejectShare(string $token): ServiceResult
+    public function approveBudget(string $token, ?string $comment = null): ServiceResult
     {
-        try {
-            $share = BudgetShare::where('share_token', $token)->first();
+        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::APPROVED, $comment);
+    }
 
-            if (!$share) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento não encontrado.');
-            }
+    /**
+     * Rejeita o orçamento vinculado ao compartilhamento
+     */
+    public function rejectBudget(string $token, ?string $comment = null): ServiceResult
+    {
+        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::REJECTED, $comment);
+    }
 
-            // Verifica se já está rejeitado
-            if ($share->status === 'rejected') {
-                return $this->error(OperationStatus::VALIDATION_ERROR, 'Compartilhamento já rejeitado.');
-            }
+    /**
+     * Cancela o orçamento vinculado ao compartilhamento
+     */
+    public function cancelBudget(string $token, ?string $comment = null): ServiceResult
+    {
+        return $this->updateBudgetStatus($token, \App\Enums\BudgetStatus::CANCELLED, $comment);
+    }
 
-            // Atualiza o status para rejeitado
-            $share->update([
-                'status' => 'rejected',
-                'is_active' => false,
-                'rejected_at' => now()
-            ]);
+    /**
+     * Atualiza o status do orçamento via token
+     */
+    private function updateBudgetStatus(string $token, \App\Enums\BudgetStatus $newStatus, ?string $comment = null): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token, $newStatus, $comment) {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($token, $newStatus, $comment) {
+                $share = $this->budgetShareRepository->findByToken($token);
+                $budget = null;
 
-            return $this->success($share, 'Compartilhamento rejeitado com sucesso.');
-        } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao rejeitar compartilhamento.', null, $e);
-        }
+                if (! $share) {
+                    // Fallback para public_token na tabela budgets
+                    $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
+                    if (! $budget) {
+                        return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                    }
+                } else {
+                    if (! $share->is_active) {
+                        return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                    }
+                    $budget = Budget::withoutGlobalScopes()->find($share->budget_id);
+                }
+
+                if (! $budget) {
+                    return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
+                }
+
+                // Atualiza o status do orçamento sem escopo global (ação do cliente)
+                $budget->update([
+                    'status' => $newStatus,
+                    'customer_comment' => $comment,
+                    'status_updated_at' => now(),
+                    'status_updated_by' => null, // Ação realizada pelo cliente (público)
+                ]);
+
+                // Marca o compartilhamento como concluído/rejeitado se for um compartilhamento real
+                if ($share) {
+                    $shareUpdateData = [
+                        'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED 
+                            ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                            : \App\Enums\BudgetShareStatus::REJECTED->value,
+                        'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? false : true,
+                    ];
+
+                    if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
+                        $shareUpdateData['rejected_at'] = now();
+                    }
+
+                    $share->update($shareUpdateData);
+                } else {
+                    // Se for fallback, limpa o token do orçamento apenas se aprovado
+                    if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
+                        $budget->update([
+                            'public_token' => null,
+                            'public_expires_at' => null,
+                        ]);
+                    }
+                }
+
+                // Registra no histórico de ações do orçamento
+                \App\Models\BudgetActionHistory::create([
+                    'tenant_id' => $budget->tenant_id,
+                    'budget_id' => $budget->id,
+                    'action' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'approved' : ($newStatus === \App\Enums\BudgetStatus::REJECTED ? 'rejected' : 'cancelled'),
+                    'old_status' => $budget->getOriginal('status'),
+                    'new_status' => $newStatus->value,
+                    'description' => $comment ?? ($newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado pelo cliente via link público.' : 'Orçamento rejeitado pelo cliente via link público.'),
+                    'metadata' => [
+                        'via' => 'public_share',
+                        'share_token' => $token,
+                        'customer_comment' => $comment,
+                    ],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+
+                $message = $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado com sucesso.' : 'Orçamento rejeitado com sucesso.';
+
+                return $this->success($budget, $message);
+            });
+        }, 'Erro ao atualizar status do orçamento.');
     }
 
     /**
      * Cria um novo compartilhamento de orçamento
      */
-    public function createShare(array $data): ServiceResult
+    public function createShare(array $data, bool $sendNotification = true): ServiceResult
     {
-        try {
+        return $this->safeExecute(function () use ($data, $sendNotification) {
             // Validações de negócio
             $validation = $this->validateShareData($data);
-            if (!$validation['valid']) {
+            if (! $validation['valid']) {
                 return $this->error(OperationStatus::VALIDATION_ERROR, $validation['message']);
             }
 
-            // Verifica se o orçamento existe e pertence ao tenant
-            $budget = Budget::where('id', $data['budget_id'])
-                ->where('tenant_id', $this->tenantId())
-                ->first();
+            // Verifica se o orçamento existe (tenant isolation via global scope)
+            $budget = $this->budgetRepository->find($data['budget_id']);
 
-            if (!$budget) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado ou não pertence ao tenant atual.');
+            if (! $budget) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
-            // Gera token único
+            // Prepara dados para o DTO
             $data['share_token'] = $this->generateUniqueToken();
-            $data['tenant_id'] = $this->tenantId();
             $data['is_active'] = true;
             $data['access_count'] = 0;
+            $data['status'] = \App\Enums\BudgetShareStatus::ACTIVE->value;
+
+            $dto = BudgetShareDTO::fromArray($data);
 
             // Cria o compartilhamento
-            $share = $this->create($data);
+            $share = $this->budgetShareRepository->createFromDTO($dto);
 
-            if (!$share->isSuccess()) {
-                return $share;
+            // Envia email de notificação apenas se solicitado
+            if ($sendNotification) {
+                $this->sendShareNotification($share, $budget);
             }
 
-            // Envia email de notificação
-            $this->sendShareNotification($share->getData(), $budget);
-
-            return $this->success($share->getData(), 'Compartilhamento criado com sucesso.');
-        } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao criar compartilhamento.', null, $e);
-        }
+            return $this->success($share, 'Compartilhamento criado com sucesso.');
+        }, 'Erro ao criar compartilhamento.');
     }
 
     /**
@@ -101,44 +177,102 @@ class BudgetShareService extends AbstractBaseService
      */
     public function validateAccess(string $token): ServiceResult
     {
-        try {
-            $share = BudgetShare::where('share_token', $token)
-                ->where('is_active', true)
-                ->where('tenant_id', $this->tenantId())
-                ->first();
+        return $this->safeExecute(function () use ($token) {
+            $share = $this->budgetShareRepository->findByToken($token);
 
-            if (!$share) {
-                return $this->error(OperationStatus::NOT_FOUND, 'Token de compartilhamento inválido ou inativo.');
+            // Fallback: Se não encontrar em budget_shares, procura no public_token da tabela budgets
+            if (! $share) {
+                $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
+
+                if ($budget) {
+                    // Verifica expiração do public_token
+                    if ($budget->public_expires_at && now()->gt($budget->public_expires_at)) {
+                        return $this->error(OperationStatus::EXPIRED, 'Este link de orçamento expirou.');
+                    }
+
+                    // Cria um objeto genérico de compartilhamento para manter a compatibilidade com a view
+                    $share = new BudgetShare([
+                        'budget_id' => $budget->id,
+                        'share_token' => $token,
+                        'permissions' => ['view', 'print', 'comment', 'approve'],
+                        'is_active' => true,
+                        'status' => \App\Enums\BudgetShareStatus::ACTIVE,
+                        'tenant_id' => $budget->tenant_id,
+                    ]);
+
+                    // Importante: Não salvar no banco aqui, apenas retornar o objeto em memória
+                }
             }
 
-            // Verifica expiração
-            if ($share->expires_at && now()->gt($share->expires_at)) {
-                $share->update(['is_active' => false]);
+            if (! $share) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Link de compartilhamento inválido ou expirado.');
+            }
+
+            // Garante que o orçamento está carregado sem escopo global para acesso público
+            $budget = $share->budget ?? Budget::withoutGlobalScopes()->find($share->budget_id);
+
+            // Verifica expiração para BudgetShare real
+            if ($share->id && $share->expires_at && now()->gt($share->expires_at)) {
+                $this->budgetShareRepository->update($share->id, ['is_active' => false, 'status' => \App\Enums\BudgetShareStatus::EXPIRED->value]);
+
                 return $this->error(OperationStatus::EXPIRED, 'Token de compartilhamento expirado.');
             }
 
-            // Incrementa contador de acesso
-            $share->increment('access_count');
-            $share->update(['last_accessed_at' => now()]);
+            // Incrementa contador de acesso se for um compartilhamento real (com ID)
+            if ($share->id) {
+                $this->budgetShareRepository->update($share->id, [
+                    'access_count' => $share->access_count + 1,
+                    'last_accessed_at' => now(),
+                ]);
+            }
 
-            // Carrega o orçamento com relacionamentos necessários
-            $budget = Budget::with(['customer', 'items', 'user'])
-                ->where('id', $share->budget_id)
-                ->where('tenant_id', $this->tenantId())
-                ->first();
+            // Carrega o orçamento com relacionamentos necessários se não tiver sido carregado no fallback
+            if (! isset($budget)) {
+                $budget = $this->budgetRepository->find($share->budget_id, [
+                    'tenant.provider.commonData',
+                    'tenant.provider.contact',
+                    'tenant.provider.address',
+                    'tenant.provider.businessData',
+                    'customer.commonData',
+                    'customer.contact',
+                    'customer.address',
+                    'services.serviceItems',
+                    'services.category',
+                ]);
+            } else {
+                $budget->load([
+                    'tenant.provider.commonData',
+                    'tenant.provider.contact',
+                    'tenant.provider.address',
+                    'tenant.provider.businessData',
+                    'customer.commonData',
+                    'customer.contact',
+                    'customer.address',
+                    'services.serviceItems',
+                    'services.category',
+                ]);
+            }
 
-            if (!$budget) {
+            if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
+
+            $rawPermissions = $share->permissions ?? ['view', 'print', 'comment', 'approve'];
+            $formattedPermissions = [
+                'can_view' => in_array('view', $rawPermissions),
+                'can_download' => in_array('print', $rawPermissions),
+                'can_print' => in_array('print', $rawPermissions),
+                'can_comment' => in_array('comment', $rawPermissions),
+                'can_approve' => in_array('approve', $rawPermissions),
+                'can_reject' => in_array('reject', $rawPermissions),
+            ];
 
             return $this->success([
                 'share' => $share,
                 'budget' => $budget,
-                'permissions' => $share->permissions ?? ['view'],
+                'permissions' => $formattedPermissions,
             ], 'Acesso válido.');
-        } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao validar acesso.', null, $e);
-        }
+        }, 'Erro ao validar acesso.');
     }
 
     /**
@@ -146,21 +280,17 @@ class BudgetShareService extends AbstractBaseService
      */
     public function revokeShare(int $shareId): ServiceResult
     {
-        try {
-            $share = BudgetShare::where('id', $shareId)
-                ->where('tenant_id', $this->tenantId())
-                ->first();
+        return $this->safeExecute(function () use ($shareId) {
+            $share = $this->budgetShareRepository->find($shareId);
 
-            if (!$share) {
+            if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento não encontrado.');
             }
 
-            $share->update(['is_active' => false]);
+            $this->budgetShareRepository->update($shareId, ['is_active' => false]);
 
             return $this->success($share, 'Compartilhamento revogado com sucesso.');
-        } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao revogar compartilhamento.', null, $e);
-        }
+        }, 'Erro ao revogar compartilhamento.');
     }
 
     /**
@@ -168,34 +298,21 @@ class BudgetShareService extends AbstractBaseService
      */
     public function getSharesByBudget(int $budgetId, array $filters = []): ServiceResult
     {
-        try {
-            // Verifica se o orçamento pertence ao tenant
-            $budget = Budget::where('id', $budgetId)
-                ->where('tenant_id', $this->tenantId())
-                ->first();
+        return $this->safeExecute(function () use ($budgetId) {
+            // Verifica se o orçamento existe
+            $budget = $this->budgetRepository->find($budgetId);
 
-            if (!$budget) {
+            if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
-            $query = BudgetShare::where('budget_id', $budgetId)
-                ->where('tenant_id', $this->tenantId());
-
-            // Aplica filtros adicionais
-            if (isset($filters['is_active'])) {
-                $query->where('is_active', $filters['is_active']);
-            }
-
-            if (isset($filters['recipient_email'])) {
-                $query->where('recipient_email', 'like', '%' . $filters['recipient_email'] . '%');
-            }
-
-            $shares = $query->orderBy('created_at', 'desc')->get();
+            $shares = $this->budgetShareRepository->listByBudget(
+                $budgetId,
+                ['created_at' => 'desc']
+            );
 
             return $this->success($shares, 'Compartilhamentos listados com sucesso.');
-        } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao listar compartilhamentos.', null, $e);
-        }
+        }, 'Erro ao listar compartilhamentos.');
     }
 
     /**
@@ -203,12 +320,10 @@ class BudgetShareService extends AbstractBaseService
      */
     public function renewToken(int $shareId, ?string $newExpiry = null): ServiceResult
     {
-        try {
-            $share = BudgetShare::where('id', $shareId)
-                ->where('tenant_id', $this->tenantId())
-                ->first();
+        return $this->safeExecute(function () use ($shareId, $newExpiry) {
+            $share = $this->budgetShareRepository->find($shareId);
 
-            if (!$share) {
+            if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento não encontrado.');
             }
 
@@ -216,18 +331,64 @@ class BudgetShareService extends AbstractBaseService
                 'share_token' => $this->generateUniqueToken(),
                 'access_count' => 0,
                 'last_accessed_at' => null,
+                'is_active' => true,
+                'status' => 'active',
             ];
 
             if ($newExpiry) {
                 $updateData['expires_at'] = $newExpiry;
             }
 
-            $share->update($updateData);
+            $this->budgetShareRepository->update($shareId, $updateData);
 
-            return $this->success($share, 'Token renovado com sucesso.');
-        } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao renovar token.', null, $e);
-        }
+            return $this->success($this->budgetShareRepository->find($shareId), 'Token renovado com sucesso.');
+        }, 'Erro ao renovar token.');
+    }
+
+    /**
+     * Adiciona um comentário a um orçamento via compartilhamento
+     */
+    public function addComment(string $token, array $data): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token, $data) {
+            $share = $this->budgetShareRepository->findByToken($token);
+            $budget = null;
+
+            if (! $share) {
+                // Fallback para public_token na tabela budgets
+                $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
+                if (! $budget || ($budget->public_expires_at && now()->gt($budget->public_expires_at))) {
+                    return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                }
+            } else {
+                if (! $share->is_active) {
+                    return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
+                }
+                $budget = Budget::withoutGlobalScopes()->find($share->budget_id);
+            }
+
+            if (! $budget) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
+            }
+
+            // Registra no histórico de ações do orçamento
+            \App\Models\BudgetActionHistory::create([
+                'tenant_id' => $budget->tenant_id,
+                'budget_id' => $budget->id,
+                'action' => 'comment',
+                'description' => $data['comment'] ?? '',
+                'metadata' => [
+                    'author_name' => $data['name'] ?? 'Cliente',
+                    'author_email' => $data['email'] ?? '',
+                    'via' => 'public_share',
+                    'share_token' => $token,
+                ],
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+
+            return $this->success(null, 'Comentário enviado com sucesso.');
+        }, 'Erro ao enviar comentário.');
     }
 
     /**
@@ -243,11 +404,11 @@ class BudgetShareService extends AbstractBaseService
             }
         }
 
-        if (!filter_var($data['recipient_email'], FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($data['recipient_email'], FILTER_VALIDATE_EMAIL)) {
             return ['valid' => false, 'message' => 'Email inválido.'];
         }
 
-        if (isset($data['expires_at']) && !strtotime($data['expires_at'])) {
+        if (isset($data['expires_at']) && ! strtotime($data['expires_at'])) {
             return ['valid' => false, 'message' => 'Data de expiração inválida.'];
         }
 
@@ -273,7 +434,7 @@ class BudgetShareService extends AbstractBaseService
     private function sendShareNotification(BudgetShare $share, Budget $budget): void
     {
         try {
-            $shareUrl = config('app.url') . "/budgets/shared/{$share->share_token}";
+            $shareUrl = config('app.url')."/budgets/shared/{$share->share_token}";
 
             $emailData = [
                 'recipient_name' => $share->recipient_name,
@@ -355,12 +516,12 @@ class BudgetShareService extends AbstractBaseService
                 'expired_shares' => $expiredShares,
                 'recent_shares' => $recentShares,
                 'most_shared_budgets' => $mostSharedBudgets,
-                'access_count' => $totalAccesses
+                'access_count' => $totalAccesses,
             ];
 
             return $this->success($stats);
         } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage());
+            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: '.$e->getMessage());
         }
     }
 }

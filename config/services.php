@@ -14,45 +14,45 @@ return [
     |
     */
 
-    'postmark'    => [
-        'token' => env( 'POSTMARK_TOKEN' ),
+    'postmark' => [
+        'token' => env('POSTMARK_TOKEN'),
     ],
 
-    'resend'      => [
-        'key' => env( 'RESEND_KEY' ),
+    'resend' => [
+        'key' => env('RESEND_KEY'),
     ],
 
-    'ses'         => [
-        'key'    => env( 'AWS_ACCESS_KEY_ID' ),
-        'secret' => env( 'AWS_SECRET_ACCESS_KEY' ),
-        'region' => env( 'AWS_DEFAULT_REGION', 'us-east-1' ),
+    'ses' => [
+        'key' => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'slack'       => [
+    'slack' => [
         'notifications' => [
-            'bot_user_oauth_token' => env( 'SLACK_BOT_USER_OAUTH_TOKEN' ),
-            'channel'              => env( 'SLACK_BOT_USER_DEFAULT_CHANNEL' ),
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
 
     'mercadopago' => [
-        'access_token'   => env( 'MERCADO_PAGO_ACCESS_TOKEN' ),
-        'webhook_secret' => env( 'MERCADO_PAGO_WEBHOOK_SECRET' ),
-        'client_id'      => env( 'MERCADOPAGO_CLIENT_ID' ),
-        'client_secret'  => env( 'MERCADOPAGO_CLIENT_SECRET' ),
-        'redirect_uri'   => env( 'MERCADOPAGO_REDIRECT_URI' ),
+        'access_token' => env('MERCADO_PAGO_ACCESS_TOKEN'),
+        'webhook_secret' => env('MERCADO_PAGO_WEBHOOK_SECRET'),
+        'client_id' => env('MERCADOPAGO_CLIENT_ID'),
+        'client_secret' => env('MERCADOPAGO_CLIENT_SECRET'),
+        'redirect_uri' => env('MERCADOPAGO_REDIRECT_URI'),
     ],
 
     'google_maps' => [
-        'api_key' => env( 'GOOGLE_MAPS_API_KEY' ),
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
-    'google'      => [
-        'client_id'     => env( 'GOOGLE_CLIENT_ID' ),
-        'client_secret' => env( 'GOOGLE_CLIENT_SECRET' ),
-        'redirect'      => env( 'GOOGLE_REDIRECT_URI' ),
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
-    'cacert_path' => env( 'CACERT_PATH' ),
+    'cacert_path' => env('CACERT_PATH'),
 
 ];

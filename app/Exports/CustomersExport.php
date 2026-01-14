@@ -57,31 +57,36 @@ class CustomersExport implements FromCollection, ShouldAutoSize, WithHeadings, W
 
     public function map($customer): array
     {
+        $commonData = $customer->commonData;
+        $contact = $customer->contact;
+        $address = $customer->address;
+        $businessData = $customer->businessData;
+
         return [
             $customer->id,
-            $customer->name,
-            $customer->email,
-            $customer->phone ?? '-',
-            $customer->document ?? '-',
-            $this->getTypeLabel($customer->type),
-            $customer->company_name ?? '-',
-            $customer->trading_name ?? '-',
-            $customer->state_registration ?? '-',
-            $customer->municipal_registration ?? '-',
-            $customer->birth_date ? $customer->birth_date->format('d/m/Y') : '-',
+            $commonData ? ($commonData->first_name . ' ' . $commonData->last_name) : '-',
+            $contact ? ($contact->email_personal ?: $contact->email_business) : '-',
+            $contact ? ($contact->phone_personal ?: $contact->phone_business) : '-',
+            $commonData ? ($commonData->cpf ?: $commonData->cnpj) : '-',
+            $commonData ? $this->getTypeLabel($commonData->type) : '-',
+            $commonData->company_name ?? '-',
+            $businessData->fantasy_name ?? '-',
+            $businessData->state_registration ?? '-',
+            $businessData->municipal_registration ?? '-',
+            $commonData->birth_date ? \Carbon\Carbon::parse($commonData->birth_date)->format('d/m/Y') : '-',
             $customer->tenant ? $customer->tenant->name : 'Global',
-            $customer->zip_code ?? '-',
-            $customer->address ?? '-',
-            $customer->number ?? '-',
-            $customer->complement ?? '-',
-            $customer->neighborhood ?? '-',
-            $customer->city ? $customer->city->name : '-',
-            $customer->state ? $customer->state->name : '-',
-            $customer->is_active ? 'Sim' : 'Não',
-            $customer->notes ?? '-',
-            $customer->budgets_count,
-            $customer->services_count,
-            $customer->invoices_count,
+            $address->cep ?? '-',
+            $address->address ?? '-',
+            $address->address_number ?? '-',
+            '-', // Complemento não encontrado no model Address atual
+            $address->neighborhood ?? '-',
+            $address->city ?? '-',
+            $address->state ?? '-',
+            $customer->status === 'active' ? 'Sim' : 'Não',
+            $businessData->notes ?? '-',
+            $customer->budgets_count ?? 0,
+            $customer->services_count ?? 0,
+            $customer->invoices_count ?? 0,
             $customer->created_at->format('d/m/Y H:i:s'),
             $customer->updated_at->format('d/m/Y H:i:s'),
         ];

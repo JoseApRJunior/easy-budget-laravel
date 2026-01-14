@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Auth;
 
+use App\DTOs\Provider\ProviderRegistrationDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\RegisterUserRequest;
 use App\Services\Application\UserRegistrationService;
@@ -13,6 +14,10 @@ use Illuminate\View\View;
 
 class EnhancedRegisteredUserController extends Controller
 {
+    public function __construct(
+        private UserRegistrationService $registrationService
+    ) {}
+
     /**
      * Exibir a tela de registro aprimorada.
      */
@@ -34,15 +39,11 @@ class EnhancedRegisteredUserController extends Controller
         // Obter dados validados e preparados pelo FormRequest
         $userData = $request->getValidatedData();
 
-        // Delegar para o service
-        $registrationService = app(UserRegistrationService::class);
-        $result = $registrationService->registerUser($userData);
+        // Criar DTO para o registro
+        $dto = ProviderRegistrationDTO::fromRequest($userData);
 
-        if (! $result->isSuccess()) {
-            return back()
-                ->withInput()
-                ->withErrors(['registration' => $result->getMessage()]);
-        }
+        // Delegar para o service
+        $result = $this->registrationService->registerUser($dto);
 
         // Registro realizado com sucesso
         $data = $result->getData();

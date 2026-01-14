@@ -1,23 +1,18 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container-fluid py-1">
-        <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-file-earmark-text me-2"></i>Editar Orçamento
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route( 'provider.dashboard' ) }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route( 'budget.index' ) }}">Orçamentos</a></li>
-                    <li class="breadcrumb-item"><a
-                            href="{{ route( 'budget.show', $budget->code ) }}">{{ $budget->code }}</a>
-                    </li>
-                    <li class="breadcrumb-item active">Editar</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Editar Orçamento #{{ $budget->code }}"
+            icon="file-earmark-text"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('budget.index'),
+                $budget->code => route('budget.show', $budget->code),
+                'Editar' => '#'
+            ]">
+            <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="arrow-left" label="Voltar" />
+        </x-layout.page-header>
 
         <!-- Budget Edit Form -->
         <div class="card border-0 shadow-sm">
@@ -101,14 +96,14 @@
 
                 <!-- Form Actions -->
                 <div class="d-flex justify-content-between mt-4 pt-4 border-top">
-                    <a href="{{ route( 'budget.show', $budget->code ) }}" class="btn btn-outline-secondary px-4">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </a>
+                    <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="x-circle">
+                        Cancelar
+                    </x-ui.button>
                     <div>
                         @if ( StatusHelper::status_allows_edit( $budget->status->value ) )
-                            <button type="submit" form="update-budget-form" class="btn btn-primary px-4">
-                                <i class="bi bi-check-lg me-2"></i>Salvar Alterações
-                            </button>
+                            <x-ui.button type="submit" form="update-budget-form" variant="primary" icon="check-lg" class="px-4">
+                                Salvar Alterações
+                            </x-ui.button>
                         @else
                             <div class="alert alert-info mb-0 py-2 px-3">
                                 <i class="bi bi-info-circle-fill me-2"></i>Não Editável ({{ $budget->status->getDescription() }})
@@ -145,12 +140,10 @@
                                         <td>
                                             {!! StatusHelper::status_badge( $service->status ) !!}
                                         </td>
-                                        <td>R$ {{ number_format( $service->total, 2, ',', '.' ) }}</td>
+                                        <td>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                         <td class="text-end">
-                                            <a href="{{ route( 'provider.services.show', $service->code ) }}"
-                                                class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
+                                            <x-ui.button type="link" :href="route('provider.services.show', $service->code)"
+                                                    variant="info" size="sm" icon="eye" title="Visualizar" />
                                         </td>
                                     </tr>
                                 @endforeach

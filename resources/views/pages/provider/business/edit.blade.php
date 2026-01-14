@@ -3,20 +3,17 @@
 @section('title', 'Dados Empresariais')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-building me-2"></i>Dados Empresariais
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('settings.index') }}">Configurações</a></li>
-                    <li class="breadcrumb-item active">Dados Empresariais</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Dados Empresariais"
+            icon="building"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Configurações' => route('settings.index'),
+                'Dados Empresariais' => '#'
+            ]">
+            <p class="text-muted mb-0 small">Gerencie as informações da sua empresa</p>
+        </x-layout.page-header>
 
         <form action="{{ route('provider.business.update') }}" method="POST" enctype="multipart/form-data"
             id="businessForm">
@@ -120,7 +117,7 @@
                                     <label for="cpf" class="form-label">CPF</label>
                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror"
                                         id="cpf" name="cpf"
-                                        value="{{ old('cpf', $provider->commonData?->cpf ?? '') }}">
+                                        value="{{ format_cpf(old('cpf', $provider->commonData?->cpf ?? '')) }}">
                                     @error('cpf')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -143,7 +140,7 @@
                                     <label for="cnpj" class="form-label">CNPJ</label>
                                     <input type="text" class="form-control @error('cnpj') is-invalid @enderror"
                                         id="cnpj" name="cnpj"
-                                        value="{{ old('cnpj', $provider->commonData?->cnpj ?? '') }}">
+                                        value="{{ format_cnpj(old('cnpj', $provider->commonData?->cnpj ?? '')) }}">
                                     @error('cnpj')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -227,9 +224,9 @@
 
                             <div class="mb-3">
                                 <label for="website" class="form-label">Website</label>
-                                <input type="url" class="form-control @error('website') is-invalid @enderror"
+                                <input type="text" class="form-control @error('website') is-invalid @enderror"
                                     id="website" name="website"
-                                    value="{{ old('website', $provider->contact?->website ?? '') }}">
+                                    value="{{ old('website', $provider->contact?->website ?? '') }}" placeholder="ex: www.site.com.br">
                                 @error('website')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -448,17 +445,27 @@
 
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="bi bi-check-circle me-2"></i>Atualizar Dados
-                    </button>
-                    <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </a>
+                <div class="d-flex gap-2">
+                    <x-ui.button 
+                        type="submit" 
+                        variant="primary"
+                        id="submitBtn"
+                        icon="bi bi-check-circle">
+                        Atualizar Dados
+                    </x-ui.button>
+                    <x-ui.button 
+                        href="{{ route('settings.index') }}" 
+                        variant="outline-secondary"
+                        icon="bi bi-x-circle">
+                        Cancelar
+                    </x-ui.button>
                 </div>
-                <a href="{{ route('settings.profile.edit') }}" class="btn btn-outline-info">
-                    <i class="bi bi-person me-2"></i>Perfil Pessoal
-                </a>
+                <x-ui.button 
+                    href="{{ route('settings.profile.edit') }}" 
+                    variant="outline-info"
+                    icon="bi bi-person">
+                    Perfil Pessoal
+                </x-ui.button>
             </div>
         </form>
     </div>
@@ -486,13 +493,15 @@
                     new VanillaMask('phone_personal', 'phone');
                     new VanillaMask('phone_business', 'phone');
                     new VanillaMask('cep', 'cep');
+                    new VanillaMask('birth_date', 'date');
+                    new VanillaMask('founding_date', 'date');
 
                     // Inicializar máscara baseada no tipo de pessoa atual
                     const type = document.getElementById('person_type').value;
                     if (type === 'pf') {
-                        new VanillaMask('cpf', 'cpf');
+                        new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
                     } else if (type === 'pj') {
-                        new VanillaMask('cnpj', 'cnpj');
+                        new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
                     }
 
                     // Aplicar formatação aos valores existentes nos campos
@@ -517,9 +526,9 @@
                     if (typeof VanillaMask !== 'undefined') {
                         const type = this.value;
                         if (type === 'pf') {
-                            new VanillaMask('cpf', 'cpf');
+                            new VanillaMask('cpf', 'cpf', { clearIfNotMatch: false });
                         } else if (type === 'pj') {
-                            new VanillaMask('cnpj', 'cnpj');
+                            new VanillaMask('cnpj', 'cnpj', { clearIfNotMatch: false });
                         }
                     }
                 }, 200);

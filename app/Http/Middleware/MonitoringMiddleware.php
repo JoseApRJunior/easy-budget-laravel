@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Enums\AlertTypeEnum;
 use App\Models\MiddlewareMetricsHistory;
+use App\Services\AlertService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;

@@ -178,9 +178,11 @@
     </div>
   </div>
 
-  <!-- Itens do Orçamento -->
+  <!-- Serviços e Itens do Orçamento -->
+  @forelse($budget->services as $service)
   <div class="info-section">
-    <h3>Itens do Orçamento</h3>
+    <h3>Serviço: {{ $service->category?->name ?? 'Geral' }}</h3>
+    <p class="small text-muted">{{ $service->description }}</p>
     <table class="items-table">
       <thead>
         <tr>
@@ -191,29 +193,51 @@
         </tr>
       </thead>
       <tbody>
-        @forelse( $budget->items as $item )
+        @forelse( $service->serviceItems as $item )
           <tr>
-            <td>{{ $item->description }}</td>
+            <td>
+              {{ $item->product?->name ?? 'Item' }}
+              @if($item->product?->description)
+                <br><small>{{ $item->product->description }}</small>
+              @endif
+            </td>
             <td class="text-center">{{ $item->quantity }}</td>
-            <td class="text-right">R$ {{ number_format( $item->unit_price, 2, ',', '.' ) }}</td>
-            <td class="text-right">R$ {{ number_format( $item->total_price, 2, ',', '.' ) }}</td>
+            <td class="text-right">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+            <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</td>
           </tr>
         @empty
           <tr>
-            <td colspan="4" class="text-center">Nenhum item adicionado</td>
+            <td colspan="4" class="text-center">Nenhum item neste serviço</td>
           </tr>
         @endforelse
       </tbody>
-      @if( $budget->items->count() > 0 )
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="3" class="text-right"><strong>TOTAL GERAL:</strong></td>
-            <td class="text-right">
-              <strong>R$ {{ number_format( $budget->total_amount, 2, ',', '.' ) }}</strong>
-            </td>
-          </tr>
-        </tfoot>
-      @endif
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="3" class="text-right"><strong>Total do Serviço:</strong></td>
+          <td class="text-right">
+            <strong>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</strong>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  @empty
+  <div class="info-section">
+    <p class="text-center">Nenhum serviço vinculado a este orçamento.</p>
+  </div>
+  @endforelse
+
+  <!-- Totais Finais -->
+  <div class="info-section">
+    <table class="items-table" style="border: none;">
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="3" class="text-right"><strong>TOTAL GERAL DO ORÇAMENTO:</strong></td>
+          <td class="text-right">
+            <strong>R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</strong>
+          </td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 

@@ -6,66 +6,66 @@ namespace App\Enums;
 
 enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
-    /** Pagamento pendente */
-    case PENDING = 'PENDING';
+    use \App\Traits\Enums\HasStatusEnumMethods;
 
-    /** Pagamento em processamento */
-    case PROCESSING = 'PROCESSING';
+    case PENDING = 'pending';
+    case PROCESSING = 'processing';
+    case COMPLETED = 'completed';
+    case FAILED = 'failed';
+    case REFUNDED = 'refunded';
 
-    /** Pagamento concluído */
-    case COMPLETED = 'COMPLETED';
-
-    /** Pagamento falhou */
-    case FAILED = 'FAILED';
-
-    /** Pagamento estornado */
-    case REFUNDED = 'REFUNDED';
-
-    /**
-     * Retorna uma descrição para cada status.
-     */
-    public function getDescription(): string
+    public function label(): string
     {
         return match ($this) {
-            self::PENDING => 'Pagamento pendente',
-            self::PROCESSING => 'Processando pagamento',
-            self::COMPLETED => 'Pagamento concluído',
-            self::FAILED => 'Pagamento falhou',
-            self::REFUNDED => 'Pagamento estornado',
+            self::PENDING => 'Pendente',
+            self::PROCESSING => 'Em Processamento',
+            self::COMPLETED => 'Concluído',
+            self::FAILED => 'Falhou',
+            self::REFUNDED => 'Estornado',
+        };
+    }
+
+    public function getDescription(): string
+    {
+        return $this->label();
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::PENDING => 'warning',
+            self::PROCESSING => 'info',
+            self::COMPLETED => 'success',
+            self::FAILED => 'danger',
+            self::REFUNDED => 'secondary',
         };
     }
 
     /**
-     * Retorna a cor associada a cada status.
+     * Retorna a cor Hexadecimal (Sincronizado com theme.php)
      */
     public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => '#ffc107', // Amarelo
-            self::PROCESSING => '#17a2b8', // Azul
-            self::COMPLETED => '#28a745', // Verde
-            self::FAILED => '#dc3545', // Vermelho
-            self::REFUNDED => '#6c757d', // Cinza
+            self::PENDING => config('theme.colors.warning'),
+            self::PROCESSING => config('theme.colors.info'),
+            self::COMPLETED => config('theme.colors.success'),
+            self::FAILED => config('theme.colors.error'),
+            self::REFUNDED => config('theme.colors.secondary'),
         };
     }
 
-    /**
-     * Retorna o ícone associado a cada status.
-     */
-    public function getIcon(): string
+    public function icon(): string
     {
         return match ($this) {
-            self::PENDING => 'bi-clock',
-            self::PROCESSING => 'bi-arrow-repeat',
-            self::COMPLETED => 'bi-check-circle-fill',
-            self::FAILED => 'bi-x-circle-fill',
-            self::REFUNDED => 'bi-arrow-counterclockwise',
+            self::PENDING => 'hourglass-split',
+            self::PROCESSING => 'arrow-repeat',
+            self::COMPLETED => 'check-circle-fill',
+            self::FAILED => 'x-circle-fill',
+            self::REFUNDED => 'arrow-counterclockwise',
         };
     }
 
-    /**
-     * Verifica se o status indica que o pagamento está ativo.
-     */
     public function isActive(): bool
     {
         return match ($this) {
@@ -74,9 +74,6 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         };
     }
 
-    /**
-     * Verifica se o status indica que o pagamento foi finalizado.
-     */
     public function isFinished(): bool
     {
         return match ($this) {
@@ -85,95 +82,66 @@ enum PaymentStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         };
     }
 
-    /**
-     * Verifica se o pagamento foi bem-sucedido.
-     */
     public function isSuccessful(): bool
     {
         return $this === self::COMPLETED;
     }
 
-    /**
-     * Retorna transições válidas para cada status.
-     */
     public function getValidTransitions(): array
     {
         return match ($this) {
             self::PENDING => [self::PROCESSING, self::FAILED],
             self::PROCESSING => [self::COMPLETED, self::FAILED],
             self::COMPLETED => [self::REFUNDED],
-            self::FAILED => [self::PENDING], // Retry
-            self::REFUNDED => [], // Final state
+            self::FAILED => [self::PENDING],
+            self::REFUNDED => [],
         };
     }
 
-    /**
-     * Verifica se pode transitar para um status específico.
-     */
     public function canTransitionTo(PaymentStatus $targetStatus): bool
     {
-        return in_array($targetStatus, $this->getValidTransitions());
+        return in_array($targetStatus, $this->getValidTransitions(), true);
     }
 
-    /**
-     * Retorna todos os status disponíveis.
-     */
     public static function getAll(): array
     {
-        return [
-            self::PENDING,
-            self::PROCESSING,
-            self::COMPLETED,
-            self::FAILED,
-            self::REFUNDED,
-        ];
+        return self::cases();
     }
 
-    /**
-     * Retorna apenas os status ativos.
-     */
     public static function getActive(): array
     {
-        return [
-            self::PENDING,
-            self::PROCESSING,
-        ];
+        return array_filter(self::cases(), fn (self $status) => $status->isActive());
     }
 
-    /**
-     * Retorna apenas os status finalizados.
-     */
     public static function getFinished(): array
     {
-        return [
+        return array_filter(self::cases(), fn (self $status) => $status->isFinished());
+    }
+
+    public static function getOrdered(bool $includeFinished = true): array
+    {
+        $ordered = [
+            self::PENDING,
+            self::PROCESSING,
             self::COMPLETED,
             self::FAILED,
             self::REFUNDED,
         ];
+
+        if (! $includeFinished) {
+            return array_filter($ordered, fn ($status) => ! $status->isFinished());
+        }
+
+        return $ordered;
     }
 
     /**
-     * Retorna opções formatadas para formulários.
+     * Retorna metadados completos do status
      */
-    public static function getOptions(): array
+    public function getMetadata(): array
     {
-        $options = [];
-        foreach (self::cases() as $status) {
-            $options[$status->value] = $status->getDescription();
-        }
-        return $options;
-    }
-
-    /**
-     * Cria instância do enum a partir de string.
-     */
-    public static function fromString(string $value): ?PaymentStatus
-    {
-        foreach (self::cases() as $case) {
-            if ($case->value === $value) {
-                return $case;
-            }
-        }
-        return null;
+        return array_merge($this->defaultMetadata(), [
+            'is_successful' => $this->isSuccessful(),
+        ]);
     }
 }

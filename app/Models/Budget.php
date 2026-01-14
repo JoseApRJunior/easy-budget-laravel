@@ -8,6 +8,9 @@ use App\Enums\BudgetStatus;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -173,15 +176,30 @@ class Budget extends Model
     /**
      * Get the tenant that owns the Budget.
      */
-    public function tenant()
+    public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
     /**
+     * Get the provider (business owner) for the Budget.
+     */
+    public function provider(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Provider::class,
+            Tenant::class,
+            'id', // Foreign key on tenants table...
+            'tenant_id', // Foreign key on providers table...
+            'tenant_id', // Local key on budgets table...
+            'id' // Local key on tenants table...
+        );
+    }
+
+    /**
      * Get the customer that owns the Budget.
      */
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
@@ -202,7 +220,7 @@ class Budget extends Model
         return $this->status;
     }
 
-    public function userConfirmationToken()
+    public function userConfirmationToken(): BelongsTo
     {
         return $this->belongsTo(UserConfirmationToken::class);
     }
@@ -210,23 +228,15 @@ class Budget extends Model
     /**
      * Get the services for the Budget.
      */
-    public function services()
+    public function services(): HasMany
     {
         return $this->hasMany(Service::class);
     }
 
     /**
-     * Get the budget items for the Budget.
-     */
-    public function items()
-    {
-        return $this->hasMany(BudgetItem::class);
-    }
-
-    /**
      * Get the budget versions for the Budget.
      */
-    public function versions()
+    public function versions(): HasMany
     {
         return $this->hasMany(BudgetVersion::class);
     }
@@ -234,7 +244,7 @@ class Budget extends Model
     /**
      * Get the current budget version.
      */
-    public function currentVersion()
+    public function currentVersion(): BelongsTo
     {
         return $this->belongsTo(BudgetVersion::class, 'current_version_id');
     }
@@ -242,7 +252,7 @@ class Budget extends Model
     /**
      * Get the budget attachments.
      */
-    public function attachments()
+    public function attachments(): HasMany
     {
         return $this->hasMany(BudgetAttachment::class);
     }
@@ -250,7 +260,7 @@ class Budget extends Model
     /**
      * Get the budget shares.
      */
-    public function shares()
+    public function shares(): HasMany
     {
         return $this->hasMany(BudgetShare::class);
     }
@@ -258,7 +268,7 @@ class Budget extends Model
     /**
      * Get the budget action history.
      */
-    public function actionHistory()
+    public function actionHistory(): HasMany
     {
         return $this->hasMany(BudgetActionHistory::class);
     }
@@ -266,7 +276,7 @@ class Budget extends Model
     /**
      * Get the budget notifications.
      */
-    public function notifications()
+    public function notifications(): HasMany
     {
         return $this->hasMany(BudgetNotification::class);
     }
@@ -304,7 +314,7 @@ class Budget extends Model
     {
         return $query->where(function ($q) {
             $q->whereNull('valid_until')
-                ->orWhere('valid_until', '>', now());
+                ->orWhere('valid_until', '>', Carbon::now());
         });
     }
 
@@ -313,7 +323,7 @@ class Budget extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->where('valid_until', '<=', now());
+        return $query->where('valid_until', '<=', Carbon::now());
     }
 
     /**
@@ -397,42 +407,24 @@ class Budget extends Model
     }
 
     /**
-     * Calcula o total do orçamento baseado nos itens.
+     * Calcula o total do orçamento baseado nos serviços e seus itens.
      */
     public function calculateTotals(): array
     {
-        $subtotal = $this->items->sum(function ($item) {
-            return $item->quantity * $item->unit_price;
-        });
+        $subtotal = $this->services->sum('total');
 
-        $discountTotal = $this->items->sum(function ($item) {
-            $itemTotal = $item->quantity * $item->unit_price;
+        // No novo modelo, descontos e impostos são tratados dentro de cada Serviço/Item
+        // Mas se houver um desconto global no orçamento, aplicamos aqui
+        $discountTotal = (float) ($this->discount ?? 0.0);
 
-            return $itemTotal * ($item->discount_percentage / 100);
-        });
-
-        // Aplicar desconto global se houver
-        if ($this->global_discount_percentage > 0) {
-            $globalDiscount = $subtotal * ($this->global_discount_percentage / 100);
-            $discountTotal += $globalDiscount;
-        }
-
-        $taxesTotal = $this->items->sum(function ($item) {
-            $itemTotal = $item->quantity * $item->unit_price;
-            $itemDiscount = $itemTotal * ($item->discount_percentage / 100);
-            $itemSubtotal = $itemTotal - $itemDiscount;
-
-            return $itemSubtotal * ($item->tax_percentage / 100);
-        });
-
-        $grandTotal = ($subtotal - $discountTotal) + $taxesTotal;
+        $grandTotal = $subtotal - $discountTotal;
 
         return [
             'subtotal' => $subtotal,
             'discount_total' => $discountTotal,
-            'taxes_total' => $taxesTotal,
+            'taxes_total' => 0, // Impostos agora estão embutidos no total do serviço
             'grand_total' => $grandTotal,
-            'items_count' => $this->items->count(),
+            'services_count' => $this->services->count(),
         ];
     }
 
@@ -446,7 +438,7 @@ class Budget extends Model
         $this->update([
             'subtotal' => $totals['subtotal'],
             'total' => $totals['grand_total'],
-            'updated_at' => now(),
+            'updated_at' => Carbon::now(),
         ]);
     }
 
@@ -463,10 +455,16 @@ class Budget extends Model
             'version_number' => $this->getNextVersionNumber(),
             'changes_description' => $changeDescription,
             'budget_data' => $this->toArray(),
-            'items_data' => $this->items->toArray(),
+            'services_data' => $this->services->map(fn($s) => [
+                'id' => $s->id,
+                'category_id' => $s->category_id,
+                'description' => $s->description,
+                'total' => $s->total,
+                'items' => $s->serviceItems->toArray(),
+            ])->toArray(),
             'version_total' => $totals['grand_total'],
             'is_current' => true,
-            'version_date' => now(),
+            'version_date' => Carbon::now(),
         ]);
 
         // Marcar versão atual
@@ -524,36 +522,30 @@ class Budget extends Model
             'pdf_verification_hash' => $budgetData['pdf_verification_hash'],
         ]);
 
-        // Recriar itens se necessário
-        if (isset($version->items_data) && is_array($version->items_data)) {
-            $this->items()->delete();
-            foreach ($version->items_data as $itemData) {
-                $this->items()->create($itemData);
+        // Recriar serviços e itens se necessário
+        if (isset($version->services_data) && is_array($version->services_data)) {
+            $this->services()->delete();
+            foreach ($version->services_data as $serviceData) {
+                $service = $this->services()->create([
+                    'tenant_id' => $this->tenant_id,
+                    'category_id' => $serviceData['category_id'],
+                    'description' => $serviceData['description'],
+                    'status' => $this->status,
+                    'code' => $serviceData['code'] ?? 'SRV-'.uniqid(),
+                    'total' => $serviceData['total'],
+                ]);
+
+                if (isset($serviceData['items']) && is_array($serviceData['items'])) {
+                    foreach ($serviceData['items'] as $itemData) {
+                        $service->serviceItems()->create($itemData);
+                    }
+                }
             }
         }
 
         return true;
     }
 
-    /**
-     * Adiciona um item ao orçamento.
-     */
-    public function addItem(array $itemData): BudgetItem
-    {
-        $itemData['tenant_id'] = $this->tenant_id;
-        $itemData['budget_id'] = $this->id;
-        $itemData['order_index'] = $this->items()->max('order_index') + 1;
-
-        return $this->items()->create($itemData);
-    }
-
-    /**
-     * Remove um item do orçamento.
-     */
-    public function removeItem(BudgetItem $item): bool
-    {
-        return $item->delete();
-    }
 
     /**
      * Duplica o orçamento.
@@ -566,11 +558,17 @@ class Budget extends Model
         $newBudget->current_version_id = null;
         $newBudget->save();
 
-        // Duplicar itens
-        foreach ($this->items as $item) {
-            $newItem = $item->replicate();
-            $newItem->budget_id = $newBudget->id;
-            $newItem->save();
+        // Duplicar serviços e seus itens
+        foreach ($this->services as $service) {
+            $newService = $service->replicate();
+            $newService->budget_id = $newBudget->id;
+            $newService->save();
+
+            foreach ($service->serviceItems as $item) {
+                $newItem = $item->replicate();
+                $newItem->service_id = $newService->id;
+                $newItem->save();
+            }
         }
 
         // Criar versão inicial

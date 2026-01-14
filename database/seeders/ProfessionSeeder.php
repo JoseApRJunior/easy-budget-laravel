@@ -13,7 +13,7 @@ class ProfessionSeeder extends Seeder
         $data = [
             ['slug' => 'administrador',          'name' => 'Administrador',          'is_active' => true, 'created_at' => $now],
             ['slug' => 'analista-financeiro',    'name' => 'Analista Financeiro',    'is_active' => true, 'created_at' => $now],
-            ['slug' => 'assistente-administrativo','name' => 'Assistente Administrativo','is_active' => true, 'created_at' => $now],
+            ['slug' => 'assistente-administrativo', 'name' => 'Assistente Administrativo', 'is_active' => true, 'created_at' => $now],
             ['slug' => 'atendente',              'name' => 'Atendente',              'is_active' => true, 'created_at' => $now],
             ['slug' => 'carpinteiro',            'name' => 'Carpinteiro',            'is_active' => true, 'created_at' => $now],
             ['slug' => 'consultor',              'name' => 'Consultor',              'is_active' => true, 'created_at' => $now],
@@ -43,10 +43,10 @@ class ProfessionSeeder extends Seeder
             ['slug' => 'arquiteto',              'name' => 'Arquiteto',              'is_active' => true, 'created_at' => $now],
             ['slug' => 'marceneiro',             'name' => 'Marceneiro',             'is_active' => true, 'created_at' => $now],
             ['slug' => 'montador',               'name' => 'Montador',               'is_active' => true, 'created_at' => $now],
-            ['slug' => 'refrigeracao',           'name' => 'Técnico de Refrigeração','is_active' => true, 'created_at' => $now],
-            ['slug' => 'limpeza',                'name' => 'Profissional de Limpeza','is_active' => true, 'created_at' => $now],
+            ['slug' => 'refrigeracao',           'name' => 'Técnico de Refrigeração', 'is_active' => true, 'created_at' => $now],
+            ['slug' => 'limpeza',                'name' => 'Profissional de Limpeza', 'is_active' => true, 'created_at' => $now],
         ];
 
-        DB::table('professions')->upsert($data, ['slug'], ['name','is_active']);
+        DB::table('professions')->upsert($data, ['slug'], ['name', 'is_active']);
     }
 }

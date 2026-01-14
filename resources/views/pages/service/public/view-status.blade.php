@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
+    <x-layout.page-container>
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
@@ -12,29 +12,18 @@
                                 <small class="text-muted">Código: {{ $service->code }}</small>
                             </div>
                             <div>
-                                <span class="badge bg-{{ $service->serviceStatus->color ?? 'secondary' }} fs-6 px-3 py-2">
-                                    <i class="bi bi-{{ $service->serviceStatus->icon ?? 'circle' }} me-1"></i>
-                                    {{ $service->serviceStatus->name }}
-                                </span>
+                                <x-ui.status-badge :item="$service" />
                             </div>
                         </div>
                     </div>
 
                     <div class="card-body">
                         @if (session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="bi bi-check-circle me-2"></i>
-                                {{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+                            <x-ui.alert type="success" :message="session('success')" />
                         @endif
 
                         @if (session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                {{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
+                            <x-ui.alert type="error" :message="session('error')" />
                         @endif
 
                         <div class="row mb-4">
@@ -66,8 +55,8 @@
                                         <h5 class="mb-1">{{ $service->budget?->code }}</h5>
                                         <p class="text-muted mb-0">{{ $service->budget?->description }}</p>
                                         <p class="mb-0">
-                                            <strong>Total: R$
-                                                {{ number_format($service->budget?->total, 2, ',', '.') }}</strong>
+                                            <strong>Total:
+                                                {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
                                         </p>
                                     </div>
                                 </div>
@@ -94,11 +83,11 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Valor:</strong><br>
-                                                R$ {{ number_format($service->total, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($service->total) }}
                                             </div>
                                             <div class="col-md-4">
                                                 <strong>Desconto:</strong><br>
-                                                R$ {{ number_format($service->discount, 2, ',', '.') }}
+                                                {{ \App\Helpers\CurrencyHelper::format($service->discount) }}
                                             </div>
                                         </div>
 
@@ -115,7 +104,7 @@
                             </div>
                         </div>
 
-                        @if ($service->serviceStatus->slug === 'enviado')
+                        @if ($service->status->value === 'pending')
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card border-warning">
@@ -150,10 +139,7 @@
                                                         @enderror
                                                     </div>
                                                     <div class="col-md-6 d-flex align-items-end">
-                                                        <button type="submit" class="btn btn-primary">
-                                                            <i class="bi bi-check-circle me-2"></i>
-                                                            Atualizar Status
-                                                        </button>
+                                                        <x-ui.button type="submit" variant="primary" icon="check-circle" label="Atualizar Status" />
                                                     </div>
                                                 </div>
                                             </form>
@@ -166,11 +152,7 @@
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <a href="{{ route('services.public.print', ['code' => $service->code, 'token' => $token]) }}"
-                                        class="btn btn-outline-secondary" target="_blank">
-                                        <i class="bi bi-printer me-2"></i>
-                                        Imprimir
-                                    </a>
+                                    <x-ui.button type="link" :href="route('services.public.print', ['code' => $service->code, 'token' => $token])" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
 
                                     <div class="text-muted small">
                                         <i class="bi bi-info-circle me-1"></i>
@@ -184,7 +166,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </x-layout.page-container>
 @endsection
 
 @push('styles')

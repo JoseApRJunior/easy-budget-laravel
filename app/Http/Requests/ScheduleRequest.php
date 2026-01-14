@@ -25,13 +25,17 @@ class ScheduleRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'service_id' => 'required|exists:services,id',
             'provider_id' => 'required|exists:users,id',
-            'service_date' => 'required|date|after:today',
+            'service_date' => 'required|date|after_or_equal:today',
             'service_time' => 'required|date_format:H:i',
             'service_duration' => 'required|integer|min:30|max:480', // 30 min a 8 horas
             'service_type' => 'required|string|max:100',
             'notes' => 'nullable|string|max:1000',
             'price' => 'nullable|numeric|min:0|max:999999.99',
+            'location' => 'nullable|string|max:255',
+            'start_date_time' => 'required|date_format:Y-m-d H:i:s',
+            'end_date_time' => 'required|date_format:Y-m-d H:i:s',
         ];
 
         // Se o usuário for admin ou prestador, pode especificar o cliente
@@ -112,6 +116,18 @@ class ScheduleRequest extends FormRequest
         }
         if ($this->price === '') {
             $this->merge(['price' => null]);
+        }
+
+        // Calcula start_date_time e end_date_time
+        if ($this->service_date && $this->service_time) {
+            $start = \Carbon\Carbon::parse($this->service_date . ' ' . $this->service_time);
+            $duration = (int) ($this->service_duration ?? 60);
+            $end = $start->copy()->addMinutes($duration);
+
+            $this->merge([
+                'start_date_time' => $start->format('Y-m-d H:i:s'),
+                'end_date_time' => $end->format('Y-m-d H:i:s'),
+            ]);
         }
     }
 }

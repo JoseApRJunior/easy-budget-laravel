@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class BudgetNotification extends Model
 {
@@ -117,7 +118,7 @@ class BudgetNotification extends Model
     {
         if (! $this->read) {
             $this->read = true;
-            $this->read_at = now();
+            $this->read_at = Carbon::now();
 
             return $this->save();
         }
@@ -132,7 +133,7 @@ class BudgetNotification extends Model
     {
         if (! $this->sent) {
             $this->sent = true;
-            $this->sent_at = now();
+            $this->sent_at = Carbon::now();
 
             return $this->save();
         }

@@ -2,28 +2,20 @@
 
 @section('title', 'Detalhes da Fatura')
 @section('content')
-    <div class="container-fluid py-1">
-        {{-- Cabeçalho --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-receipt me-2"></i>Detalhes da Fatura
-                </h1>
-                <p class="text-muted mb-0">Visualize todas as informações da fatura {{ $invoice->code }}</p>
-            </div>
-            <nav aria-label="breadcrumb" class="d-none d-md-block">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.invoices.index') }}">Faturas</a></li>
-                    <li class="breadcrumb-item active">{{ $invoice->code }}</li>
-                </ol>
-            </nav>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Detalhes da Fatura"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                $invoice->code => '#'
+            ]">
+        <div class="d-flex gap-2">
+            <x-ui.button type="link" :href="route('provider.invoices.print', $invoice)" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
         </div>
+    </x-layout.page-header>
 
-        <a href="{{ route('provider.invoices.print', $invoice) }}" class="btn btn-outline-secondary" target="_blank">
-            <i class="bi bi-printer me-1"></i>Imprimir
-        </a>
-    </div>
     <div class="row g-4">
         <!-- Informações Principais -->
         <div class="col-md-8">
@@ -37,19 +29,7 @@
                                 Gerada em {{ $invoice->created_at->format('d/m/Y H:i') }}
                             </p>
                         </div>
-                        @php
-                            $status = $invoice->status;
-                            $badgeClass = match ($status) {
-                                'pending' => 'bg-warning',
-                                'paid' => 'bg-success',
-                                'overdue' => 'bg-danger',
-                                'cancelled' => 'bg-secondary',
-                                default => 'bg-light text-dark',
-                            };
-                        @endphp
-                        <span class="badge {{ $badgeClass }} fs-6">
-                            {{ $status->name ?? ucfirst($status) }}
-                        </span>
+                        <x-ui.status-description :item="$invoice" />
                     </div>
 
                     <!-- Dados do Cliente e Empresa -->
@@ -87,7 +67,7 @@
                             <h6 class="text-muted">Data de Vencimento</h6>
                             <p class="mb-0">
                                 {{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}
-                                @if ($invoice->due_date)
+                                @if ($invoice->due_date && $invoice->status === 'pending')
                                     @if ($invoice->due_date < now())
                                         <span class="badge bg-danger ms-2">Vencida</span>
                                     @elseif($invoice->due_date->diffInDays(now()) <= 7)
@@ -101,7 +81,7 @@
                         <div class="col-md-4">
                             <h6 class="text-muted">Valor Total</h6>
                             <p class="mb-0 fs-5 text-success fw-bold">
-                                R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}
+                                {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}
                             </p>
                         </div>
                     </div>
@@ -132,18 +112,18 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-center">{{ $item->quantity }}</td>
-                                                <td class="text-end">R$
-                                                    {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                                <td class="text-end fw-bold">R$
-                                                    {{ number_format($item->total, 2, ',', '.') }}</td>
+                                                <td class="text-end">
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                                                <td class="text-end fw-bold">
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
                                         <tr class="table-light">
                                             <th colspan="3" class="text-end">Subtotal:</th>
-                                            <th class="text-end">R$
-                                                {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}
+                                            <th class="text-end">
+                                                {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}
                                             </th>
                                         </tr>
                                     </tfoot>
@@ -162,11 +142,11 @@
                                                 <div class="fw-semibold mb-2">{{ $item->product->name ?? 'N/A' }}</div>
                                                 <div class="small text-muted mb-2">
                                                     <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
-                                                    <span><strong>Unit:</strong> R$
-                                                        {{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                    <span><strong>Unit:</strong>
+                                                        {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span>
                                                 </div>
-                                                <div class="text-success fw-semibold">Total: R$
-                                                    {{ number_format($item->total, 2, ',', '.') }}</div>
+                                                <div class="text-success fw-semibold">Total:
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->total) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -174,8 +154,8 @@
                                 <div class="list-group-item bg-light">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <strong>Subtotal:</strong>
-                                        <strong class="text-success">R$
-                                            {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</strong>
+                                        <strong class="text-success">
+                                            {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -202,16 +182,16 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal:</span>
-                        <span>R$ {{ number_format($invoice->invoiceItems->sum('total'), 2, ',', '.') }}</span>
+                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Desconto:</span>
-                        <span>R$ 0,00</span>
+                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between fw-bold">
                         <span>Total:</span>
-                        <span class="text-success">R$ {{ number_format($invoice->total_amount, 2, ',', '.') }}</span>
+                        <span class="text-success">{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</span>
                     </div>
                 </div>
             </div>
@@ -225,9 +205,8 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <span class="badge {{ $badgeClass }} fs-6 w-100 py-2">
-                            {{ $status->name ?? ucfirst($status) }}
-                        </span>
+                        <x-ui.status-badge :item="$invoice" class="w-100 py-2 fs-6 mb-1" />
+                        <x-ui.status-description :item="$invoice" class="mt-1" />
                     </div>
 
                     @if ($invoice->due_date)

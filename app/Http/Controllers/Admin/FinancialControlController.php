@@ -1,123 +1,85 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
+use App\Models\Tenant;
 use App\Services\Admin\FinancialControlService;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class FinancialControlController extends Controller
 {
-    protected $financialControlService;
+    protected FinancialControlService $financialControlService;
 
     public function __construct(FinancialControlService $financialControlService)
     {
         $this->financialControlService = $financialControlService;
     }
 
-    public function index()
+    public function index(): View
     {
-        try {
-            $financialOverview = $this->financialControlService->getFinancialOverview();
-            $budgetAlerts = $this->financialControlService->getBudgetAlerts();
+        $financialOverview = $this->financialControlService->getFinancialOverview();
+        $budgetAlerts = $this->financialControlService->getBudgetAlerts();
 
-            return view('admin.financial.index', compact('financialOverview', 'budgetAlerts'));
-        } catch (\Exception $e) {
-            Log::error('Error loading financial control dashboard: '.$e->getMessage());
-
-            return view('admin.financial.index', [
-                'financialOverview' => $this->getDefaultOverview(),
-                'budgetAlerts' => [],
-            ]);
-        }
+        return view('admin.financial.index', compact('financialOverview', 'budgetAlerts'));
     }
 
-    public function providerDetails($tenantId)
+    public function providerDetails(string $tenantId): View
     {
-        try {
-            $providerFinancialDetails = $this->financialControlService->getProviderFinancialDetails($tenantId);
+        $providerFinancialDetails = $this->financialControlService->getProviderFinancialDetails($tenantId);
 
-            return view('admin.financial.provider-details', compact('providerFinancialDetails'));
-        } catch (\Exception $e) {
-            Log::error('Error loading provider financial details for tenant '.$tenantId.': '.$e->getMessage());
-
-            return view('admin.financial.provider-details', [
-                'providerFinancialDetails' => $this->getDefaultProviderDetails(),
-            ]);
-        }
+        return view('admin.financial.provider-details', compact('providerFinancialDetails'));
     }
 
-    public function reports(Request $request)
+    public function reports(Request $request): View
     {
-        try {
-            $filters = [
-                'start_date' => $request->get('start_date') ? \Carbon\Carbon::parse($request->get('start_date')) : null,
-                'end_date' => $request->get('end_date') ? \Carbon\Carbon::parse($request->get('end_date')) : null,
-                'tenant_id' => $request->get('tenant_id'),
-            ];
+        $filters = [
+            'start_date' => DateHelper::toCarbon($request->get('start_date')),
+            'end_date' => DateHelper::toCarbon($request->get('end_date')),
+            'tenant_id' => $request->get('tenant_id'),
+        ];
 
-            $reports = $this->financialControlService->getFinancialReports($filters);
-            $tenants = \App\Models\Tenant::all();
+        $reports = $this->financialControlService->getFinancialReports($filters);
+        $tenants = Tenant::all();
 
-            return view('admin.financial.reports', compact('reports', 'filters', 'tenants'));
-        } catch (\Exception $e) {
-            Log::error('Error loading financial reports: '.$e->getMessage());
-
-            return view('admin.financial.reports', [
-                'reports' => $this->getDefaultReports(),
-                'filters' => $filters ?? [],
-                'tenants' => [],
-            ]);
-        }
+        return view('admin.financial.reports', compact('reports', 'filters', 'tenants'));
     }
 
-    public function budgetAlerts()
+    public function budgetAlerts(): JsonResponse
     {
-        try {
-            $budgetAlerts = $this->financialControlService->getBudgetAlerts();
+        $budgetAlerts = $this->financialControlService->getBudgetAlerts();
 
-            return response()->json([
-                'success' => true,
-                'alerts' => $budgetAlerts,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error getting budget alerts: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao carregar alertas de orçamento',
-                'alerts' => [],
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'alerts' => $budgetAlerts,
+        ]);
     }
 
-    public function exportReports(Request $request)
+    public function exportReports(Request $request): Response
     {
-        try {
-            $filters = [
-                'start_date' => $request->get('start_date') ? \Carbon\Carbon::parse($request->get('start_date')) : null,
-                'end_date' => $request->get('end_date') ? \Carbon\Carbon::parse($request->get('end_date')) : null,
-                'tenant_id' => $request->get('tenant_id'),
-            ];
+        $filters = [
+            'start_date' => DateHelper::toCarbon($request->get('start_date')),
+            'end_date' => DateHelper::toCarbon($request->get('end_date')),
+            'tenant_id' => $request->get('tenant_id'),
+        ];
 
-            $reports = $this->financialControlService->getFinancialReports($filters);
+        $reports = $this->financialControlService->getFinancialReports($filters);
 
-            // Generate CSV content
-            $csvContent = $this->generateCsvReport($reports);
+        // Generate CSV content
+        $csvContent = $this->generateCsvReport($reports);
 
-            return response($csvContent, 200, [
-                'Content-Type' => 'text/csv',
-                'Content-Disposition' => 'attachment; filename="financial_report_'.date('Y-m-d').'.csv"',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error exporting financial reports: '.$e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao exportar relatórios financeiros',
-            ], 500);
-        }
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="financial_report_'.date('Y-m-d').'.csv"',
+        ]);
     }
 
     private function generateCsvReport(array $reports): string

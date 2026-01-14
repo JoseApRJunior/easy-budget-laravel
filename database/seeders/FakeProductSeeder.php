@@ -22,27 +22,28 @@ class FakeProductSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info( '📦 Criando produtos fake para todos os tenants...' );
+        $this->command->info('📦 Criando produtos fake para todos os tenants...');
 
         // Cria 3 produtos para cada tenant existente
         $tenants = Tenant::all();
 
-        foreach ( $tenants as $tenant ) {
-            $this->createForTenant( $tenant->id, 3 );
+        foreach ($tenants as $tenant) {
+            $this->createForTenant($tenant->id, 3);
         }
 
-        $this->command->info( '✅ Produtos fake criados com sucesso!' );
+        $this->command->info('✅ Produtos fake criados com sucesso!');
     }
 
     /**
      * Cria produtos para um tenant específico
      */
-    public static function createForTenant( int $tenantId, int $quantity = 5 ): void
+    public static function createForTenant(int $tenantId, int $quantity = 5): void
     {
-        $tenant = Tenant::find( $tenantId );
+        $tenant = Tenant::find($tenantId);
 
-        if ( !$tenant ) {
+        if (! $tenant) {
             echo "❌ Tenant {$tenantId} não encontrado\n";
+
             return;
         }
 
@@ -51,56 +52,56 @@ class FakeProductSeeder extends Seeder
         // Cria produtos manualmente para evitar problemas com a factory
         $products = [];
 
-        for ( $i = 0; $i < $quantity; $i++ ) {
+        for ($i = 0; $i < $quantity; $i++) {
             // Obtém a primeira categoria existente no tenant
-            $category = \App\Models\Category::where( 'tenant_id', $tenantId )
+            $category = \App\Models\Category::where('tenant_id', $tenantId)
                 ->first();
 
-            if ( !$category ) {
+            if (! $category) {
                 // Se não houver categorias, cria uma categoria padrão
-                $category = \App\Models\Category::create( [
+                $category = \App\Models\Category::create([
                     'tenant_id' => $tenantId,
-                    'name'      => 'Categoria Padrão',
-                    'slug'      => 'categoria-padrao',
+                    'name' => 'Categoria Padrão',
+                    'slug' => 'categoria-padrao',
                     'is_active' => true,
-                ] );
+                ]);
             }
 
             // Gera SKU único
-            $service    = app( \App\Services\Domain\ProductService::class);
-            $reflection = new \ReflectionClass( $service );
-            $method     = $reflection->getMethod( 'generateUniqueSku' );
-            $method->setAccessible( true );
-            $sku = $method->invoke( $service, $tenantId );
+            $service = app(\App\Services\Domain\ProductService::class);
+            $reflection = new \ReflectionClass($service);
+            $method = $reflection->getMethod('generateUniqueSku');
+            $method->setAccessible(true);
+            $sku = $method->invoke($service, $tenantId);
 
             // Cria produto manualmente
-            $product = Product::create( [
-                'tenant_id'   => $tenantId,
+            $product = Product::create([
+                'tenant_id' => $tenantId,
                 'category_id' => $category->id,
-                'name'        => \Faker\Factory::create()->word,
+                'name' => \Faker\Factory::create()->word,
                 'description' => \Faker\Factory::create()->sentence,
-                'sku'         => $sku,
-                'price'       => \Faker\Factory::create()->randomFloat( 2, 10, 500 ),
-                'unit'        => \Faker\Factory::create()->randomElement( [ 'un', 'h', 'm²' ] ),
-                'active'      => true,
-                'image'       => null,
-            ] );
+                'sku' => $sku,
+                'price' => \Faker\Factory::create()->randomFloat(2, 10, 500),
+                'unit' => \Faker\Factory::create()->randomElement(['un', 'h', 'm²']),
+                'active' => true,
+                'image' => null,
+            ]);
 
             $products[] = $product;
         }
 
         // Gera SKUs únicos para cada produto
-        foreach ( $products as $product ) {
+        foreach ($products as $product) {
             // Gera SKU sequencial compatível com legado
-            $service = app( \App\Services\Domain\ProductService::class);
+            $service = app(\App\Services\Domain\ProductService::class);
 
             // Usa reflection para acessar o método privado generateUniqueSku
-            $reflection = new \ReflectionClass( $service );
-            $method     = $reflection->getMethod( 'generateUniqueSku' );
-            $method->setAccessible( true );
+            $reflection = new \ReflectionClass($service);
+            $method = $reflection->getMethod('generateUniqueSku');
+            $method->setAccessible(true);
 
-            $sku = $method->invoke( $service, $tenantId );
-            $product->update( [ 'sku' => $sku ] );
+            $sku = $method->invoke($service, $tenantId);
+            $product->update(['sku' => $sku]);
 
             echo "   ✓ Produto: {$product->name} (SKU: {$product->sku})\n";
         }
@@ -111,19 +112,20 @@ class FakeProductSeeder extends Seeder
     /**
      * Cria produtos para todos os tenants
      */
-    public static function createForAllTenants( int $quantity = 5 ): void
+    public static function createForAllTenants(int $quantity = 5): void
     {
         $tenants = Tenant::all();
 
-        if ( $tenants->isEmpty() ) {
+        if ($tenants->isEmpty()) {
             echo "❌ Nenhum tenant encontrado\n";
+
             return;
         }
 
         echo "📦 Criando {$quantity} produtos para cada um dos {$tenants->count()} tenants...\n";
 
-        foreach ( $tenants as $tenant ) {
-            self::createForTenant( $tenant->id, $quantity );
+        foreach ($tenants as $tenant) {
+            self::createForTenant($tenant->id, $quantity);
         }
 
         echo "✅ Produtos fake criados para todos os tenants!\n";
@@ -132,12 +134,11 @@ class FakeProductSeeder extends Seeder
     /**
      * Cria produtos para o tenant atualmente autenticado
      */
-    public static function createForCurrentTenant( int $quantity = 5 ): void
+    public static function createForCurrentTenant(int $quantity = 5): void
     {
         // Para uso em tinker, assume tenant 1 como padrão
         $currentTenantId = 1; // Pode ser modificado conforme necessário
 
-        self::createForTenant( $currentTenantId, $quantity );
+        self::createForTenant($currentTenantId, $quantity);
     }
-
 }

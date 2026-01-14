@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Serviço {{ $service->code }} - {{ $service->budget->tenant->name ?? 'Easy Budget' }}</title>
+  <title>Serviço {{ $service->code }} - Easy Budget</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
   <style>
@@ -60,23 +60,17 @@
 </head>
 
 <body>
-  <div class="container">
+  <x-layout.page-container :fluid="false" padding="py-0">
     <!-- Botão de impressão (não aparece na impressão) -->
-    <div class="text-center no-print mb-3">
-      <button onclick="window.print()" class="btn btn-primary">
-        <i class="bi bi-printer me-2"></i>
-        Imprimir
-      </button>
-      <a href="{{ route( 'provider.services.public.view-status', [ 'code' => $service->code, 'token' => request( 'token' ) ] ) }}"
-        class="btn btn-outline-secondary ms-2">
-        <i class="bi bi-arrow-left me-2"></i>
-        Voltar
-      </a>
+    <div class="text-center no-print mb-3 py-3">
+      <x-ui.button onclick="window.print()" variant="primary" icon="printer" label="Imprimir" />
+      <x-ui.button type="link" :href="route( 'provider.services.public.view-status', [ 'code' => $service->code, 'token' => request( 'token' ) ] )"
+        variant="outline-secondary" icon="arrow-left" label="Voltar" class="ms-2" />
     </div>
 
     <!-- Cabeçalho -->
     <div class="header text-center">
-      <h1 class="mb-2">{{ $service->budget->tenant->name ?? 'Easy Budget' }}</h1>
+      <h1 class="mb-2">Comprovante de Serviço</h1>
       <h3 class="text-muted">Serviço #{{ $service->code }}</h3>
       <p class="mb-0">{{ date( 'd/m/Y H:i:s' ) }}</p>
     </div>
@@ -84,7 +78,7 @@
     <!-- Status e informações principais -->
     <div class="row mb-4">
       <div class="col-md-6">
-        <div class="info-box">
+        <div class="info-box h-100">
           <h5 class="text-muted mb-3">
             <i class="bi bi-person-circle me-2"></i>
             Dados do Cliente
@@ -107,18 +101,16 @@
       </div>
 
       <div class="col-md-6">
-        <div class="info-box">
+        <div class="info-box h-100">
           <h5 class="text-muted mb-3">
             <i class="bi bi-receipt me-2"></i>
             Orçamento
           </h5>
           <strong>Código:</strong> {{ $service->budget->code }}<br>
           <strong>Descrição:</strong> {{ $service->budget->description }}<br>
-          <strong>Total do Orçamento:</strong> R$ {{ number_format( $service->budget->total, 2, ',', '.' ) }}<br>
+          <strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($service->budget->total) }}<br>
           <strong>Status:</strong>
-          <span class="badge bg-{{ $service->budget->budgetStatus->color ?? 'secondary' }} status-badge">
-            {{ $service->budget->budgetStatus->name }}
-          </span>
+          <x-ui.status-badge :item="$service->budget" />
         </div>
       </div>
     </div>
@@ -150,27 +142,25 @@
 
         <div class="col-md-6">
           <strong>Status Atual:</strong><br>
-          <span class="badge bg-{{ $service->serviceStatus->color ?? 'secondary' }} status-badge fs-5 mb-3">
-            <i class="bi bi-{{ $service->serviceStatus->icon ?? 'circle' }} me-2"></i>
-            {{ $service->serviceStatus->name }}
-          </span><br><br>
+          <x-ui.status-badge :item="$service" class="fs-5 mb-3" />
+          <br><br>
 
           <strong>Valor do Serviço:</strong><br>
-          R$ {{ number_format( $service->total, 2, ',', '.' ) }}<br><br>
+          {{ \App\Helpers\CurrencyHelper::format($service->total) }}<br><br>
 
           <strong>Desconto:</strong><br>
-          R$ {{ number_format( $service->discount, 2, ',', '.' ) }}<br><br>
+          {{ \App\Helpers\CurrencyHelper::format($service->discount) }}<br><br>
 
           <div class="total-highlight">
-            <strong class="fs-4">Valor Final: R$
-              {{ number_format( $service->total - $service->discount, 2, ',', '.' ) }}</strong>
+            <strong class="fs-4">Valor Final:
+              {{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount) }}</strong>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Itens do serviço (se houver) -->
-    @if( $service->items && $service->items->count() > 0 )
+    @if( $service->serviceItems && $service->serviceItems->count() > 0 )
       <div class="info-box">
         <h5 class="text-muted mb-3">
           <i class="bi bi-list-ul me-2"></i>
@@ -188,12 +178,12 @@
               </tr>
             </thead>
             <tbody>
-              @foreach( $service->items as $item )
+              @foreach( $service->serviceItems as $item )
                 <tr>
-                  <td>{{ $item->product->name }}</td>
+                  <td>{{ $item->product?->name ?? 'Produto não encontrado' }}</td>
                   <td class="text-center">{{ $item->quantity }}</td>
-                  <td class="text-end">R$ {{ number_format( $item->unit_value, 2, ',', '.' ) }}</td>
-                  <td class="text-end">R$ {{ number_format( $item->total, 2, ',', '.' ) }}</td>
+                  <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                  <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                 </tr>
               @endforeach
             </tbody>
@@ -215,15 +205,6 @@
 
     <!-- Rodapé -->
   <div class="text-center mt-5 pt-4 border-top">
-    <p class="text-muted mb-1">
-      <strong>{{ $service->budget->tenant->name ?? 'Easy Budget' }}</strong>
-    </p>
-      @if( $service->budget->tenant->contact ?? false )
-        <p class="text-muted mb-1">{{ $service->budget->tenant->contact->email }}</p>
-        @if( $service->budget->tenant->contact->phone )
-          <p class="text-muted mb-1">{{ $service->budget->tenant->contact->phone }}</p>
-        @endif
-      @endif
     <p class="text-muted mb-0">
       <small>Documento gerado em {{ date( 'd/m/Y \à\s H:i:s' ) }}</small>
     </p>
@@ -235,7 +216,7 @@
       </div>
     @endif
   </div>
-  </div>
+  </x-layout.page-container>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

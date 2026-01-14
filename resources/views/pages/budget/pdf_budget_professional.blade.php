@@ -449,14 +449,14 @@
                                     <br><small>{{ $item->product->description }}</small>
                                 @endif
                             </td>
-                            <td class="text-center">{{ number_format($item->quantity, 0, ',', '.') }}</td>
-                            <td class="text-right">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                            <td class="text-right">R$ {{ number_format($item->total, 2, ',', '.') }}</td>
+                            <td class="text-center">{{ \App\Helpers\CurrencyHelper::format($item->quantity, 0, false) }}</td>
+                            <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                            <td class="text-right">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                         </tr>
                         @endforeach
                         <tr class="service-total">
                             <td colspan="3"><strong>Total do Serviço</strong></td>
-                            <td class="text-right"><strong>R$ {{ number_format($service->total, 2, ',', '.') }}</strong></td>
+                            <td class="text-right"><strong>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</strong></td>
                         </tr>
                     </tbody>
                 </table>
@@ -475,15 +475,15 @@
                 <div class="totals-grid">
                     <div class="total-item">
                         <div class="total-label">Subtotal dos Serviços</div>
-                        <div class="total-value">R$ {{ number_format($servicesSubtotal, 2, ',', '.') }}</div>
+                        <div class="total-value">{{ \App\Helpers\CurrencyHelper::format($servicesSubtotal) }}</div>
                     </div>
                     <div class="total-item">
                         <div class="total-label">Desconto</div>
-                        <div class="total-value">R$ {{ number_format($discountValue, 2, ',', '.') }}</div>
+                        <div class="total-value">{{ \App\Helpers\CurrencyHelper::format($discountValue) }}</div>
                     </div>
                     <div class="total-item grand-total">
                         <div class="total-label">TOTAL GERAL</div>
-                        <div class="total-value">R$ {{ number_format($netTotal, 2, ',', '.') }}</div>
+                        <div class="total-value">{{ \App\Helpers\CurrencyHelper::format($netTotal) }}</div>
                     </div>
                 </div>
             </div>

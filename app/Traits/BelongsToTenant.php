@@ -15,15 +15,14 @@ trait BelongsToTenant
      */
     public function tenant(): BelongsTo
     {
-        return $this->belongsTo( Tenant::class);
+        return $this->belongsTo(Tenant::class);
     }
 
     /**
      * Scope a query to only include permissions for a given tenant.
      */
-    public function scopeForTenant( Builder $query, Tenant $tenant ): Builder
+    public function scopeForTenant(Builder $query, Tenant $tenant): Builder
     {
-        return $query->where( 'tenant_id', $tenant->id );
+        return $query->where('tenant_id', $tenant->id);
     }
-
 }

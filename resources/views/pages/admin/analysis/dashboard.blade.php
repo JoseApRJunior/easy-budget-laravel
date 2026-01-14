@@ -1,16 +1,14 @@
 @extends( 'layouts.admin' )
 
-@section( 'breadcrumb' )
-    <li class="breadcrumb-item active">Análise Histórica</li>
-@endsection
-
 @section( 'admin_content' )
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Dashboard de Análise Histórica</h5>
-                </div>
+    <x-layout.page-header
+        title="Análise Histórica"
+        icon="graph-up"
+        :breadcrumb-items="[
+            'Admin' => url('/admin'),
+            'Análise' => '#'
+        ]">
+    </x-layout.page-header>
                 <div class="card-body">
                     @if ( isset( $error ) )
                         <div class="alert alert-danger">{{ $error }}</div>
@@ -35,7 +33,4 @@
                         </div>
                     @endif
                 </div>
-            </div>
-        </div>
-    </div>
 @endsection

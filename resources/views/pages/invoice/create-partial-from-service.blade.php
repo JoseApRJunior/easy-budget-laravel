@@ -1,21 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-1">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="bi bi-receipt me-2"></i>Gerar Fatura Parcial para o Serviço #{{ $serviceCode }}
-            </h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('provider.services.index') }}">Serviços</a></li>
-                    <li class="breadcrumb-item"><a href="#">#{{ $serviceCode }}</a></li>
-                    <li class="breadcrumb-item active">Fatura Parcial</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid py-4">
+        <x-layout.page-header
+            title="Gerar Fatura Parcial para o Serviço #{{ $serviceCode }}"
+            icon="receipt"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Faturas' => route('provider.invoices.dashboard'),
+                'Serviço #' . $serviceCode => route('provider.services.show', $serviceCode),
+                'Fatura Parcial' => '#'
+            ]">
+            <p class="text-muted mb-0">Selecione apenas os itens que deseja faturar agora</p>
+        </x-layout.page-header>
 
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
@@ -100,13 +97,13 @@
                                         </td>
                                         <td class="text-end">
                                             R$ <span
-                                                class="unit-value">{{ number_format($item->unit_value, 2, ',', '.') }}</span>
+                                                class="unit-value">{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, false) }}</span>
                                             <input type="hidden" name="items[{{ $index }}][unit_value]"
                                                 value="{{ $item->unit_value }}">
                                         </td>
                                         <td class="text-end">
                                             R$ <span
-                                                class="total-item">{{ number_format($item->total, 2, ',', '.') }}</span>
+                                                class="total-item">{{ \App\Helpers\CurrencyHelper::format($item->total, 2, false) }}</span>
                                         </td>
                                         <td class="text-end">
                                             R$ <span class="partial-total text-primary fw-bold">0,00</span>
