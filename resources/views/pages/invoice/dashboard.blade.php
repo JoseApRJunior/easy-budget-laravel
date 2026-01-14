@@ -138,8 +138,8 @@
 
                                 @foreach ($recent as $inv)
                                     <x-resource.table-row>
-                                        <x-resource.table-cell>
-                                            <code class="text-primary small">{{ $inv->code }}</code>
+                                        <x-resource.table-cell class="fw-bold text-dark">
+                                            {{ $inv->code }}
                                         </x-resource.table-cell>
                                         <x-resource.table-cell class="fw-medium text-dark">
                                             {{ $inv->customer?->commonData?->first_name ?? 'Cliente N/A' }}
