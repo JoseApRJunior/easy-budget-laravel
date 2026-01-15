@@ -3,7 +3,7 @@
 @section('title', 'Ajustar Estoque - ' . $product->name)
 
 @section('content')
-<div class="container-fluid py-4">
+<x-layout.page-container>
     <x-layout.page-header
         title="Ajuste de Estoque"
         icon="sliders"
@@ -146,7 +146,7 @@
             </form>
         </div>
     </div>
-</div>
+</x-layout.page-container>
 @endsection
 
 @push('scripts')

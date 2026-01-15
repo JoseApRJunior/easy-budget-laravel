@@ -3,7 +3,7 @@
 @section('title', 'Novo Orçamento')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-layout.page-container>
     <x-layout.page-header
         title="Novo Orçamento"
         icon="file-earmark-plus"
@@ -18,13 +18,13 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             @if ($errors->any())
-            <div class="alert alert-danger" role="alert">
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+                <div class="alert alert-danger" role="alert">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             <form id="create-budget-form" action="{{ route('provider.budgets.store') }}" method="POST">
@@ -38,83 +38,80 @@
                             id="customer_id" name="customer_id" required>
                             <option value="">Selecione um cliente...</option>
                             @foreach ($customers as $customer)
-                            @php
-                                $customerName = 'Nome não informado';
-                                if ($customer->commonData) {
-                                    $commonData = $customer->commonData;
-                                    $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
-                                }
-                                $doc = 'Sem documento';
-                                if ($customer->commonData) {
-                                    $doc = $customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($customer->commonData->cpf);
-                                }
-                            @endphp
-                            <option value="{{ $customer->id }}"
-                                {{ (old('customer_id') == $customer->id || ($selectedCustomer && $selectedCustomer->id == $customer->id)) ? 'selected' : '' }}>
-                                {{ $customerName }} ({{ $doc }})
-                            </option>
+                                @php
+                                    $customerName = 'Nome não informado';
+                                    if ($customer->commonData) {
+                                        $commonData = $customer->commonData;
+                                        $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                    }
+                                    $doc = 'Sem documento';
+                                    if ($customer->commonData) {
+                                        $doc = $customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($customer->commonData->cpf);
+                                    }
+                                @endphp
+                                <option value="{{ $customer->id }}"
+                                    {{ old('customer_id') == $customer->id || ($selectedCustomer && $selectedCustomer->id == $customer->id) ? 'selected' : '' }}>
+                                    {{ $customerName }} ({{ $doc }})
+                                </option>
                             @endforeach
                         </select>
                         @error('customer_id')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Data de Vencimento -->
                     <div class="col-md-6">
                         <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
-                        <input type="date" class="form-control @error('due_date') is-invalid @enderror"
-                            id="due_date" name="due_date"
-                            min="{{ date('Y-m-d') }}"
+                        <input type="date" class="form-control @error('due_date') is-invalid @enderror" id="due_date"
+                            name="due_date" min="{{ date('Y-m-d') }}"
                             value="{{ \App\Helpers\DateHelper::formatDateOrDefault(old('due_date', date('Y-m-d', strtotime('+7 days'))), 'Y-m-d', date('Y-m-d', strtotime('+7 days'))) }}"
                             required>
                         @error('due_date')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Valores (Somente Leitura) -->
                     <div class="col-md-6">
                         <label for="total_display" class="form-label small fw-bold text-muted text-uppercase">Valor Total Estimado</label>
-                        <input type="text" id="total_display"
-                            class="form-control bg-light currency-brl"
-                            value="0,00" readonly tabindex="-1">
+                        <input type="text" id="total_display" class="form-control bg-light currency-brl" value="0,00"
+                            readonly tabindex="-1">
                         <div class="form-text text-muted small">O valor final será calculado após adicionar os serviços.</div>
                     </div>
 
                     <!-- Descrição -->
                     <div class="col-12">
                         <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
-                        <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
-                            rows="4" maxlength="255" placeholder="Ex: Projeto de reforma da cozinha...">{{ old('description') }}</textarea>
+                        <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror" rows="4"
+                            maxlength="255" placeholder="Ex: Projeto de reforma da cozinha...">{{ old('description') }}</textarea>
                         <div class="d-flex justify-content-end mt-1">
                             <small id="char-count" class="text-muted small">255 caracteres restantes</small>
                         </div>
                         @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <!-- Condições de Pagamento -->
                     <div class="col-12">
                         <label for="payment_terms" class="form-label small fw-bold text-muted text-uppercase">Condições de Pagamento (Opcional)</label>
-                        <textarea id="payment_terms" name="payment_terms"
-                            class="form-control @error('payment_terms') is-invalid @enderror" rows="2" maxlength="255"
-                            placeholder="Ex: 50% de entrada e 50% na conclusão.">{{ old('payment_terms') }}</textarea>
+                        <textarea id="payment_terms" name="payment_terms" class="form-control @error('payment_terms') is-invalid @enderror"
+                            rows="2" maxlength="255" placeholder="Ex: 50% de entrada e 50% na conclusão.">{{ old('payment_terms') }}</textarea>
                         @error('payment_terms')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mt-5">
-                    <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="x-circle" label="Cancelar" />
+                    <x-ui.back-button index-route="provider.budgets.index" label="Cancelar" />
                     <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Orçamento" />
                 </div>
             </form>
         </div>
     </div>
-</div>
+</x-layout.page-container>
 @endsection
 
 @push('scripts')
