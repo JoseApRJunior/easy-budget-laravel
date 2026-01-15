@@ -78,34 +78,36 @@ class BudgetShareService extends AbstractBaseService
                 }
 
                 // Atualiza o status do orçamento sem escopo global (ação do cliente)
-                $budget->update([
-                    'status' => $newStatus,
-                    'customer_comment' => $comment,
-                    'status_updated_at' => now(),
-                    'status_updated_by' => null, // Ação realizada pelo cliente (público)
-                ]);
+                $budget->status = $newStatus;
+                $budget->customer_comment = $comment;
+                $budget->status_updated_at = now();
+                $budget->status_updated_by = null;
+                $budget->save();
 
                 // Marca o compartilhamento como concluído/rejeitado se for um compartilhamento real
                 if ($share) {
-                    $shareUpdateData = [
-                        'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED 
-                            ? \App\Enums\BudgetShareStatus::APPROVED->value 
-                            : \App\Enums\BudgetShareStatus::REJECTED->value,
-                        'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? false : true,
-                    ];
+                    $share->status = $newStatus === \App\Enums\BudgetStatus::APPROVED 
+                        ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                        : \App\Enums\BudgetShareStatus::REJECTED->value;
 
-                    if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
-                        $shareUpdateData['rejected_at'] = now();
+                    // Se aprovado, mantemos o link ativo por mais 30 dias para consulta do cliente
+                    if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
+                        $share->is_active = true;
+                        $share->expires_at = now()->addDays(30);
+                    } else {
+                        $share->is_active = true; // Mantemos ativo para o cliente ver que foi rejeitado, se quiser
+                        if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
+                            $share->rejected_at = now();
+                        }
                     }
 
-                    $share->update($shareUpdateData);
+                    $share->save();
                 } else {
                     // Se for fallback, limpa o token do orçamento apenas se aprovado
                     if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
-                        $budget->update([
-                            'public_token' => null,
-                            'public_expires_at' => null,
-                        ]);
+                        $budget->public_token = null;
+                        $budget->public_expires_at = null;
+                        $budget->save();
                     }
                 }
 
@@ -113,7 +115,7 @@ class BudgetShareService extends AbstractBaseService
                 \App\Models\BudgetActionHistory::create([
                     'tenant_id' => $budget->tenant_id,
                     'budget_id' => $budget->id,
-                    'action' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'approved' : ($newStatus === \App\Enums\BudgetStatus::REJECTED ? 'rejected' : 'cancelled'),
+                    'action' => $newStatus->value, // Usa o valor do enum (approved/rejected/etc)
                     'old_status' => $budget->getOriginal('status'),
                     'new_status' => $newStatus->value,
                     'description' => $comment ?? ($newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado pelo cliente via link público.' : 'Orçamento rejeitado pelo cliente via link público.'),
@@ -532,7 +534,8 @@ class BudgetShareService extends AbstractBaseService
                 })->count();
             $recentShares = BudgetShare::where('tenant_id', $tenantId)
                 ->with(['budget', 'budget.customer.commonData'])
-                ->orderBy('created_at', 'desc')
+                ->orderBy('is_active', 'desc')
+                ->orderByRaw('COALESCE(last_accessed_at, created_at) DESC')
                 ->limit(10)
                 ->get();
             $mostSharedBudgets = Budget::where('tenant_id', $tenantId)
