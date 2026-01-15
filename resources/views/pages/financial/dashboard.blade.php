@@ -11,16 +11,14 @@
             ]"
             description="Visão geral das finanças do seu negócio com métricas de receita e faturamento."
         >
-            <x-slot:actions>
-                <select class="form-select form-select-sm w-auto" id="periodSelect" onchange="changePeriod()">
-                    @foreach ($periods as $key => $label)
-                        <option value="{{ $key }}" {{ $period === $key ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </x-slot:actions>
         </x-layout.page-header>
+
+        <x-layout.actions-bar>
+            <x-ui.period-selector
+                :periods="$periods"
+                :current-period="$period"
+            />
+        </x-layout.actions-bar>
 
         <!-- KPI Cards -->
         <x-layout.grid-row>
@@ -67,34 +65,39 @@
             />
         </x-layout.grid-row>
 
-        <!-- Charts Row -->
-        <x-layout.grid-row>
-            <!-- Receita Timeline -->
-            <x-layout.grid-col size="col-lg-8">
-                <x-resource.resource-list-card
-                    title="Receita dos Últimos 30 Dias"
-                    icon="graph-up"
-                    padding="p-4"
-                >
-                    <div style="height: 300px;">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </x-resource.resource-list-card>
-            </x-layout.grid-col>
+            <!-- Gráficos -->
+            <x-layout.grid-row>
+                <!-- Receita Timeline -->
+                <x-layout.grid-col size="col-lg-8">
+                    <x-resource.resource-list-card
+                        title="Receita dos Últimos 30 Dias"
+                        icon="graph-up"
+                        padding="p-4"
+                    >
+                        <x-dashboard.chart-line
+                            id="revenueChart"
+                            :data="$charts['revenue_timeline']"
+                            label="Receita (R$)"
+                             height="150"
+                        />
+                    </x-resource.resource-list-card>
+                </x-layout.grid-col>
 
-            <!-- Status das Faturas -->
-            <x-layout.grid-col size="col-lg-4">
-                <x-resource.resource-list-card
-                    title="Status das Faturas"
-                    icon="pie-chart"
-                    padding="p-4"
-                >
-                    <div style="height: 300px;">
-                        <canvas id="invoiceStatusChart"></canvas>
-                    </div>
-                </x-resource.resource-list-card>
-            </x-layout.grid-col>
-        </x-layout.grid-row>
+                <!-- Status das Faturas -->
+                <x-layout.grid-col size="col-lg-4">
+                    <x-resource.resource-list-card
+                        title="Status das Faturas"
+                        icon="pie-chart"
+                        padding="p-4"
+                    >
+                        <x-dashboard.chart-doughnut
+                            id="invoiceStatusChart"
+                            :data="$charts['invoice_status']"
+                            height="150"
+                        />
+                    </x-resource.resource-list-card>
+                </x-layout.grid-col>
+            </x-layout.grid-row>
 
         <!-- Métodos de Pagamento e Orçamentos -->
         <x-layout.grid-row>
@@ -106,21 +109,16 @@
                     padding="p-4"
                 >
                     @if (!empty($payments['by_method']))
-                        <div class="row g-4">
+                        <x-layout.grid-row class="mb-0">
                             @foreach ($payments['by_method'] as $method => $data)
-                                <div class="col-md-6">
-                                    <div class="p-3 border rounded-3 h-100 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <div class="fw-bold text-dark">{{ \App\Models\Payment::getPaymentMethods()[$method] ?? $method }}</div>
-                                            <small class="text-muted">{{ $data['count'] }} pagamentos</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="fw-bold text-success">R$ {{ number_format($data['total'], 2, ',', '.') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <x-dashboard.mini-stat-card
+                                    :label="\App\Models\Payment::getPaymentMethods()[$method] ?? $method"
+                                    :value="'R$ ' . number_format($data['total'], 2, ',', '.')"
+                                    variant="primary"
+                                    col="col-md-6"
+                                />
                             @endforeach
-                        </div>
+                        </x-layout.grid-row>
                     @else
                         <x-resource.empty-state
                             title="Sem pagamentos"
@@ -141,24 +139,25 @@
                         padding="p-3"
                     >
                         <x-layout.grid-row class="text-center mb-3 g-2">
-                            <x-layout.grid-col size="col-6">
-                                <div class="p-2 bg-light rounded">
-                                    <div class="fw-bold text-primary h5 mb-0">{{ $budgets['total'] }}</div>
-                                    <p class="text-muted x-small text-uppercase mb-0">Total</p>
-                                </div>
-                            </x-layout.grid-col>
-                            <x-layout.grid-col size="col-6">
-                                <div class="p-2 bg-light rounded">
-                                    <div class="fw-bold text-success h5 mb-0">{{ $budgets['approved'] }}</div>
-                                    <p class="text-muted x-small text-uppercase mb-0">Aprovados</p>
-                                </div>
-                            </x-layout.grid-col>
+                            <x-dashboard.mini-stat-card
+                                label="Total"
+                                :value="$budgets['total']"
+                                variant="primary"
+                            />
+                            <x-dashboard.mini-stat-card
+                                label="Aprovados"
+                                :value="$budgets['approved']"
+                                variant="success"
+                            />
                         </x-layout.grid-row>
 
-                        <div class="text-center p-2 bg-primary bg-opacity-10 rounded">
-                            <div class="h4 fw-bold text-primary mb-0">{{ $budgets['approval_rate'] }}%</div>
-                            <p class="text-muted x-small text-uppercase mb-0">Taxa de Aprovação</p>
-                        </div>
+                        <x-dashboard.mini-stat-card
+                            label="Taxa de Aprovação"
+                            :value="$budgets['approval_rate'] . '%'"
+                            variant="primary"
+                            col="col-12"
+                            class="text-center"
+                        />
                     </x-resource.resource-list-card>
 
                     <!-- Insights -->
@@ -198,43 +197,6 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const revenueData = @json($charts['revenue_timeline']);
-        const invoiceStatusData = @json($charts['invoice_status']);
-
-        // Gráfico de Receita
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: Object.keys(revenueData),
-                datasets: [{
-                    label: 'Receita (R$)',
-                    data: Object.values(revenueData),
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-
-        // Gráfico de Status das Faturas
-        const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
-        new Chart(invoiceStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(invoiceStatusData),
-                datasets: [{
-                    data: Object.values(invoiceStatusData),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
-                }]
-            }
-        });
-
         function changePeriod() {
             const period = document.getElementById('periodSelect').value;
             window.location.href = `?period=${period}`;

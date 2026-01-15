@@ -202,7 +202,11 @@ class FinancialReportService extends AbstractBaseService
             ->groupBy('status')
             ->get()
             ->mapWithKeys(function ($item) {
-                return [$item->status->label() => $item->count];
+                return [$item->status->value => [
+                    'label' => $item->status->label(),
+                    'count' => $item->count,
+                    'color' => $item->status->getColor()
+                ]];
             })
             ->toArray();
 
@@ -215,8 +219,11 @@ class FinancialReportService extends AbstractBaseService
             ->get()
             ->mapWithKeys(function ($item) {
                 $label = $item->method ?: 'Não informado';
-
-                return [$label => $item->count];
+                return [$label => [
+                    'label' => $label,
+                    'count' => $item->count,
+                    'color' => '#6c757d' // Cor padrão para métodos
+                ]];
             })
             ->toArray();
 
