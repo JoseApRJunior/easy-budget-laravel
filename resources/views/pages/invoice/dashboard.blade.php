@@ -69,27 +69,27 @@
                 <x-resource.resource-list-card
                     title="Totais Financeiros"
                     icon="currency-dollar"
-                    padding="p-4"
+                    padding="p-3"
                 >
                     <x-layout.grid-row class="text-center g-3">
-                        <x-layout.grid-col size="col-4">
-                            <div class="p-3 bg-light rounded-3 h-100">
-                                <div class="text-muted small text-uppercase mb-1">Faturado</div>
-                                <div class="fw-bold text-dark h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($billed) }}</div>
-                            </div>
-                        </x-layout.grid-col>
-                        <x-layout.grid-col size="col-4">
-                            <div class="p-3 bg-success bg-opacity-10 rounded-3 h-100">
-                                <div class="text-muted small text-uppercase mb-1">Recebido</div>
-                                <div class="fw-bold text-success h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($received) }}</div>
-                            </div>
-                        </x-layout.grid-col>
-                        <x-layout.grid-col size="col-4">
-                            <div class="p-3 bg-warning bg-opacity-10 rounded-3 h-100">
-                                <div class="text-muted small text-uppercase mb-1">A Receber</div>
-                                <div class="fw-bold text-warning h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($toReceive) }}</div>
-                            </div>
-                        </x-layout.grid-col>
+                        <x-dashboard.mini-stat-card
+                            label="Faturado"
+                            :value="\App\Helpers\CurrencyHelper::format($billed)"
+                            variant="primary"
+                            col="col-4"
+                        />
+                        <x-dashboard.mini-stat-card
+                            label="Recebido"
+                            :value="\App\Helpers\CurrencyHelper::format($received)"
+                            variant="success"
+                            col="col-4"
+                        />
+                        <x-dashboard.mini-stat-card
+                            label="A Receber"
+                            :value="\App\Helpers\CurrencyHelper::format($toReceive)"
+                            variant="warning"
+                            col="col-4"
+                        />
                     </x-layout.grid-row>
                 </x-resource.resource-list-card>
             </x-layout.grid-col>
@@ -100,15 +100,19 @@
                     icon="pie-chart"
                     padding="p-4"
                 >
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="chart-container" style="height: 120px; width: 200px;">
-                            <canvas id="statusChart"></canvas>
-                        </div>
-                        <div class="text-end">
+                    <x-layout.grid-row class="align-items-center mb-0">
+                        <x-layout.grid-col size="col-7">
+                            <x-dashboard.chart-doughnut
+                                id="statusChart"
+                                :data="$breakdown"
+                                height="150"
+                            />
+                        </x-layout.grid-col>
+                        <x-layout.grid-col size="col-5" class="text-end">
                             <div class="display-6 fw-bold text-dark mb-0">{{ $paidRate }}%</div>
-                            <div class="text-muted small text-uppercase">Taxa de Liquidez</div>
-                        </div>
-                    </div>
+                            <div class="text-muted small text-uppercase fw-medium">Taxa de Liquidez</div>
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
                 </x-resource.resource-list-card>
             </x-layout.grid-col>
         </x-layout.grid-row>
@@ -238,92 +242,6 @@
     </x-layout.page-container>
 @endsection
 
-@push('styles')
-    <style>
-        .text-code {
-            font-family: 'Courier New', monospace;
-            background: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: .85em
-        }
-
-        .chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 120px;
-            width: 100%
-        }
-
-        .chart-container canvas {
-            max-width: 100% !important;
-            height: auto !important
-        }
-    </style>
-@endpush
-
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const statusData = @json($breakdown);
-            const labels = [];
-            const values = [];
-            const colors = [];
-            Object.keys(statusData).forEach(k => {
-                const s = statusData[k];
-                if (s && s.count > 0) {
-                    labels.push(k);
-                    values.push(s.count);
-                    colors.push(s.color || '#6c757d');
-                }
-            });
-            if (values.length === 0) {
-                const c = document.querySelector('.chart-container');
-                if (c) {
-                    c.innerHTML = '<p class="text-muted text-center mb-0 small">Nenhuma fatura cadastrada</p>';
-                }
-                return;
-            }
-            const ctx = document.getElementById('statusChart');
-            if (!ctx) {
-                return;
-            }
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: colors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const pct = ((context.parsed / total) * 100).toFixed(1);
-                                    return context.label + ': ' + context.parsed + ' (' + pct + '%)';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
 @endpush
