@@ -184,13 +184,13 @@
                                         $customer = $budget->customer->commonData ?? null;
                                         $customerName = $customer?->company_name ?? trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?: 'Cliente não informado';
                                     @endphp
-                                    <div class="d-flex justify-content-between align-items-center p-2 rounded transition-all hover-bg">
+                                    <x-ui.list-item>
                                         <x-resource.resource-info
                                             :title="$budget->code"
                                             :subtitle="Str::limit($customerName, 20)"
                                         />
                                         <x-ui.badge variant="primary" :label="$budget->shares_count" pill />
-                                    </div>
+                                    </x-ui.list-item>
                                 @endforeach
                             </x-layout.v-stack>
                         @else
@@ -225,7 +225,7 @@
 
                     <!-- Atalhos -->
                     <x-resource.quick-actions title="Atalhos" icon="lightning-charge">
-                        <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Link" />
+                        <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="outline-success" icon="plus-circle" label="Novo Link" />
                         <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="outline-primary" icon="list" label="Gerenciar" />
                         <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="file-earmark-text" label="Orçamentos" />
                     </x-resource.quick-actions>
@@ -234,15 +234,3 @@
         </x-layout.grid-row>
     </x-layout.page-container>
 @endsection
-
-@push('styles')
-    <style>
-        .text-code {
-            font-family: 'Courier New', monospace;
-            background-color: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.85em;
-        }
-    </style>
-@endpush

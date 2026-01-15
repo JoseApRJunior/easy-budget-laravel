@@ -152,6 +152,40 @@ class BudgetShareService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
+            // Verifica se já existe um compartilhamento ATIVO para este mesmo orçamento e destinatário
+            $existingShare = BudgetShare::where('budget_id', $data['budget_id'])
+                ->where('recipient_email', $data['recipient_email'])
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($existingShare) {
+                // Se o usuário estiver tentando criar um novo com permissões diferentes ou expiração diferente, 
+                // podemos decidir atualizar o existente ou retornar o atual.
+                // Para manter a inteligência solicitada, vamos retornar o existente para evitar duplicidade de links ativos.
+                
+                // Opcional: Atualizar a mensagem ou expiração se foram enviadas novas
+                $updateData = [];
+                if (isset($data['expires_at'])) $updateData['expires_at'] = $data['expires_at'];
+                if (isset($data['message'])) $updateData['message'] = $data['message'];
+                if (isset($data['permissions'])) $updateData['permissions'] = $data['permissions'];
+
+                if (!empty($updateData)) {
+                    $existingShare->update($updateData);
+                }
+
+                // Re-envia a notificação se solicitado
+                if ($sendNotification) {
+                    $this->sendShareNotification($existingShare, $budget);
+                }
+
+                return $this->success($existingShare, 'Link de compartilhamento ativo já existente reutilizado.');
+            }
+
             // Prepara dados para o DTO
             $data['share_token'] = $this->generateUniqueToken();
             $data['is_active'] = true;
