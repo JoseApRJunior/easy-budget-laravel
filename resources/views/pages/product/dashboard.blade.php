@@ -89,8 +89,12 @@
 
                             @foreach ($recent as $product)
                                 <x-resource.table-row>
-                                    <x-resource.table-cell class="fw-bold text-dark">
-                                        {{ $product->name }}
+                                    <x-resource.table-cell>
+                                        <x-resource.resource-info
+                                            :title="$product->name"
+                                            :subtitle="'SKU: ' . $product->sku"
+                                            titleClass="fw-bold text-dark"
+                                        />
                                     </x-resource.table-cell>
                                     <x-resource.table-cell class="text-muted small">
                                         {{ $product->category->name ?? '—' }}
@@ -100,9 +104,10 @@
                                     </x-resource.table-cell>
                                     <x-resource.table-cell>
                                         @if($product->cost_price > 0)
-                                            <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}-subtle text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }} border-0">
-                                                {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
-                                            </span>
+                                            <x-ui.badge
+                                                :variant="$product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger')"
+                                                :label="number_format($product->profit_margin_percentage, 1, ',', '.') . '%'"
+                                            />
                                         @else
                                             <span class="text-muted small">—</span>
                                         @endif
@@ -145,9 +150,10 @@
                                         col="col-6"
                                     >
                                         @if($product->cost_price > 0)
-                                            <span class="badge bg-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }}-subtle text-{{ $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger') }} border-0">
-                                                {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
-                                            </span>
+                                            <x-ui.badge
+                                                :variant="$product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger')"
+                                                :label="number_format($product->profit_margin_percentage, 1, ',', '.') . '%'"
+                                            />
                                         @else
                                             <span class="text-muted small">—</span>
                                         @endif
@@ -167,7 +173,7 @@
                     <x-resource.empty-state
                         title="Nenhum produto recente"
                         description="Comece cadastrando seus produtos para visualizá-los aqui."
-                        icon="box-seam"
+                        :icon="null"
                     />
                 @endif
             </x-resource.resource-list-card>
@@ -215,6 +221,3 @@
     </x-layout.grid-row>
 </x-layout.page-container>
 @endsection
-
-@push('styles')
-@endpush

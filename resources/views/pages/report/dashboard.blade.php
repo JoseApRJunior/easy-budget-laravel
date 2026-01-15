@@ -81,10 +81,11 @@
                                 @foreach ($recentReports as $report)
                                     <x-resource.table-row>
                                         <x-resource.table-cell>
-                                            <span class="fw-medium text-dark">{{ ucfirst($report->type ?? 'N/A') }}</span>
-                                        </x-resource.table-cell>
-                                        <x-resource.table-cell class="text-muted small">
-                                            {{ $report->period ?? 'N/A' }}
+                                            <x-resource.resource-info
+                                                :title="ucfirst($report->type ?? 'N/A')"
+                                                :subtitle="$report->period ?? 'Período não informado'"
+                                                titleClass="fw-bold text-dark"
+                                            />
                                         </x-resource.table-cell>
                                         <x-resource.table-cell class="text-muted small">
                                             @if ($report->date)
@@ -94,18 +95,16 @@
                                             @endif
                                         </x-resource.table-cell>
                                         <x-resource.table-cell>
-                                            <span class="badge bg-success bg-opacity-10 text-success border-0 px-3">Concluído</span>
+                                            <x-ui.badge variant="success" label="Concluído" />
                                         </x-resource.table-cell>
-                                        <x-resource.table-cell align="center">
-                                            <div class="d-flex justify-content-center gap-1">
-                                                @if (isset($report->download_url))
-                                                    <x-ui.button type="link" :href="$report->download_url" variant="outline-primary" size="sm" icon="download" title="Download" />
-                                                @endif
-                                                @if (isset($report->view_url))
-                                                    <x-ui.button type="link" :href="$report->view_url" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
-                                                @endif
-                                            </div>
-                                        </x-resource.table-cell>
+                                        <x-resource.table-actions>
+                                            @if (isset($report->download_url))
+                                                <x-ui.button type="link" :href="$report->download_url" variant="outline-primary" size="sm" icon="download" title="Download" target="_blank" />
+                                            @endif
+                                            @if (isset($report->view_url))
+                                                <x-ui.button type="link" :href="$report->view_url" variant="outline-info" size="sm" icon="eye" title="Visualizar" target="_blank" />
+                                            @endif
+                                        </x-resource.table-actions>
                                     </x-resource.table-row>
                                 @endforeach
                             </x-resource.resource-table>
@@ -127,16 +126,16 @@
                                     <x-resource.resource-mobile-field
                                         label="Status"
                                     >
-                                        <span class="badge bg-success bg-opacity-10 text-success border-0">Concluído</span>
+                                        <x-ui.badge variant="success" label="Concluído" />
                                     </x-resource.resource-mobile-field>
                                 </x-resource.resource-mobile-item>
                             @endforeach
                         </x-slot:mobile>
                     @else
                         <x-resource.empty-state
-                            title="Nenhum relatório"
-                            description="Gere seu primeiro relatório para visualizá-lo aqui."
-                            icon="bar-chart-line"
+                            title="Nenhum relatório gerado"
+                            description="Seus relatórios recentes aparecerão aqui conforme forem solicitados."
+                            :icon="null"
                         />
                     @endif
                 </x-resource.resource-list-card>

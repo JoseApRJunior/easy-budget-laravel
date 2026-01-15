@@ -6,6 +6,7 @@
 'type' => 'button',
 'href' => null,
 'label' => null,
+'bold' => true, // Novo default para botões mais profissionais
 ])
 
 @php
@@ -15,7 +16,10 @@ if ($variant === 'info' && !$outline) {
     $classes .= ' text-white';
 }
 if ($size) {
-$classes .= " btn-{$size}";
+    $classes .= " btn-{$size}";
+}
+if ($bold) {
+    $classes .= ' fw-bold';
 }
 
 $tag = $type === 'link' ? 'a' : 'button';

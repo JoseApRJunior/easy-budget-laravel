@@ -121,9 +121,9 @@
                         </x-layout.grid-row>
                     @else
                         <x-resource.empty-state
-                            title="Sem pagamentos"
-                            description="Nenhum pagamento registrado no período selecionado."
-                            icon="cash-stack"
+                            title="Sem pagamentos registrados"
+                            description="Nenhum pagamento encontrado no período selecionado."
+                            :icon="null"
                         />
                     @endif
                 </x-resource.resource-list-card>

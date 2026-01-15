@@ -76,21 +76,46 @@
                     icon="pie-chart"
                     padding="p-4"
                 >
-                    <div class="chart-container" style="height: 200px;">
-                        <canvas id="statusChart"></canvas>
-                    </div>
+                    <x-dashboard.chart-doughnut
+                        id="statusChart"
+                        :data="$breakdown"
+                        height="250"
+                    />
                 </x-resource.resource-list-card>
             </x-layout.grid-col>
 
             <x-layout.grid-col size="col-lg-6">
                 <x-resource.resource-list-card
-                    title="Agendamentos por Período"
-                    icon="bar-chart"
+                    title="Atividade Recente"
+                    icon="activity"
                     padding="p-4"
                 >
-                    <div class="chart-container" style="height: 200px;">
-                        <canvas id="periodChart"></canvas>
-                    </div>
+                    <x-layout.grid-row class="text-center g-3 mb-0">
+                        <x-dashboard.mini-stat-card
+                            label="Hoje"
+                            :value="$todaySchedules"
+                            variant="primary"
+                            col="col-12 col-md-3"
+                        />
+                        <x-dashboard.mini-stat-card
+                            label="Esta Semana"
+                            :value="$thisWeekSchedules"
+                            variant="success"
+                            col="col-12 col-md-3"
+                        />
+                        <x-dashboard.mini-stat-card
+                            label="Pendentes"
+                            :value="$pending"
+                            variant="warning"
+                            col="col-12 col-md-3"
+                        />
+                        <x-dashboard.mini-stat-card
+                            label="Faltas (No-show)"
+                            :value="$noShow"
+                            variant="danger"
+                            col="col-12 col-md-3"
+                        />
+                    </x-layout.grid-row>
                 </x-resource.resource-list-card>
             </x-layout.grid-col>
         </x-layout.grid-row>
@@ -132,27 +157,7 @@
                                             <x-resource.table-cell-truncate :text="$sc->service?->description ?? $sc->service?->code" />
                                         </x-resource.table-cell>
                                         <x-resource.table-cell>
-                                            @php
-                                                $statusVariant = match ($sc->status) {
-                                                    'confirmed' => 'primary',
-                                                    'pending' => 'warning',
-                                                    'completed' => 'success',
-                                                    'cancelled' => 'danger',
-                                                    'no_show' => 'secondary',
-                                                    default => 'secondary',
-                                                };
-                                                $statusLabel = match ($sc->status) {
-                                                    'confirmed' => 'Confirmado',
-                                                    'pending' => 'Pendente',
-                                                    'completed' => 'Concluído',
-                                                    'cancelled' => 'Cancelado',
-                                                    'no_show' => 'No-show',
-                                                    default => ucfirst($sc->status),
-                                                };
-                                            @endphp
-                                            <span class="badge bg-{{ $statusVariant }}-subtle text-{{ $statusVariant }} border-0 px-3">
-                                                {{ $statusLabel }}
-                                            </span>
+                                            <x-ui.status-badge :item="$sc" />
                                         </x-resource.table-cell>
                                         <x-resource.table-cell align="center">
                                             <x-ui.button type="link" :href="route('provider.schedules.show', $sc->id)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" />
@@ -178,9 +183,7 @@
                                     <x-resource.resource-mobile-field
                                         label="Status"
                                     >
-                                        <span class="badge bg-{{ $statusVariant ?? 'secondary' }}-subtle text-{{ $statusVariant ?? 'secondary' }} border-0">
-                                            {{ $statusLabel ?? $sc->status }}
-                                        </span>
+                                        <x-ui.status-badge :item="$sc" />
                                     </x-resource.resource-mobile-field>
                                 </x-resource.resource-mobile-item>
                             @endforeach
@@ -255,144 +258,9 @@
         </x-layout.grid-row>
     </x-layout.page-container>
 @endsection
-    </div>
-@endsection
-
-@push('styles')
-    <style>
-        .chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 120px;
-            width: 100%
-        }
-
-        .chart-container canvas {
-            max-width: 100% !important;
-            height: auto !important
-        }
-    </style>
-@endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Status Chart
-            const statusData = @json($breakdown);
-            const statusLabels = [];
-            const statusValues = [];
-            const statusColors = [];
-            Object.keys(statusData).forEach(k => {
-                const s = statusData[k];
-                if (s && s.count > 0) {
-                    statusLabels.push(k.replace('_', ' ').replace('-', ' '));
-                    statusValues.push(s.count);
-                    statusColors.push(s.color || '#6c757d');
-                }
-            });
-
-            if (statusValues.length > 0) {
-                const statusCtx = document.getElementById('statusChart');
-                if (statusCtx) {
-                    new Chart(statusCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: statusLabels,
-                            datasets: [{
-                                data: statusValues,
-                                backgroundColor: statusColors,
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        padding: 15,
-                                        usePointStyle: true,
-                                        font: {
-                                            size: 12
-                                        }
-                                    }
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            const total = context.dataset.data.reduce((a, b) => a + b,
-                                                0);
-                                            const pct = ((context.parsed / total) * 100).toFixed(1);
-                                            return context.label + ': ' + context.parsed + ' (' + pct +
-                                                '%)';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-            } else {
-                const statusContainer = document.querySelector('#statusChart').parentElement;
-                if (statusContainer) {
-                    statusContainer.innerHTML =
-                        '<p class="text-muted text-center mb-0 small">Nenhum agendamento cadastrado</p>';
-                }
-            }
-
-            // Period Chart (Mock data - would come from backend)
-            const periodLabels = ['Hoje', 'Esta Semana', 'Este Mês'];
-            const periodValues = [@json($todaySchedules), @json($thisWeekSchedules),
-                @json($total)
-            ];
-
-            const periodCtx = document.getElementById('periodChart');
-            if (periodCtx) {
-                new Chart(periodCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: periodLabels,
-                        datasets: [{
-                            label: 'Agendamentos',
-                            data: periodValues,
-                            backgroundColor: [
-                                'rgba(13, 110, 253, 0.8)',
-                                'rgba(25, 135, 84, 0.8)',
-                                'rgba(255, 193, 7, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgb(13, 110, 253)',
-                                'rgb(25, 135, 84)',
-                                'rgb(255, 193, 7)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
         // Quick Actions Functions
         function confirmAllPending() {
             alert(

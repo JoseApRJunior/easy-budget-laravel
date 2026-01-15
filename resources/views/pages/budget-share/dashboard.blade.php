@@ -3,7 +3,7 @@
 @section('title', 'Dashboard de Compartilhamentos')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Dashboard de Compartilhamentos"
             icon="share-fill"
@@ -12,9 +12,8 @@
                 'Orçamentos' => route('provider.budgets.index'),
                 'Compartilhamentos' => route('provider.budgets.shares.index'),
                 'Dashboard' => '#'
-            ]">
-            <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-        </x-layout.page-header>
+            ]"
+        />
 
         @php
             $totalShares = $stats['total_shares'] ?? 0;
@@ -28,286 +27,212 @@
         @endphp
 
         <!-- Cards de Métricas -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-primary bg-gradient me-3">
-                                <i class="bi bi-share text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Total de Compartilhamentos</h6>
-                                <h3 class="mb-0">{{ $totalShares }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Quantidade total de compartilhamentos criados para seus orçamentos.
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <x-layout.grid-row>
+            <x-dashboard.stat-card
+                title="Total de Compartilhamentos"
+                :value="$totalShares"
+                description="Quantidade total de links criados."
+                icon="share"
+                variant="primary"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-success bg-gradient me-3">
-                                <i class="bi bi-check-circle-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Compartilhamentos Ativos</h6>
-                                <h3 class="mb-0">{{ $activeShares }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Links ativos e disponíveis para acesso aos orçamentos.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Compartilhamentos Ativos"
+                :value="$activeShares"
+                description="Links disponíveis para acesso."
+                icon="check-circle-fill"
+                variant="success"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-warning bg-gradient me-3">
-                                <i class="bi bi-clock-fill text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Taxa de Atividade</h6>
-                                <h3 class="mb-0">{{ $activeRate }}%</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Percentual de compartilhamentos ativos em relação ao total.
-                        </p>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card
+                title="Taxa de Atividade"
+                :value="$activeRate . '%'"
+                description="Percentual de links ativos."
+                icon="clock-fill"
+                variant="warning"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="avatar-circle bg-info bg-gradient me-3">
-                                <i class="bi bi-eye text-white"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-muted mb-1">Total de Acessos</h6>
-                                <h3 class="mb-0">{{ $totalAccesses }}</h3>
-                            </div>
-                        </div>
-                        <p class="text-muted small mb-0">
-                            Número total de vezes que os orçamentos foram acessados.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            <x-dashboard.stat-card
+                title="Total de Acessos"
+                :value="$totalAccesses"
+                description="Visualizações totais dos orçamentos."
+                icon="eye"
+                variant="info"
+            />
+        </x-layout.grid-row>
 
         <!-- Conteúdo Principal -->
-        <div class="row g-4">
+        <x-layout.grid-row>
             <!-- Compartilhamentos Recentes -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-clock-history me-2"></i>Compartilhamentos Recentes
-                        </h5>
-                        <x-ui.button 
-                            href="{{ route('provider.budgets.shares.index') }}" 
-                            variant="primary" 
-                            size="sm">
-                            Ver todos
-                        </x-ui.button>
-                    </div>
-                    <div class="card-body">
-                        @if ($recentShares instanceof \Illuminate\Support\Collection && $recentShares->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Orçamento</th>
-                                            <th>Destinatário</th>
-                                            <th>Status</th>
-                                            <th>Acessos</th>
-                                            <th>Expiração</th>
-                                            <th class="text-end">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recentShares as $share)
-                                            @php
-                                                $budget = $share->budget;
-                                                $customer = $budget->customer->commonData ?? null;
-                                                $customerName =
-                                                    $customer?->company_name ??
-                                                    trim(
-                                                        ($customer->first_name ?? '') .
-                                                            ' ' .
-                                                            ($customer->last_name ?? ''),
-                                                    ) ?:
-                                                    'Cliente não informado';
+            <x-layout.grid-col size="col-lg-8">
+                <x-resource.resource-list-card
+                    title="Compartilhamentos Recentes"
+                    icon="clock-history"
+                >
+                    <x-slot:actions>
+                        <x-ui.button
+                            href="{{ route('provider.budgets.shares.index') }}"
+                            variant="primary"
+                            size="sm"
+                            label="Ver todos"
+                        />
+                    </x-slot:actions>
 
-                                                $isExpired =
-                                                    !$share->is_active ||
-                                                    ($share->expires_at && $share->expires_at <= now());
+                    @if ($recentShares && $recentShares->isNotEmpty())
+                        <x-slot:desktop>
+                            <x-resource.resource-table>
+                                <x-slot:thead>
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell header>Orçamento</x-resource.table-cell>
+                                        <x-resource.table-cell header>Destinatário</x-resource.table-cell>
+                                        <x-resource.table-cell header>Status</x-resource.table-cell>
+                                        <x-resource.table-cell header>Acessos</x-resource.table-cell>
+                                        <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                                    </x-resource.table-row>
+                                </x-slot:thead>
 
-                                                $statusBadge = $isExpired
-                                                    ? '<span class="badge bg-danger-subtle text-danger">Expirado</span>'
-                                                    : '<span class="badge bg-success-subtle text-success">Ativo</span>';
-                                            @endphp
-                                            <tr>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="bi bi-file-earmark-text text-primary me-2"></i>
-                                                        <div>
-                                                            <div class="fw-medium">{{ $budget->code }}</div>
-                                                            <small
-                                                                class="text-muted">{{ Str::limit($customerName, 25) }}</small>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="bi bi-person text-muted me-2"></i>
-                                                        <div>
-                                                            <div class="fw-medium">{{ $share->recipient_name }}</div>
-                                                            <small class="text-muted">{{ $share->recipient_email }}</small>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>{!! $statusBadge !!}</td>
-                                                <td>
-                                                    <span class="badge bg-light text-dark">
-                                                        <i class="bi bi-eye me-1"></i>{{ $share->access_count }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    @if ($share->expires_at)
-                                                        <small
-                                                            class="text-muted">{{ $share->expires_at->format('d/m/Y') }}</small>
-                                                    @else
-                                                        <small class="text-muted">Sem expiração</small>
-                                                    @endif
-                                                </td>
-                                                <td class="text-end">
-                                                    <x-ui.button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="info" size="sm" icon="eye" title="Visualizar Orçamento" />
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <p class="text-muted mb-0">
-                                Nenhum compartilhamento recente encontrado. Crie novos compartilhamentos para visualizar
-                                aqui.
-                            </p>
-                        @endif
-                    </div>
-                </div>
-            </div>
+                                @foreach ($recentShares as $share)
+                                    @php
+                                        $budget = $share->budget;
+                                        $customer = $budget->customer->commonData ?? null;
+                                        $customerName = $customer?->company_name ?? trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?: 'Cliente não informado';
 
-            <!-- Orçamentos Mais Compartilhados -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-trophy me-2"></i>Orçamentos Mais Compartilhados
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        @if ($mostSharedBudgets instanceof \Illuminate\Support\Collection && $mostSharedBudgets->isNotEmpty())
-                            <div class="list-group list-group-flush">
+                                        $isExpired = !$share->is_active || ($share->expires_at && $share->expires_at <= now());
+                                    @endphp
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell>
+                                            <x-resource.resource-info
+                                                :title="$budget->code"
+                                                :subtitle="Str::limit($customerName, 25)"
+                                                icon="file-earmark-text"
+                                            />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-resource.resource-info
+                                                :title="$share->recipient_name"
+                                                :subtitle="$share->recipient_email"
+                                                icon="person"
+                                            />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-ui.badge
+                                                :variant="$isExpired ? 'danger' : 'success'"
+                                                :label="$isExpired ? 'Expirado' : 'Ativo'"
+                                            />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <x-ui.badge
+                                                variant="light"
+                                                :label="$share->access_count"
+                                                icon="eye"
+                                            />
+                                        </x-resource.table-cell>
+                                        <x-resource.table-actions>
+                                            <x-ui.button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="outline-info" size="sm" icon="eye" title="Visualizar Orçamento" />
+                                        </x-resource.table-actions>
+                                    </x-resource.table-row>
+                                @endforeach
+                            </x-resource.resource-table>
+                        </x-slot:desktop>
+
+                        <x-slot:mobile>
+                            @foreach ($recentShares as $share)
+                                @php
+                                    $budget = $share->budget;
+                                    $customer = $budget->customer->commonData ?? null;
+                                    $customerName = $customer?->company_name ?? trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?: 'Cliente não informado';
+                                    $isExpired = !$share->is_active || ($share->expires_at && $share->expires_at <= now());
+                                @endphp
+                                <x-resource.resource-mobile-item :href="route('provider.budgets.show', $share->budget->code)">
+                                    <x-resource.resource-mobile-header
+                                        :title="$budget->code"
+                                        :subtitle="$customerName"
+                                    />
+                                    <x-resource.resource-mobile-field label="Destinatário" :value="$share->recipient_name" />
+                                    <x-resource.resource-mobile-field label="Status">
+                                        <x-ui.badge :variant="$isExpired ? 'danger' : 'success'" :label="$isExpired ? 'Expirado' : 'Ativo'" />
+                                    </x-resource.resource-mobile-field>
+                                    <x-resource.resource-mobile-field label="Acessos">
+                                        <x-ui.badge variant="light" :label="$share->access_count" icon="eye" />
+                                    </x-resource.resource-mobile-field>
+                                </x-resource.resource-mobile-item>
+                            @endforeach
+                        </x-slot:mobile>
+                    @else
+                        <x-resource.empty-state
+                            title="Nenhum compartilhamento recente"
+                            description="Crie novos compartilhamentos para visualizar aqui."
+                            :icon="null"
+                        />
+                    @endif
+                </x-resource.resource-list-card>
+            </x-layout.grid-col>
+
+            <!-- Sidebar -->
+            <x-layout.grid-col size="col-lg-4">
+                <x-layout.v-stack gap="4">
+                    <!-- Orçamentos Mais Compartilhados -->
+                    <x-resource.resource-list-card
+                        title="Destaques"
+                        icon="trophy"
+                        padding="p-3"
+                    >
+                        @if ($mostSharedBudgets && $mostSharedBudgets->isNotEmpty())
+                            <x-layout.v-stack gap="2">
                                 @foreach ($mostSharedBudgets as $budget)
                                     @php
                                         $customer = $budget->customer->commonData ?? null;
-                                        $customerName =
-                                            $customer?->company_name ??
-                                            trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?:
-                                            'Cliente não informado';
+                                        $customerName = $customer?->company_name ?? trim(($customer->first_name ?? '') . ' ' . ($customer->last_name ?? '')) ?: 'Cliente não informado';
                                     @endphp
-                                    <div
-                                        class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
-                                        <div>
-                                            <div class="fw-medium">{{ $budget->code }}</div>
-                                            <small class="text-muted">{{ Str::limit($customerName, 20) }}</small>
-                                        </div>
-                                        <span class="badge bg-primary rounded-pill">
-                                            {{ $budget->shares_count }}
-                                        </span>
+                                    <div class="d-flex justify-content-between align-items-center p-2 rounded transition-all hover-bg">
+                                        <x-resource.resource-info
+                                            :title="$budget->code"
+                                            :subtitle="Str::limit($customerName, 20)"
+                                        />
+                                        <x-ui.badge variant="primary" :label="$budget->shares_count" pill />
                                     </div>
                                 @endforeach
-                            </div>
+                            </x-layout.v-stack>
                         @else
-                            <p class="text-muted mb-0">
-                                Nenhum orçamento foi compartilhado ainda.
-                            </p>
+                            <x-resource.empty-state title="Sem destaques" :icon="null" />
                         @endif
-                    </div>
-                </div>
+                    </x-resource.resource-list-card>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-lightbulb me-2"></i>Dicas de Uso
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0 small text-muted">
-                            <li class="mb-2">
-                                <i class="bi bi-share-fill text-primary me-2"></i>
-                                Compartilhe orçamentos aprovados para aumentar a conversão.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-clock text-warning me-2"></i>
-                                Defina prazos de expiração para criar urgência no cliente.
-                            </li>
-                            <li class="mb-2">
-                                <i class="bi bi-eye text-info me-2"></i>
-                                Monitore os acessos para entender o interesse do cliente.
-                            </li>
-                            <li class="mb-0">
-                                <i class="bi bi-envelope text-success me-2"></i>
-                                Use notificações automáticas para lembrar os clientes.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <!-- Dicas -->
+                    <x-resource.resource-list-card
+                        title="Dicas de Uso"
+                        icon="lightbulb"
+                        padding="p-3"
+                    >
+                        <x-layout.v-stack gap="3">
+                            <x-dashboard.insight-item
+                                icon="share-fill"
+                                variant="primary"
+                                description="Compartilhe orçamentos aprovados para aumentar a conversão."
+                            />
+                            <x-dashboard.insight-item
+                                icon="clock"
+                                variant="warning"
+                                description="Defina prazos de expiração para criar urgência no cliente."
+                            />
+                            <x-dashboard.insight-item
+                                icon="eye"
+                                variant="info"
+                                description="Monitore os acessos para entender o interesse do cliente."
+                            />
+                        </x-layout.v-stack>
+                    </x-resource.resource-list-card>
 
-        <!-- Atalhos Rápidos -->
-        <div class="row g-4 mt-1">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-transparent border-0">
-                        <h6 class="mb-0">
-                            <i class="bi bi-link-45deg me-2"></i>Atalhos Rápidos
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Compartilhamento" class="w-100" />
-                            </div>
-                            <div class="col-md-3">
-                                <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="primary" outline icon="list" label="Gerenciar Compartilhamentos" class="w-100" />
-                            </div>
-                            <div class="col-md-3">
-                                <x-ui.button type="link" :href="route('provider.budgets.index')" variant="secondary" outline icon="file-earmark-text" label="Ver Orçamentos" class="w-100" />
-                            </div>
-                            <div class="col-md-3">
-                                <x-ui.button type="link" :href="route('provider.reports.budgets')" variant="info" outline icon="graph-up" label="Relatórios" class="w-100" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <!-- Atalhos -->
+                    <x-resource.quick-actions title="Atalhos" icon="lightning-charge">
+                        <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="success" icon="plus-circle" label="Novo Link" />
+                        <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="outline-primary" icon="list" label="Gerenciar" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="file-earmark-text" label="Orçamentos" />
+                    </x-resource.quick-actions>
+                </x-layout.v-stack>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 @endsection
 
 @push('styles')

@@ -28,7 +28,8 @@
 
             if (values.length === 0) {
                 const container = document.getElementById('{{ $id }}').parentElement;
-                container.innerHTML = `<p class="text-center mb-0 small mt-2 py-2" style="color: {{ config('theme.colors.small_text', '#94a3b8') }};">{{ $emptyText }}</p>`;
+                container.classList.add('d-flex', 'align-items-center', 'justify-content-center');
+                container.innerHTML = `<span class="text-muted fw-medium">{{ $emptyText }}</span>`;
                 return;
             }
 

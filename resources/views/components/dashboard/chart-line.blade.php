@@ -3,6 +3,7 @@
     'data' => [],
     'label' => 'Total',
     'height' => 300,
+    'emptyText' => 'Nenhum dado financeiro para o período',
     'borderColor' => '#0d6efd',
     'backgroundColor' => 'rgba(13, 110, 253, 0.1)',
 ])
@@ -17,6 +18,13 @@
             const chartData = @json($data);
             const labels = Object.keys(chartData);
             const values = Object.values(chartData);
+
+            if (values.length === 0 || values.every(v => v === 0)) {
+                const container = document.getElementById('{{ $id }}').parentElement;
+                container.classList.add('d-flex', 'align-items-center', 'justify-content-center');
+                container.innerHTML = `<span class="text-muted fw-medium">{{ $emptyText }}</span>`;
+                return;
+            }
 
             const ctx = document.getElementById('{{ $id }}').getContext('2d');
             new Chart(ctx, {

@@ -71,24 +71,24 @@
                     icon="currency-dollar"
                     padding="p-3"
                 >
-                    <x-layout.grid-row class="text-center g-3">
+                    <x-layout.grid-row class="text-center g-3 mb-0">
                         <x-dashboard.mini-stat-card
                             label="Faturado"
                             :value="\App\Helpers\CurrencyHelper::format($billed)"
                             variant="primary"
-                            col="col-4"
+                            col="col-12 col-md-4"
                         />
                         <x-dashboard.mini-stat-card
                             label="Recebido"
                             :value="\App\Helpers\CurrencyHelper::format($received)"
                             variant="success"
-                            col="col-4"
+                            col="col-12 col-md-4"
                         />
                         <x-dashboard.mini-stat-card
                             label="A Receber"
                             :value="\App\Helpers\CurrencyHelper::format($toReceive)"
                             variant="warning"
-                            col="col-4"
+                            col="col-12 col-md-4"
                         />
                     </x-layout.grid-row>
                 </x-resource.resource-list-card>
@@ -197,9 +197,9 @@
                         </x-slot:mobile>
                     @else
                         <x-resource.empty-state
-                            title="Nenhuma fatura"
+                            title="Nenhuma fatura recente"
                             description="Suas faturas aparecerão aqui conforme forem geradas."
-                            icon="receipt"
+                            :icon="null"
                         />
                     @endif
                 </x-resource.resource-list-card>
