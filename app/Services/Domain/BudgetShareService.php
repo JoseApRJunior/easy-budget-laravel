@@ -84,23 +84,33 @@ class BudgetShareService extends AbstractBaseService
                 $budget->status_updated_by = null;
                 $budget->save();
 
-                // Marca o compartilhamento como concluído/rejeitado se for um compartilhamento real
+                // Se o orçamento foi aprovado, desativamos TODOS os outros links ativos deste orçamento
+                // e atualizamos o status de todos os compartilhamentos vinculados a este orçamento
+                BudgetShare::withoutGlobalScopes()
+                    ->where('budget_id', $budget->id)
+                    ->update([
+                        'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED 
+                            ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                            : \App\Enums\BudgetShareStatus::REJECTED->value,
+                        'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? true : false,
+                        'expires_at' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? now()->addDays(30) : null
+                    ]);
+
+                // Marca o compartilhamento atual com os dados específicos (redundante mas garante o objeto atual)
                 if ($share) {
                     $share->status = $newStatus === \App\Enums\BudgetStatus::APPROVED 
                         ? \App\Enums\BudgetShareStatus::APPROVED->value 
                         : \App\Enums\BudgetShareStatus::REJECTED->value;
-
-                    // Se aprovado, mantemos o link ativo por mais 30 dias para consulta do cliente
+                    
                     if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
                         $share->is_active = true;
                         $share->expires_at = now()->addDays(30);
                     } else {
-                        $share->is_active = true; // Mantemos ativo para o cliente ver que foi rejeitado, se quiser
+                        $share->is_active = false;
                         if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
                             $share->rejected_at = now();
                         }
                     }
-
                     $share->save();
                 } else {
                     // Se for fallback, limpa o token do orçamento apenas se aprovado
@@ -242,6 +252,11 @@ class BudgetShareService extends AbstractBaseService
 
             if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Link de compartilhamento inválido ou expirado.');
+            }
+
+            // Verifica se o compartilhamento foi revogado manualmente
+            if (! $share->is_active && $share->status !== \App\Enums\BudgetStatus::APPROVED->value) {
+                return $this->error(OperationStatus::EXPIRED, 'Este link de compartilhamento não está mais ativo.');
             }
 
             // Garante que o orçamento está carregado sem escopo global para acesso público
