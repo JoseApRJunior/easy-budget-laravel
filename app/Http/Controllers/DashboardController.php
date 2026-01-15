@@ -34,19 +34,29 @@ class DashboardController extends Controller
         $ttl = 60; // 1 minuto para dados iniciais
 
         $dashboardData = Cache::remember($cacheKey, $ttl, function () use ($userId, $period) {
+            $metrics = $this->metricsService->getMetrics($userId, $period);
+            
             return [
-                'metrics' => $this->metricsService->getMetrics($userId, $period),
+                'metrics' => $metrics,
                 'charts' => $this->chartService->getInitialChartData($userId, $period),
                 'recent_activities' => $this->getRecentActivities($userId),
                 'quick_actions' => $this->getQuickActions(),
+                'financial_summary' => [
+                    'pending_budgets_count' => $metrics['pending_budgets']['count'],
+                    'pending_budgets_total' => $metrics['pending_budgets']['total'],
+                    'overdue_payments_count' => $metrics['overdue_payments']['count'],
+                    'overdue_payments_total' => $metrics['overdue_payments']['total'],
+                    'next_month_projection' => $metrics['next_month_projection'],
+                ],
             ];
         });
 
-        return view('dashboard.index', [
+        return view('pages.home.dashboard.index', [
             'metrics' => $dashboardData['metrics'],
             'charts' => $dashboardData['charts'],
             'recentTransactions' => $dashboardData['recent_activities'],
             'quickActions' => $dashboardData['quick_actions'],
+            'financialSummary' => $dashboardData['financial_summary'],
             'currentPeriod' => $period,
             'lastUpdated' => Carbon::now()->toDateTimeString(),
         ]);

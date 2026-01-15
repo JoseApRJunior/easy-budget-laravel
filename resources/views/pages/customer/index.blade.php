@@ -18,179 +18,129 @@
         <div class="row">
             <div class="col-12">
                 <!-- Filtros de Busca -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="filtersFormCustomers" method="GET" action="{{ route('provider.customers.index') }}">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label for="search" class="form-label small fw-bold text-muted text-uppercase">Buscar</label>
-                                        <input type="text" class="form-control" id="search" name="search"
-                                            value="{{ $filters['search'] ?? '' }}" placeholder="Nome, e-mail ou documento">
-                                    </div>
-                                </div>
-                               <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="active" class="form-label small fw-bold text-muted text-uppercase">Status</label>
-                                    <select class="form-select tom-select" id="active" name="active">
-                                        @php($selectedActive = $filters['active'] ?? 'active')
-                                        <option value="active" {{ $selectedActive === 'active' ? 'selected' : '' }}>
-                                            Ativo
-                                        </option>
-                                        <option value="inactive" {{ $selectedActive === 'inactive' ? 'selected' : '' }}>
-                                            Inativo
-                                        </option>
-                                        <option value="all" {{ $selectedActive === 'all' ? 'selected' : '' }}>
-                                            Todos
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="type" class="form-label small fw-bold text-muted text-uppercase">Tipo</label>
-                                        <select class="form-select tom-select" id="type" name="type">
-                                            <option value="">Todos os tipos</option>
-                                            <option value="individual"
-                                                {{ ($filters['type'] ?? '') === 'individual' ? 'selected' : '' }}>
-                                                Pessoa Física
-                                            </option>
-                                            <option value="company"
-                                                {{ ($filters['type'] ?? '') === 'company' ? 'selected' : '' }}>
-                                                Pessoa Jurídica</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="area_of_activity" class="form-label small fw-bold text-muted text-uppercase">Área de Atuação</label>
-                                        <select class="form-select tom-select" id="area_of_activity" name="area_of_activity">
-                                            <option value="">Todas as áreas</option>
-                                            @isset($areas_of_activity)
-                                                @foreach ($areas_of_activity as $area)
-                                                    <option value="{{ $area->slug }}"
-                                                        {{ (string) ($filters['area_of_activity'] ?? '') === (string) $area->slug ? 'selected' : '' }}>
-                                                        {{ $area->name }}</option>
-                                                @endforeach
-                                            @endisset
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                <div class="form-group">
-                                    <label for="deleted" class="form-label small fw-bold text-muted text-uppercase">Status de Exclusão</label>
-                                    <select name="deleted" id="deleted" class="form-select tom-select">
-                                        @php($selectedDeleted = $filters['deleted'] ?? 'current')
-                                        <option value="current" {{ $selectedDeleted === 'current' ? 'selected' : '' }}>
-                                            Atuais
-                                        </option>
-                                        <option value="only" {{ $selectedDeleted === 'only' ? 'selected' : '' }}>
-                                            Deletados
-                                        </option>
-                                        <option value="all" {{ $selectedDeleted === 'all' ? 'selected' : '' }}>
-                                            Todos
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="cep" class="form-label small fw-bold text-muted text-uppercase">CEP (Proximidade)</label>
-                                        <input type="text" class="form-control" id="cep" name="cep"
-                                            value="{{ $filters['cep'] ?? '' }}" placeholder="00000-000" data-mask="00000-000">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="cpf" class="form-label small fw-bold text-muted text-uppercase">CPF</label>
-                                        <input type="text" class="form-control" id="cpf" name="cpf"
-                                            value="{{ $filters['cpf'] ?? '' }}" placeholder="000.000.000-00" data-mask="000.000.000-00">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="cnpj" class="form-label small fw-bold text-muted text-uppercase">CNPJ</label>
-                                        <input type="text" class="form-control" id="cnpj" name="cnpj"
-                                            value="{{ $filters['cnpj'] ?? '' }}" placeholder="00.000.000/0000-00" data-mask="00.000.000/0000-00">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="phone" class="form-label small fw-bold text-muted text-uppercase">Telefone</label>
-                                        <input type="text" class="form-control" id="phone" name="phone"
-                                            value="{{ $filters['phone'] ?? '' }}" placeholder="(00) 00000-0000" data-mask="(00) 00000-0000">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <x-form.filter-field
-                                        type="date"
-                                        name="start_date"
-                                        label="Cadastro inicial"
-                                        :value="$filters['start_date'] ?? request('start_date')"
-                                    />
-                                </div>
-                                <div class="col-md-2">
-                                    <x-form.filter-field
-                                        type="date"
-                                        name="end_date"
-                                        label="Cadastro final"
-                                        :value="$filters['end_date'] ?? request('end_date')"
-                                    />
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="per_page" class="form-label small fw-bold text-muted text-uppercase">Por página</label>
-                                        <select class="form-select tom-select" id="per_page" name="per_page">
-                                            @php($pp = (int) ($filters['per_page'] ?? 10))
-                                            <option value="10" {{ $pp === 10 ? 'selected' : '' }}>10</option>
-                                            <option value="20" {{ $pp === 20 ? 'selected' : '' }}>20</option>
-                                            <option value="50" {{ $pp === 50 ? 'selected' : '' }}>50</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="d-flex gap-2 flex-nowrap">
-                                        <button type="submit" id="btnFilterCustomers" class="btn btn-primary"
-                                            aria-label="Filtrar">
-                                            <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
-                                        </button>
-                                        <a href="{{ route('provider.customers.index') }}" class="btn btn-secondary"
-                                            aria-label="Limpar filtros">
-                                            <i class="bi bi-x me-1" aria-hidden="true"></i>Limpar
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <x-form.filter-form
+                    id="filtersFormCustomers"
+                    :route="route('provider.customers.index')"
+                    :filters="$filters"
+                >
+                    <x-form.filter-field
+                        col="col-md-4"
+                        name="search"
+                        label="Buscar"
+                        placeholder="Nome, e-mail ou documento"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        type="select"
+                        col="col-md-2"
+                        name="active"
+                        label="Status"
+                        :filters="$filters"
+                        :options="['active' => 'Ativo', 'inactive' => 'Inativo', 'all' => 'Todos']"
+                    />
+
+                    <x-form.filter-field
+                        type="select"
+                        col="col-md-2"
+                        name="type"
+                        label="Tipo"
+                        :filters="$filters"
+                        :options="['' => 'Todos os tipos', 'individual' => 'Pessoa Física', 'company' => 'Pessoa Jurídica']"
+                    />
+
+                    <x-form.filter-field
+                        type="select"
+                        col="col-md-2"
+                        name="area_of_activity"
+                        label="Área de Atuação"
+                        :filters="$filters"
+                        :options="['' => 'Todas as áreas'] + (isset($areas_of_activity) ? $areas_of_activity->pluck('name', 'slug')->toArray() : [])"
+                    />
+
+                    <x-form.filter-field
+                        type="select"
+                        col="col-md-2"
+                        name="deleted"
+                        label="Status de Exclusão"
+                        :filters="$filters"
+                        :options="['current' => 'Atuais', 'only' => 'Deletados', 'all' => 'Todos']"
+                    />
+
+                    <x-form.filter-field
+                        col="col-md-2"
+                        name="cep"
+                        label="CEP"
+                        placeholder="00000-000"
+                        data-mask="00000-000"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        col="col-md-2"
+                        name="cpf"
+                        label="CPF"
+                        placeholder="000.000.000-00"
+                        data-mask="000.000.000-00"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        col="col-md-2"
+                        name="cnpj"
+                        label="CNPJ"
+                        placeholder="00.000.000/0000-00"
+                        data-mask="00.000.000/0000-00"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        col="col-md-2"
+                        name="phone"
+                        label="Telefone"
+                        placeholder="(00) 00000-0000"
+                        data-mask="(00) 00000-0000"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        type="date"
+                        col="col-md-2"
+                        name="start_date"
+                        label="Cadastro Inicial"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        type="date"
+                        col="col-md-2"
+                        name="end_date"
+                        label="Cadastro Final"
+                        :filters="$filters"
+                    />
+
+                    <x-form.filter-field
+                        type="select"
+                        col="col-md-2"
+                        name="per_page"
+                        label="Por página"
+                        :filters="$filters"
+                        :options="[10 => '10', 20 => '20', 50 => '50']"
+                    />
+                </x-form.filter-form>
 
 
 
-                <div class="card">
-                        <div class="card-header">
-                            <div class="row align-items-center">
-                                <div class="col-12 col-lg-8 mb-2 mb-lg-0">
-                                    <h5 class="mb-0 d-flex align-items-center flex-wrap">
-                                        <span class="me-2">
-                                            <i class="bi bi-list-ul me-1"></i>
-                                            <span class="d-none d-sm-inline">Lista de Clientes</span>
-                                            <span class="d-sm-none">Clientes</span>
-                                        </span>
-                                        <span class="text-muted" style="font-size: 0.875rem;">
-                                            @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                                                ({{ $customers->total() }})
-                                            @elseif(isset($customers))
-                                                ({{ count($customers) }})
-                                            @endif
-                                        </span>
-                                    </h5>
-                                </div>
-                                <div class="col-12 col-lg-4 mt-2 mt-lg-0">
-                                    <div class="d-flex justify-content-start justify-content-lg-end gap-2">
+        <!-- Card de Tabela -->
+        <x-resource.resource-list-card
+            title="Lista de Clientes"
+            mobileTitle="Clientes"
+            icon="people"
+            :total="$customers->total()"
+            padding="p-0"
+        >
+            <x-slot:headerActions>
+                <div class="d-flex justify-content-end gap-2">
                     <div class="dropdown">
                         <x-ui.button variant="outline-secondary" size="sm" icon="download" label="Exportar"
                             class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
@@ -211,177 +161,152 @@
                     </div>
                     <x-ui.button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" />
                 </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <!-- Mobile View -->
-                            <div class="mobile-view">
-                                <div class="list-group list-group-flush">
-                                    @forelse($customers as $customer)
-                                        <a href="{{ route('provider.customers.show', $customer->id) }}"
-                                            class="list-group-item list-group-item-action py-3">
-                                            <div class="d-flex align-items-start">
-                                                <i class="bi bi-person text-muted me-2 mt-1"></i>
-                                                <div class="flex-grow-1">
-                                                    <div class="fw-semibold mb-2">
-                                                        @if ($customer->commonData)
-                                                            @if ($customer->commonData->isCompany())
-                                                                {{ $customer->commonData->company_name }}
-                                                            @else
-                                                                {{ $customer->commonData->first_name }} {{ $customer->commonData->last_name }}
-                                                            @endif
-                                                        @else
-                                                            Nome não informado
-                                                        @endif
-                                                    </div>
-                                                    <div class="d-flex gap-2 flex-wrap mb-2">
-                                                        @if ($customer->status === 'active')
-                                                            <span class="badge bg-success-subtle text-success">Ativo</span>
-                                                        @else
-                                                            <span class="badge bg-danger-subtle text-danger">Inativo</span>
-                                                        @endif
-                                                    </div>
-                                                    <small class="text-muted">{{ $customer->created_at->format('d/m/Y') }}</small>
-                                                </div>
-                                                <i class="bi bi-chevron-right text-muted ms-2"></i>
-                                            </div>
-                                        </a>
-                                    @empty
-                                        <div class="p-4 text-center text-muted">
-                                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                            <br>
-                                            @if (($filters['deleted'] ?? '') === 'only')
-                                                Nenhum cliente deletado encontrado.
-                                            @else
-                                                Nenhum cliente encontrado.
-                                            @endif
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div>
+            </x-slot:headerActions>
 
-                            <!-- Versão Desktop: Tabela -->
-                            <div class="desktop-view">
-                                <div class="table-responsive">
-                                <table class="modern-table table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th><i class="bi bi-person" aria-hidden="true"></i></th>
-                                            <th>Cliente</th>
-                                            <th>Documento</th>
-                                            <th class="text-nowrap">E-mail</th>
-                                            <th class="text-nowrap">Telefone</th>
-                                            <th class="text-nowrap">Cadastro</th>
-                                            <th class="text-nowrap">Status</th>
-                                            <th class="text-center">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($customers as $customer)
-                                            <tr>
-                                                <td>
-                                                    <div class="item-icon">
-                                                        <i class="bi bi-person-fill"></i>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    @if ($customer->commonData)
-                                                        @if ($customer->commonData->isCompany())
-                                                            <strong>{{ $customer->commonData->company_name }}</strong>
-                                                            @if ($customer->commonData->fantasy_name)
-                                                                <br><small
-                                                                    class="text-muted">{{ $customer->commonData->fantasy_name }}</small>
-                                                            @endif
-                                                        @else
-                                                            <strong>{{ $customer->commonData->first_name }}
-                                                                {{ $customer->commonData->last_name }}</strong>
-                                                        @endif
-                                                    @else
-                                                        <span class="text-muted">Nome não informado</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($customer->commonData)
-                                                        @if ($customer->commonData->isCompany())
-                                                            <span
-                                                                class="text-code">{{ \App\Helpers\MaskHelper::formatCNPJ($customer->commonData->cnpj) }}</span>
-                                                        @else
-                                                            <span
-                                                                class="text-code">{{ \App\Helpers\MaskHelper::formatCPF($customer->commonData->cpf) }}</span>
-                                                        @endif
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($customer->contact)
-                                                        {{ $customer->contact->email_personal ?? ($customer->contact->email_business ?? 'N/A') }}
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($customer->contact)
-                                                        {{ \App\Helpers\MaskHelper::formatPhone($customer->contact->phone_personal ?? $customer->contact->phone_business) }}
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $customer->created_at->format('d/m/Y') }}</td>
-                                                <td class="text-nowrap">
-                                                    <span class="modern-badge {{ $customer->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
-                                                        {{ $customer->status === 'active' ? 'Ativo' : 'Inativo' }}
-                                                    </span>
-                                                </td>
-                                                <td class="text-center">
-                                                    <div class="action-btn-group">
-                                                        @if ($customer->deleted_at)
-                                                            <x-ui.button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
-                                                            <x-ui.button variant="success" icon="arrow-counterclockwise"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#restoreModal"
-                                                                    data-restore-url="{{ route('provider.customers.restore', $customer->id) }}"
-                                                                    data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
-                                                                    title="Restaurar" />
-                                                        @else
-                                                            <x-ui.button type="link" :href="route('provider.customers.show', $customer->id)" variant="info" icon="eye" title="Visualizar" />
-                                                            <x-ui.button type="link" :href="route('provider.customers.edit', $customer->id)" icon="pencil-square" title="Editar" />
-
-                                                            <x-ui.button variant="danger" icon="trash"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#deleteModal"
-                                                                    data-delete-url="{{ route('provider.customers.destroy', $customer->id) }}"
-                                                                    data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
-                                                                    title="Excluir" />
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="8" class="text-center text-muted">
-                                                    <i class="bi bi-inbox mb-2" aria-hidden="true" style="font-size: 2rem;"></i>
-                                                    <br>
-                                                    @if (($filters['deleted'] ?? '') === 'only')
-                                                        Nenhum cliente deletado encontrado.
-                                                        <br>
-                                                        <small>Você ainda não deletou nenhum cliente.</small>
-                                                    @else
-                                                        Nenhum cliente encontrado.
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+            <x-slot:desktop>
+                <x-resource.resource-table>
+                    <x-slot:thead>
+                        <tr>
+                            <th><i class="bi bi-person" aria-hidden="true"></i></th>
+                            <th>Cliente</th>
+                            <th>Documento</th>
+                            <th class="text-nowrap">E-mail</th>
+                            <th class="text-nowrap">Telefone</th>
+                            <th class="text-nowrap">Cadastro</th>
+                            <th class="text-nowrap">Status</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </x-slot:thead>
+                    @forelse($customers as $customer)
+                        <tr>
+                            <td>
+                                <div class="item-icon">
+                                    <i class="bi bi-person-fill"></i>
                                 </div>
+                            </td>
+                            <td>
+                                @if ($customer->commonData)
+                                    @if ($customer->commonData->isCompany())
+                                        <strong>{{ $customer->commonData->company_name }}</strong>
+                                        @if ($customer->commonData->fantasy_name)
+                                            <br><small class="text-muted">{{ $customer->commonData->fantasy_name }}</small>
+                                        @endif
+                                    @else
+                                        <strong>{{ $customer->commonData->first_name }} {{ $customer->commonData->last_name }}</strong>
+                                    @endif
+                                @else
+                                    <span class="text-muted">Nome não informado</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($customer->commonData)
+                                    @if ($customer->commonData->isCompany())
+                                        <span class="text-code">{{ \App\Helpers\MaskHelper::formatCNPJ($customer->commonData->cnpj) }}</span>
+                                    @else
+                                        <span class="text-code">{{ \App\Helpers\MaskHelper::formatCPF($customer->commonData->cpf) }}</span>
+                                    @endif
+                                @else
+                                    <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($customer->contact)
+                                    {{ $customer->contact->email_personal ?? ($customer->contact->email_business ?? 'N/A') }}
+                                @else
+                                    <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($customer->contact)
+                                    {{ \App\Helpers\MaskHelper::formatPhone($customer->contact->phone_personal ?? $customer->contact->phone_business) }}
+                                @else
+                                    <span class="text-muted">N/A</span>
+                                @endif
+                            </td>
+                            <td>{{ $customer->created_at->format('d/m/Y') }}</td>
+                            <td class="text-nowrap">
+                                <span class="modern-badge {{ $customer->status === 'active' ? 'badge-active' : 'badge-inactive' }}">
+                                    {{ $customer->status === 'active' ? 'Ativo' : 'Inativo' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <x-resource.action-buttons
+                                    :item="$customer"
+                                    resource="customers"
+                                    size="sm"
+                                    :showDelete="!$customer->deleted_at"
+                                />
+                                @if ($customer->deleted_at)
+                                    <x-ui.button variant="success" icon="arrow-counterclockwise"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#restoreModal"
+                                        data-restore-url="{{ route('provider.customers.restore', $customer->id) }}"
+                                        data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
+                                        title="Restaurar" size="sm" />
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8">
+                                <x-resource.empty-state
+                                    title="Nenhum cliente encontrado"
+                                    description="Não encontramos clientes com os filtros aplicados."
+                                    icon="people"
+                                />
+                            </td>
+                        </tr>
+                    @endforelse
+                </x-resource.resource-table>
+            </x-slot:desktop>
+
+            <x-slot:mobile>
+                @forelse($customers as $customer)
+                    <x-resource.resource-mobile-item
+                        icon="person"
+                        :href="route('provider.customers.show', $customer->id)"
+                    >
+                        <x-resource.resource-mobile-header
+                            :title="$customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Nome não informado'"
+                            :subtitle="$customer->created_at->format('d/m/Y')"
+                        />
+
+                        <x-slot:description>
+                            <div class="d-flex gap-2 flex-wrap mb-2">
+                                @if ($customer->status === 'active')
+                                    <span class="badge bg-success-subtle text-success">Ativo</span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger">Inativo</span>
+                                @endif
                             </div>
-                        </div>
+                        </x-slot:description>
+
+                        <x-slot:actions>
+                            <x-resource.action-buttons
+                                :item="$customer"
+                                resource="customers"
+                                size="sm"
+                                :showDelete="!$customer->deleted_at"
+                            />
+                        </x-slot:actions>
+                    </x-resource.resource-mobile-item>
+                @empty
+                    <div class="py-5">
+                        <x-resource.empty-state
+                            title="Nenhum cliente encontrado"
+                            description="Não encontramos clientes com os filtros aplicados."
+                            icon="people"
+                        />
                     </div>
-                    @if (isset($customers) && $customers instanceof \Illuminate\Pagination\LengthAwarePaginator && $customers->hasPages())
-                        @include('partials.components.paginator', ['p' => $customers->appends(request()->query()), 'show_info' => true])
-                    @endif
+                @endforelse
+            </x-slot:mobile>
+
+            @if ($customers instanceof \Illuminate\Pagination\LengthAwarePaginator && $customers->hasPages())
+                <x-slot:footer>
+                    @include('partials.components.paginator', ['p' => $customers->appends(request()->query()), 'show_info' => true])
+                </x-slot:footer>
+            @endif
+        </x-resource.resource-list-card>
                 </div>
             </div>
             <!-- Modal de Confirmação -->

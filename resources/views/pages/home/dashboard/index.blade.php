@@ -30,14 +30,14 @@
         $financialSummary = [
           'monthly_revenue'       => $metrics[ 'receita_total' ][ 'valor' ] ?? 0,
           'pending_budgets'       => [
-            'count' => 0, // TODO: implementar contagem de orçamentos pendentes
-            'total' => 0  // TODO: implementar soma de orçamentos pendentes
+            'count' => $financialSummary[ 'pending_budgets_count' ] ?? 0,
+            'total' => $financialSummary[ 'pending_budgets_total' ] ?? 0
           ],
           'overdue_payments'      => [
-            'count' => 0, // TODO: implementar contagem de pagamentos atrasados
-            'total' => 0  // TODO: implementar soma de pagamentos atrasados
+            'count' => $financialSummary[ 'overdue_payments_count' ] ?? 0,
+            'total' => $financialSummary[ 'overdue_payments_total' ] ?? 0
           ],
-          'next_month_projection' => 0 // TODO: implementar projeção do próximo mês
+          'next_month_projection' => $financialSummary[ 'next_month_projection' ] ?? 0
         ];
 
         $translations = [
