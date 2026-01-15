@@ -30,8 +30,9 @@ class CleanupDuplicateBudgetShares extends Command
     {
         $this->info('Iniciando limpeza de compartilhamentos duplicados...');
 
-        // Busca grupos de compartilhamentos duplicados ativos
-        $duplicates = BudgetShare::where('is_active', true)
+        // Busca grupos de compartilhamentos duplicados ativos (sem escopo global de tenant)
+        $duplicates = BudgetShare::withoutGlobalScopes()
+            ->where('is_active', true)
             ->select('budget_id', 'recipient_email', DB::raw('count(*) as total'))
             ->groupBy('budget_id', 'recipient_email')
             ->having('total', '>', 1)
@@ -46,7 +47,8 @@ class CleanupDuplicateBudgetShares extends Command
 
         foreach ($duplicates as $duplicate) {
             // Busca todos os compartilhamentos ativos deste grupo, ordenados do mais novo para o mais antigo
-            $shares = BudgetShare::where('budget_id', $duplicate->budget_id)
+            $shares = BudgetShare::withoutGlobalScopes()
+                ->where('budget_id', $duplicate->budget_id)
                 ->where('recipient_email', $duplicate->recipient_email)
                 ->where('is_active', true)
                 ->orderBy('created_at', 'desc')
@@ -65,7 +67,7 @@ class CleanupDuplicateBudgetShares extends Command
             }
         }
 
-        $this->success("Limpeza concluída! {$totalCleaned} compartilhamentos antigos foram desativados.");
+        $this->info("Limpeza concluída! {$totalCleaned} compartilhamentos antigos foram desativados.");
         
         return 0;
     }

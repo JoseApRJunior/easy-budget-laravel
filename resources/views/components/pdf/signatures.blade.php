@@ -16,10 +16,10 @@
                 <div style="padding-top: 40px;">
                     <div style="border-bottom: 1px solid {{ $colors['border'] }}; width: 85%; margin: 0 auto 8px auto;"></div>
                     <div style="line-height: 1.2; border-top: 1px solid {{ $colors['border'] }};">
-                        <strong style="font-size: 10px; color: {{ $colors['dark'] }}; display: block;">
+                        <strong style="font-size: 10px; color: {{ $colors['text'] }}; display: block;">
                             {{ $providerName }}
                         </strong>
-                        <span style="font-size: 8px; color: {{ $colors['secondary'] }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $providerLabel }}</span>
+                        <span style="font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $providerLabel }}</span>
                     </div>
                 </div>
             </td>
@@ -28,8 +28,8 @@
                 <div style="padding-top: 40px;">
                     <div style="border-bottom: 1px solid {{ $colors['border'] }}; width: 85%; margin: 0 auto 8px auto;"></div>
                     <div style="line-height: 1.2; border-top: 1px solid {{ $colors['border'] }}">
-                        <strong style="font-size: 10px; color: {{ $colors['dark'] }}; display: block;">{{ $customerName }}</strong>
-                        <span style="font-size: 8px; color: {{ $colors['secondary'] }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $customerLabel }}</span>
+                        <strong style="font-size: 10px; color: {{ $colors['text'] }}; display: block;">{{ $customerName }}</strong>
+                        <span style="font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 0.5px;">{{ $customerLabel }}</span>
                     </div>
                 </div>
             </td>
