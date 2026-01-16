@@ -83,4 +83,4 @@
         type="delete" 
         resource="profissão"
     />
-@endsection
+</x-app-layout>

@@ -56,5 +56,5 @@
                 </form>
             </div>
         </div>
-    </div>
-@endsection
+    </x-layout.page-container>
+</x-app-layout>

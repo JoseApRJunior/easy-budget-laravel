@@ -4,14 +4,21 @@
 
 @include('partials.shared.head')
 
-<body class="d-flex flex-column h-100 bg-light">
+<body class="d-flex flex-column h-100">
     @include('partials.shared.header')
 
     <main class="flex-shrink-0">
+        @include('partials.components.alerts')
 
-                            @include('partials.components.alerts')
-                            @yield('content')
+        @if (session()->has('trial_expired_warning'))
+        @include('partials.components.trial-expired-warning')
+        @endif
 
+        @if (isset($slot))
+            {{ $slot }}
+        @else
+            @yield('content')
+        @endif
     </main>
 
     @include('partials.shared.footer')
@@ -19,12 +26,14 @@
     <!-- Scripts Base -->
     <script defer src="{{ asset('assets/js/jquery-3.7.1.min.js') }}?v={{ filemtime(public_path('assets/js/jquery-3.7.1.min.js')) }}"></script>
     <script defer src="{{ asset('assets/js/bootstrap.bundle.min.js') }}?v={{ filemtime(public_path('assets/js/bootstrap.bundle.min.js')) }}"></script>
+    <script defer src="{{ asset('assets/js/tom-select/tom-select.complete.min.js') }}?v={{ filemtime(public_path('assets/js/tom-select/tom-select.complete.min.js')) }}"></script>
 
     <!-- Módulos e Componentes -->
     <script defer src="{{ asset('assets/js/modules/vanilla-masks.js') }}?v={{ filemtime(public_path('assets/js/modules/vanilla-masks.js')) }}"></script>
     <script defer src="{{ asset('assets/js/main.js') }}?v={{ filemtime(public_path('assets/js/main.js')) }}" type="module"></script>
 
     <script defer src="{{ asset('assets/js/components/alerts.js') }}?v={{ filemtime(public_path('assets/js/components/alerts.js')) }}"></script>
+    <script defer src="{{ asset('assets/js/cep-lookup.js') }}?v={{ filemtime(public_path('assets/js/cep-lookup.js')) }}"></script>
 
     @stack('scripts')
     @yield('scripts')

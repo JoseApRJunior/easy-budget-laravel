@@ -1,13 +1,14 @@
-@extends('layouts.admin')
-
-@section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Detalhes do Alerta
-                </h1>
+<x-app-layout title="Detalhes do Alerta">
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Detalhes do Alerta"
+            icon="exclamation-triangle"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Alertas' => route('admin.alerts.index'),
+                'Detalhes' => '#'
+            ]">
+            <x-slot:actions>
                 <div class="btn-group" role="group">
                     <a href="{{ route('admin.alerts.edit', $alert['id']) }}" class="btn btn-primary">
                         <i class="bi bi-pencil me-2"></i>Editar
@@ -16,9 +17,8 @@
                         <i class="bi bi-arrow-left me-2"></i>Voltar
                     </a>
                 </div>
-            </div>
-        </div>
-    </div>
+            </x-slot:actions>
+        </x-layout.page-header>
 
     <div class="row">
         <div class="col-md-8">

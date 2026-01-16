@@ -83,4 +83,4 @@
         type="delete" 
         resource="função"
     />
-@endsection
+</x-app-layout>

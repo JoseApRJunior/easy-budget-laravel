@@ -1,7 +1,5 @@
-@extends('layouts.app')
-
-@section('content')
-    <div class="container-fluid py-4">
+<x-app-layout title="Nova Profissão">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Nova Profissão"
             icon="plus-circle"
@@ -10,7 +8,9 @@
                 'Profissões' => url('/admin/professions'),
                 'Nova' => '#'
             ]">
-            <x-ui.button :href="url('/admin/professions')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-slot:actions>
+                <x-ui.button :href="url('/admin/professions')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- Formulário -->
@@ -47,5 +47,5 @@
                 </form>
             </div>
         </div>
-    </div>
-@endsection
+    </x-layout.page-container>
+</x-app-layout>

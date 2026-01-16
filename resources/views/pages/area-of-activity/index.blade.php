@@ -83,4 +83,4 @@
         type="delete" 
         resource="área de atividade"
     />
-@endsection
+</x-app-layout>

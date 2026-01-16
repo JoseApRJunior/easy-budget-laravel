@@ -1,6 +1,4 @@
-@extends('layouts.admin')
-
-@section('content')
+<x-app-layout title="Gerenciamento de Alertas">
     <x-layout.page-container>
         <x-layout.page-header
             title="Gerenciamento de Alertas"
@@ -221,7 +219,7 @@
         @csrf
         @method('DELETE')
     </form>
-@endsection
+</x-app-layout>
 
 @push('scripts')
     <script>

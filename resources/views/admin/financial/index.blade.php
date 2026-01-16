@@ -1,9 +1,5 @@
-@extends('layouts.admin')
-
-@section('title', 'Controle Financeiro - Admin')
-
-@section('content')
-    <div class="container-fluid py-4">
+<x-app-layout title="Controle Financeiro">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Controle Financeiro"
             icon="cash-stack"
@@ -11,11 +7,13 @@
                 'Admin' => route('admin.dashboard'),
                 'Controle Financeiro' => '#'
             ]">
-            <div class="d-flex gap-2">
-                <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportReports()" />
-                <x-ui.button type="button" variant="secondary" outline icon="bell" label="Alertas" onclick="refreshBudgetAlerts()" />
-                <x-ui.button :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
-            </div>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportReports()" />
+                    <x-ui.button type="button" variant="secondary" outline icon="bell" label="Alertas" onclick="refreshBudgetAlerts()" />
+                    <x-ui.button :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
+                </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- Alertas de Orçamento -->
@@ -343,10 +341,10 @@
                 </div>
             @endif
         </x-ui.card>
-    </div>
-@endsection
+    </x-layout.page-container>
+</x-app-layout>
 
-@section('scripts')
+@push('scripts')
     <script>
         $(document).ready(function() {
             // Auto-refresh budget alerts every 30 seconds if they exist

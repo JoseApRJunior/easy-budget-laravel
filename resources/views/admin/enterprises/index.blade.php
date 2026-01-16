@@ -1,7 +1,5 @@
-@extends('layouts.admin')
-
-@section('content')
-    <div class="container-fluid py-4">
+<x-app-layout title="Gestão de Empresas">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Gestão de Empresas"
             icon="building"
@@ -9,10 +7,12 @@
                 'Admin' => route('admin.dashboard'),
                 'Gestão de Empresas' => '#'
             ]">
-            <div class="d-flex gap-2">
-                <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
-                <x-ui.button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
-            </div>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
+                    <x-ui.button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
+                </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- Cards de Estatísticas -->
@@ -316,17 +316,8 @@
                 </div>
             @endif
         </x-ui.card>
-    </div>
-
-    <!-- Modal de Confirmação -->
-    <x-ui.confirm-modal id="confirmModal" title="Confirmar Ação">
-        <div id="confirmModalBody"></div>
-        <x-slot:footer>
-            <x-ui.button variant="secondary" data-bs-dismiss="modal">Cancelar</x-ui.button>
-            <x-ui.button variant="primary" id="confirmModalAction">Confirmar</x-ui.button>
-        </x-slot:footer>
-    </x-ui.confirm-modal>
-@endsection
+    </x-layout.page-container>
+</x-app-layout>
 
 @push('styles')
     <style>

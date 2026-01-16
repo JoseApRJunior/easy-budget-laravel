@@ -1,20 +1,14 @@
-@extends('layouts.admin')
-
-@section('title', 'Detalhes Financeiros - Admin')
-
-@section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h3 mb-0 text-gray-800">Detalhes Financeiros</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.financial.index') }}">Controle Financeiro</a></li>
-                    <li class="breadcrumb-item active">{{ $providerFinancialDetails['provider_name'] }}</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
+<x-app-layout title="Detalhes Financeiros">
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Detalhes Financeiros"
+            icon="cash-stack"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Controle Financeiro' => route('admin.financial.index'),
+                $providerFinancialDetails['provider_name'] => '#'
+            ]">
+        </x-layout.page-header>
 
     <!-- Alertas Financeiros -->
     @if(count($providerFinancialDetails['alerts']) > 0)

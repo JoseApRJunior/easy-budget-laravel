@@ -101,4 +101,4 @@
             </x-slot:mobile>
         </x-resource.resource-list-card>
     </x-layout.page-container>
-@endsection
+</x-app-layout>
