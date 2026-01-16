@@ -68,12 +68,27 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 - [x] Planos e Assinaturas (`pages.admin.plan.*`)
 - [x] Monitoramento e Logs (`pages.admin.monitoring.*` / `pages.admin.logs.*`)
 - [x] Configurações (`pages.admin.settings.index`)
+- [x] Profissões (`pages.profession.index`)
+- [x] Áreas de Atividade (`pages.area-of-activity.index`)
+- [x] Funções (`pages.role.index`)
 
 ## 🌍 Páginas Públicas e Perfil
 - [x] Perfil do Usuário (`pages.profile.edit`)
 - [x] Dados da Empresa (`pages.provider.business.edit`)
 - [x] Landing Page (`home.*` / `welcome.blade.php`)
 - [x] Páginas Legais (`pages.legal.*`)
+- [x] Páginas de Erro (`pages.error.*`)
+- [x] Verificação de Documentos (`pages.document.verify`)
+
+## 🔐 Autenticação e Layouts
+- [x] Layout Principal (`layouts.app`)
+- [x] Views de Autenticação (`auth.*`)
+- [x] Headers e Footers (`partials.shared.*`)
+
+## 💳 Pagamentos e Integrações
+- [x] Integração Mercado Pago (`pages.mercadopago.index`)
+- [x] Redirecionamento de Pagamento (`pages.payment.*`)
+- [x] Status de Pagamento de Planos (`pages.plan.status` / `payment-status`)
 
 ## 🎨 Componentes Base (Revisados)
 - [x] `x-dashboard.stat-card`
@@ -83,6 +98,4 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 - [x] `x-resource.resource-list-card`
 
 ---
-*Legenda:*
-- [x] Verificado e Aprovado
-- [ ] Pendente Revisão/Migração
+**Status Final:** ✅ Todos os componentes e páginas principais foram migrados e revisados.

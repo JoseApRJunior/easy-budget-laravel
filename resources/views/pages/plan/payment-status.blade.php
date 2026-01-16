@@ -1,9 +1,9 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'title', 'Status do Pagamento' )
+@section('title', 'Status do Pagamento')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Status do Pagamento"
             icon="credit-card"
@@ -12,57 +12,60 @@
                 'Planos' => route('provider.plans.index'),
                 'Status do Pagamento' => '#'
             ]">
-            <p class="text-muted mb-0">Confira o status da sua transação</p>
+            <x-slot:actions>
+                <x-ui.button :href="route('provider.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar para Planos" />
+            </x-slot:actions>
         </x-layout.page-header>
 
-        <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card">
-          <div class="card-header">
-            <h4 class="card-title">Status do Pagamento</h4>
-          </div>
-          <div class="card-body text-center">
-            @if( $status === 'approved' )
-              <div class="alert alert-success">
-                <h5><i class="fas fa-check-circle"></i> Pagamento Aprovado!</h5>
-                <p>Seu plano foi ativado com sucesso.</p>
-              </div>
-            @elseif( $status === 'pending' )
-              <div class="alert alert-warning">
-                <h5><i class="fas fa-clock"></i> Pagamento Pendente</h5>
-                <p>Estamos aguardando a confirmação do pagamento.</p>
-              </div>
-            @elseif( $status === 'rejected' )
-              <div class="alert alert-danger">
-                <h5><i class="fas fa-times-circle"></i> Pagamento Rejeitado</h5>
-                <p>Houve um problema com seu pagamento. Tente novamente.</p>
-              </div>
-            @else
-              <div class="alert alert-info">
-                <h5><i class="fas fa-info-circle"></i> Status Desconhecido</h5>
-                <p>Não foi possível determinar o status do pagamento.</p>
-              </div>
-            @endif
+        <x-layout.grid-row class="justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <x-ui.card class="text-center">
+                    <x-slot:header>
+                        <h4 class="mb-0 fw-bold text-primary">
+                            <i class="bi bi-wallet2 me-2"></i>Resultado da Transação
+                        </h4>
+                    </x-slot:header>
+                    
+                    <div class="p-3">
+                        @if ($status === 'approved')
+                            <div class="text-success mb-3">
+                                <i class="bi bi-check-circle-fill display-1"></i>
+                            </div>
+                            <h4 class="fw-bold text-success mb-3">Pagamento Aprovado!</h4>
+                            <p class="lead mb-4">Seu plano foi ativado com sucesso.</p>
+                            
+                        @elseif ($status === 'pending')
+                            <div class="text-warning mb-3">
+                                <i class="bi bi-hourglass-split display-1"></i>
+                            </div>
+                            <h4 class="fw-bold text-warning mb-3">Pagamento Pendente</h4>
+                            <p class="lead mb-4">Estamos aguardando a confirmação do pagamento.</p>
+                            
+                        @elseif ($status === 'rejected')
+                            <div class="text-danger mb-3">
+                                <i class="bi bi-x-circle-fill display-1"></i>
+                            </div>
+                            <h4 class="fw-bold text-danger mb-3">Pagamento Rejeitado</h4>
+                            <p class="lead mb-4">Houve um problema com seu pagamento. Por favor, tente novamente.</p>
+                            
+                        @else
+                            <div class="text-info mb-3">
+                                <i class="bi bi-info-circle-fill display-1"></i>
+                            </div>
+                            <h4 class="fw-bold text-info mb-3">Status Desconhecido</h4>
+                            <p class="lead mb-4">Não foi possível determinar o status do pagamento no momento.</p>
+                        @endif
 
-            @if( isset( $plan_slug ) )
-              <div class="mt-4">
-                <a href="{{ route( 'provider.plans.show', $plan_slug ) }}" class="btn btn-primary">
-                  Ver Detalhes do Plano
-                </a>
-                <a href="{{ route( 'provider.plans.index' ) }}" class="btn btn-secondary">
-                  Voltar para Planos
-                </a>
-              </div>
-            @else
-              <div class="mt-4">
-                <a href="{{ route( 'provider.plans.index' ) }}" class="btn btn-primary">
-                  Ir para Planos
-                </a>
-              </div>
-            @endif
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+                        <div class="d-flex flex-column gap-2">
+                            @if (isset($plan_slug))
+                                <x-ui.button :href="route('provider.plans.show', $plan_slug)" variant="primary" size="lg" icon="eye" label="Ver Detalhes do Plano" />
+                            @endif
+                            
+                            <x-ui.button :href="route('provider.plans.index')" variant="secondary" outline size="lg" icon="arrow-left" label="Voltar para Planos" />
+                        </div>
+                    </div>
+                </x-ui.card>
+            </div>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 @endsection

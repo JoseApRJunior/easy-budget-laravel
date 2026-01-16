@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
+@section('title', 'Integração Mercado Pago')
+
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Integração Mercado Pago"
             icon="credit-card-2-front-fill"
@@ -10,66 +12,80 @@
                 'Configurações' => url('/settings'),
                 'Mercado Pago' => '#'
             ]">
-            <x-ui.button :href="url('/settings')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-slot:actions>
+                <x-ui.button :href="url('/settings')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            </x-slot:actions>
         </x-layout.page-header>
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-light border-0">
-                <h5 class="mb-0">Status da Conexão</h5>
-            </div>
-            <div class="card-body">
+        <x-layout.grid-row>
+            <div class="col-12">
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-link-45deg me-2"></i>Status da Conexão
+                        </h5>
+                    </x-slot:header>
+                    
+                    <div class="p-2">
+                        @if ($isConnected)
+                            <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+                                <i class="bi bi-check-circle-fill me-3 fs-4"></i>
+                                <div>
+                                    <strong class="d-block">Conta Mercado Pago conectada</strong>
+                                    <span class="small">Agora você pode gerar faturas e receber pagamentos diretamente na sua conta.</span>
+                                </div>
+                            </div>
 
-                @if ($isConnected)
-                    <div class="alert alert-success d-flex align-items-center" role="alert">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        <div>
-                            <strong>Conta Mercado Pago conectada</strong>
-                        </div>
+                            <div class="bg-light p-3 rounded mb-4">
+                                @if (!empty($public_key))
+                                    <div class="mb-2">
+                                        <span class="text-muted small text-uppercase fw-bold">Chave Pública:</span>
+                                        <code class="bg-white px-2 py-1 rounded border ms-2">{{ $public_key }}</code>
+                                    </div>
+                                @endif
+                                @if ($expires_readable)
+                                    <div>
+                                        <span class="text-muted small text-uppercase fw-bold">Expiração do Token:</span>
+                                        <span class="ms-2">{{ $expires_readable }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <form action="{{ route('integrations.mercadopago.disconnect') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <x-ui.button type="submit" variant="danger" icon="x-lg" label="Desconectar Conta" />
+                                </form>
+                                <form action="{{ route('integrations.mercadopago.refresh') }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <x-ui.button type="submit" variant="secondary" icon="arrow-repeat" label="Renovar Tokens" :disabled="!$can_refresh" />
+                                </form>
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <div class="mb-4">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning display-4"></i>
+                                </div>
+                                <h4 class="fw-bold">Não conectado</h4>
+                                <p class="text-muted mb-4">
+                                    Vincule sua conta Mercado Pago para começar a receber pagamentos.<br>
+                                    Ao conectar sua conta, você autoriza o Easy Budget a criar cobranças em seu nome.<br>
+                                    <small class="fst-italic">Nós não temos acesso à sua senha ou outros dados financeiros.</small>
+                                </p>
+                                
+                                <x-ui.button :href="$authorization_url" variant="primary" size="lg" icon="link-45deg" label="Conectar com Mercado Pago" />
+                            </div>
+                        @endif
                     </div>
-                    @if (!empty($public_key))
-                        <p class="text-muted">Sua chave pública é: <span class="text-code">{{ $public_key }}</span></p>
-                    @endif
-                    @if ($expires_readable)
-                        <p class="text-muted">Token expira em {{ $expires_readable }}.</p>
-                    @endif
-                    <p>Agora você pode gerar faturas e receber pagamentos diretamente na sua conta.</p>
-                    <form action="{{ route('integrations.mercadopago.disconnect') }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-x-lg me-2"></i>Desconectar Conta
-                        </button>
-                    </form>
-                    <form action="{{ route('integrations.mercadopago.refresh') }}" method="POST" class="d-inline ms-2">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary" @if (!$can_refresh) disabled @endif>
-                            <i class="bi bi-arrow-repeat me-2"></i>Renovar Tokens
-                        </button>
-                    </form>
-                @else
-                    <div class="alert alert-warning d-flex align-items-center" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <div>
-                            <strong>Não conectado.</strong> Vincule sua conta Mercado Pago para começar a receber
-                            pagamentos.
-                        </div>
-                    </div>
-                    <p>Ao conectar sua conta, você autoriza o Easy Budget a criar cobranças em seu nome. Nós não temos
-                        acesso à
-                        sua
-                        senha ou dados financeiros.</p>
-                    <a href="{{ $authorization_url }}" class="btn btn-primary btn-lg">
-                        <i class="bi bi-link-45deg me-2"></i>Conectar com Mercado Pago
-                    </a>
-                @endif
+
+                    <x-slot:footer>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            A integração permite que seus clientes paguem faturas diretamente para sua conta Mercado Pago. Uma taxa de serviço da plataforma pode ser aplicada.
+                        </small>
+                    </x-slot:footer>
+                </x-ui.card>
             </div>
-            <div class="card-footer bg-transparent border-0">
-                <small class="text-muted">
-                    <i class="bi bi-info-circle me-1"></i>
-                    A integração permite que seus clientes paguem faturas diretamente para sua conta Mercado Pago. Uma taxa
-                    de
-                    serviço da plataforma pode ser aplicada.
-                </small>
-            </div>
-        </div>
-    </div>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 @endsection

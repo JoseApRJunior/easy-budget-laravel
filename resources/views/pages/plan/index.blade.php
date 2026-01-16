@@ -1,10 +1,9 @@
-@extends( 'layouts.app' )
-@php
-use App\Helpers\BladeHelper;
-@endphp
+@extends('layouts.app')
+
+@section('title', 'Escolha seu Plano')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Escolha seu Plano"
             icon="gem"
@@ -12,133 +11,140 @@ use App\Helpers\BladeHelper;
                 'Dashboard' => route('provider.dashboard'),
                 'Planos' => '#'
             ]">
-            <p class="text-muted mb-0">Selecione o plano ideal para o seu negócio</p>
-        </x-layout.page-header>
-
-            <!-- Cards de Planos -->
-            <div class="row g-4 justify-content-center">
-                @foreach ( $plans as $plan )
-                    @php
-                        $currentPlan   =  auth()->check() ? auth()->user()->activePlan() : null;
-                        $isCurrentPlan = $currentPlan && $currentPlan->slug == $plan->slug;
-                    @endphp
-
-                    <div class="col-12 col-md-6 col-lg-4 position-relative">
-                        <div class="card h-100 border-0 shadow-lg rounded-lg hover-shadow fade-in">
-                            <!-- Cabeçalho do Plano -->
-                            <div class="card-header bg-transparent border-0 text-center pt-4 pb-0">
-                                @if ( $plan->slug == 'basic' || $plan->slug == 'trial' )
-                                    <i class="bi bi-rocket display-6 text-primary mb-2"></i>
-                                @elseif ( $plan->slug == 'pro' )
-                                    <i class="bi bi-star display-6 text-success mb-2"></i>
-                                @else
-                                    <i class="bi bi-gem display-6 text-info mb-2"></i>
-                                @endif
-
-                                <h3 class="h4 fw-bold mb-0">{{ $plan->name }}</h3>
-                            </div>
-
-                            <!-- Corpo do Plano -->
-                            <div class="card-body d-flex flex-column p-4">
-                                <!-- Preço -->
-                                <div class="text-center mb-4">
-                                    <div class="small text-muted mb-1">A partir de</div>
-                                    <div class="display-6 fw-bold text-primary mb-0">
-                                        R$ {{ number_format( $plan->price, 2, ',', '.' ) }}
-                                    </div>
-                                    <div class="small text-muted">/mês</div>
-                                </div>
-
-                                <p class="card-text small-text mb-4">{{ $plan[ 'description' ] }}</p>
-
-                                <!-- Features -->
-                                <ul class="list-unstyled mb-4">
-                                    @php
-                                        $features = is_array($plan->features) ? $plan->features : json_decode($plan->features ?? '[]', true);
-                                    @endphp
-                                    @foreach ( $features as $feature )
-                                        <li class="mb-3 d-flex align-items-center">
-                                            <i class="bi bi-check-lg text-success me-2"></i>
-                                            <span class="small">{{ $feature }}</span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-
-                                <!-- Botão de Ação -->
-                                <form action="/plans/pay" method="post" class="mt-auto">
-                                    @csrf
-                                    <input type="hidden" name="planSlug" value="{{ $plan->slug }}" required>
-                                    <div class="d-grid">
-                                        @if ( $isCurrentPlan )
-                                            <button type="button" class="btn btn-lg btn-outline-secondary" disabled>
-                                                <i class="bi bi-check2 me-2"></i>Plano Atual
-                                            </button>
-                                        @else
-                                            <button type="submit" class="btn btn-lg btn-primary">
-                                                <i class="bi bi-arrow-right me-2"></i>Escolher Plano
-                                            </button>
-                                        @endif
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Destaque para Plano Recomendado -->
-                        @if ( $plan->slug == 'pro' )
-                            <div class="position-absolute top-0 start-50 translate-middle" style="z-index: 1000; margin-top: -10px;">
-                                <span class="badge bg-warning text-dark px-3 py-2 fs-6 fw-bold shadow-lg border">
-                                    <i class="bi bi-star-fill me-1"></i>Mais Popular
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-                @endforeach
-
-                <!-- Corpo do Modal -->
-                <div class="modal-body">
-                    @php
-    $pendingPlan = auth()->check() ? auth()->user()->pendingPlan() : null;
-                    @endphp
-                    @if ( $pendingPlan && $pendingPlan->status == 'pending' )
-                        <p class="text-muted mb-3">
-                            Você possui uma assinatura para o plano
-                            <strong>{{ $pendingPlan->name }}</strong>
-                            aguardando pagamento. O que você gostaria de fazer?
-                        </p>
-                        <div class="d-flex flex-column gap-2">
-                            <a href="/plans/status" class="btn btn-primary d-grid">
-                                <i class="bi bi-hourglass-split me-2"></i>
-                                Verificar Status do Pagamento
-                            </a>
-                            <form action="/plans/cancel-pending" method="post" class="d-grid">
+            <x-slot:actions>
+                @php
+                    $pendingPlan = auth()->check() ? auth()->user()->pendingPlan() : null;
+                @endphp
+                @if ($pendingPlan && $pendingPlan->status == 'pending')
+                    <div class="alert alert-warning d-flex align-items-center mb-0 py-2">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <span class="small me-3">Você tem um plano pendente ({{ $pendingPlan->name }}).</span>
+                        <div class="d-flex gap-2">
+                            <x-ui.button href="/plans/status" variant="warning" size="sm" icon="hourglass-split" label="Ver Status" />
+                            <form action="/plans/cancel-pending" method="post" class="d-inline">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-secondary">
-                                    <i class="bi bi-x-circle me-2"></i>
-                                    Cancelar e Escolher Outro Plano
+                                <button type="submit" class="btn btn-outline-dark btn-sm">
+                                    <i class="bi bi-x-circle me-1"></i>Cancelar
                                 </button>
                             </form>
                         </div>
-                    @endif
-                </div>
+                    </div>
+                @endif
+            </x-slot:actions>
+        </x-layout.page-header>
 
-                <!-- Seção de Garantias -->
-                <div class="row justify-content-center mt-5">
-                    <div class="col-md-8">
-                        <div class="d-flex justify-content-center gap-4">
-                            <div class="text-center">
-                                <i class="bi bi-shield-check text-success h4 mb-2"></i>
-                                <p class="small text-muted mb-0">Pagamento Seguro</p>
+        <x-layout.grid-row class="justify-content-center">
+            @foreach ($plans as $plan)
+                @php
+                    $currentPlan = auth()->check() ? auth()->user()->activePlan() : null;
+                    $isCurrentPlan = $currentPlan && $currentPlan->slug == $plan->slug;
+                    $isPro = $plan->slug == 'pro';
+                @endphp
+
+                <div class="col-12 col-md-6 col-lg-4 mb-4 position-relative">
+                    @if ($isPro)
+                        <div class="position-absolute top-0 start-50 translate-middle" style="z-index: 10; margin-top: -10px;">
+                            <span class="badge bg-warning text-dark px-3 py-2 shadow-sm rounded-pill border border-light">
+                                <i class="bi bi-star-fill me-1"></i>Mais Popular
+                            </span>
+                        </div>
+                    @endif
+
+                    <div class="card h-100 border-0 shadow-sm hover-shadow transition-all {{ $isPro ? 'border border-primary' : '' }}" style="transition: transform 0.3s ease, box-shadow 0.3s ease;">
+                        <div class="card-body d-flex flex-column p-4 text-center">
+                            
+                            <!-- Icon & Title -->
+                            <div class="mb-3">
+                                @if ($plan->slug == 'basic' || $plan->slug == 'trial')
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-3 text-primary">
+                                        <i class="bi bi-rocket display-6"></i>
+                                    </div>
+                                @elseif ($plan->slug == 'pro')
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle p-3 mb-3 text-success">
+                                        <i class="bi bi-star display-6"></i>
+                                    </div>
+                                @else
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle p-3 mb-3 text-info">
+                                        <i class="bi bi-gem display-6"></i>
+                                    </div>
+                                @endif
+                                <h3 class="h4 fw-bold mb-1">{{ $plan->name }}</h3>
+                                <p class="text-muted small">{{ $plan->description }}</p>
                             </div>
-                            <div class="text-center">
-                                <i class="bi bi-arrow-counterclockwise text-success h4 mb-2"></i>
-                                <p class="small text-muted mb-0">7 Dias de Garantia</p>
+
+                            <!-- Price -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-center align-items-baseline">
+                                    <span class="h5 text-muted fw-normal me-1">R$</span>
+                                    <span class="display-5 fw-bold text-dark">{{ number_format($plan->price, 2, ',', '.') }}</span>
+                                    <span class="text-muted ms-1">/mês</span>
+                                </div>
                             </div>
-                            <div class="text-center">
-                                <i class="bi bi-headset text-success h4 mb-2"></i>
-                                <p class="small text-muted mb-0">Suporte 24/7</p>
-                            </div>
+
+                            <hr class="my-4 text-muted opacity-25">
+
+                            <!-- Features -->
+                            <ul class="list-unstyled text-start mb-4 flex-grow-1 px-2">
+                                @php
+                                    $features = is_array($plan->features) ? $plan->features : json_decode($plan->features ?? '[]', true);
+                                @endphp
+                                @foreach ($features as $feature)
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="bi bi-check-circle-fill text-success me-2 mt-1 flex-shrink-0"></i>
+                                        <span class="small">{{ $feature }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+
+                            <!-- Action Button -->
+                            <form action="/plans/pay" method="post" class="mt-auto">
+                                @csrf
+                                <input type="hidden" name="planSlug" value="{{ $plan->slug }}" required>
+                                <div class="d-grid">
+                                    @if ($isCurrentPlan)
+                                        <button type="button" class="btn btn-lg btn-success" disabled>
+                                            <i class="bi bi-check-circle me-2"></i>Plano Atual
+                                        </button>
+                                    @else
+                                        <button type="submit" class="btn btn-lg {{ $isPro ? 'btn-primary' : 'btn-outline-primary' }}">
+                                            Escolher Plano
+                                        </button>
+                                    @endif
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
+            @endforeach
+        </x-layout.grid-row>
+
+        <!-- Trust Badges -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="d-flex justify-content-center flex-wrap gap-4 text-center">
+                    <div class="p-3">
+                        <i class="bi bi-shield-lock text-success h3 d-block mb-2"></i>
+                        <span class="small text-muted fw-bold text-uppercase">Pagamento Seguro</span>
+                    </div>
+                    <div class="p-3">
+                        <i class="bi bi-arrow-counterclockwise text-success h3 d-block mb-2"></i>
+                        <span class="small text-muted fw-bold text-uppercase">Cancelamento Fácil</span>
+                    </div>
+                    <div class="p-3">
+                        <i class="bi bi-headset text-success h3 d-block mb-2"></i>
+                        <span class="small text-muted fw-bold text-uppercase">Suporte 24/7</span>
+                    </div>
+                </div>
             </div>
+        </div>
+    </x-layout.page-container>
 @endsection
+
+@push('styles')
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    }
+</style>
+@endpush

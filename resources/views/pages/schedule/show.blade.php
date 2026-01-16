@@ -152,18 +152,16 @@
                                 />
                             @endcan
                             @can('delete', $schedule)
-                                <form action="{{ route('provider.schedules.destroy', $schedule) }}" method="POST"
-                                    class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-ui.button 
-                                        type="submit"
-                                        variant="danger"
-                                        icon="trash"
-                                        label="Excluir"
-                                        onclick="return confirm('Tem certeza que deseja excluir este agendamento?')"
-                                    />
-                                </form>
+                                <x-ui.button 
+                                    type="button"
+                                    variant="danger"
+                                    icon="trash"
+                                    label="Excluir"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal" 
+                                    data-delete-url="{{ route('provider.schedules.destroy', $schedule) }}"
+                                    data-item-name="o agendamento #{{ $schedule->id }}"
+                                />
                             @endcan
                         </div>
                     </div>
@@ -171,4 +169,15 @@
             </div>
         </x-layout.grid-row>
     </x-layout.page-container>
+
+    <x-ui.confirm-modal 
+        id="deleteModal" 
+        title="Confirmar Exclusão" 
+        message="Tem certeza que deseja excluir <strong id='deleteModalItemName'></strong>?" 
+        submessage="Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+        type="delete" 
+        resource="agendamento"
+    />
 @endsection

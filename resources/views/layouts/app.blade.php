@@ -1,6 +1,6 @@
 {{-- resources/views/layouts/app.blade.php --}}
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-100" data-bs-theme="light">
+<html lang="pt-BR" class="h-100">
 
 @include('partials.shared.head')
 

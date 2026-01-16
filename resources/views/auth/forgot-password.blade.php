@@ -1,180 +1,39 @@
 @extends('layouts.app')
 
-@section('content')
-    <div class="container py-1">
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0">
-                    <i class="bi bi-key me-2"></i>Recuperação de Senha
-                </h1>
-                <p class="text-muted mb-0">Digite seu e-mail para receber o link de reset</p>
-            </div>
-        </div>
+@section('title', 'Recuperar Senha')
 
-        <!-- Formulário -->
+@section('content')
+    <div class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <form method="POST" action="{{ route('password.email') }}" id="forgotPasswordForm">
+            <div class="col-lg-5 col-md-7">
+                <x-ui.card class="border-0 shadow-lg">
+                    <div class="p-4">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-3 text-primary">
+                                <i class="bi bi-envelope-exclamation display-6"></i>
+                            </div>
+                            <h4 class="fw-bold text-dark mb-2">Esqueceu a senha?</h4>
+                            <p class="text-muted small">
+                                Digite seu email e enviaremos um link para redefinir sua senha.
+                            </p>
+                        </div>
+
+                        <form method="POST" action="{{ route('password.email') }}">
                             @csrf
 
-                            <!-- Dados de Recuperação -->
-                            <div class="form-section">
-                                <h5 class="section-title">
-                                    <i class="bi bi-envelope-arrow-up me-2"></i>Recuperação de Senha
-                                </h5>
-
-                                <!-- Email -->
-                                <div class="mb-4">
-                                    <label for="email" class="form-label fw-semibold">
-                                        Endereço de E-mail <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="bi bi-envelope"></i>
-                                        </span>
-                                        <input id="email" name="email" type="email" value="{{ old('email') }}"
-                                            required autofocus class="form-control @error('email') is-invalid @enderror"
-                                            placeholder="seu@email.com">
-                                        @error('email')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Instruções -->
-                                    <div class="mt-2">
-                                        <small class="text-muted">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Digite o e-mail associado à sua conta. Você receberá um link para criar uma nova
-                                            senha.
-                                        </small>
-                                    </div>
-                                </div>
+                            <div class="mb-4">
+                                <x-ui.form.input type="email" name="email" label="Email" placeholder="seu@email.com" required :value="old('email')" autofocus />
                             </div>
 
-                            <!-- Botões de ação -->
-                            <div class="d-flex justify-content-between pt-4 border-top">
-                                <a href="{{ route('login') }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2"></i>Voltar ao Login
-                                </a>
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="bi bi-envelope-check me-2"></i>Enviar Link de Reset
-                                </button>
+                            <div class="d-grid gap-3">
+                                <x-ui.button type="submit" variant="primary" size="lg" icon="envelope" label="Enviar Link de Recuperação" />
+                                
+                                <x-ui.button href="{{ route('login') }}" variant="secondary" outline icon="arrow-left" label="Voltar ao Login" />
                             </div>
                         </form>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        /* Estilos específicos do formulário de recuperação */
-        .form-section {
-            background: #f8f9fa;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-title {
-            color: #495057;
-            border-bottom: 2px solid #dee2e6;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .input-group-text {
-            background-color: #e9ecef;
-            border-color: #ced4da;
-            color: #495057;
-        }
-
-        .is-invalid {
-            border-color: #dc3545;
-            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-        }
-
-        .invalid-feedback {
-            display: block;
-        }
-
-        .btn-outline-secondary {
-            border-color: #6c757d;
-            color: #6c757d;
-        }
-
-        .btn-outline-secondary:hover {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: white;
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .btn {
-                width: 100%;
-                margin-bottom: 0.5rem;
-            }
-
-            .d-flex.justify-content-between {
-                flex-direction: column;
-            }
-        }
-    </style>
-@endpush
-
-@push('scripts')
-    <script>
-        // Funcionalidades do formulário de recuperação
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('forgotPasswordForm');
-
-            if (form) {
-                // Validação em tempo real
-                setupRealTimeValidation();
-
-                // Submit com indicador de loading
-                form.addEventListener('submit', function(e) {
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    if (submitBtn) {
-                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Enviando...';
-                        submitBtn.disabled = true;
-                    }
-                });
-            }
-
-            function setupRealTimeValidation() {
-                const emailInput = document.getElementById('email');
-
-                if (emailInput) {
-                    emailInput.addEventListener('blur', function() {
-                        const email = this.value.trim();
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-                        if (email && !emailRegex.test(email)) {
-                            this.classList.add('is-invalid');
-                        } else {
-                            this.classList.remove('is-invalid');
-                        }
-                    });
-
-                    emailInput.addEventListener('input', function() {
-                        if (this.classList.contains('is-invalid')) {
-                            this.classList.remove('is-invalid');
-                        }
-                    });
-                }
-            }
-        });
-    </script>
-@endpush
