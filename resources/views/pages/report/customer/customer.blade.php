@@ -16,61 +16,65 @@
         </x-layout.page-header>
 
         <!-- Filtros de Busca -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <x-ui.card class="mb-4">
+            <x-slot:header>
                 <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-            </div>
-            <div class="card-body">
-                <form id="filtersFormCustomers" method="GET" action="{{ route('provider.reports.customers') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="name">Nome do Cliente</label>
-                                <input type="text" class="form-control" id="name" name="name"
-                                    value="{{ request('name') ?? '' }}" placeholder="Digite o nome">
-                            </div>
-                        </div>
+            </x-slot:header>
+            <form id="filtersFormCustomers" method="GET" action="{{ route('provider.reports.customers') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            label="Nome do Cliente" 
+                            name="name" 
+                            id="name"
+                            :value="request('name') ?? ''" 
+                            placeholder="Digite o nome"
+                            wrapper-class="mb-0"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="document">CPF ou CNPJ</label>
-                                <input type="text" class="form-control" id="document" name="document"
-                                    value="{{ request('document') ?? '' }}" placeholder="Digite CPF ou CNPJ">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            label="CPF ou CNPJ" 
+                            name="document" 
+                            id="document"
+                            :value="request('document') ?? ''" 
+                            placeholder="Digite CPF ou CNPJ"
+                            wrapper-class="mb-0"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="start_date"
-                                label="Data de Cadastro Inicial"
-                                :value="request('start_date')"
-                            />
-                        </div>
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="start_date"
+                            label="Data de Cadastro Inicial"
+                            :value="request('start_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="end_date"
-                                label="Data de Cadastro Final"
-                                :value="request('end_date')"
-                            />
-                        </div>
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="end_date"
+                            label="Data de Cadastro Final"
+                            :value="request('end_date')"
+                        />
+                    </div>
 
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterCustomers" />
-                                <x-ui.button type="link" :href="route('provider.reports.customers')" variant="secondary" icon="x" label="Limpar" />
-                            </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterCustomers" />
+                            <x-ui.button type="link" :href="route('provider.reports.customers')" variant="secondary" icon="x" label="Limpar" />
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-ui.card>
 
         {{-- Empty State Inicial --}}
         @if (!request()->hasAny(['name', 'document', 'start_date', 'end_date']))
-            <div class="card border-0 shadow-sm text-center py-4">
+            <x-ui.card class="border-0 shadow-sm text-center py-4">
                 <div class="card-body">
                     <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
                     <h5 class="text-gray-800 mb-3">Utilize os filtros acima para gerar o relatório</h5>
@@ -81,11 +85,11 @@
                         <i class="fas fa-plus me-2"></i>Criar Primeiro Cliente
                     </a>
                 </div>
-            </div>
+            </x-ui.card>
         @else
             <!-- Resultados -->
-            <div class="card">
-                <div class="card-header">
+            <x-ui.card>
+                <x-slot:header>
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                             <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -112,8 +116,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body p-0">
+                </x-slot:header>
+                <div class="p-0">
 
                     <!-- Mobile View -->
                     <div class="mobile-view">
@@ -230,6 +234,7 @@
                         ])
                     @endif
                 </div>
+            </x-ui.card>
         @endif
     </div>
 @endsection

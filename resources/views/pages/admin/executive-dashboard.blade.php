@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout title="Dashboard Executivo">
     <x-layout.page-container>
         <x-layout.page-header
             title="Dashboard Executivo"
@@ -43,6 +41,7 @@
                 :value="$kpis['success_rate'] . '%'"
                 icon="check-circle"
                 variant="success"
+                :variant="$kpis['success_rate'] >= 95 ? 'success' : ($kpis['success_rate'] >= 90 ? 'warning' : 'danger')"
             />
 
             <x-dashboard.stat-card 
@@ -126,9 +125,8 @@
             </div>
         </div>
     </x-layout.page-container>
-@endsection
 
-@section('scripts')
+    @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
         let performanceChart, middlewareChart, alertsChart;
@@ -233,4 +231,5 @@
             loadChartData();
         }
     </script>
-@endsection
+    @endpush
+</x-app-layout>

@@ -22,43 +22,38 @@
         <x-layout.grid-row class="g-4">
             <!-- Informações do Produto -->
             <x-layout.grid-col size="col-lg-8">
-                <div class="card h-100">
-                    <div class="card-header bg-transparent border-bottom py-3">
-                        <h5 class="mb-0">
-                            <i class="bi bi-box me-2 text-primary"></i>Informações do Produto
+                <x-ui.card class="h-100">
+                    <x-slot:header>
+                        <h5 class="mb-0 fw-bold text-primary">
+                            <i class="bi bi-box me-2"></i>Informações do Produto
                         </h5>
-                    </div>
-                    <div class="card-body p-4">
+                    </x-slot:header>
+                    <div class="p-2">
                         <x-layout.grid-row>
                             <!-- Nome -->
                             <x-layout.grid-col size="col-md-6">
-                                <div class="mb-3">
-                                    <label for="name" class="form-label small fw-bold text-muted text-uppercase">Nome do Produto <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                        id="name" name="name" value="{{ old('name') }}" required>
-                                    @error('name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                <x-ui.form.input 
+                                    name="name" 
+                                    label="Nome do Produto" 
+                                    required 
+                                    :value="old('name')" 
+                                />
                             </x-layout.grid-col>
 
                             <!-- SKU -->
                             <x-layout.grid-col size="col-md-3">
-                                <div class="mb-3">
-                                    <label for="sku" class="form-label small fw-bold text-muted text-uppercase">SKU</label>
-                                    <input type="text" class="form-control @error('sku') is-invalid @enderror"
-                                        id="sku" name="sku" value="{{ old('sku', $defaults['sku'] ?? '') }}">
-                                    @error('sku')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <div class="form-text small">Código sugerido ou personalizado</div>
-                                </div>
+                                <x-ui.form.input 
+                                    name="sku" 
+                                    label="SKU" 
+                                    :value="old('sku', $defaults['sku'] ?? '')" 
+                                    help="Código sugerido ou personalizado"
+                                />
                             </x-layout.grid-col>
 
                             <!-- Preço de Custo -->
                             <x-layout.grid-col size="col-md-3">
                                 <div class="mb-3">
-                                    <label for="cost_price" class="form-label small fw-bold text-muted text-uppercase">Preço de Custo</label>
+                                    <label for="cost_price" class="form-label fw-bold small text-muted text-uppercase">Preço de Custo</label>
                                     <div class="input-group">
                                         <div class="input-group-text bg-light border-end-0">R$</div>
                                         <input type="text" class="form-control currency-brl border-start-0 @error('cost_price') is-invalid @enderror"
@@ -76,7 +71,7 @@
                             <!-- Preço de Venda -->
                             <x-layout.grid-col size="col-md-3">
                                 <div class="mb-3">
-                                    <label for="price" class="form-label small fw-bold text-muted text-uppercase">Preço de Venda <span class="text-danger">*</span></label>
+                                    <label for="price" class="form-label fw-bold small text-muted text-uppercase">Preço de Venda <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <div class="input-group-text bg-light border-end-0">R$</div>
                                         <input type="text" class="form-control currency-brl border-start-0 @error('price') is-invalid @enderror"
@@ -95,45 +90,34 @@
 
                             <!-- Categoria -->
                             <x-layout.grid-col size="col-md-6">
-                                <div class="mb-3">
-                                    <label for="category_id" class="form-label small fw-bold text-muted text-uppercase">Categoria</label>
-                                    <select class="form-select tom-select @error('category_id') is-invalid @enderror"
-                                        id="category_id" name="category_id">
-                                        <option value="">Selecione uma categoria</option>
-                                        @foreach ($categories as $category)
-                                            @if ($category->parent_id === null)
-                                                @if ($category->children->isEmpty())
-                                                    <option value="{{ $category->id }}"
-                                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->name }}
-                                                    </option>
-                                                @else
-                                                    <optgroup label="{{ $category->name }}">
-                                                        <option value="{{ $category->id }}"
-                                                            {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                            {{ $category->name }} (Geral)
-                                                        </option>
-                                                        @foreach ($category->children as $subcategory)
-                                                            <option value="{{ $subcategory->id }}"
-                                                                {{ old('category_id') == $subcategory->id ? 'selected' : '' }}>
-                                                                {{ $subcategory->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </optgroup>
-                                                @endif
+                                <x-ui.form.select 
+                                    name="category_id" 
+                                    label="Categoria" 
+                                    id="category_id"
+                                    :selected="old('category_id')"
+                                >
+                                    <option value="">Selecione uma categoria</option>
+                                    @foreach ($categories as $category)
+                                        @if ($category->parent_id === null)
+                                            @if ($category->children->isEmpty())
+                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                            @else
+                                                <optgroup label="{{ $category->name }}">
+                                                    <option value="{{ $category->id }}">{{ $category->name }} (Geral)</option>
+                                                    @foreach ($category->children as $subcategory)
+                                                        <option value="{{ $subcategory->id }}">{{ $subcategory->name }}</option>
+                                                    @endforeach
+                                                </optgroup>
                                             @endif
-                                        @endforeach
-                                    </select>
-                                    @error('category_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                        @endif
+                                    @endforeach
+                                </x-ui.form.select>
                             </x-layout.grid-col>
 
                             <!-- Status -->
                             <x-layout.grid-col size="col-md-3">
                                 <div class="mb-3">
-                                    <label class="form-label small fw-bold text-muted text-uppercase">Status</label>
+                                    <label class="form-label fw-bold small text-muted text-uppercase">Status</label>
                                     <div class="form-check form-switch mt-2">
                                         <input type="hidden" name="active" value="0">
                                         <input class="form-check-input" type="checkbox" id="active" name="active"
@@ -147,32 +131,30 @@
 
                             <!-- Descrição -->
                             <x-layout.grid-col size="col-12">
-                                <div class="mb-3">
-                                    <label for="description" class="form-label small fw-bold text-muted text-uppercase">Descrição</label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
-                                        rows="4" placeholder="Detalhes técnicos, benefícios e especificações...">{{ old('description') }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                <x-ui.form.textarea 
+                                    name="description" 
+                                    label="Descrição" 
+                                    rows="4" 
+                                    placeholder="Detalhes técnicos, benefícios e especificações..."
+                                >{{ old('description') }}</x-ui.form.textarea>
                             </x-layout.grid-col>
                         </x-layout.grid-row>
                     </div>
-                </div>
+                </x-ui.card>
             </x-layout.grid-col>
 
             <!-- Imagem -->
             <x-layout.grid-col size="col-lg-4">
-                <div class="card h-100">
-                    <div class="card-header bg-transparent border-bottom py-3">
-                        <h5 class="mb-0">
-                            <i class="bi bi-image me-2 text-primary"></i>Imagem do Produto
+                <x-ui.card class="h-100">
+                    <x-slot:header>
+                        <h5 class="mb-0 fw-bold text-primary">
+                            <i class="bi bi-image me-2"></i>Imagem do Produto
                         </h5>
-                    </div>
-                    <div class="card-body p-4 text-center">
+                    </x-slot:header>
+                    <div class="p-4 text-center">
                         <!-- Preview da Imagem -->
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted text-uppercase d-block text-start">Preview</label>
+                            <label class="form-label fw-bold small text-muted text-uppercase d-block text-start">Preview</label>
                             <div id="image-preview-container" class="mx-auto" style="max-width: 300px;">
                                 <img id="image-preview" src="{{ asset('assets/img/img_not_found.png') }}"
                                     alt="Preview da Imagem"
@@ -183,7 +165,7 @@
 
                         <!-- Seleção de Arquivo -->
                         <div class="mb-3 text-start">
-                            <label for="image" class="form-label small fw-bold text-muted text-uppercase">Upload de Imagem</label>
+                            <label for="image" class="form-label fw-bold small text-muted text-uppercase">Upload de Imagem</label>
                             <input type="file" class="form-control @error('image') is-invalid @enderror"
                                 id="image" name="image" accept="image/*">
                             @error('image')
@@ -194,7 +176,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </x-ui.card>
             </x-layout.grid-col>
         </x-layout.grid-row>
 

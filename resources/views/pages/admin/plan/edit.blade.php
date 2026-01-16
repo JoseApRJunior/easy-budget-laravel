@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Editar Plano')
-
-@section('content')
+<x-app-layout title="Editar Plano">
     <x-layout.page-container>
         <x-layout.page-header
             :title="'Editar Plano: ' . $plan->name"
@@ -208,4 +204,4 @@
             </x-layout.grid-row>
         </form>
     </x-layout.page-container>
-@endsection
+</x-app-layout>

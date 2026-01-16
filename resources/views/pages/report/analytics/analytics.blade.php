@@ -22,7 +22,7 @@
         <!-- Cards de Métricas Principais -->
         <div class="row mb-4">
             <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
-                <div class="card bg-primary text-white">
+                <div class="card bg-primary text-white h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
@@ -39,7 +39,7 @@
             </div>
 
             <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
-                <div class="card bg-success text-white">
+                <div class="card bg-success text-white h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
@@ -56,7 +56,7 @@
             </div>
 
             <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
-                <div class="card bg-info text-white">
+                <div class="card bg-info text-white h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
@@ -73,7 +73,7 @@
             </div>
 
             <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12 mb-3">
-                <div class="card bg-warning text-white">
+                <div class="card bg-warning text-white h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <div>
@@ -94,59 +94,55 @@
         <div class="row mb-4">
             <!-- Gráfico de Vendas por Período -->
             <div class="col-xl-8 col-lg-7 col-md-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
+                <x-ui.card>
+                    <x-slot:header>
                         <h5 class="mb-0">
                             <i class="fas fa-chart-area"></i> Vendas por Período
                         </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="salesChart" width="400" height="200"></canvas>
-                    </div>
-                </div>
+                    </x-slot:header>
+                    <canvas id="salesChart" width="400" height="200"></canvas>
+                </x-ui.card>
             </div>
 
             <!-- Top Produtos/Serviços -->
             <div class="col-xl-4 col-lg-5 col-md-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
+                <x-ui.card>
+                    <x-slot:header>
                         <h5 class="mb-0">
                             <i class="fas fa-star"></i> Top Produtos/Serviços
                         </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">Consultoria em TI</h6>
-                                    <small class="text-muted">R$ 45.200</small>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">35%</span>
+                    </x-slot:header>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Consultoria em TI</h6>
+                                <small class="text-muted">R$ 45.200</small>
                             </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">Desenvolvimento Web</h6>
-                                    <small class="text-muted">R$ 32.800</small>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">25%</span>
+                            <span class="badge bg-primary rounded-pill">35%</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Desenvolvimento Web</h6>
+                                <small class="text-muted">R$ 32.800</small>
                             </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">Manutenção de Sistemas</h6>
-                                    <small class="text-muted">R$ 28.600</small>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">22%</span>
+                            <span class="badge bg-primary rounded-pill">25%</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Manutenção de Sistemas</h6>
+                                <small class="text-muted">R$ 28.600</small>
                             </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1">Suporte Técnico</h6>
-                                    <small class="text-muted">R$ 20.750</small>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">18%</span>
+                            <span class="badge bg-primary rounded-pill">22%</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">Suporte Técnico</h6>
+                                <small class="text-muted">R$ 20.750</small>
                             </div>
+                            <span class="badge bg-primary rounded-pill">18%</span>
                         </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         </div>
 
@@ -154,84 +150,78 @@
         <div class="row mb-4">
             <!-- Performance por Canal -->
             <div class="col-xl-6 col-lg-6 col-md-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
+                <x-ui.card>
+                    <x-slot:header>
                         <h5 class="mb-0">
                             <i class="fas fa-chart-pie"></i> Performance por Canal
                         </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="channelChart" width="400" height="200"></canvas>
-                    </div>
-                </div>
+                    </x-slot:header>
+                    <canvas id="channelChart" width="400" height="200"></canvas>
+                </x-ui.card>
             </div>
 
             <!-- Análise de Retenção -->
             <div class="col-xl-6 col-lg-6 col-md-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
+                <x-ui.card>
+                    <x-slot:header>
                         <h5 class="mb-0">
                             <i class="fas fa-user-check"></i> Taxa de Retenção de Clientes
                         </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <h4 class="text-success">94.2%</h4>
-                                <small class="text-muted">Retenção 30 dias</small>
-                            </div>
-                            <div class="col-4">
-                                <h4 class="text-info">87.5%</h4>
-                                <small class="text-muted">Retenção 90 dias</small>
-                            </div>
-                            <div class="col-4">
-                                <h4 class="text-warning">76.3%</h4>
-                                <small class="text-muted">Retenção 180 dias</small>
-                            </div>
+                    </x-slot:header>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-success">94.2%</h4>
+                            <small class="text-muted">Retenção 30 dias</small>
                         </div>
-                        <div class="progress mt-3">
-                            <div class="progress-bar bg-success" style="width: 94.2%"></div>
-                            <div class="progress-bar bg-info" style="width: 87.5%"></div>
-                            <div class="progress-bar bg-warning" style="width: 76.3%"></div>
+                        <div class="col-4">
+                            <h4 class="text-info">87.5%</h4>
+                            <small class="text-muted">Retenção 90 dias</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-warning">76.3%</h4>
+                            <small class="text-muted">Retenção 180 dias</small>
                         </div>
                     </div>
-                </div>
+                    <div class="progress mt-3">
+                        <div class="progress-bar bg-success" style="width: 94.2%"></div>
+                        <div class="progress-bar bg-info" style="width: 87.5%"></div>
+                        <div class="progress-bar bg-warning" style="width: 76.3%"></div>
+                    </div>
+                </x-ui.card>
             </div>
         </div>
 
         <!-- Tabela de Insights -->
-        <div class="card">
-            <div class="card-header">
+        <x-ui.card>
+            <x-slot:header>
                 <h5 class="mb-0">
                     <i class="fas fa-lightbulb"></i> Insights e Recomendações
                 </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-xl-4 col-lg-6 col-md-12 mb-3">
-                        <div class="alert alert-success" role="alert">
-                            <h6><i class="fas fa-check-circle"></i> Oportunidade Identificada</h6>
-                            <p class="mb-0">Clientes que compraram "Consultoria em TI" têm 40% mais chance de contratar
-                                "Manutenção de Sistemas".</p>
-                        </div>
+            </x-slot:header>
+            <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-12 mb-3">
+                    <div class="alert alert-success" role="alert">
+                        <h6><i class="fas fa-check-circle"></i> Oportunidade Identificada</h6>
+                        <p class="mb-0">Clientes que compraram "Consultoria em TI" têm 40% mais chance de contratar
+                            "Manutenção de Sistemas".</p>
                     </div>
-                    <div class="col-xl-4 col-lg-6 col-md-12 mb-3">
-                        <div class="alert alert-info" role="alert">
-                            <h6><i class="fas fa-info-circle"></i> Tendência Positiva</h6>
-                            <p class="mb-0">Vendas online cresceram 25% este mês. Considere investir mais em marketing
-                                digital.</p>
-                        </div>
+                </div>
+                <div class="col-xl-4 col-lg-6 col-md-12 mb-3">
+                    <div class="alert alert-info" role="alert">
+                        <h6><i class="fas fa-info-circle"></i> Tendência Positiva</h6>
+                        <p class="mb-0">Vendas online cresceram 25% este mês. Considere investir mais em marketing
+                            digital.</p>
                     </div>
-                    <div class="col-xl-4 col-lg-6 col-md-12 mb-3">
-                        <div class="alert alert-warning" role="alert">
-                            <h6><i class="fas fa-exclamation-triangle"></i> Atenção Necessária</h6>
-                            <p class="mb-0">Taxa de conversão do canal "Redes Sociais" está 15% abaixo da média. Revisar
-                                estratégia.</p>
-                        </div>
+                </div>
+                <div class="col-xl-4 col-lg-6 col-md-12 mb-3">
+                    <div class="alert alert-warning" role="alert">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Atenção Necessária</h6>
+                        <p class="mb-0">Taxa de conversão do canal "Redes Sociais" está 15% abaixo da média. Revisar
+                            estratégia.</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </x-ui.card>
     </div>
 @endsection
 

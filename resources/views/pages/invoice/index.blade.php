@@ -77,8 +77,8 @@
         </x-form.filter-form>
 
         {{-- Card de Tabela --}}
-        <div class="card">
-            <div class="card-header">
+        <x-ui.card>
+            <x-slot:header>
                 <div class="row align-items-center">
                     <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                         <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -98,8 +98,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="card-body p-0">
+            </x-slot:header>
+
+            <div class="p-0">
                 {{-- Desktop View --}}
                 <div class="desktop-view">
                     <div class="table-responsive">
@@ -187,6 +188,6 @@
                     'show_info' => true,
                 ])
             @endif
-        </div>
+        </x-ui.card>
     </div>
 @endsection

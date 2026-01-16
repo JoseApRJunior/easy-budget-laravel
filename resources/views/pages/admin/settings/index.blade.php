@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Configurações do Sistema')
-
-@section('content')
+<x-app-layout title="Configurações do Sistema">
     <x-layout.page-container>
         <x-layout.page-header
             title="Configurações do Sistema"
@@ -130,4 +126,4 @@
             </x-layout.grid-row>
         </form>
     </x-layout.page-container>
-@endsection
+</x-app-layout>

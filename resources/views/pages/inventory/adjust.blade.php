@@ -18,10 +18,10 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <x-ui.card>
                 <form action="{{ route('provider.inventory.adjust.store', $product->sku) }}" method="POST">
                     @csrf
-                    <div class="card-body">
+                    <div class="p-2">
                         <!-- Informações do Produto -->
                         <div class="alert alert-info border-0 shadow-sm mb-4">
                             <div class="d-flex align-items-center mb-2">
@@ -64,17 +64,15 @@
 
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="current_quantity" class="form-label">Quantidade Atual</label>
-                                    <input type="number"
-                                           class="form-control"
-                                           value="{{ $inventory->quantity ?? 0 }}"
-                                           disabled>
-                                </div>
+                                <x-ui.form.input 
+                                    label="Quantidade Atual" 
+                                    :value="$inventory->quantity ?? 0" 
+                                    disabled 
+                                />
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="new_quantity" class="form-label">Nova Quantidade <span class="text-danger">*</span></label>
+                                    <label for="new_quantity" class="form-label fw-bold small text-muted text-uppercase">Nova Quantidade <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <button type="button" class="btn btn-outline-secondary quantity-decrement">-</button>
                                         <input type="number"
@@ -100,23 +98,16 @@
 
                         <div class="row">
                             <div class="col-12">
-                                <div class="form-group mb-3">
-                                    <label for="reason" class="form-label">Motivo do Ajuste <span class="text-danger">*</span></label>
-                                    <textarea class="form-control @error('reason') is-invalid @enderror"
-                                              id="reason"
-                                              name="reason"
-                                              rows="3"
-                                              minlength="10"
-                                              maxlength="500"
-                                              required
-                                              placeholder="Descreva detalhadamente o motivo deste ajuste de estoque...">{{ old('reason') }}</textarea>
-                                    @error('reason')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <small class="form-text text-muted">
-                                        Mínimo 10 caracteres. Este motivo será registrado no histórico de movimentações.
-                                    </small>
-                                </div>
+                                <x-ui.form.textarea 
+                                    name="reason" 
+                                    label="Motivo do Ajuste" 
+                                    required 
+                                    rows="3" 
+                                    minlength="10" 
+                                    maxlength="500" 
+                                    placeholder="Descreva detalhadamente o motivo deste ajuste de estoque..."
+                                    help="Mínimo 10 caracteres. Este motivo será registrado no histórico de movimentações."
+                                >{{ old('reason') }}</x-ui.form.textarea>
                             </div>
                         </div>
 
@@ -126,24 +117,15 @@
                             A diferença entre a quantidade atual e a nova quantidade será registrada como uma movimentação de estoque.
                         </div>
                     </div>
-                </div>
 
-                <div class="mt-4">
-                    <div class="row align-items-center g-3">
-                        <div class="col-12 col-md-auto order-2 order-md-1">
-                            <x-ui.back-button index-route="provider.inventory.index" class="w-100 w-md-auto px-md-3" />
-                        </div>
-                        <div class="col-12 col-md text-center d-none d-md-block order-md-2">
-                            <!-- Espaçador central para alinhar com o padrão show -->
-                        </div>
-                        <div class="col-12 col-md-auto order-1 order-md-3">
-                            <button type="submit" class="btn btn-primary w-100 px-4">
-                                <i class="bi bi-check-lg me-1"></i> Confirmar Ajuste
-                            </button>
+                    <div class="mt-4 p-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <x-ui.back-button index-route="provider.inventory.index" />
+                            <x-ui.button type="submit" variant="primary" icon="check-lg" label="Confirmar Ajuste" />
                         </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </x-ui.card>
         </div>
     </div>
 </x-layout.page-container>

@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout :title="$page_title">
     <x-layout.page-container>
         <x-layout.page-header
             :title="$page_title"
@@ -142,9 +140,8 @@
             </div>
         </div>
     </x-layout.page-container>
-@endsection
 
-@section('scripts')
+    @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
         // Gráfico de Tendência
@@ -201,4 +198,5 @@
             location.reload();
         }
     </script>
-@endsection
+    @endpush
+</x-app-layout>

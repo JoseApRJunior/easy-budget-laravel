@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Logs do Sistema')
-
-@section('content')
+<x-app-layout title="Logs do Sistema">
     <x-layout.page-container>
         <x-layout.page-header
             title="Logs do Sistema"
@@ -105,4 +101,4 @@
             </div>
         </x-layout.grid-row>
     </x-layout.page-container>
-@endsection
+</x-app-layout>

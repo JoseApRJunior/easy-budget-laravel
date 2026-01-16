@@ -1,15 +1,5 @@
-@extends('layouts.admin')
-
-@section('admin_content')
-    <x-layout.page-header
-        title="Dashboard de Inteligência Artificial"
-        icon="robot"
-        :breadcrumb-items="[
-            'Admin' => url('/admin'),
-            'IA' => '#'
-        ]">
-    </x-layout.page-header>
-
+<x-app-layout title="Dashboard de Inteligência Artificial">
+    @push('styles')
     <style>
         .metric-card {
             text-align: center;
@@ -43,6 +33,16 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
+    @endpush
+
+    <x-layout.page-header
+        title="Dashboard de Inteligência Artificial"
+        icon="robot"
+        :breadcrumb-items="[
+            'Admin' => url('/admin'),
+            'IA' => '#'
+        ]">
+    </x-layout.page-header>
 
     <div class="container-fluid">
         <!-- Métricas Principais -->
@@ -195,9 +195,8 @@
             </div>
         </div>
     </div>
-@endsection
 
-@section('scripts')
+    @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -277,4 +276,5 @@
             document.getElementById('growth-rate').textContent = forecast.summary.growth_rate;
         }
     </script>
-@endsection
+    @endpush
+</x-app-layout>

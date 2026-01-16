@@ -14,7 +14,11 @@
         @include('partials.components.trial-expired-warning')
         @endif
 
-        @yield('content')
+        @if (isset($slot))
+            {{ $slot }}
+        @else
+            @yield('content')
+        @endif
     </main>
 
     @include('partials.shared.footer')

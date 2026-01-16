@@ -1,11 +1,13 @@
-@extends( 'layouts.admin' )
+<x-app-layout title="Relatório de Performance">
+    <x-layout.page-header
+        title="Relatório de Performance"
+        icon="file-earmark-bar-graph"
+        :breadcrumb-items="[
+            'Análise' => url('/admin/analysis'),
+            'Relatório' => '#'
+        ]">
+    </x-layout.page-header>
 
-@section( 'breadcrumb' )
-    <li class="breadcrumb-item"><a href="{{ url( '/admin/analysis' ) }}">Análise</a></li>
-    <li class="breadcrumb-item active">Relatório de Performance</li>
-@endsection
-
-@section( 'admin_content' )
     <div class="card">
         <div class="card-header">
             <h5>Relatório de Performance - {{ $period[ 'start' ] }} a {{ $period[ 'end' ] }}</h5>
@@ -35,4 +37,4 @@
             @endif
         </div>
     </div>
-@endsection
+</x-app-layout>

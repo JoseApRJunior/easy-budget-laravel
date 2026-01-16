@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout :title="'Histórico do Plano: ' . $plan->name">
 <div class="container-fluid py-4">
     <x-layout.page-header
         :title="'Histórico do Plano: ' . $plan->name"
@@ -136,4 +134,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-app-layout>

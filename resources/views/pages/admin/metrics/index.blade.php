@@ -1,8 +1,4 @@
-@extends( 'layouts.admin' )
-
-@section( 'title', 'Métricas de Middlewares' )
-
-@section( 'admin_content' )
+<x-app-layout title="Métricas de Middlewares">
     <x-layout.page-header
         title="Métricas de Middlewares"
         icon="graph-up"
@@ -286,9 +282,8 @@
             </div>
         </div>
     @endif
-@endsection
 
-@section( 'styles' )
+    @push('styles')
     <style>
         .widget-icon {
             width: 48px;
@@ -323,9 +318,9 @@
             padding: 0.25rem 0.5rem;
         }
     </style>
-@endsection
+    @endpush
 
-@section( 'scripts' )
+    @push('scripts')
     <script>
         function refreshMetrics() {
             fetch( '{{ url( "/admin/metrics/realtime" ) }}' )
@@ -363,4 +358,5 @@
 
         setInterval( refreshMetrics, 30000 );
     </script>
-@endsection
+    @endpush
+</x-app-layout>

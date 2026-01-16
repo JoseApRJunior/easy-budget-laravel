@@ -85,20 +85,18 @@
       @else
         <div class="row g-4 mt-2">
           <div class="col-12">
-            <div class="card border-0 shadow-sm hover-card mb-4">
-              <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <x-ui.card class="border-0 shadow-sm hover-card mb-4">
+              <x-slot:header class="bg-secondary text-white">
                 <h5 class="card-title mb-0">
                   <i class="bi bi-lightning-charge me-2"></i>Ações Administrativas
                 </h5>
+              </x-slot:header>
+              <div class="d-flex flex-wrap gap-2">
+                <x-ui.button type="link" :href="route( 'admin.users.index' )" variant="primary" icon="people" label="Gerenciar Usuários" />
+                <x-ui.button type="link" :href="route( 'admin.settings' )" variant="info" icon="gear" label="Configurações do Sistema" />
+                <x-ui.button type="link" :href="route( 'admin.index' )" variant="success" outline icon="speedometer" label="Painel Principal" />
               </div>
-              <div class="card-body">
-                <div class="d-flex flex-wrap gap-2">
-                  <x-ui.button type="link" :href="route( 'admin.users.index' )" variant="primary" icon="people" label="Gerenciar Usuários" />
-                  <x-ui.button type="link" :href="route( 'admin.settings' )" variant="info" icon="gear" label="Configurações do Sistema" />
-                  <x-ui.button type="link" :href="route( 'admin.index' )" variant="success" outline icon="speedometer" label="Painel Principal" />
-                </div>
-              </div>
-            </div>
+            </x-ui.card>
           </div>
         </div>
       @endif
@@ -107,32 +105,22 @@
       <div class="row g-4 mt-2">
         <div class="col-12">
           {{-- Gráficos serão implementados posteriormente --}}
-          <div class="card">
-            <div class="card-header">
-              <h5 class="card-title mb-0">Análise de Performance</h5>
-            </div>
-            <div class="card-body">
+          <x-ui.card title="Análise de Performance">
               <p class="text-muted">Gráficos e análises serão implementados em breve.</p>
-            </div>
-          </div>
+          </x-ui.card>
         </div>
       </div>
     @else
       {{-- Fallback para quando os dados não estão disponíveis --}}
       <div class="row g-4">
         <div class="col-12">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="card-title mb-0">Dashboard</h5>
-            </div>
-            <div class="card-body">
+          <x-ui.card title="Dashboard">
               <div class="alert alert-info">
                 <h6>Informações da Conta</h6>
                 <p>Usuário: {{ $user->email }}</p>
                 <p>Tipo: {{ $isAdmin ? 'Administrador' : 'Prestador de Serviços' }}</p>
               </div>
-            </div>
-          </div>
+          </x-ui.card>
         </div>
       </div>
     @endif

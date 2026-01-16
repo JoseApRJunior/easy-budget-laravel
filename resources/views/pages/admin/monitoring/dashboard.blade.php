@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Dashboard de Monitoramento')
-
-@section('content')
+<x-app-layout title="Dashboard de Monitoramento">
     <x-layout.page-container>
         <x-layout.page-header
             title="Dashboard de Monitoramento"
@@ -209,9 +205,8 @@
             </div>
         </div>
     </x-layout.page-container>
-@endsection
 
-@section('scripts')
+    @push('scripts')
     <script>
         /**
          * Atualiza as métricas do dashboard via AJAX.
@@ -304,4 +299,5 @@
     `;
         document.head.appendChild(style);
     </script>
-@endsection
+    @endpush
+</x-app-layout>

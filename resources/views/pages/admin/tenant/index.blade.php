@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Gerenciar Tenants')
-
-@section('content')
+<x-app-layout title="Gerenciar Tenants">
     <x-layout.page-container>
         <x-layout.page-header
             title="Gerenciar Tenants"
@@ -100,4 +96,4 @@
         type="delete" 
         resource="tenant"
     />
-@endsection
+</x-app-layout>

@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Gerenciar Usuários')
-
-@section('content')
+<x-app-layout title="Gerenciar Usuários">
     <x-layout.page-container>
         <x-layout.page-header
             title="Gerenciar Usuários"
@@ -86,4 +82,4 @@
         type="delete" 
         resource="usuário"
     />
-@endsection
+</x-app-layout>

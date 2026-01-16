@@ -16,126 +16,103 @@
         </x-layout.page-header>
 
         <!-- Filtros de Busca -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <x-ui.card class="mb-4">
+            <x-slot:header>
                 <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-            </div>
-            <div class="card-body">
-                <form id="filtersFormFinancial" method="GET" action="{{ route('provider.reports.financial') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="period">Período</label>
-                                <select class="form-control" id="period" name="period">
-                                    <option value="">Selecione o período</option>
-                                    <option value="current_month"
-                                        {{ request('period') == 'current_month' ? 'selected' : '' }}>
-                                        Mês Atual</option>
-                                    <option value="last_month" {{ request('period') == 'last_month' ? 'selected' : '' }}>Mês
-                                        Anterior</option>
-                                    <option value="current_year"
-                                        {{ request('period') == 'current_year' ? 'selected' : '' }}>Ano
-                                        Atual</option>
-                                    <option value="last_year" {{ request('period') == 'last_year' ? 'selected' : '' }}>Ano
-                                        Anterior</option>
-                                    <option value="custom" {{ request('period') == 'custom' ? 'selected' : '' }}>Período
-                                        Personalizado</option>
-                                </select>
-                            </div>
-                        </div>
+            </x-slot:header>
+            <form id="filtersFormFinancial" method="GET" action="{{ route('provider.reports.financial') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <x-ui.form.select label="Período" name="period" id="period" wrapper-class="mb-0">
+                            <option value="">Selecione o período</option>
+                            <option value="current_month" {{ request('period') == 'current_month' ? 'selected' : '' }}>Mês Atual</option>
+                            <option value="last_month" {{ request('period') == 'last_month' ? 'selected' : '' }}>Mês Anterior</option>
+                            <option value="current_year" {{ request('period') == 'current_year' ? 'selected' : '' }}>Ano Atual</option>
+                            <option value="last_year" {{ request('period') == 'last_year' ? 'selected' : '' }}>Ano Anterior</option>
+                            <option value="custom" {{ request('period') == 'custom' ? 'selected' : '' }}>Período Personalizado</option>
+                        </x-ui.form.select>
+                    </div>
 
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="start_date"
-                                label="Data Inicial"
-                                :value="request('start_date')"
-                            />
-                        </div>
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="start_date"
+                            label="Data Inicial"
+                            :value="request('start_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="end_date"
-                                label="Data Final"
-                                :value="request('end_date')"
-                            />
-                        </div>
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="end_date"
+                            label="Data Final"
+                            :value="request('end_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="transaction_type">Tipo de Transação</label>
-                                <select class="form-control" id="transaction_type" name="transaction_type">
-                                    <option value="">Todos os Tipos</option>
-                                    <option value="revenue"
-                                        {{ request('transaction_type') == 'revenue' ? 'selected' : '' }}>
-                                        Receitas</option>
-                                    <option value="expense"
-                                        {{ request('transaction_type') == 'expense' ? 'selected' : '' }}>
-                                        Despesas</option>
-                                    <option value="invoice"
-                                        {{ request('transaction_type') == 'invoice' ? 'selected' : '' }}>
-                                        Faturas</option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.select label="Tipo de Transação" name="transaction_type" id="transaction_type" wrapper-class="mb-0">
+                            <option value="">Todos os Tipos</option>
+                            <option value="revenue" {{ request('transaction_type') == 'revenue' ? 'selected' : '' }}>Receitas</option>
+                            <option value="expense" {{ request('transaction_type') == 'expense' ? 'selected' : '' }}>Despesas</option>
+                            <option value="invoice" {{ request('transaction_type') == 'invoice' ? 'selected' : '' }}>Faturas</option>
+                        </x-ui.form.select>
+                    </div>
 
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterFinancial" />
-                                <x-ui.button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="x" label="Limpar" />
-                            </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterFinancial" />
+                            <x-ui.button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="x" label="Limpar" />
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-ui.card>
 
         {{-- Empty State Inicial --}}
         @if (!request()->hasAny(['period', 'start_date', 'end_date', 'transaction_type']))
-            <div class="card border-0 shadow-sm text-center py-4">
-                <div class="card-body">
-                    <i class="bi bi-graph-up text-primary mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-gray-800 mb-3">Relatório Financeiro</h5>
-                    <p class="text-muted mb-3">
-                        Esta funcionalidade está em desenvolvimento. Configure os filtros e clique em "Filtrar" para
-                        visualizar análises financeiras.
-                    </p>
-                    <div class="row justify-content-center">
-                        <div class="col-md-4">
-                            <div class="card border-primary border-opacity-25">
-                                <div class="card-body text-center">
-                                    <i class="bi bi-currency-dollar text-success mb-2" style="font-size: 2rem;"></i>
-                                    <h6>Receitas</h6>
-                                    <p class="text-muted small mb-0">Total de ingresos</p>
-                                </div>
+            <x-ui.card class="border-0 shadow-sm text-center py-4">
+                <i class="bi bi-graph-up text-primary mb-3" style="font-size: 3rem;"></i>
+                <h5 class="text-gray-800 mb-3">Relatório Financeiro</h5>
+                <p class="text-muted mb-3">
+                    Esta funcionalidade está em desenvolvimento. Configure os filtros e clique em "Filtrar" para
+                    visualizar análises financeiras.
+                </p>
+                <div class="row justify-content-center">
+                    <div class="col-md-4">
+                        <div class="card border-primary border-opacity-25">
+                            <div class="card-body text-center">
+                                <i class="bi bi-currency-dollar text-success mb-2" style="font-size: 2rem;"></i>
+                                <h6>Receitas</h6>
+                                <p class="text-muted small mb-0">Total de ingresos</p>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card border-primary border-opacity-25">
-                                <div class="card-body text-center">
-                                    <i class="bi bi-credit-card text-danger mb-2" style="font-size: 2rem;"></i>
-                                    <h6>Despesas</h6>
-                                    <p class="text-muted small mb-0">Total de gastos</p>
-                                </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-primary border-opacity-25">
+                            <div class="card-body text-center">
+                                <i class="bi bi-credit-card text-danger mb-2" style="font-size: 2rem;"></i>
+                                <h6>Despesas</h6>
+                                <p class="text-muted small mb-0">Total de gastos</p>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card border-primary border-opacity-25">
-                                <div class="card-body text-center">
-                                    <i class="bi bi-graph-up-arrow text-info mb-2" style="font-size: 2rem;"></i>
-                                    <h6>Lucro</h6>
-                                    <p class="text-muted small mb-0">Resultado líquido</p>
-                                </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-primary border-opacity-25">
+                            <div class="card-body text-center">
+                                <i class="bi bi-graph-up-arrow text-info mb-2" style="font-size: 2rem;"></i>
+                                <h6>Lucro</h6>
+                                <p class="text-muted small mb-0">Resultado líquido</p>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
         @else
             <!-- Resultados -->
-            <div class="card">
-                <div class="card-header">
+            <x-ui.card>
+                <x-slot:header>
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                             <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -155,8 +132,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body p-0">
+                </x-slot:header>
+                <div class="p-0">
 
                     <!-- Mobile View -->
                     <div class="mobile-view">
@@ -284,7 +261,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </x-ui.card>
         @endif
     </div>
 @endsection

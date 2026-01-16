@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Detalhes do Plano')
-
-@section('content')
+<x-app-layout :title="'Detalhes do Plano: ' . $plan->name">
     <x-layout.page-container>
         <x-layout.page-header
             :title="'Detalhes do Plano: ' . $plan->name"
@@ -254,4 +250,4 @@
         type="delete" 
         resource="plano"
     />
-@endsection
+</x-app-layout>

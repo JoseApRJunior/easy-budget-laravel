@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout title="Dashboard de Métricas">
     <div class="container-fluid py-4">
         <x-layout.page-header
             title="Dashboard de Métricas"
@@ -143,4 +141,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

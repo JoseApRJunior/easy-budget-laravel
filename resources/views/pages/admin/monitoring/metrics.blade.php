@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout title="Monitoramento do Sistema">
     <div class="container-fluid py-4">
         <x-layout.page-header
             title="Monitoramento do Sistema"
@@ -205,9 +203,8 @@
             </div>
         </div>
     @endforeach
-@endsection
 
-@section('scripts')
+    @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Funções de ordenação e filtro
@@ -218,4 +215,5 @@
             console.log('Exportando métricas...');
         }
     </script>
-@endsection
+    @endpush
+</x-app-layout>

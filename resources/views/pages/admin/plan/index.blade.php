@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Gerenciamento de Planos')
-
-@section('content')
+<x-app-layout title="Gerenciamento de Planos">
     <x-layout.page-container>
         <x-layout.page-header
             title="Gerenciamento de Planos"
@@ -186,4 +182,4 @@
         type="delete" 
         resource="plano"
     />
-@endsection
+</x-app-layout>

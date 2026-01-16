@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout :title="'Análises do Plano: ' . $plan->name">
 <div class="container-fluid py-4">
     <x-layout.page-header
         :title="'Análises do Plano: ' . $plan->name"
@@ -155,7 +153,6 @@
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -247,3 +244,4 @@ const monthlyChart = new Chart(ctx, {
 });
 </script>
 @endpush
+</x-app-layout>

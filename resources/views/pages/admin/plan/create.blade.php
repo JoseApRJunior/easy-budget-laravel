@@ -1,8 +1,4 @@
-@extends('layouts.app')
-
-@section('title', 'Criar Novo Plano')
-
-@section('content')
+<x-app-layout title="Criar Novo Plano">
     <x-layout.page-container>
         <x-layout.page-header
             title="Criar Novo Plano"
@@ -173,4 +169,4 @@
             </x-layout.grid-row>
         </form>
     </x-layout.page-container>
-@endsection
+</x-app-layout>

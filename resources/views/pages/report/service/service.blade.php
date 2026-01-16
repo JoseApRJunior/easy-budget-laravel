@@ -16,84 +16,86 @@
         </x-layout.page-header>
 
         <!-- Filtros de Busca -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <x-ui.card class="mb-4">
+            <x-slot:header>
                 <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-            </div>
-            <div class="card-body">
-                <form id="filtersFormServices" method="GET" action="{{ route('provider.reports.services') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="start_date"
-                                label="Data Inicial"
-                                :value="request('start_date')"
-                            />
-                        </div>
+            </x-slot:header>
+            
+            <form id="filtersFormServices" method="GET" action="{{ route('provider.reports.services') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="start_date"
+                            label="Data Inicial"
+                            :value="request('start_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="end_date"
-                                label="Data Final"
-                                :value="request('end_date')"
-                            />
-                        </div>
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="end_date"
+                            label="Data Final"
+                            :value="request('end_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="name">Nome do Serviço</label>
-                                <input type="text" class="form-control" id="name" name="name"
-                                    value="{{ request('name') ?? '' }}" placeholder="Digite o nome">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            name="name" 
+                            label="Nome do Serviço" 
+                            :value="request('name')" 
+                            placeholder="Digite o nome" 
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="price_min">Preço Mínimo</label>
-                                <input type="text" class="form-control money-input" id="price_min" name="price_min"
-                                    value="{{ request('price_min') ? \App\Helpers\CurrencyHelper::format(request('price_min'), 2, false) : '' }}"
-                                    placeholder="0,00" maxlength="20">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            name="price_min" 
+                            label="Preço Mínimo" 
+                            class="money-input"
+                            :value="request('price_min') ? \App\Helpers\CurrencyHelper::format(request('price_min'), 2, false) : ''" 
+                            placeholder="0,00" 
+                            maxlength="20"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="price_max">Preço Máximo</label>
-                                <input type="text" class="form-control money-input" id="price_max" name="price_max"
-                                    value="{{ request('price_max') ? \App\Helpers\CurrencyHelper::format(request('price_max'), 2, false) : '' }}"
-                                    placeholder="0,00" maxlength="20">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            name="price_max" 
+                            label="Preço Máximo" 
+                            class="money-input"
+                            :value="request('price_max') ? \App\Helpers\CurrencyHelper::format(request('price_max'), 2, false) : ''" 
+                            placeholder="0,00" 
+                            maxlength="20"
+                        />
+                    </div>
 
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterServices" />
-                                <x-ui.button type="link" :href="route('provider.reports.services')" variant="secondary" icon="x" label="Limpar" />
-                            </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterServices" />
+                            <x-ui.button type="link" :href="route('provider.reports.services')" variant="secondary" icon="x" label="Limpar" />
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-ui.card>
 
         {{-- Empty State Inicial --}}
         @if (!request()->hasAny(['name', 'price_min', 'price_max']))
-            <div class="card border-0 shadow-sm text-center py-4">
-                <div class="card-body">
-                    <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-gray-800 mb-3">Utilize os filtros acima para gerar o relatório</h5>
-                    <p class="text-muted mb-3">
-                        Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
-                    </p>
-                    <x-ui.button type="link" :href="route('provider.services.create')" variant="primary" icon="plus" label="Criar Primeiro Serviço" />
-                </div>
-            </div>
+            <x-ui.card class="border-0 shadow-sm text-center py-4">
+                <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
+                <h5 class="text-gray-800 mb-3">Utilize os filtros acima para gerar o relatório</h5>
+                <p class="text-muted mb-3">
+                    Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
+                </p>
+                <x-ui.button type="link" :href="route('provider.services.create')" variant="primary" icon="plus" label="Criar Primeiro Serviço" />
+            </x-ui.card>
         @else
             <!-- Resultados -->
-            <div class="card">
-                <div class="card-header">
+            <x-ui.card class="p-0">
+                <x-slot:header>
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                             <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -120,109 +122,108 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body p-0">
+                </x-slot:header>
 
-                    <!-- Mobile View -->
-                    <div class="mobile-view">
-                        <div class="list-group list-group-flush">
-                            @forelse($services ?? [] as $service)
-                                <a href="{{ route('provider.services.show', $service) }}"
-                                    class="list-group-item list-group-item-action py-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="bi bi-tools text-muted me-3 mt-1" style="font-size: 1.5rem;"></i>
-                                        <div class="flex-grow-1">
-                                            <div class="fw-semibold mb-1">{{ $service->name ?? 'Nome não informado' }}
-                                            </div>
-                                            <p class="text-muted small mb-2">{{ Str::limit($service->description, 50) }}
-                                            </p>
-                                            <small class="text-muted">
-                                                {{ \App\Helpers\CurrencyHelper::format($service->price) }}
-                                            </small>
+                <!-- Mobile View -->
+                <div class="mobile-view">
+                    <div class="list-group list-group-flush">
+                        @forelse($services ?? [] as $service)
+                            <a href="{{ route('provider.services.show', $service) }}"
+                                class="list-group-item list-group-item-action py-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-tools text-muted me-3 mt-1" style="font-size: 1.5rem;"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold mb-1">{{ $service->name ?? 'Nome não informado' }}
                                         </div>
-                                        <i class="bi bi-chevron-right text-muted ms-2"></i>
+                                        <p class="text-muted small mb-2">{{ Str::limit($service->description, 50) }}
+                                        </p>
+                                        <small class="text-muted">
+                                            {{ \App\Helpers\CurrencyHelper::format($service->price) }}
+                                        </small>
                                     </div>
-                                </a>
-                            @empty
-                                <div class="p-4 text-center text-muted">
-                                    <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                    <br>
-                                    <strong>Nenhum serviço encontrado</strong>
-                                    <br>
-                                    <small>Ajuste os filtros ou <a href="{{ route('provider.services.create') }}">cadastre
-                                            um novo serviço</a></small>
+                                    <i class="bi bi-chevron-right text-muted ms-2"></i>
                                 </div>
-                            @endforelse
-                        </div>
+                            </a>
+                        @empty
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                <br>
+                                <strong>Nenhum serviço encontrado</strong>
+                                <br>
+                                <small>Ajuste os filtros ou <a href="{{ route('provider.services.create') }}">cadastre
+                                        um novo serviço</a></small>
+                            </div>
+                        @endforelse
                     </div>
-
-                    <!-- Desktop View -->
-                    <div class="desktop-view">
-                        <div class="table-responsive">
-                            <table class="modern-table table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th width="50"><i class="bi bi-tools" aria-hidden="true"></i></th>
-                                        <th>Nome</th>
-                                        <th>Descrição</th>
-                                        <th width="120">Preço</th>
-                                        <th width="150" class="text-center">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($services ?? [] as $service)
-                                        <tr>
-                                            <td>
-                                                <div class="item-icon">
-                                                    <i class="bi bi-tools"></i>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="item-name-cell">
-                                                    {{ $service->name ?? 'Nome não informado' }}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="text-truncate" style="max-width: 300px;"
-                                                    title="{{ $service->description }}">
-                                                    {{ Str::limit($service->description, 60) }}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <strong>{{ \App\Helpers\CurrencyHelper::format($service->price) }}</strong>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex justify-content-center gap-1">
-                                                    <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                    <x-ui.button type="link" :href="route('provider.services.edit', $service->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted">
-                                                <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
-                                                <br>
-                                                <strong>Nenhum serviço encontrado</strong>
-                                                <br>
-                                                <small>Ajuste os filtros ou <a
-                                                        href="{{ route('provider.services.create') }}">cadastre um novo
-                                                        serviço</a></small>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator && $services->hasPages())
-                        @include('partials.components.paginator', [
-                            'p' => $services->appends(request()->query()),
-                            'show_info' => true,
-                        ])
-                    @endif
                 </div>
+
+                <!-- Desktop View -->
+                <div class="desktop-view">
+                    <div class="table-responsive">
+                        <table class="modern-table table mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50"><i class="bi bi-tools" aria-hidden="true"></i></th>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th width="120">Preço</th>
+                                    <th width="150" class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($services ?? [] as $service)
+                                    <tr>
+                                        <td>
+                                            <div class="item-icon">
+                                                <i class="bi bi-tools"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="item-name-cell">
+                                                {{ $service->name ?? 'Nome não informado' }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-truncate" style="max-width: 300px;"
+                                                title="{{ $service->description }}">
+                                                {{ Str::limit($service->description, 60) }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong>{{ \App\Helpers\CurrencyHelper::format($service->price) }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-ui.button type="link" :href="route('provider.services.edit', $service->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">
+                                            <i class="bi bi-inbox mb-2" style="font-size: 2rem;"></i>
+                                            <br>
+                                            <strong>Nenhum serviço encontrado</strong>
+                                            <br>
+                                            <small>Ajuste os filtros ou <a
+                                                    href="{{ route('provider.services.create') }}">cadastre um novo
+                                                    serviço</a></small>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @if ($services instanceof \Illuminate\Pagination\LengthAwarePaginator && $services->hasPages())
+                    @include('partials.components.paginator', [
+                        'p' => $services->appends(request()->query()),
+                        'show_info' => true,
+                    ])
+                @endif
+            </x-ui.card>
         @endif
     </div>
 @endsection

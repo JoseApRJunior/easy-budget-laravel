@@ -1,8 +1,4 @@
-@extends('layouts.admin')
-
-@section('title', $pageTitle . ' - Easy Budget')
-
-@section('content')
+<x-app-layout :title="$pageTitle . ' - Easy Budget'">
     <div class="container-fluid py-4">
         <x-layout.page-header
             title="Sistema de Alertas"
@@ -238,7 +234,7 @@
         </div>
     </div>
 
-@section('scripts')
+    @push('scripts')
     <script>
         // Auto-refresh a cada 30 segundos
         setInterval(function() {
@@ -299,4 +295,5 @@
             document.querySelector('.container-fluid').insertAdjacentHTML('afterbegin', alertHtml);
         }
     </script>
-@endsection
+    @endpush
+</x-app-layout>

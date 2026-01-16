@@ -1,8 +1,4 @@
-@extends( 'layouts.admin' )
-
-@section( 'title', 'Erro - Dashboard de IA' )
-
-@section( 'content' )
+<x-app-layout title="Erro - Dashboard de IA">
     <div class="container-fluid">
         <!-- Cabeçalho da Página -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -36,4 +32,4 @@
             </div>
         </div>
     </div>
-@endsection
+</x-app-layout>

@@ -1,10 +1,13 @@
-@extends( 'layouts.admin' )
+<x-app-layout title="Coleta de Métricas">
+    <x-layout.page-header
+        title="Coleta de Métricas"
+        icon="graph-up"
+        :breadcrumb-items="[
+            'Admin' => '#',
+            'Coleta de Métricas' => '#'
+        ]">
+    </x-layout.page-header>
 
-@section( 'breadcrumb' )
-    <li class="breadcrumb-item active">Coleta de Métricas</li>
-@endsection
-
-@section( 'admin_content' )
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -99,7 +102,7 @@
         </div>
     </div>
 
-    @section( 'scripts' )
+    @push('scripts')
         <script>
             function collectMetrics() {
                 fetch( '{{ url( "/admin/metrics/record" ) }}', {
@@ -136,5 +139,5 @@
                 }
             }
         </script>
-    @endsection
-@endsection
+    @endpush
+</x-app-layout>
