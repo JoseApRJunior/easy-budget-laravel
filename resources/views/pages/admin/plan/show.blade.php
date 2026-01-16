@@ -1,242 +1,257 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container-fluid py-4">
-    <x-layout.page-header
-        :title="'Detalhes do Plano: ' . $plan->name"
-        icon="box-seam"
-        :breadcrumb-items="[
-            'Dashboard' => route('admin.dashboard'),
-            'Planos' => route('admin.plans.index'),
-            $plan->name => '#'
-        ]">
-        <div class="d-flex gap-2">
-            <x-ui.back-button index-route="admin.plans.index" />
-            <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
-            <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
-        </div>
-    </x-layout.page-header>
+@section('title', 'Detalhes do Plano')
 
-    <div class="row">
-        <!-- Plan Information -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informações do Plano</h5>
+@section('content')
+    <x-layout.page-container>
+        <x-layout.page-header
+            :title="'Detalhes do Plano: ' . $plan->name"
+            icon="box-seam"
+            :breadcrumb-items="[
+                'Dashboard' => route('admin.dashboard'),
+                'Planos' => route('admin.plans.index'),
+                $plan->name => '#'
+            ]">
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                    <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
+                    <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
                 </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
+            </x-slot:actions>
+        </x-layout.page-header>
+
+        <x-layout.grid-row>
+            <!-- Plan Information -->
+            <div class="col-md-4">
+                <x-ui.card class="h-100">
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-info-circle me-2"></i>Informações do Plano
+                        </h5>
+                    </x-slot:header>
+                    <table class="table table-borderless table-sm">
                         <tr>
-                            <th>ID:</th>
-                            <td>{{ $plan->id }}</td>
+                            <th class="text-muted text-end w-50">ID:</th>
+                            <td class="fw-bold ps-3">{{ $plan->id }}</td>
                         </tr>
                         <tr>
-                            <th>Nome:</th>
-                            <td>{{ $plan->name }}</td>
+                            <th class="text-muted text-end">Nome:</th>
+                            <td class="ps-3">{{ $plan->name }}</td>
                         </tr>
                         @if($plan->slug)
                         <tr>
-                            <th>Slug:</th>
-                            <td><code>{{ $plan->slug }}</code></td>
+                            <th class="text-muted text-end">Slug:</th>
+                            <td class="ps-3"><code>{{ $plan->slug }}</code></td>
                         </tr>
                         @endif
                         <tr>
-                            <th>Descrição:</th>
-                            <td>{{ $plan->description ?? 'Nenhuma descrição' }}</td>
+                            <th class="text-muted text-end">Descrição:</th>
+                            <td class="ps-3">{{ $plan->description ?? 'Nenhuma descrição' }}</td>
                         </tr>
                         <tr>
-                            <th>Preço:</th>
-                            <td>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
+                            <th class="text-muted text-end">Preço:</th>
+                            <td class="ps-3">{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
                         </tr>
                         <tr>
-                            <th>Status:</th>
-                            <td>
+                            <th class="text-muted text-end">Status:</th>
+                            <td class="ps-3">
                                 @php
                                     $statusClass = match($plan->status) {
-                                        'active' => 'bg-success',
-                                        'inactive' => 'bg-danger',
-                                        'draft' => 'bg-secondary',
-                                        default => 'bg-light text-dark'
+                                        'active' => 'success',
+                                        'inactive' => 'danger',
+                                        'draft' => 'secondary',
+                                        default => 'secondary'
                                     };
                                 @endphp
-                                <span class="badge {{ $statusClass }}">{{ ucfirst($plan->status) }}</span>
+                                <span class="badge bg-{{ $statusClass }}">{{ ucfirst($plan->status) }}</span>
                             </td>
                         </tr>
                         <tr>
-                            <th>Criado em:</th>
-                            <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                            <th class="text-muted text-end">Criado em:</th>
+                            <td class="ps-3">{{ $plan->created_at ? $plan->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                         </tr>
                         <tr>
-                            <th>Atualizado em:</th>
-                            <td>{{ $plan->updated_at ? $plan->updated_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                            <th class="text-muted text-end">Atualizado em:</th>
+                            <td class="ps-3">{{ $plan->updated_at ? $plan->updated_at->format('d/m/Y H:i') : 'N/A' }}</td>
                         </tr>
                     </table>
-                </div>
+                </x-ui.card>
             </div>
-        </div>
 
-        <!-- Plan Limits -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-limits me-2"></i>Limites do Plano</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
+            <!-- Plan Limits -->
+            <div class="col-md-4">
+                <x-ui.card class="h-100">
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-speedometer2 me-2"></i>Limites do Plano
+                        </h5>
+                    </x-slot:header>
+                    <table class="table table-borderless table-sm">
                         <tr>
-                            <th>Máximo de Orçamentos:</th>
-                            <td>{{ $plan->max_budgets }}</td>
+                            <th class="text-muted text-end w-50">Máx. Orçamentos:</th>
+                            <td class="fw-bold ps-3">{{ $plan->max_budgets }}</td>
                         </tr>
                         <tr>
-                            <th>Máximo de Clientes:</th>
-                            <td>{{ $plan->max_clients }}</td>
+                            <th class="text-muted text-end">Máx. Clientes:</th>
+                            <td class="fw-bold ps-3">{{ $plan->max_clients }}</td>
                         </tr>
                     </table>
 
                     @if($plan->features)
                         <hr>
-                        <h6>Recursos Incluídos:</h6>
-                        <ul class="list-unstyled">
+                        <h6 class="text-dark fw-bold mb-3">Recursos Incluídos:</h6>
+                        <ul class="list-unstyled mb-0">
                             @foreach($plan->features as $feature)
-                                <li><i class="bi bi-check-circle text-success me-2"></i>{{ $feature }}</li>
+                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>{{ $feature }}</li>
                             @endforeach
                         </ul>
                     @endif
-                </div>
+                </x-ui.card>
             </div>
-        </div>
 
-        <!-- Plan Statistics -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Estatísticas</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
+            <!-- Plan Statistics -->
+            <div class="col-md-4">
+                <x-ui.card class="h-100">
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-graph-up me-2"></i>Estatísticas
+                        </h5>
+                    </x-slot:header>
+                    <table class="table table-borderless table-sm">
                         <tr>
-                            <th>Total de Assinaturas:</th>
-                            <td><span class="badge bg-primary">{{ $stats['total_subscriptions'] }}</span></td>
+                            <th class="text-muted text-end w-50">Total de Assinaturas:</th>
+                            <td class="ps-3"><span class="badge bg-primary">{{ $stats['total_subscriptions'] }}</span></td>
                         </tr>
                         <tr>
-                            <th>Assinaturas Ativas:</th>
-                            <td><span class="badge bg-success">{{ $stats['active_subscriptions'] }}</span></td>
+                            <th class="text-muted text-end">Assinaturas Ativas:</th>
+                            <td class="ps-3"><span class="badge bg-success">{{ $stats['active_subscriptions'] }}</span></td>
                         </tr>
                         <tr>
-                            <th>Assinaturas Canceladas:</th>
-                            <td><span class="badge bg-danger">{{ $stats['cancelled_subscriptions'] }}</span></td>
+                            <th class="text-muted text-end">Canceladas:</th>
+                            <td class="ps-3"><span class="badge bg-danger">{{ $stats['cancelled_subscriptions'] }}</span></td>
                         </tr>
                         <tr>
-                            <th>Assinaturas em Trial:</th>
-                            <td><span class="badge bg-info">{{ $stats['trial_subscriptions'] }}</span></td>
+                            <th class="text-muted text-end">Em Trial:</th>
+                            <td class="ps-3"><span class="badge bg-info">{{ $stats['trial_subscriptions'] }}</span></td>
                         </tr>
                         <tr>
-                            <th>Receita Total:</th>
-                            <td><strong>{{ \App\Helpers\CurrencyHelper::format($stats['total_revenue']) }}</strong></td>
+                            <th class="text-muted text-end">Receita Total:</th>
+                            <td class="ps-3"><strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($stats['total_revenue']) }}</strong></td>
                         </tr>
                         <tr>
-                            <th>Receita Mensal:</th>
-                            <td><strong>{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</strong></td>
+                            <th class="text-muted text-end">Receita Mensal:</th>
+                            <td class="ps-3"><strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</strong></td>
                         </tr>
                         <tr>
-                            <th>Taxa de Churn:</th>
-                            <td>{{ \App\Helpers\CurrencyHelper::format($stats['churn_rate'], 2, false) }}%</td>
+                            <th class="text-muted text-end">Churn Rate:</th>
+                            <td class="ps-3">{{ \App\Helpers\CurrencyHelper::format($stats['churn_rate'], 2, false) }}%</td>
                         </tr>
                         <tr>
-                            <th>Taxa de Conversão:</th>
-                            <td>{{ \App\Helpers\CurrencyHelper::format($stats['conversion_rate'], 2, false) }}%</td>
+                            <th class="text-muted text-end">Conversão:</th>
+                            <td class="ps-3">{{ \App\Helpers\CurrencyHelper::format($stats['conversion_rate'], 2, false) }}%</td>
                         </tr>
                     </table>
-                </div>
+                </x-ui.card>
             </div>
-        </div>
-    </div>
+        </x-layout.grid-row>
 
-    <!-- Recent Subscriptions -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Assinaturas Recentes</h5>
-                    <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="primary" size="sm" label="Ver Todas" />
-                </div>
-                <div class="card-body">
-                    @if($subscriptions->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Tenant</th>
-                                        <th>Usuário</th>
-                                        <th>Status</th>
-                                        <th>Início</th>
-                                        <th>Fim</th>
-                                        <th>Valor</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($subscriptions as $subscription)
-                                        <tr>
-                                            <td>{{ $subscription->id }}</td>
-                                            <td>{{ $subscription->tenant->name ?? 'N/A' }}</td>
-                                            <td>{{ $subscription->provider->name ?? 'N/A' }}</td>
-                                            <td>
-                                                @php
-                                                    $statusClass = match($subscription->status) {
-                                                        'active' => 'bg-success',
-                                                        'cancelled' => 'bg-danger',
-                                                        'trial' => 'bg-info',
-                                                        'pending' => 'bg-warning text-dark',
-                                                        default => 'bg-light text-dark'
-                                                    };
-                                                @endphp
-                                                <span class="badge {{ $statusClass }}">{{ ucfirst($subscription->status) }}</span>
-                                            </td>
-                                            <td>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</td>
-                                            <td>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</td>
-                                            <td>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</td>
-                                            <td>
-                                                <x-ui.button type="link" :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" size="sm" icon="eye" title="Ver detalhes" />
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="alert alert-info" role="alert">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Nenhuma assinatura encontrada para este plano.
-                        </div>
-                    @endif
-                </div>
+        <!-- Recent Subscriptions -->
+        <x-layout.grid-row class="mt-4">
+            <div class="col-12">
+                <x-resource.resource-list-card
+                    title="Assinaturas Recentes"
+                    icon="clock-history"
+                    :total="$subscriptions->count()"
+                    :actions="[
+                        [
+                            'label' => 'Ver Todas',
+                            'icon' => 'list-ul',
+                            'route' => route('admin.plans.subscribers', $plan),
+                            'variant' => 'primary',
+                            'outline' => true,
+                            'size' => 'sm'
+                        ]
+                    ]"
+                >
+                    <x-resource.resource-table :headers="['ID', 'Tenant', 'Usuário', 'Status', 'Início', 'Fim', 'Valor', 'Ações']">
+                        @forelse($subscriptions as $subscription)
+                            <x-resource.table-row>
+                                <x-resource.table-cell>{{ $subscription->id }}</x-resource.table-cell>
+                                <x-resource.table-cell>{{ $subscription->tenant->name ?? 'N/A' }}</x-resource.table-cell>
+                                <x-resource.table-cell>{{ $subscription->provider->name ?? 'N/A' }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    @php
+                                        $statusClass = match($subscription->status) {
+                                            'active' => 'success',
+                                            'cancelled' => 'danger',
+                                            'trial' => 'info',
+                                            'pending' => 'warning',
+                                            default => 'secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge bg-{{ $statusClass }}">{{ ucfirst($subscription->status) }}</span>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>{{ $subscription->start_date ? \Carbon\Carbon::parse($subscription->start_date)->format('d/m/Y') : 'N/A' }}</x-resource.table-cell>
+                                <x-resource.table-cell>{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d/m/Y') : 'N/A' }}</x-resource.table-cell>
+                                <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <x-resource.action-buttons>
+                                        <x-ui.button :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" outline size="sm" icon="eye" title="Ver detalhes" />
+                                    </x-resource.action-buttons>
+                                </x-resource.table-cell>
+                            </x-resource.table-row>
+                        @empty
+                            <x-resource.table-row>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="bi bi-people display-4 d-block mb-3"></i>
+                                    Nenhuma assinatura encontrada para este plano.
+                                </td>
+                            </x-resource.table-row>
+                        @endforelse
+                    </x-resource.resource-table>
+                </x-resource.resource-list-card>
             </div>
-        </div>
-    </div>
+        </x-layout.grid-row>
 
-    <!-- Action Buttons -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between">
-                <div>
-                    @if(!$plan->planSubscriptions()->exists())
-                        <form method="POST" action="{{ route('admin.plans.destroy', $plan) }}" id="deleteForm-{{ $plan->id }}">
-                            @csrf
-                            @method('DELETE')
-                            <x-ui.button variant="danger" icon="trash" label="Excluir Plano" 
-                                onclick="if(confirm('Tem certeza que deseja excluir este plano?')) document.getElementById('deleteForm-{{ $plan->id }}').submit();" />
-                        </form>
-                    @endif
-                </div>
-                <div class="d-flex gap-2">
-                    <x-ui.button type="link" :href="route('admin.plans.duplicate', $plan)" variant="secondary" icon="copy" label="Duplicar" />
-                    <x-ui.button type="link" :href="route('admin.plans.analytics', $plan)" variant="primary" icon="graph-up" label="Análises" />
-                    <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
-                </div>
+        <!-- Action Buttons Footer -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <x-ui.card>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            @if(!$plan->planSubscriptions()->exists())
+                                <x-ui.button 
+                                    type="button" 
+                                    variant="danger" 
+                                    icon="trash" 
+                                    label="Excluir Plano" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal" 
+                                    data-delete-url="{{ route('admin.plans.destroy', $plan) }}"
+                                    data-item-name="{{ $plan->name }}"
+                                />
+                            @endif
+                        </div>
+                        <div class="d-flex gap-2">
+                            <x-ui.button :href="route('admin.plans.duplicate', $plan)" variant="secondary" outline icon="copy" label="Duplicar" />
+                            <x-ui.button :href="route('admin.plans.analytics', $plan)" variant="primary" outline icon="graph-up" label="Análises" />
+                            <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
+                        </div>
+                    </div>
+                </x-ui.card>
             </div>
         </div>
-    </div>
-</div>
+    </x-layout.page-container>
+
+    <x-ui.confirm-modal 
+        id="deleteModal" 
+        title="Confirmar Exclusão" 
+        message="Tem certeza que deseja excluir o plano <strong id='deleteModalItemName'></strong>?" 
+        submessage="Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+        type="delete" 
+        resource="plano"
+    />
 @endsection

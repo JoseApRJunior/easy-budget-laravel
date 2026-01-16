@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Dashboard de Monitoramento')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Dashboard de Monitoramento"
             icon="graph-up"
@@ -11,246 +11,204 @@
                 'Admin' => url('/admin'),
                 'Monitoramento' => '#'
             ]">
-            <div class="d-flex gap-2">
-                <x-ui.button variant="secondary" outline size="sm" icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
-                <x-ui.button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" size="sm" icon="graph-up" label="Métricas Detalhadas" />
-            </div>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
+                    <x-ui.button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" icon="graph-up" label="Métricas Detalhadas" />
+                </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- Cards de Resumo -->
         <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="bi bi-speedometer2 fs-2 text-primary"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Tempo Médio de Resposta</div>
-                                <div class="fs-4 fw-bold text-primary" id="avg-response-time">
-                                    {{ \App\Helpers\CurrencyHelper::format($summary['average_response_time'] ?? 0, 4, false) }}s
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Tempo Médio de Resposta"
+                :value="\App\Helpers\CurrencyHelper::format($summary['average_response_time'] ?? 0, 4, false) . 's'"
+                icon="speedometer2"
+                variant="primary"
+                id="avg-response-time"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="bi bi-check-circle fs-2 text-success"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Taxa de Sucesso</div>
-                                <div class="fs-4 fw-bold text-success" id="success-rate">
-                                    {{ \App\Helpers\CurrencyHelper::format($summary['success_rate'] ?? 100, 2, false) }}%
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Taxa de Sucesso"
+                :value="\App\Helpers\CurrencyHelper::format($summary['success_rate'] ?? 100, 2, false) . '%'"
+                icon="check-circle"
+                variant="success"
+                id="success-rate"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="bi bi-memory fs-2 text-info"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Uso Médio de Memória</div>
-                                <div class="fs-4 fw-bold text-info" id="avg-memory">
-                                    {{ \App\Helpers\CurrencyHelper::format(($summary['average_memory'] ?? 0) / 1024 / 1024, 2, false) }}MB
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Uso Médio de Memória"
+                :value="\App\Helpers\CurrencyHelper::format(($summary['average_memory'] ?? 0) / 1024 / 1024, 2, false) . 'MB'"
+                icon="memory"
+                variant="info"
+                id="avg-memory"
+            />
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="bi bi-play-circle fs-2 text-warning"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Total de Execuções</div>
-                                <div class="fs-4 fw-bold text-warning" id="total-executions">
-                                    {{ \App\Helpers\CurrencyHelper::format($summary['total_executions'] ?? 0, 0, false) }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Total de Execuções"
+                :value="\App\Helpers\CurrencyHelper::format($summary['total_executions'] ?? 0, 0, false)"
+                icon="play-circle"
+                variant="warning"
+                id="total-executions"
+            />
         </div>
 
         <!-- Status dos Middlewares -->
         <div class="row g-4 mb-4">
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
                             <i class="bi bi-layers me-2"></i>Status dos Middlewares
                         </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                    </x-slot:header>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Middleware</th>
+                                    <th>Status</th>
+                                    <th>Taxa de Sucesso</th>
+                                    <th>Tempo Médio</th>
+                                    <th>Última Execução</th>
+                                </tr>
+                            </thead>
+                            <tbody id="middleware-status-table">
+                                @forelse ($middleware_status as $middleware)
                                     <tr>
-                                        <th>Middleware</th>
-                                        <th>Status</th>
-                                        <th>Taxa de Sucesso</th>
-                                        <th>Tempo Médio</th>
-                                        <th>Última Execução</th>
+                                        <td>
+                                            <strong>{{ $middleware['name'] }}</strong>
+                                        </td>
+                                        <td>
+                                            @if ($middleware['status'] == 'healthy')
+                                                <span class="badge bg-success">Saudável</span>
+                                            @elseif ($middleware['status'] == 'warning')
+                                                <span class="badge bg-warning">Atenção</span>
+                                            @else
+                                                <span class="badge bg-danger">Crítico</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $middleware['success_rate'] }}%</td>
+                                        <td>{{ \App\Helpers\CurrencyHelper::format($middleware['average_time'], 4, false) }}s</td>
+                                        <td>
+                                            <small class="text-muted">{{ $middleware['last_execution'] }}</small>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody id="middleware-status-table">
-                                    @forelse ($middleware_status as $middleware)
-                                        <tr>
-                                            <td>
-                                                <strong>{{ $middleware['name'] }}</strong>
-                                            </td>
-                                            <td>
-                                                @if ($middleware['status'] == 'healthy')
-                                                    <span class="badge bg-success">Saudável</span>
-                                                @elseif ($middleware['status'] == 'warning')
-                                                    <span class="badge bg-warning">Atenção</span>
-                                                @else
-                                                    <span class="badge bg-danger">Crítico</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $middleware['success_rate'] }}%</td>
-                                            <td>{{ \App\Helpers\CurrencyHelper::format($middleware['average_time'], 4, false) }}s</td>
-                                            <td>
-                                                <small class="text-muted">{{ $middleware['last_execution'] }}</small>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted">
-                                                Nenhum middleware monitorado ainda
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">
+                                            Nenhum middleware monitorado ainda
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
 
             <div class="col-lg-4">
                 <!-- Alertas Ativos -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
+                <x-ui.card class="mb-4">
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
                             <i class="bi bi-exclamation-triangle me-2"></i>Alertas Ativos
                         </h5>
-                    </div>
-                    <div class="card-body">
-                        @if (empty($alerts))
-                            <div class="text-center text-muted py-3">
-                                <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
-                                <p class="mb-0">Nenhum alerta ativo</p>
-                                <small>Sistema funcionando normalmente</small>
+                    </x-slot:header>
+                    @if (empty($alerts))
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
+                            <p class="mb-0">Nenhum alerta ativo</p>
+                            <small>Sistema funcionando normalmente</small>
+                        </div>
+                    @else
+                        @foreach ($alerts as $alert)
+                            <div class="alert alert-{{ $alert['type'] }} alert-dismissible fade show" role="alert">
+                                <strong>{{ $alert['title'] }}</strong><br>
+                                <small>{{ $alert['message'] }}</small>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
-                        @else
-                            @foreach ($alerts as $alert)
-                                <div class="alert alert-{{ $alert['type'] }} alert-dismissible fade show" role="alert">
-                                    <strong>{{ $alert['title'] }}</strong><br>
-                                    <small>{{ $alert['message'] }}</small>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
+                        @endforeach
+                    @endif
+                </x-ui.card>
 
                 <!-- Tendências de Performance -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
                             <i class="bi bi-graph-up-arrow me-2"></i>Tendências
                         </h5>
+                    </x-slot:header>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Tempo de Resposta</span>
+                        <span
+                            class="badge bg-{{ $performance_trends['response_time_trend'] == 'stable' ? 'success' : ($performance_trends['response_time_trend'] == 'increasing' ? 'warning' : 'danger') }}">
+                            @if ($performance_trends['response_time_trend'] == 'stable')
+                                <i class="bi bi-dash"></i> Estável
+                            @elseif ($performance_trends['response_time_trend'] == 'increasing')
+                                <i class="bi bi-arrow-up"></i> Aumentando
+                            @else
+                                <i class="bi bi-arrow-down"></i> Diminuindo
+                            @endif
+                        </span>
                     </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Tempo de Resposta</span>
-                            <span
-                                class="badge bg-{{ $performance_trends['response_time_trend'] == 'stable' ? 'success' : ($performance_trends['response_time_trend'] == 'increasing' ? 'warning' : 'danger') }}">
-                                @if ($performance_trends['response_time_trend'] == 'stable')
-                                    <i class="bi bi-dash"></i> Estável
-                                @elseif ($performance_trends['response_time_trend'] == 'increasing')
-                                    <i class="bi bi-arrow-up"></i> Aumentando
-                                @else
-                                    <i class="bi bi-arrow-down"></i> Diminuindo
-                                @endif
-                            </span>
-                        </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Uso de Memória</span>
-                            <span
-                                class="badge bg-{{ $performance_trends['memory_usage_trend'] == 'stable' ? 'success' : ($performance_trends['memory_usage_trend'] == 'increasing' ? 'warning' : 'danger') }}">
-                                @if ($performance_trends['memory_usage_trend'] == 'stable')
-                                    <i class="bi bi-dash"></i> Estável
-                                @elseif ($performance_trends['memory_usage_trend'] == 'increasing')
-                                    <i class="bi bi-arrow-up"></i> Aumentando
-                                @else
-                                    <i class="bi bi-arrow-down"></i> Diminuindo
-                                @endif
-                            </span>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span>Taxa de Erro</span>
-                            <span
-                                class="badge bg-{{ $performance_trends['error_rate_trend'] == 'stable' ? 'success' : ($performance_trends['error_rate_trend'] == 'increasing' ? 'danger' : 'success') }}">
-                                @if ($performance_trends['error_rate_trend'] == 'stable')
-                                    <i class="bi bi-dash"></i> Estável
-                                @elseif ($performance_trends['error_rate_trend'] == 'increasing')
-                                    <i class="bi bi-arrow-up"></i> Aumentando
-                                @else
-                                    <i class="bi bi-arrow-down"></i> Diminuindo
-                                @endif
-                            </span>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Uso de Memória</span>
+                        <span
+                            class="badge bg-{{ $performance_trends['memory_usage_trend'] == 'stable' ? 'success' : ($performance_trends['memory_usage_trend'] == 'increasing' ? 'warning' : 'danger') }}">
+                            @if ($performance_trends['memory_usage_trend'] == 'stable')
+                                <i class="bi bi-dash"></i> Estável
+                            @elseif ($performance_trends['memory_usage_trend'] == 'increasing')
+                                <i class="bi bi-arrow-up"></i> Aumentando
+                            @else
+                                <i class="bi bi-arrow-down"></i> Diminuindo
+                            @endif
+                        </span>
                     </div>
-                </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Taxa de Erro</span>
+                        <span
+                            class="badge bg-{{ $performance_trends['error_rate_trend'] == 'stable' ? 'success' : ($performance_trends['error_rate_trend'] == 'increasing' ? 'danger' : 'success') }}">
+                            @if ($performance_trends['error_rate_trend'] == 'stable')
+                                <i class="bi bi-dash"></i> Estável
+                            @elseif ($performance_trends['error_rate_trend'] == 'increasing')
+                                <i class="bi bi-arrow-up"></i> Aumentando
+                            @else
+                                <i class="bi bi-arrow-down"></i> Diminuindo
+                            @endif
+                        </span>
+                    </div>
+                </x-ui.card>
             </div>
         </div>
 
         <!-- Gráfico de Performance (placeholder para futuro) -->
         <div class="row">
             <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
                             <i class="bi bi-bar-chart me-2"></i>Gráfico de Performance
                         </h5>
+                    </x-slot:header>
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-graph-up fs-1 mb-3"></i>
+                        <h6>Gráficos Interativos</h6>
+                        <p class="mb-0">Funcionalidade será implementada em versão futura</p>
+                        <small>Incluirá gráficos de linha temporal, distribuição de performance e análise
+                            comparativa</small>
                     </div>
-                    <div class="card-body">
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-graph-up fs-1 mb-3"></i>
-                            <h6>Gráficos Interativos</h6>
-                            <p class="mb-0">Funcionalidade será implementada em versão futura</p>
-                            <small>Incluirá gráficos de linha temporal, distribuição de performance e análise
-                                comparativa</small>
-                        </div>
-                    </div>
-                </div>
+                </x-ui.card>
             </div>
         </div>
-    </div>
+    </x-layout.page-container>
 @endsection
 
 @section('scripts')
@@ -288,10 +246,10 @@
         function updateDashboardMetrics(data) {
             // Atualiza cards de resumo
             if (data.summary) {
-                const avgTime = document.getElementById('avg-response-time');
-                const successRate = document.getElementById('success-rate');
-                const avgMemory = document.getElementById('avg-memory');
-                const totalExec = document.getElementById('total-executions');
+                const avgTime = document.getElementById('avg-response-time').querySelector('.h3');
+                const successRate = document.getElementById('success-rate').querySelector('.h3');
+                const avgMemory = document.getElementById('avg-memory').querySelector('.h3');
+                const totalExec = document.getElementById('total-executions').querySelector('.h3');
 
                 if (avgTime) avgTime.textContent = (data.summary.average_response_time || 0).toFixed(4) + 's';
                 if (successRate) successRate.textContent = (data.summary.success_rate || 100).toFixed(2) + '%';

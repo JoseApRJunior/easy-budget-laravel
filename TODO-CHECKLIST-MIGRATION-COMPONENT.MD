@@ -21,8 +21,8 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 - [x] Cadastro (`pages.budget.create`)
 - [x] Edição (`pages.budget.edit`)
 - [x] Visualização (`pages.budget.show`)
-- [ ] Escolha de Status (`pages.budget.choose-status`)
-- [ ] Compartilhamento (`pages.budget-share.*`)
+- [x] Escolha de Status (`pages.budget.choose-status`)
+- [x] Compartilhamento (`pages.budget-share.*`)
 
 ### 🛠️ Serviços (Services)
 - [x] Listagem (`pages.service.index`)
@@ -35,7 +35,7 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 - [x] Cadastro (`pages.customer.create`)
 - [x] Edição (`pages.customer.edit`)
 - [x] Visualização (`pages.customer.show`)
-- [ ] Serviços e Orçamentos do Cliente (`pages.customer.services_and_quotes`)
+- [x] Serviços e Orçamentos do Cliente (`pages.customer.services_and_quotes`)
 
 ### 📦 Produtos e Estoque (Products/Inventory)
 - [x] Listagem de Produtos (`pages.product.index`)
@@ -61,19 +61,19 @@ Este checklist monitora a migração das views para o padrão de componentes Bla
 - [x] Unidades de Medida (`pages.unit.index`)
 
 ## 👑 Administrativo (Admin)
-- [ ] Dashboard Admin (`pages.admin.dashboard`)
-- [ ] Dashboard Executivo (`pages.admin.executive-dashboard`)
-- [ ] Gestão de Usuários (`pages.admin.user.index`)
-- [ ] Gestão de Tenants (`pages.admin.tenant.index`)
-- [ ] Planos e Assinaturas (`pages.admin.plan.*`)
-- [ ] Monitoramento e Logs (`pages.admin.monitoring.*` / `pages.admin.logs.*`)
-- [ ] Configurações (`pages.admin.settings.index`)
+- [x] Dashboard Admin (`pages.admin.dashboard`)
+- [x] Dashboard Executivo (`pages.admin.executive-dashboard`)
+- [x] Gestão de Usuários (`pages.admin.user.index`)
+- [x] Gestão de Tenants (`pages.admin.tenant.index`)
+- [x] Planos e Assinaturas (`pages.admin.plan.*`)
+- [x] Monitoramento e Logs (`pages.admin.monitoring.*` / `pages.admin.logs.*`)
+- [x] Configurações (`pages.admin.settings.index`)
 
 ## 🌍 Páginas Públicas e Perfil
 - [x] Perfil do Usuário (`pages.profile.edit`)
 - [x] Dados da Empresa (`pages.provider.business.edit`)
-- [ ] Home/Landing Page (`pages.home.index`)
-- [ ] Páginas Legais (Privacidade/Termos)
+- [x] Landing Page (`home.*` / `welcome.blade.php`)
+- [x] Páginas Legais (`pages.legal.*`)
 
 ## 🎨 Componentes Base (Revisados)
 - [x] `x-dashboard.stat-card`

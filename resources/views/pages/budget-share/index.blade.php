@@ -1,9 +1,9 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
-@section( 'title', 'Compartilhamentos de Orçamentos' )
+@section('title', 'Compartilhamentos de Orçamentos')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <x-layout.page-container>
         <x-layout.page-header
             title="Compartilhamentos de Orçamentos"
             icon="share"
@@ -12,115 +12,127 @@
                 'Orçamentos' => route('provider.budgets.index'),
                 'Compartilhamentos' => '#'
             ]">
-            <x-ui.button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" />
+            <x-slot:actions>
+                <x-ui.button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" />
+            </x-slot:actions>
         </x-layout.page-header>
 
-        <div class="row">
+        <x-layout.grid-row>
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title mb-0">Lista de Compartilhamentos</h3>
-                    </div>
-                    <div class="card-body">
-                        @if(session('success'))
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                {{ session('success') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
+                <x-resource.resource-list-card
+                    title="Lista de Compartilhamentos"
+                    icon="list-ul"
+                    :total="$shares->total()"
+                >
+                    <x-resource.resource-table :headers="['ID', 'Orçamento', 'Cliente', 'Token', 'Expiração', 'Status', 'Criado em', 'Ações']">
+                        @forelse($shares as $share)
+                            <x-resource.table-row>
+                                <x-resource.table-cell>{{ $share->id }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <a href="{{ route('provider.budgets.show', $share->budget->code) }}" target="_blank" class="text-decoration-none fw-bold">
+                                        #{{ $share->budget->code }}
+                                    </a>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>{{ $share->budget->customer->name ?? 'N/A' }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <code class="bg-light px-2 py-1 rounded">{{ substr($share->token, 0, 8) }}...</code>
+                                        <button class="btn btn-sm btn-link text-secondary p-0 copy-token" data-token="{{ $share->token }}" title="Copiar token">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    {{ $share->expires_at ? $share->expires_at->format('d/m/Y H:i') : 'Nunca' }}
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    @if($share->expires_at && \Carbon\Carbon::parse($share->expires_at)->isPast())
+                                        <span class="badge bg-danger">Expirado</span>
+                                    @else
+                                        <span class="badge bg-success">Ativo</span>
+                                    @endif
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    {{ $share->created_at->format('d/m/Y H:i') }}
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <x-resource.action-buttons>
+                                        <x-ui.button :href="route('provider.budgets.shares.show', $share)" variant="primary" outline size="sm" icon="eye" title="Ver detalhes" />
+                                        
+                                        <x-ui.button :href="route('budgets.public.shared.view', $share->token)" target="_blank" variant="info" outline size="sm" icon="box-arrow-up-right" title="Ver link público" />
 
-                        @if(session('error'))
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                {{ session('error') }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        @endif
+                                        @if(!($share->expires_at && \Carbon\Carbon::parse($share->expires_at)->isPast()))
+                                            <x-ui.button 
+                                                type="button" 
+                                                variant="warning" 
+                                                outline 
+                                                size="sm" 
+                                                icon="slash-circle" 
+                                                title="Revogar acesso"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#revokeModal" 
+                                                data-action-url="{{ route('provider.budgets.shares.revoke', $share) }}"
+                                                data-item-name="{{ $share->budget->code }}"
+                                            />
+                                        @endif
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Orçamento</th>
-                                        <th>Cliente</th>
-                                        <th>Email</th>
-                                        <th>Token</th>
-                                        <th>Expiração</th>
-                                        <th>Status</th>
-                                        <th>Criado em</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($shares as $share)
-                                        <tr>
-                                            <td>{{ $share->id }}</td>
-                                            <td>
-                                                <a href="{{ route('provider.budgets.show', $share->budget->code) }}" target="_blank">
-                                                    #{{ $share->budget->code }}
-                                                </a>
-                                            </td>
-                                            <td>{{ $share->budget->customer->name ?? 'N/A' }}</td>
-                                            <td>{{ $share->email }}</td>
-                                            <td>
-                                                <x-resource.share-token :token="substr($share->share_token, 0, 8) . '...'" :show-copy="false" />
-                                                <button class="btn btn-sm btn-outline-secondary copy-token" data-token="{{ $share->share_token }}" title="Copiar token completo">
-                                                    <i class="fas fa-copy"></i>
-                                                </button>
-                                            </td>
-                                            <td>{{ $share->expires_at ? $share->expires_at->format('d/m/Y H:i') : 'Nunca' }}</td>
-                                            <td>
-                                                <x-ui.share-status-badge :share="$share" />
-                                            </td>
-                                            <td>{{ $share->created_at->format('d/m/Y H:i') }}</td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ route('provider.budgets.shares.show', $share) }}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    
-                                                    <a href="{{ route('provider.budgets.public.shared.view', $share->share_token) }}" target="_blank" class="btn btn-sm btn-outline-info" title="Ver link público">
-                                                        <i class="fas fa-external-link-alt"></i>
-                                                    </a>
+                                        <x-ui.button 
+                                            type="button" 
+                                            variant="danger" 
+                                            outline 
+                                            size="sm" 
+                                            icon="trash" 
+                                            title="Excluir"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal" 
+                                            data-delete-url="{{ route('provider.budgets.shares.destroy', $share) }}"
+                                            data-item-name="{{ $share->budget->code }}"
+                                        />
+                                    </x-resource.action-buttons>
+                                </x-resource.table-cell>
+                            </x-resource.table-row>
+                        @empty
+                            <x-resource.table-row>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    <i class="bi bi-share display-4 d-block mb-3"></i>
+                                    Nenhum compartilhamento encontrado
+                                </td>
+                            </x-resource.table-row>
+                        @endforelse
+                    </x-resource.resource-table>
 
-                                                    @if($share->is_active)
-                                                        <form action="{{ route('provider.budgets.shares.revoke', $share) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Revogar acesso" onclick="return confirm('Tem certeza que deseja revogar este compartilhamento?')">
-                                                                <i class="fas fa-ban"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
-
-                                                    <form action="{{ route('provider.budgets.shares.destroy', $share) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este compartilhamento?')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="9" class="text-center">Nenhum compartilhamento encontrado</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                    @if($shares->hasPages())
+                        <div class="mt-4">
+                            {{ $shares->links() }}
                         </div>
-
-                        @if($shares->hasPages())
-                            <div class="d-flex justify-content-center mt-4">
-                                {{ $shares->links() }}
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                    @endif
+                </x-resource.resource-list-card>
             </div>
-        </div>
-    </div>
+        </x-layout.grid-row>
+    </x-layout.page-container>
+
+    <x-ui.confirm-modal 
+        id="revokeModal" 
+        title="Confirmar Revogação" 
+        message="Tem certeza que deseja revogar o compartilhamento do orçamento <strong id='revokeModalItemName'></strong>?" 
+        submessage="O link de acesso será invalidado e não poderá mais ser usado."
+        confirmLabel="Revogar Compartilhamento"
+        variant="warning"
+        type="confirm" 
+        method="POST"
+        resource="compartilhamento"
+    />
+
+    <x-ui.confirm-modal 
+        id="deleteModal" 
+        title="Confirmar Exclusão" 
+        message="Tem certeza que deseja excluir o compartilhamento do orçamento <strong id='deleteModalItemName'></strong>?" 
+        submessage="Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+        type="delete" 
+        resource="compartilhamento"
+    />
 @endsection
 
 @push('scripts')
@@ -134,14 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Mudar ícone temporariamente
                 const icon = this.querySelector('i');
                 const originalClass = icon.className;
-                icon.className = 'fas fa-check';
-                this.classList.remove('btn-outline-secondary');
-                this.classList.add('btn-success');
+                icon.className = 'bi bi-check-lg text-success';
                 
                 setTimeout(() => {
                     icon.className = originalClass;
-                    this.classList.remove('btn-success');
-                    this.classList.add('btn-outline-secondary');
                 }, 2000);
             }).catch(err => {
                 console.error('Erro ao copiar token:', err);

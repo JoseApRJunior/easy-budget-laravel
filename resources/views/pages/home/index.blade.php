@@ -16,7 +16,7 @@
                 <h1 class="display-4 fw-bold mb-3">Bem-vindo ao Easy Budget</h1>
                 <p class="lead mb-4">Transforme a gestão de seus serviços com nossas soluções diversificadas e inovadoras.
                 </p>
-                <button id="conhecaPlanos" class="btn btn-primary btn-lg pulse-button">
+                <button id="conhecaPlanos" class="btn btn-primary btn-lg pulse-button" onclick="document.getElementById('plans').scrollIntoView({behavior: 'smooth'})">
                     <i class="bi bi-arrow-down-circle me-2"></i>Conheça nossos planos
                 </button>
             </div>
@@ -85,14 +85,10 @@
                         <h3 class="mb-3">Pronto para começar?</h3>
                         <p class="lead mb-4">Junte-se a milhares de profissionais que já estão transformando seus negócios com o Easy Budget.</p>
                         <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <a href="{{ route( 'register' ) }}" class="btn btn-light btn-lg" aria-label="Começar agora">
-                                <i class="bi bi-person-plus me-2"></i>
-                                Começar Agora
-                            </a>
-                            <a href="#plans" class="btn btn-outline-light btn-lg" aria-label="Saiba mais sobre os planos">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Saiba Mais
-                            </a>
+                            <x-ui.button :href="route('register')" variant="light" size="lg" icon="person-plus" label="Começar Agora" />
+                            <button type="button" class="btn btn-outline-light btn-lg" onclick="document.getElementById('plans').scrollIntoView({behavior: 'smooth'})">
+                                <i class="bi bi-info-circle me-2"></i>Saiba Mais
+                            </button>
                         </div>
                         <div class="mt-4">
                             <small class="opacity-75">

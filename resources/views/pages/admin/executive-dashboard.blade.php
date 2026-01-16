@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Dashboard Executivo"
             icon="graph-up-arrow"
@@ -9,151 +9,123 @@
                 'Admin' => '#',
                 'Executivo' => '#'
             ]">
-            <div class="d-flex gap-2">
-                <x-ui.button 
-                    variant="outline-primary" 
-                    onclick="refreshCharts()"
-                    icon="bi bi-arrow-clockwise">
-                    Atualizar
-                </x-ui.button>
-                <x-ui.button 
-                    href="/admin/executive-dashboard/export-pdf" 
-                    variant="success"
-                    icon="bi bi-file-earmark-pdf">
-                    Exportar PDF
-                </x-ui.button>
-            </div>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button 
+                        variant="outline-primary" 
+                        onclick="refreshCharts()"
+                        icon="arrow-clockwise"
+                        label="Atualizar"
+                    />
+                    <x-ui.button 
+                        href="/admin/executive-dashboard/export-pdf" 
+                        variant="success"
+                        icon="file-earmark-pdf"
+                        label="Exportar PDF"
+                    />
+                </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- KPIs Cards -->
         <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <i class="bi bi-activity fs-1 text-primary me-2"></i>
-                            <div>
-                                <h3 class="mb-0">{{ \App\Helpers\CurrencyHelper::format($kpis['total_requests'], 0, false) }}</h3>
-                                <small class="text-muted">Requisições (24h)</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <i class="bi bi-check-circle fs-1 text-success me-2"></i>
-                            <div>
-                                <h3 class="mb-0">{{ $kpis['success_rate'] }}%</h3>
-                                <small class="text-muted">Taxa de Sucesso</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            <i class="bi bi-speedometer2 fs-1 text-warning me-2"></i>
-                            <div>
-                                <h3 class="mb-0">{{ $kpis['avg_response_time'] }}ms</h3>
-                                <small class="text-muted">Tempo Médio</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <div class="d-flex align-items-center justify-content-center mb-2">
-                            @if ($kpis['system_health'] == 'HEALTHY')
-                                <i class="bi bi-heart-fill fs-1 text-success me-2"></i>
-                            @elseif ($kpis['system_health'] == 'WARNING')
-                                <i class="bi bi-exclamation-triangle fs-1 text-warning me-2"></i>
-                            @else
-                                <i class="bi bi-x-circle fs-1 text-danger me-2"></i>
-                            @endif
-                            <div>
-                                <h3
-                                    class="mb-0 text-{{ $kpis['system_health'] == 'HEALTHY' ? 'success' : ($kpis['system_health'] == 'WARNING' ? 'warning' : 'danger') }}">
-                                    {{ $kpis['system_health'] == 'HEALTHY' ? 'Saudável' : ($kpis['system_health'] == 'WARNING' ? 'Atenção' : 'Crítico') }}
-                                </h3>
-                                <small class="text-muted">Status do Sistema</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Requisições (24h)"
+                :value="\App\Helpers\CurrencyHelper::format($kpis['total_requests'], 0, false)"
+                icon="activity"
+                variant="primary"
+            />
+
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Taxa de Sucesso"
+                :value="$kpis['success_rate'] . '%'"
+                icon="check-circle"
+                variant="success"
+            />
+
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Tempo Médio"
+                :value="$kpis['avg_response_time'] . 'ms'"
+                icon="speedometer2"
+                variant="warning"
+            />
+
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Status do Sistema"
+                :value="$kpis['system_health'] == 'HEALTHY' ? 'Saudável' : ($kpis['system_health'] == 'WARNING' ? 'Atenção' : 'Crítico')"
+                :icon="$kpis['system_health'] == 'HEALTHY' ? 'heart-fill' : ($kpis['system_health'] == 'WARNING' ? 'exclamation-triangle' : 'x-circle')"
+                :variant="$kpis['system_health'] == 'HEALTHY' ? 'success' : ($kpis['system_health'] == 'WARNING' ? 'warning' : 'danger')"
+            />
         </div>
 
         <!-- Gráficos -->
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Tendência de Performance (6h)</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="performanceChart" height="100"></canvas>
-                    </div>
-                </div>
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-graph-up me-2"></i>Tendência de Performance (6h)
+                        </h5>
+                    </x-slot:header>
+                    <canvas id="performanceChart" height="100"></canvas>
+                </x-ui.card>
             </div>
             <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Distribuição por Middleware</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="middlewareChart"></canvas>
-                    </div>
-                </div>
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-pie-chart me-2"></i>Distribuição por Middleware
+                        </h5>
+                    </x-slot:header>
+                    <canvas id="middlewareChart"></canvas>
+                </x-ui.card>
             </div>
         </div>
 
         <div class="row mt-4">
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Alertas (24h)</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="alertsChart" height="150"></canvas>
-                    </div>
-                </div>
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Alertas (24h)
+                        </h5>
+                    </x-slot:header>
+                    <canvas id="alertsChart" height="150"></canvas>
+                </x-ui.card>
             </div>
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Resumo de Alertas</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <div class="border-end">
-                                    <h3 class="text-danger">{{ $alerts_summary['CRITICAL'] }}</h3>
-                                    <small class="text-muted">Críticos</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="border-end">
-                                    <h3 class="text-warning">{{ $alerts_summary['WARNING'] }}</h3>
-                                    <small class="text-muted">Atenção</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <h3 class="text-info">{{ $alerts_summary['INFO'] }}</h3>
-                                <small class="text-muted">Info</small>
+                <x-ui.card>
+                    <x-slot:header>
+                        <h5 class="mb-0 text-primary fw-bold">
+                            <i class="bi bi-list-check me-2"></i>Resumo de Alertas
+                        </h5>
+                    </x-slot:header>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h3 class="text-danger fw-bold">{{ $alerts_summary['CRITICAL'] }}</h3>
+                                <small class="text-muted fw-bold text-uppercase">Críticos</small>
                             </div>
                         </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <h3 class="text-warning fw-bold">{{ $alerts_summary['WARNING'] }}</h3>
+                                <small class="text-muted fw-bold text-uppercase">Atenção</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-info fw-bold">{{ $alerts_summary['INFO'] }}</h3>
+                            <small class="text-muted fw-bold text-uppercase">Info</small>
+                        </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         </div>
-    </div>
+    </x-layout.page-container>
 @endsection
 
 @section('scripts')
