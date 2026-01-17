@@ -283,7 +283,6 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'avatar' => $socialData['avatar'] ?? $user->avatar,
                 'google_data' => $socialData,
                 'email_verified_at' => now(),
-                'is_active' => true,
             ]);
 
             return $this->success($user, 'Dados sincronizados com sucesso');

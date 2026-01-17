@@ -1,27 +1,40 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
-    </div>
+<x-app-layout title="Confirmar Senha">
+    <x-auth.split-layout
+        title="Confirmar Senha"
+        subtitle="Esta é uma área segura do sistema. Por favor, confirme sua senha antes de continuar.">
 
-    <form method="POST" action="{{ route('password.confirm') }}">
-        @csrf
+        <x-slot:welcome>
+            <x-auth.welcome-header
+                title="Segurança em Primeiro Lugar"
+                subtitle="Para proteger seus dados sensíveis, precisamos confirmar que é realmente você."
+            />
 
-        <!-- Password -->
-        <div>
-            <x-form.input-label for="password" :value="__('Password')" />
+            <x-auth.feature-grid>
+                <x-auth.feature-item label="Acesso restrito a áreas críticas" />
+                <x-auth.feature-item label="Proteção de dados financeiros" />
+                <x-auth.feature-item label="Confirmação de identidade em tempo real" />
+            </x-auth.feature-grid>
 
-            <x-form.text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+            <x-auth.security-note>
+                Sua segurança é nossa prioridade. Nunca compartilhe sua senha.
+            </x-auth.security-note>
+        </x-slot:welcome>
 
-            <x-form.input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+        <x-ui.form.form :action="route('password.confirm')" id="confirmPasswordForm">
+            <!-- Senha -->
+            <x-ui.form.password
+                name="password"
+                id="password-input"
+                label="Sua Senha"
+                placeholder="Digite sua senha para confirmar"
+                required
+                autocomplete="current-password"
+                :showForgot="true" />
 
-        <div class="flex justify-end mt-4">
-            <x-ui.primary-button>
-                {{ __('Confirm') }}
-            </x-ui.primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+            <!-- Actions -->
+            <x-ui.form.actions class="mt-4">
+                <x-ui.button type="submit" variant="primary" size="lg" icon="shield-lock" label="Confirmar Identidade" class="w-100" />
+            </x-ui.form.actions>
+        </x-ui.form.form>
+    </x-auth.split-layout>
+</x-app-layout>

@@ -6,10 +6,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -17,10 +19,50 @@ class AuthenticatedSessionController extends Controller
     /**
      * Exibir a tela de login.
      */
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         if ($request->query('action') === 'block_account') {
-            session()->flash('warning', 'Sua conta foi temporariamente bloqueada. Por favor, entre em contato com o suporte para mais informações.');
+            $email = $request->query('email');
+            $token = $request->query('token');
+
+            Log::info('Tentativa de bloqueio de conta via link', [
+                'email' => $email,
+                'has_token' => !empty($token),
+                'ip' => $request->ip()
+            ]);
+
+            if ($email && $token) {
+                // Buscar usuário ignorando o escopo de tenant para garantir que o encontramos globalmente
+                $user = User::withoutGlobalScopes()->where('email', $email)->first();
+
+                if ($user) {
+                    Log::info('Usuário encontrado para bloqueio', ['user_id' => $user->id]);
+                    
+                    if (Password::broker()->tokenExists($user, $token)) {
+                        // Bloqueia a conta
+                        $user->update(['is_active' => false]);
+
+                        // Invalida o token usado para que não possa ser usado para resetar a senha também
+                        Password::broker()->deleteToken($user);
+
+                        Log::info('Conta bloqueada com sucesso via link', ['user_id' => $user->id]);
+
+                        session()->flash('success', 'Sua conta foi bloqueada com sucesso por medida de segurança. Para reativá-la, entre em contato com o suporte.');
+                        return redirect()->route('login');
+                    } else {
+                        Log::warning('Token inválido ou expirado para bloqueio de conta', [
+                            'user_id' => $user->id,
+                            'email' => $email
+                        ]);
+                    }
+                } else {
+                    Log::warning('Usuário não encontrado para e-mail fornecido no bloqueio', ['email' => $email]);
+                }
+            }
+
+            // Fallback: mensagem se o processo falhar (token inválido, etc)
+            session()->flash('warning', 'Não foi possível processar o bloqueio automático. Por favor, entre em contato com o suporte para garantir a segurança da sua conta.');
+            return redirect()->route('login');
         }
 
         return view('auth.login');

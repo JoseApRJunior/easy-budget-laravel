@@ -68,7 +68,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (! Auth::attempt(array_merge($this->only('email', 'password'), ['is_active' => true]), $this->boolean('remember'))) {
+            // Verificar se o login falhou porque o usuário está inativo
+            $user = User::where('email', $this->input('email'))->first();
+            if ($user && ! $user->is_active) {
+                throw ValidationException::withMessages([
+                    'email' => 'Sua conta está desativada ou bloqueada. Por favor, entre em contato com o suporte para reativá-la.',
+                ]);
+            }
+
             RateLimiter::hit($this->throttleKey());
 
             // Forçar locale pt-BR para garantir tradução correta
