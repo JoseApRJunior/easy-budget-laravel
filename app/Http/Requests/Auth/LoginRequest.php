@@ -73,7 +73,7 @@ class LoginRequest extends FormRequest
             $user = User::where('email', $this->input('email'))->first();
             if ($user && ! $user->is_active) {
                 throw ValidationException::withMessages([
-                    'email' => 'Sua conta está desativada ou bloqueada. Por favor, entre em contato com o suporte para reativá-la.',
+                    'email' => 'Esta conta foi bloqueada por medida de segurança. Para reativá-la, você deve redefinir sua senha clicando em "Esqueceu sua senha?".',
                 ]);
             }
 

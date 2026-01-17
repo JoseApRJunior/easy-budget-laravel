@@ -152,17 +152,6 @@ class SendPasswordResetNotification implements ShouldQueue
                 throw new \InvalidArgumentException('Token de redefinição com formato inválido');
             }
 
-            // Validação adicional: verificar se o usuário está ativo
-            if (isset($event->user->is_active) && ! $event->user->is_active) {
-                Log::warning('Tentativa de redefinição de senha para usuário inativo', [
-                    'user_id' => $event->user->id,
-                    'email' => $event->user->email,
-                    'is_active' => $event->user->is_active,
-                ]);
-
-                return ServiceResult::error('Usuário inativo não pode redefinir senha');
-            }
-
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
             return $this->mailerService->sendPasswordResetNotification(
                 $event->user,
