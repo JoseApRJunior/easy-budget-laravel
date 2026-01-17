@@ -11,10 +11,10 @@
             />
 
             <x-auth.feature-grid>
-                <x-auth.feature-item label="Gestão financeira completa" />
-                <x-auth.feature-item label="Controle de orçamentos" />
-                <x-auth.feature-item label="Relatórios detalhados" />
-                <x-auth.feature-item label="Suporte especializado" />
+                <x-auth.feature-item label="Gestão financeira profissional" />
+                <x-auth.feature-item label="Orçamentos inteligentes" />
+                <x-auth.feature-item label="Relatórios em tempo real" />
+                <x-auth.feature-item label="Suporte via WhatsApp" />
             </x-auth.feature-grid>
 
             <x-auth.security-note>
@@ -23,14 +23,13 @@
         </x-slot:welcome>
 
         <!-- Social Login -->
-        <x-ui.form.actions class="mb-4">
-            <x-ui.button href="{{ route('auth.google') }}" variant="outline-danger" size="lg" icon="google" label="Continuar com Google" class="w-100" />
-            <x-auth.footer>
-                Ao continuar com Google, você concorda com nossos
-                <a href="/terms-of-service" target="_blank" class="text-decoration-none">Termos de Serviço</a>
-                e
-                <a href="/privacy-policy" target="_blank" class="text-decoration-none">Política de Privacidade</a>.
-            </x-auth.footer>
+        <x-ui.form.actions class="mb-2">
+            <x-ui.button href="{{ route('auth.google') }}" variant="outline-danger" size="lg" icon="google" label="Continuar com Google" class="w-100 py-3 fw-semibold" />
+            <div class="mt-3">
+                <x-auth.footer>
+                    <x-auth.legal-links mode="full" />
+                </x-auth.footer>
+            </div>
         </x-ui.form.actions>
 
         <x-auth.divider label="ou preencha o formulário" />
@@ -85,12 +84,12 @@
                 name="terms_accepted"
                 required>
                 <x-slot:label>
-                    Eu li e aceito os <a href="/terms-of-service" target="_blank" class="text-decoration-none">Termos de Serviço</a> e a <a href="/privacy-policy" target="_blank" class="text-decoration-none">Política de Privacidade</a>.
+                    Eu li e aceito os <x-auth.legal-links mode="links" />
                 </x-slot:label>
             </x-ui.form.checkbox>
 
-            <x-ui.form.actions class="mb-4">
-                <x-ui.button type="submit" variant="primary" size="lg" icon="person-plus" label="Criar Conta" />
+            <x-ui.form.actions class="mt-4 mb-4">
+                <x-ui.button type="submit" variant="primary" size="lg" icon="person-plus" label="Criar minha conta agora" class="w-100 py-3 fw-bold" />
             </x-ui.form.actions>
 
             <x-auth.footer
