@@ -17,8 +17,12 @@ class AuthenticatedSessionController extends Controller
     /**
      * Exibir a tela de login.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        if ($request->query('action') === 'block_account') {
+            session()->flash('warning', 'Sua conta foi temporariamente bloqueada. Por favor, entre em contato com o suporte para mais informações.');
+        }
+
         return view('auth.login');
     }
 
