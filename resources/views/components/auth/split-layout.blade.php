@@ -26,7 +26,7 @@
         </div>
 
         {{-- Painel de Formulário --}}
-        <div class="auth-form-panel bg-white p-4 p-md-5 d-flex flex-column justify-content-center">
+        <div class="auth-form-panel p-4 p-md-5 d-flex flex-column justify-content-center">
             <div class="auth-form-content mx-auto w-100" style="max-width: 420px;">
                 <div class="mb-4">
                     @if($title)
@@ -47,7 +47,6 @@
     /* Reset e Fundo */
     .auth-wrapper {
         min-height: calc(100vh - 140px); /* Ajuste para dar espaço visual entre header e footer */
-        background-color: #f1f5f9;
         position: relative;
         overflow: hidden;
         z-index: 1;
