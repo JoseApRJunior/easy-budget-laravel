@@ -11,7 +11,7 @@
         </div>
     @endif
 
-    <h1 class="h2 fw-bold mb-3">{{ $title }}</h1>
+    <span class="h3 fw-bold mb-3">{{ $title }}</span>
 
     @if($subtitle)
         <p class="lead text-white-50 mb-4">
@@ -19,4 +19,3 @@
         </p>
     @endif
 </div>
-

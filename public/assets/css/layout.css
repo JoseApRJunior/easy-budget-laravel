@@ -882,10 +882,6 @@ main .main-container {
     }
 }
 
-.auth-form-panel{
-   background-color: var(--surface-color);
-}
-
 /* Footer */
 .footer {
    position: relative;

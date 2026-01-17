@@ -3,7 +3,7 @@
     'subtitle' => null,
 ])
 
-<div class="auth-wrapper d-flex align-items-center justify-content-center py-5">
+<div class="auth-wrapper d-flex align-items-center justify-content-center py-3">
     {{-- Fundo Decorativo --}}
     <div class="auth-bg-shapes">
         <div class="shape-1"></div>
@@ -28,7 +28,7 @@
         {{-- Painel de Formulário --}}
         <div class="auth-form-panel p-4 p-md-5 d-flex flex-column justify-content-center">
             <div class="auth-form-content mx-auto w-100" style="max-width: 420px;">
-                <div class="mb-4">
+                <div class="mb-4 text-center">
                     @if($title)
                         <h2 class="fw-bold text-dark h3 mb-2">{{ $title }}</h2>
                     @endif
@@ -50,7 +50,6 @@
         position: relative;
         overflow: hidden;
         z-index: 1;
-        background-color: var(--surface-color);
     }
 
     .auth-bg-shapes .shape-1 {
@@ -59,7 +58,6 @@
         right: -100px;
         width: 400px;
         height: 400px;
-        background: radial-gradient(circle, rgba(13, 110, 253, 0.1) 0%, rgba(255,255,255,0) 70%);
         border-radius: 50%;
     }
 
@@ -69,7 +67,6 @@
         left: -100px;
         width: 500px;
         height: 500px;
-        background: radial-gradient(circle, rgba(13, 110, 253, 0.05) 0%, rgba(255,255,255,0) 70%);
         border-radius: 50%;
     }
 
@@ -95,13 +92,15 @@
         content: "";
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 30px 30px;
     }
 
     .auth-form-panel {
         flex: 1;
         max-height: 100%;
         overflow-y: auto;
+        background-color: var(--surface-color);
     }
 
     @media (max-width: 991.98px) {
