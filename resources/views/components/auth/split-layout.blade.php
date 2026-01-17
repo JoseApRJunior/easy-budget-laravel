@@ -50,6 +50,7 @@
         position: relative;
         overflow: hidden;
         z-index: 1;
+        background-color: var(--surface-color);
     }
 
     .auth-bg-shapes .shape-1 {
@@ -77,7 +78,7 @@
         width: 100%;
         max-width: 1100px;
         min-height: 650px;
-        background: white;
+        background: var(--surface-color);
         border-radius: 2rem;
         z-index: 10;
         border: 1px solid rgba(0,0,0,0.05);

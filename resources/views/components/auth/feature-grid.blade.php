@@ -1,3 +1,3 @@
-<div class="row text-start g-4 justify-content-center">
+<div class="d-flex flex-column gap-3 text-start">
     {{ $slot }}
 </div>

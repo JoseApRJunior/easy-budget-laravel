@@ -5,16 +5,15 @@
 
         <x-slot:welcome>
             <x-auth.welcome-header
-                icon="graph-up"
                 title="Bem-vindo ao Easy Budget!"
                 subtitle="Crie sua conta e comece a transformar a gestão do seu negócio hoje mesmo."
             />
 
             <x-auth.feature-grid>
-                <x-auth.feature-item label="Gestão financeira profissional" />
-                <x-auth.feature-item label="Orçamentos inteligentes" />
-                <x-auth.feature-item label="Relatórios em tempo real" />
-                <x-auth.feature-item label="Suporte via WhatsApp" />
+                <x-auth.feature-item label="Orçamentos e Serviços profissionais e aprovação online" />
+                <x-auth.feature-item label="Pagamentos integrados via Mercado Pago" />
+                <x-auth.feature-item label="Relatórios e Dashboard em tempo real" />
+                <x-auth.feature-item label="Gestão completa de clientes e estoque" />
             </x-auth.feature-grid>
 
             <x-auth.security-note>
