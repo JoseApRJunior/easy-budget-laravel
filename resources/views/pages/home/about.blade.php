@@ -33,7 +33,7 @@
                             <h2 class="h5 mb-0 text-dark fw-bold">Quem Somos</h2>
                         </x-layout.h-stack>
                     </x-slot:header>
-                    <p class="mb-0">
+                    <p class="lead mb-0">
                         Somos uma equipe de profissionais apaixonados por tecnologia e gestão de projetos.
                         Fundada em 2024,
                         nossa plataforma tem crescido rapidamente, atendendo a uma ampla gama de setores e
@@ -50,7 +50,7 @@
                             <h2 class="h5 mb-0 text-dark fw-bold">Nossa Visão</h2>
                         </x-layout.h-stack>
                     </x-slot:header>
-                    <p class="mb-0">
+                    <p class="lead mb-0">
                         Imaginamos um mercado de serviços mais eficiente e transparente, onde prestadores e
                         clientes possam
                         colaborar de forma harmoniosa. Estamos comprometidos em continuar inovando e expandindo

@@ -1,25 +1,29 @@
-<x-app-layout title="Verificar E-mail">
+<x-app-layout :title="$title ?? 'Verificar E-mail'">
     <x-auth.split-layout
-        :title="($status ?? '') === 'inactive' ? 'Conta Inativa' : 'Verifique seu E-mail'"
+        :title="$title ?? 'Verifique seu E-mail'"
         :subtitle="$message ?? 'Enviamos um link de confirmação para o endereço de e-mail fornecido durante o cadastro.'">
 
         <x-slot:welcome>
-            @if(($status ?? '') === 'inactive')
+            @if(($status ?? '') === 'deactivated')
                 <x-auth.welcome-header
-                    title="Aguardando Ativação"
-                    subtitle="Seu e-mail já foi verificado, mas sua conta ainda não está totalmente ativa."
+                    title="Conta Desativada"
+                    subtitle="Seu acesso ao sistema foi suspenso temporariamente."
                 />
 
                 <x-auth.feature-grid>
-                    <x-auth.feature-item label="Sua conta está em processo de revisão" />
-                    <x-auth.feature-item icon="shield-lock" label="Segurança dos seus dados garantida" />
-                    <x-auth.feature-item icon="chat-dots" label="Suporte pronto para te ajudar" />
-                    <x-auth.feature-item icon="check2-all" label="Acesso total liberado após ativação" />
+                    <x-auth.feature-item icon="shield-lock" label="Sua conta está em processo de revisão" />
+                    <x-auth.feature-item icon="chat-dots" label="O suporte pode ajudar na reativação" />
+                    <x-auth.feature-item icon="file-lock2" label="Seus dados continuam seguros conosco" />
+                    <x-auth.feature-item icon="check2-all" label="Acesso total liberado após reativação" />
                 </x-auth.feature-grid>
+
+                <x-auth.security-note>
+                    Se você acredita que isso é um erro ou deseja reativar sua conta, entre em contato com nosso suporte.
+                </x-auth.security-note>
             @else
                 <x-auth.welcome-header
-                    title="Quase lá!"
-                    subtitle="Verifique sua caixa de entrada para ativar sua conta e começar a usar o Easy Budget."
+                    title="Ative sua Conta"
+                    subtitle="Verifique sua caixa de entrada para começar a usar o Easy Budget."
                 />
 
                 <x-auth.feature-grid>
@@ -28,16 +32,26 @@
                     <x-auth.feature-item icon="link-45deg" label="Clique no link de confirmação no e-mail" />
                     <x-auth.feature-item icon="shield-check" label="Tenha acesso total ao seu painel" />
                 </x-auth.feature-grid>
-            @endif
 
-            <x-auth.security-note>
-                {{ ($status ?? '') === 'inactive'
-                    ? 'Se você acredita que isso é um erro, entre em contato com nosso suporte.'
-                    : 'Caso não encontre o e-mail, use o botão ao lado para reenviar.' }}
-            </x-auth.security-note>
+                <x-auth.security-note>
+                    Caso não encontre o e-mail, use o botão ao lado para reenviar o link de ativação.
+                </x-auth.security-note>
+            @endif
         </x-slot:welcome>
 
-        @if(($status ?? '') !== 'inactive')
+        @if(session('status'))
+            <x-ui.alert variant="success" :message="session('status')" class="mb-4" />
+        @endif
+
+        @if(session('warning'))
+            <x-ui.alert variant="warning" :message="session('warning')" class="mb-4" />
+        @endif
+
+        @if(session('error'))
+            <x-ui.alert variant="danger" :message="session('error')" class="mb-4" />
+        @endif
+
+        @if(!auth()->user()->hasVerifiedEmail())
             <x-ui.form.form :action="route('verification.send')">
                 <x-ui.form.actions class="mb-3">
                     <x-ui.button type="submit" variant="primary" size="lg" icon="envelope-arrow-up" label="Reenviar E-mail de Verificação" class="w-100" />
