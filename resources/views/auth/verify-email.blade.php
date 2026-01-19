@@ -21,20 +21,17 @@
             </x-auth.security-note>
         </x-slot:welcome>
 
-        <x-ui.auth-session-status :status="session('status') == 'verification-link-sent' ? __('Um novo link de verificação foi enviado para o seu e-mail.') : null" />
-
         <x-ui.form.form :action="route('verification.send')">
             <x-ui.form.actions class="mb-3">
                 <x-ui.button type="submit" variant="primary" size="lg" icon="envelope-arrow-up" label="Reenviar E-mail de Verificação" class="w-100" />
             </x-ui.form.actions>
         </x-ui.form.form>
 
-        <form method="POST" action="{{ route('logout') }}" class="w-100">
-            @csrf
+        <x-ui.form.form :action="route('logout')" class="w-100">
             <x-ui.form.actions>
                 <x-ui.button type="submit" variant="outline-secondary" size="lg" icon="box-arrow-right" label="Sair do Sistema" class="w-100" />
             </x-ui.form.actions>
-        </form>
+        </x-ui.form.form>
 
         <x-auth.footer
             text="Precisa de ajuda?"

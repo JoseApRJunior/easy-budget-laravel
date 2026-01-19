@@ -21,7 +21,7 @@
         </x-slot:welcome>
 
         <x-ui.form.form :action="route('password.store')">
-            <input type="hidden" name="token" value="{{ $request->route('token') ?? $request->query('token') }}">
+            <x-ui.form.hidden name="token" :value="$request->route('token') ?? $request->query('token')" />
 
             <x-ui.form.input-group
                 type="email"
