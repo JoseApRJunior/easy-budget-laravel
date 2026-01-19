@@ -119,20 +119,6 @@ class EmailVerificationService extends AbstractBaseService
                 );
             }
 
-            // Verificar se usuário está ativo
-            if (! $user->is_active) {
-                Log::warning('Tentativa de reenvio de e-mail para usuário inativo', [
-                    'user_id' => $user->id,
-                    'tenant_id' => $user->tenant_id,
-                    'email' => $user->email,
-                ]);
-
-                return ServiceResult::error(
-                    OperationStatus::CONFLICT,
-                    'Usuário inativo. Entre em contato com o suporte.',
-                );
-            }
-
             Log::info('Reenviando e-mail de verificação', [
                 'user_id' => $user->id,
                 'tenant_id' => $user->tenant_id,

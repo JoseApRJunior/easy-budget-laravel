@@ -48,11 +48,11 @@ class SendBudgetNotification implements ShouldQueue
 
             // Carregar relações necessárias para os dados da empresa
             $budget->loadMissing(['tenant.provider.commonData', 'tenant.provider.address', 'tenant.provider.contact']);
-            
+
             // Preparar dados da empresa (Tenant/Provider) para o e-mail
             $provider = $budget->tenant->provider;
             $companyData = [];
-            
+
             if ($provider) {
                 $commonData = $provider->commonData;
                 $address = $provider->address;
@@ -65,7 +65,7 @@ class SendBudgetNotification implements ShouldQueue
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";

@@ -92,22 +92,10 @@ class SendPasswordResetNotification implements ShouldQueue
         // Iniciar métricas de performance
         $this->startPerformanceTracking();
 
-        // ADICIONADO: Log crítico para verificar se o listener está sendo executado
-        Log::critical('SendPasswordResetNotification: LISTENER EXECUTADO - Verificando se evento personalizado está sendo disparado', [
-            'user_id' => $event->user->id,
-            'email' => $event->user->email,
-            'tenant_id' => $event->tenant?->id,
-            'reset_token' => substr($event->resetToken, 0, 10).'...', // Log parcial por segurança
-            'event_type' => 'password_reset_custom',
-            'listener_class' => static::class,
-            'timestamp' => now()->toISOString(),
-        ]);
-
         try {
             // 1. Logging inicial estruturado
             $this->logEventStart($event);
 
-            // ADICIONADO: Deduplicação usando cache
             $dedupeKey = $this->buildPasswordResetDedupKey($event);
             if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
                 Log::warning('Envio de e-mail de redefinição de senha ignorado por deduplicação', [
@@ -309,12 +297,6 @@ class SendPasswordResetNotification implements ShouldQueue
         throw $exception;
     }
 
-    /**
-     * Constrói chave única para deduplicação de e-mails de redefinição de senha.
-     *
-     * @param  PasswordResetRequested  $event  Evento de redefinição de senha
-     * @return string Chave única para deduplicação
-     */
     private function buildPasswordResetDedupKey(PasswordResetRequested $event): string
     {
         $tokenHash = hash('sha256', (string) $event->resetToken);

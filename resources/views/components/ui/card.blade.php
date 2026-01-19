@@ -7,7 +7,7 @@
 
 <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm h-100 ' . $class]) }}>
     @if(isset($header) && $header->isNotEmpty())
-        <div class="card-header bg-white py-3 border-bottom">
+        <div class="card-header border-1 py-3 bg-transparent">
             {{ $header }}
         </div>
     @endif
@@ -17,7 +17,7 @@
     </div>
 
     @if(isset($footer) && $footer->isNotEmpty())
-        <div class="card-footer bg-light py-3 border-top">
+        <div class="card-footer border-1 py-3 bg-transparent">
             {{ $footer }}
         </div>
     @endif

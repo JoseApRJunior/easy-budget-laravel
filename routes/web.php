@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\TenantManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AIAnalyticsController;
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\BudgetShareController;
@@ -124,7 +125,7 @@ Route::middleware('auth')->group(function () {
 // Email verification routes
 // Routes for email verification process
 Route::prefix('email')->name('verification.')->group(function () {
-    Route::get('/verify', [CustomVerifyEmailController::class, 'show'])->name('notice');
+    Route::get('/verify', EmailVerificationPromptController::class)->name('notice');
     Route::get('/verify/{id}/{hash}', [CustomVerifyEmailController::class, 'confirmAccount'])->middleware(['signed:relative'])->name('verify');
 });
 

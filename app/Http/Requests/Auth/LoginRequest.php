@@ -68,15 +68,7 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (! Auth::attempt(array_merge($this->only('email', 'password'), ['is_active' => true]), $this->boolean('remember'))) {
-            // Verificar se o login falhou porque o usuário está inativo
-            $user = User::where('email', $this->input('email'))->first();
-            if ($user && ! $user->is_active) {
-                throw ValidationException::withMessages([
-                    'email' => 'Esta conta foi bloqueada por medida de segurança. Para reativá-la, você deve redefinir sua senha clicando em "Esqueceu sua senha?".',
-                ]);
-            }
-
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             // Forçar locale pt-BR para garantir tradução correta
