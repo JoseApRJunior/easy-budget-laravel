@@ -114,7 +114,35 @@
         {{-- Linha 3: Orçamentos + Sidebar --}}
         <x-layout.grid-row class="mt-2">
             <x-layout.grid-col size="col-12 col-lg-8">
-                <x-dashboard.recent-budgets :budgets="$budgets" />
+                <x-layout.v-stack gap="4">
+                    <x-dashboard.recent-budgets :budgets="$budgets" />
+
+                    {{-- Log de Atividades (Resgatado da view obsoleta) --}}
+                    @php
+                        $translations = [
+                            'actionIcons' => [
+                                'created_budget' => 'bi-file-earmark-plus',
+                                'updated_budget' => 'bi-pencil-square',
+                                'deleted_budget' => 'bi-trash',
+                            ],
+                            'textColors' => [
+                                'created_budget' => 'text-success',
+                                'updated_budget' => 'text-warning',
+                                'deleted_budget' => 'text-danger',
+                            ],
+                            'descriptionTranslation' => [
+                                'created_budget' => 'Orçamento Criado',
+                                'updated_budget' => 'Orçamento Atualizado',
+                                'deleted_budget' => 'Orçamento Removido',
+                            ],
+                        ];
+                    @endphp
+                    <x-dashboard.activities
+                        :activities="$activities"
+                        :translations="$translations"
+                        :total="$total_activities"
+                    />
+                </x-layout.v-stack>
             </x-layout.grid-col>
 
             <x-layout.grid-col size="col-12 col-lg-4">

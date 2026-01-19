@@ -9,6 +9,7 @@ use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -25,6 +26,7 @@ use Throwable;
  * - Tratamento específico para redefinição de senha
  * - Métricas de performance integradas
  * - Sistema de retry automático com backoff exponencial
+ * - Deduplicação para evitar envio duplo
  */
 class SendPasswordResetNotification implements ShouldQueue
 {
@@ -104,6 +106,19 @@ class SendPasswordResetNotification implements ShouldQueue
         try {
             // 1. Logging inicial estruturado
             $this->logEventStart($event);
+
+            // ADICIONADO: Deduplicação usando cache
+            $dedupeKey = $this->buildPasswordResetDedupKey($event);
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Envio de e-mail de redefinição de senha ignorado por deduplicação', [
+                    'user_id' => $event->user->id,
+                    'email' => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                    'dedupe_key' => $dedupeKey,
+                ]);
+
+                return;
+            }
 
             // 2. Validação inicial rigorosa
             $this->validateEvent($event);
@@ -292,6 +307,19 @@ class SendPasswordResetNotification implements ShouldQueue
 
         // Relança a exceção para que seja tratada pela queue
         throw $exception;
+    }
+
+    /**
+     * Constrói chave única para deduplicação de e-mails de redefinição de senha.
+     *
+     * @param  PasswordResetRequested  $event  Evento de redefinição de senha
+     * @return string Chave única para deduplicação
+     */
+    private function buildPasswordResetDedupKey(PasswordResetRequested $event): string
+    {
+        $tokenHash = hash('sha256', (string) $event->resetToken);
+
+        return 'email:password_reset:'.$event->user->id.':'.$tokenHash;
     }
 
     /**
