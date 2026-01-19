@@ -3,7 +3,7 @@
     'subtitle' => null,
 ])
 
-<div class="auth-wrapper d-flex align-items-center justify-content-center py-3">
+<div class=" container-fluid auth-wrapper d-flex align-items-center justify-content-center py-1">
     {{-- Fundo Decorativo --}}
     <div class="auth-bg-shapes">
         <div class="shape-1"></div>

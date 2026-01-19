@@ -1,108 +1,54 @@
-@extends( 'layouts.app' )
+<x-app-layout title="Verificar E-mail">
+    <x-auth.split-layout
+        title="Verifique seu E-mail"
+        subtitle="Enviamos um link de confirmação para o endereço de e-mail fornecido durante o cadastro.">
 
-@section( 'content' )
-    <main class="container py-5">
-        <!-- Cabeçalho da página -->
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold mb-3">
-                Confirmação de E-mail
-            </h1>
-            <p class="lead text-muted">
-                Verifique sua caixa de entrada para ativar sua conta
-            </p>
-        </div>
+        <x-slot:welcome>
+            <x-auth.welcome-header
+                title="Quase lá!"
+                subtitle="Verifique sua caixa de entrada para ativar sua conta e começar a usar o Easy Budget."
+            />
 
-        <!-- Conteúdo principal -->
-        <div class="row g-4">
-            <div class="col-lg-8 mx-auto">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-5">
-                        <!-- Ícone ilustrativo -->
-                        <div class="text-center mb-4">
-                            <i class="bi bi-envelope-check text-primary mb-3" style="font-size: 4rem;"></i>
-                        </div>
+            <x-auth.feature-grid>
+                <x-auth.feature-item label="Ative todos os recursos do sistema" />
+                <x-auth.feature-item icon="inboxes" label="Verifique sua caixa de entrada e spam" />
+                <x-auth.feature-item icon="link-45deg" label="Clique no link de confirmação no e-mail" />
+                <x-auth.feature-item icon="shield-check" label="Tenha acesso total ao seu painel" />
+            </x-auth.feature-grid>
 
-                        <!-- Mensagem principal -->
-                        <div class="text-center mb-4">
-                            <h5 class="mb-3">E-mail de confirmação enviado!</h5>
-                            <p class="text-muted mb-4">
-                                Enviamos um link de confirmação para o endereço de e-mail fornecido durante o cadastro.
-                                Clique no link para ativar sua conta e começar a usar o Easy Budget.
-                            </p>
-                        </div>
+            <x-auth.security-note>
+                {{ __('Caso não encontre o e-mail, use o botão ao lado para reenviar.') }}
+            </x-auth.security-note>
+        </x-slot:welcome>
 
-
-                        <!-- Instruções -->
-                        <div class="alert alert-info" role="alert">
-                            <h6 class="alert-heading mb-2">
-                                <i class="bi bi-info-circle me-2"></i>O que fazer agora?
-                            </h6>
-                            <ul class="mb-0 text-start">
-                                <li>Verifique sua caixa de entrada (e também a pasta de spam)</li>
-                                <li>Clique no link de confirmação no e-mail</li>
-                                <li>Após confirmar, você será redirecionado automaticamente</li>
-                                <li>Caso não encontre o e-mail, use o botão abaixo para reenviar</li>
-                            </ul>
-                        </div>
-
-                        <!-- Ações Melhoradas - Proporcional -->
-                        <div class="row g-3 justify-content-center">
-                            <div class="col-12 col-sm-8 col-md-6">
-                                <form method="POST" action="{{ route( 'verification.send' ) }}" class="d-grid mb-2">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary py-2 px-4 fw-semibold">
-                                        <i class="bi bi-envelope-arrow-up me-2"></i>
-                                        Reenviar E-mail
-                                    </button>
-                                </form>
-                            </div>
-
-                            <div class="col-12 col-sm-8 col-md-6">
-                                <form method="POST" action="{{ route( 'logout' ) }}" class="d-grid">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline-secondary py-2 px-4 fw-semibold">
-                                        Sair do Sistema
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-
-
-                        <!-- Separador Visual -->
-                        <div class="row">
-                            <div class="col-12">
-                                <hr class="my-4">
-                            </div>
-                        </div>
-
-                        <!-- Seção de Ajuda Melhorada -->
-                        <div class="row justify-content-center">
-                            <div class="col-12 col-md-8">
-                                <div class="text-center">
-                                    <div class="alert alert-light border">
-                                        <h6 class="alert-heading mb-2">
-                                            <i class="bi bi-question-circle text-muted me-2"></i>
-                                            Precisa de Ajuda?
-                                        </h6>
-                                        <p class="mb-2 text-muted">
-                                            Não conseguiu receber o e-mail de verificação?
-                                        </p>
-                                        <a href="{{ route( 'support' ) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-headset me-1"></i>
-                                            Falar com Suporte
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
+        @if (session('status') == 'verification-link-sent')
+            <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <div>
+                    {{ __('Um novo link de verificação foi enviado para o seu e-mail.') }}
                 </div>
             </div>
-        </div>
-    </main>
-@endsection
+        @endif
+
+        <x-ui.form.form :action="route('verification.send')">
+            <x-ui.form.actions class="mb-3">
+                <x-ui.button type="submit" variant="primary" size="lg" icon="envelope-arrow-up" label="Reenviar E-mail de Verificação" class="w-100" />
+            </x-ui.form.actions>
+        </x-ui.form.form>
+
+        <form method="POST" action="{{ route('logout') }}" class="w-100">
+            @csrf
+            <x-ui.form.actions>
+                <x-ui.button type="submit" variant="outline-secondary" size="lg" icon="box-arrow-right" label="Sair do Sistema" class="w-100" />
+            </x-ui.form.actions>
+        </form>
+
+        <x-auth.footer
+            text="Precisa de ajuda?"
+            linkText="Falar com Suporte"
+            :linkHref="route('support')" />
+    </x-auth.split-layout>
+</x-app-layout>
 
 @push( 'styles' )
 @endpush
