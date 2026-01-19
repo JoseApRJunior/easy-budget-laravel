@@ -21,14 +21,7 @@
             </x-auth.security-note>
         </x-slot:welcome>
 
-        @if (session('status') == 'verification-link-sent')
-            <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <div>
-                    {{ __('Um novo link de verificação foi enviado para o seu e-mail.') }}
-                </div>
-            </div>
-        @endif
+        <x-ui.auth-session-status :status="session('status') == 'verification-link-sent' ? __('Um novo link de verificação foi enviado para o seu e-mail.') : null" />
 
         <x-ui.form.form :action="route('verification.send')">
             <x-ui.form.actions class="mb-3">
