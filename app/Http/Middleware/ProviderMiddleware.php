@@ -81,8 +81,6 @@ class ProviderMiddleware
         // Check if provider is active
         $provider = Provider::where('user_id', $user->id)->first();
         if (! $provider || $user->is_active !== true) {
-            // Se o usuário não estiver ativo, redirecionar para a página de verificação de e-mail
-            // em vez de abortar com 403, permitindo que ele reenvie o e-mail se necessário.
             return redirect()->route('verification.notice')->with('warning', 'Sua conta ainda não está ativa. Por favor, verifique seu e-mail ou entre em contato com o suporte.');
         }
 

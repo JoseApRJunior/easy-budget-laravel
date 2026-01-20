@@ -12,27 +12,27 @@
             <p class="text-muted mb-0 small">Gerencie as preferências e configurações da sua conta e empresa</p>
         </x-layout.page-header>
 
-        <div class="row g-4">
+        <x-layout.grid-row>
             <!-- Menu Lateral -->
-            <div class="col-12 col-md-3">
-                @include( 'partials.settings.sidebar' )
-            </div>
+            <x-layout.grid-col size="col-12 col-md-3">
+                <x-settings.sidebar :active-tab="$activeTab" />
+            </x-layout.grid-col>
 
             <!-- Conteúdo -->
-            <div class="col-12 col-md-9">
+            <x-layout.grid-col size="col-12 col-md-9">
                 <div class="tab-content">
-                    @include( 'partials.settings.tabs.profile' )
-                    @include( 'partials.settings.tabs.general' )
-                    @include( 'partials.settings.tabs.notifications' )
-                    @include( 'partials.settings.tabs.security' )
-                    @include( 'partials.settings.tabs.integration' )
-                    @include( 'partials.settings.tabs.customization' )
-                    @include( 'partials.settings.tabs.provider' )
+                    <x-settings.tabs.profile :active-tab="$activeTab" />
+                    <x-settings.tabs.general :active-tab="$activeTab" />
+                    <x-settings.tabs.notifications :active-tab="$activeTab" :tabs="$tabs" />
+                    <x-settings.tabs.security :active-tab="$activeTab" :tabs="$tabs" />
+                    <x-settings.tabs.integration :active-tab="$activeTab" :tabs="$tabs" />
+                    <x-settings.tabs.customization :active-tab="$activeTab" :tabs="$tabs" />
+                    <x-settings.tabs.provider :active-tab="$activeTab" :tabs="$tabs" />
                 </div>
-            </div>
-        </div>
-    </div>
-@endsection
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-layout.page-container>
+</x-app-layout>
 
 @section( 'scripts' )
     @parent

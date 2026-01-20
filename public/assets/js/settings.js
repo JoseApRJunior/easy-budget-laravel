@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const toggleButtons = document.querySelectorAll('.password-toggle');
       
       if (toggleButtons.length === 0) {
-         console.warn('Botões de alternância de senha não encontrados');
          return;
       }
       
@@ -36,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const eyeIcon = this.querySelector('i');
             
             if (!input || !eyeIcon) {
-               console.warn('Input ou ícone não encontrado para o botão:', inputId);
                return;
             }
             
@@ -104,13 +102,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const matchFeedback = document.querySelector('.password-match-feedback');
       const mismatchFeedback = document.querySelector('.password-mismatch-feedback');
       
-      // Verificar se os elementos existem
       if (!newPassword || !confirmPassword || !passwordRulesContainer) {
-         console.warn('Elementos de validação de senha não encontrados');
          return;
       }
       
-      // Regras de validação de senha
       const passwordRules = [
          { regex: /.{6,}/, text: "Pelo menos 6 caracteres", element: document.querySelector('[data-rule="length"]') },
          { regex: /[a-z]/, text: "Letras minúsculas (a-z)", element: document.querySelector('[data-rule="lowercase"]') },
@@ -148,7 +143,6 @@ document.addEventListener("DOMContentLoaded", function () {
                this.classList.remove('is-valid', 'is-invalid');
             }
             
-            // Validar confirmação também quando a senha muda
             if (confirmPassword.value) {
                validatePasswordConfirmation();
             }
@@ -180,7 +174,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
    };
 
-   // Inicializar preview de cores
    const initializeColorPreview = () => {
       const colorInput = document.getElementById('primary_color');
       if (colorInput) {
@@ -199,5 +192,31 @@ document.addEventListener("DOMContentLoaded", function () {
    initializePasswordValidation();
    initializePasswordToggle();
    initializeColorPreview();
-   console.log('Configurações inicializadas com sucesso!');
 });
+
+// Funções Globais para Configurações
+function confirmDisconnectSettings() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Desconectar Mercado Pago?',
+            text: "Você precisará refazer a conexão para processar pagamentos automaticamente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--text-error)',
+            cancelButtonColor: 'var(--secondary-color)',
+            confirmButtonText: 'Sim, desconectar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('form-disconnect-mp-settings');
+                if (form) form.submit();
+            }
+        });
+    } else {
+        if (confirm('Tem certeza que deseja desconectar esta integração?')) {
+            const form = document.getElementById('form-disconnect-mp-settings');
+            if (form) form.submit();
+        }
+    }
+}

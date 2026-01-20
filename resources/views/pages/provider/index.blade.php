@@ -2,18 +2,6 @@
 
 @section('content')
     <x-layout.page-container>
-
-        @php
-            $user = auth()->user();
-            $pendingPlan = $user?->pendingPlan();
-        @endphp
-
-        {{-- Alertas de plano --}}
-        @includeWhen($user?->isTrialExpired(), 'partials.components.provider.plan-alert')
-        @includeWhen(
-            $user?->isTrial() || ($pendingPlan && $pendingPlan->status === 'pending'),
-            'partials.components.provider.plan-modal')
-
         {{-- Cabeçalho Moderno --}}
         <x-layout.grid-row class="mb-4">
             <x-layout.grid-col>
@@ -137,12 +125,7 @@
                             ],
                         ];
                     @endphp
-                    <x-dashboard.activities
-                        :activities="$activities"
-                        :translations="$translations"
-                        :total="$total_activities"
-                    />
-                </x-layout.v-stack>
+                                    </x-layout.v-stack>
             </x-layout.grid-col>
 
             <x-layout.grid-col size="col-12 col-lg-4">

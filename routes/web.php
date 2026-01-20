@@ -780,10 +780,12 @@ Route::middleware(['auth', 'verified', 'provider'])->group(function () {
     });
 });
 
-Route::prefix('integrations')->name('integrations.')->group(function () {
-    Route::get('/mercadopago', [MercadoPagoController::class, 'index'])->name('mercadopago.index');
-    Route::get('/mercadopago/callback', [MercadoPagoController::class, 'callback'])->name('mercadopago.callback');
-    Route::post('/mercadopago/disconnect', [MercadoPagoController::class, 'disconnect'])->name('mercadopago.disconnect');
-    Route::post('/mercadopago/refresh', [MercadoPagoController::class, 'refresh'])->name('mercadopago.refresh');
-    Route::get('/mercadopago/test', [MercadoPagoController::class, 'testConnection'])->name('mercadopago.test');
+Route::middleware(['auth', 'verified', 'provider'])->group(function () {
+    Route::prefix('integrations')->name('integrations.')->group(function () {
+        Route::get('/mercadopago', [MercadoPagoController::class, 'index'])->name('mercadopago.index');
+        Route::get('/mercadopago/callback', [MercadoPagoController::class, 'callback'])->name('mercadopago.callback');
+        Route::post('/mercadopago/disconnect', [MercadoPagoController::class, 'disconnect'])->name('mercadopago.disconnect');
+        Route::post('/mercadopago/refresh', [MercadoPagoController::class, 'refresh'])->name('mercadopago.refresh');
+        Route::get('/mercadopago/test', [MercadoPagoController::class, 'testConnection'])->name('mercadopago.test');
+    });
 });

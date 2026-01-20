@@ -41,22 +41,19 @@
 - [x] `pages/report/analytics/analytics.blade.php` (Atualizado)
 - [x] `pages/report/inventory/inventory.blade.php` (Atualizado)
 
-### 5. Admin (🔄 Em Andamento)
-- [x] `admin/financial/index.blade.php` (Atualizado)
-- [x] `admin/enterprises/index.blade.php` (Atualizado)
-- [x] `pages/admin/plan/subscribers.blade.php` (Atualizado)
-- [ ] `pages/admin/*` (Restante)
-
-### 6. Auth (✅ Concluído)
+### 5. Auth (✅ Concluído)
 - [x] `auth/login.blade.php` (Padronizado com x-ui.card)
 - [x] `auth/register.blade.php` / `enhanced-register.blade.php`
 - [x] `auth/forgot-password.blade.php`
 - [x] `auth/reset-password.blade.php`
 
+### 6. Integrações (✅ Concluído)
+- [x] `pages/mercadopago/index.blade.php` (Refatorado para x-ui e x-layout)
+- [x] `components/settings/tabs/integration.blade.php` (Simplificado e centralizado)
+
+
 ## Próximos Passos
-1. Continuar e finalizar a refatoração das views administrativas restantes em `resources/views/pages/admin`.
-2. Verificar se há outras pastas "soltas" (ex: `pages/plan`, `pages/budget-share`).
-3. Verificação final de consistência.
+1. Verificação final de consistência.
 
 ## Componentes Criados/Utilizados
 - `x-ui.card`: Container padrão

@@ -31,7 +31,7 @@
 
         <!-- KPIs Principais -->
         <div class="row g-4 mb-4">
-            <x-dashboard.stat-card 
+            <x-dashboard.stat-card
                 col="col-md-3"
                 title="Requisições (24h)"
                 :value="\App\Helpers\CurrencyHelper::format($kpis['total_requests'], 0, false)"
@@ -40,7 +40,7 @@
                 :description="$kpis['growth_rate'] . ' vs período anterior'"
             />
 
-            <x-dashboard.stat-card 
+            <x-dashboard.stat-card
                 col="col-md-3"
                 title="Taxa de Sucesso"
                 :value="\App\Helpers\CurrencyHelper::format($kpis['success_rate'], 1, false) . '%'"
@@ -49,7 +49,7 @@
                 :description="($kpis['success_rate'] >= 95 ? 'Excelente' : 'Atenção')"
             />
 
-            <x-dashboard.stat-card 
+            <x-dashboard.stat-card
                 col="col-md-3"
                 title="Tempo Médio"
                 :value="\App\Helpers\CurrencyHelper::format($kpis['avg_response_time'], 1, false) . 'ms'"
@@ -58,7 +58,7 @@
                 :description="($kpis['avg_response_time'] < 50 ? 'Rápido' : 'Normal')"
             />
 
-            <x-dashboard.stat-card 
+            <x-dashboard.stat-card
                 col="col-md-3"
                 title="Middlewares Ativos"
                 :value="$kpis['active_middlewares']"
@@ -77,7 +77,7 @@
                             <i class="bi bi-activity me-2"></i>Status do Sistema
                         </h5>
                     </x-slot:header>
-                    
+
                     <div class="row text-center">
                         <div class="col-md-4">
                             <div class="p-3">
@@ -115,7 +115,7 @@
                             <i class="bi bi-tools me-2"></i>Ações Rápidas
                         </h5>
                     </x-slot:header>
-                    
+
                     <div class="d-grid gap-2">
                         <x-ui.button href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" />
                         <x-ui.button href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" />
@@ -134,7 +134,7 @@
                             <i class="bi bi-graph-up me-2"></i>Tendência de Performance (Últimas 24h)
                         </h5>
                     </x-slot:header>
-                    
+
                     <canvas id="trendChart" height="100"></canvas>
                 </x-ui.card>
             </div>

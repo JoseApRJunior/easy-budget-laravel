@@ -47,7 +47,7 @@ class AdminDashboardController extends Controller
             ];
         });
 
-        return view('admin.dashboard.index', [
+        return view('pages.admin.home', [
             'systemMetrics' => $dashboardData['system_metrics'],
             'financialMetrics' => $dashboardData['financial_metrics'],
             'userMetrics' => $dashboardData['user_metrics'],

@@ -43,29 +43,44 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // Buscar usuário para verificar se é social login
+        // Buscar usuário para verificar status e se é social login
         $user = User::where('email', $this->input('email'))->first();
 
-        if ($user && ! empty($user->google_id)) {
-            // Verificar se o usuário tem senha definida
-            if (empty($user->password)) {
-                Log::warning('Tentativa de login local para usuário Google OAuth sem senha', [
+        if ($user) {
+            // Verificar se o usuário está ativo antes de qualquer coisa
+            if ($user->is_active === false) {
+                Log::warning('Tentativa de login em conta bloqueada', [
                     'email' => $this->input('email'),
                     'user_id' => $user->id,
                     'ip' => $this->ip(),
                 ]);
 
                 throw ValidationException::withMessages([
-                    'email' => 'Esta conta usa login social (Google) e não possui senha definida. Use o botão "Login com Google" ou defina uma senha em suas configurações.',
+                    'email' => 'Sua conta ainda não está ativa. Por favor, verifique seu e-mail ou entre em contato com o suporte.',
                 ]);
             }
 
-            // Usuário tem google_id e senha, permitir login por senha
-            Log::info('Tentativa de login local para usuário Google OAuth com senha', [
-                'email' => $this->input('email'),
-                'user_id' => $user->id,
-                'ip' => $this->ip(),
-            ]);
+            if (! empty($user->google_id)) {
+                // Verificar se o usuário tem senha definida
+                if (empty($user->password)) {
+                    Log::warning('Tentativa de login local para usuário Google OAuth sem senha', [
+                        'email' => $this->input('email'),
+                        'user_id' => $user->id,
+                        'ip' => $this->ip(),
+                    ]);
+
+                    throw ValidationException::withMessages([
+                        'email' => 'Esta conta usa login social (Google) e não possui senha definida. Use o botão "Login com Google" ou defina uma senha em suas configurações.',
+                    ]);
+                }
+
+                // Usuário tem google_id e senha, permitir login por senha
+                Log::info('Tentativa de login local para usuário Google OAuth com senha', [
+                    'email' => $this->input('email'),
+                    'user_id' => $user->id,
+                    'ip' => $this->ip(),
+                ]);
+            }
         }
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Application\Auth;
 
+use App\Enums\OperationStatus;
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
 use App\DTOs\Provider\ProviderRegistrationDTO;
@@ -83,7 +84,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'email' => $user->email,
             ]);
 
-            return $this->error('Conta bloqueada', 'Esta conta foi bloqueada por medida de segurança. Para reativá-la, você deve redefinir sua senha.');
+            return $this->error(OperationStatus::ERROR, 'Sua conta ainda não está ativa. Por favor, verifique seu e-mail ou entre em contato com o suporte.');
         }
 
         $updateResult = $this->syncSocialProfileData($user, $userData);
@@ -117,7 +118,7 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'email' => $existingUser->email,
             ]);
 
-            return $this->error('Conta bloqueada', 'Esta conta está bloqueada por medida de segurança. Para reativá-la, você deve redefinir sua senha.');
+            return $this->error(OperationStatus::ERROR, 'Sua conta ainda não está ativa. Por favor, verifique seu e-mail ou entre em contato com o suporte.');
         }
 
         $linkResult = $this->linkSocialAccountToUser($existingUser, $provider, $userData);
