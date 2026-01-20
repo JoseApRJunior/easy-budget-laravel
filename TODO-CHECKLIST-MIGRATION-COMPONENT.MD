@@ -7,9 +7,11 @@
 
 ## Módulos Verificados e Componentizados
 
-### 1. Dashboards (✅ Concluído)
-- [x] `pages/home/dashboard/index.blade.php` (Atualizado)
-- [x] `pages/provider/dashboard.blade.php`
+### 1. Home e Dashboards (✅ Concluído)
+- [x] `pages/home/index.blade.php` (Home Principal - Componentizada)
+- [x] `pages/home/about.blade.php` (Sobre - Componentizada)
+- [x] `pages/home/support.blade.php` (Suporte - Componentizada)
+- [x] `pages/provider/dashboard.blade.php` (Dashboard Prestador)
 
 ### 2. Módulos Principais (✅ Concluído)
 - [x] **Budget (Orçamentos)**
