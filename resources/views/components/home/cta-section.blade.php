@@ -1,10 +1,10 @@
 @props([
     'title' => 'Pronto para começar?',
     'description' => 'Junte-se a milhares de profissionais que já estão transformando seus negócios com o Easy Budget.',
-    'primaryButtonText' => 'Começar Agora',
+    'primaryButtonText' => 'Criar Conta Agora',
     'primaryButtonRoute' => 'register',
-    'secondaryButtonText' => 'Saiba Mais',
-    'secondaryButtonTarget' => 'plans'
+    'secondaryButtonText' => 'Ver Recursos',
+    'secondaryButtonTarget' => 'features'
 ])
 
 <div class="row justify-content-center mt-5">
