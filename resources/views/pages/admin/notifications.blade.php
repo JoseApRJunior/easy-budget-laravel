@@ -1,6 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
+<x-app-layout title="Configurações de Notificação">
     <div class="container-fluid py-4">
         <x-layout.page-header
             title="Configurações de Notificação"
@@ -100,9 +98,8 @@
             </div>
         </div>
     </div>
-@endsection
 
-@push('scripts')
+    @push('scripts')
     <script>
         function addEmailInput() {
             const container = document.getElementById('emailInputs');
@@ -168,4 +165,5 @@
                 });
         });
     </script>
-@endpush
+    @endpush
+</x-app-layout>

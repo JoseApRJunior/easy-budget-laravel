@@ -75,6 +75,17 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
 
     private function handleExistingUser(User $user, string $provider, array $userData): ServiceResult
     {
+        // Verificar se o usuário está ativo antes de prosseguir
+        if (! $user->is_active) {
+            Log::warning('Tentativa de login social em conta desativada/bloqueada', [
+                'provider' => $provider,
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+
+            return $this->error('Conta bloqueada', 'Esta conta foi bloqueada por medida de segurança. Para reativá-la, você deve redefinir sua senha.');
+        }
+
         $updateResult = $this->syncSocialProfileData($user, $userData);
 
         if (! $updateResult->isSuccess()) {
@@ -96,6 +107,17 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
 
         if (! $existingUser) {
             return $this->createNewSocialUser($provider, $userData);
+        }
+
+        // Verificar se o usuário está ativo antes de tentar vincular
+        if (! $existingUser->is_active) {
+            Log::warning('Tentativa de vínculo social em conta desativada/bloqueada', [
+                'provider' => $provider,
+                'user_id' => $existingUser->id,
+                'email' => $existingUser->email,
+            ]);
+
+            return $this->error('Conta bloqueada', 'Esta conta está bloqueada por medida de segurança. Para reativá-la, você deve redefinir sua senha.');
         }
 
         $linkResult = $this->linkSocialAccountToUser($existingUser, $provider, $userData);
@@ -283,7 +305,6 @@ class SocialAuthenticationService extends AbstractBaseService implements SocialA
                 'avatar' => $socialData['avatar'] ?? $user->avatar,
                 'google_data' => $socialData,
                 'email_verified_at' => now(),
-                'is_active' => true,
             ]);
 
             return $this->success($user, 'Dados sincronizados com sucesso');

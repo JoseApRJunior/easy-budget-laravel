@@ -129,6 +129,7 @@ class ScheduleRepository extends AbstractTenantRepository
             'total' => $this->model->count(),
             'upcoming' => $this->model->where('status', '!=', 'cancelled')->where('start_date_time', '>=', now())->count(),
             'today' => $this->model->whereDate('start_date_time', now()->toDateString())->count(),
+            'this_week' => $this->model->whereBetween('start_date_time', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             'by_status' => $this->model->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status')->toArray(),
         ];
     }

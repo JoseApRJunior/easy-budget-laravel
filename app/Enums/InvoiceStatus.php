@@ -65,10 +65,10 @@ enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     public function getColor(): string
     {
         return match ($this) {
-            self::PENDING => config('theme.colors.warning'),
-            self::PAID => config('theme.colors.success'),
-            self::CANCELLED => config('theme.colors.error'),
-            self::OVERDUE => config('theme.colors.dark'),
+            self::PENDING => config('theme.colors.warning', '#d97706'),
+            self::PAID => config('theme.colors.success', '#059669'),
+            self::CANCELLED => config('theme.colors.error', '#dc2626'),
+            self::OVERDUE => config('theme.colors.secondary', '#94a3b8'),
         };
     }
 

@@ -1,8 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Editar Fatura')
+
 @section('content')
-    <div class="container-fluid py-4">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Editar Fatura"
             icon="pencil-square"
@@ -12,202 +13,197 @@
                 $invoice->code => route('provider.invoices.show', $invoice->code),
                 'Editar' => '#'
             ]">
-            <p class="text-muted mb-0">Atualize as informações da fatura {{ $invoice->code }}</p>
+            <x-slot:actions>
+                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Voltar" />
+            </x-slot:actions>
         </x-layout.page-header>
 
-    <form action="{{ route('provider.invoices.update', $invoice->code) }}" method="POST" id="invoiceEditForm">
-        @csrf
-        @method('PUT')
+        <form action="{{ route('provider.invoices.update', $invoice->code) }}" method="POST" id="invoiceEditForm">
+            @csrf
+            @method('PUT')
 
-            <div class="row g-4">
+            <x-layout.grid-row>
                 <!-- Dados da Fatura -->
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white py-3">
+                    <x-ui.card>
+                        <x-slot:header>
                             <h5 class="mb-0 text-primary fw-bold">
                                 <i class="bi bi-receipt-cutoff me-2"></i>Dados da Fatura
                             </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="customer_id" class="form-label small fw-bold text-muted text-uppercase">Cliente *</label>
-                                        <select class="form-select @error('customer_id') is-invalid @enderror"
-                                            name="customer_id" id="customer_id" required>
-                                            <option value="">Selecione o cliente</option>
-                                            @foreach ($customers as $customer)
-                                                <option value="{{ $customer->id }}"
-                                                    {{ old('customer_id', $invoice->customer_id) == $customer->id ? 'selected' : '' }}>
-                                                    {{ $customer->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('customer_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="status" class="form-label small fw-bold text-muted text-uppercase">Status *</label>
-                                        <select class="form-select @error('status') is-invalid @enderror" name="status"
-                                            id="status" required>
-                                            @foreach ($statusOptions as $status)
-                                                <option value="{{ $status->value }}"
-                                                    {{ old('status', $invoice->status) == $status->value ? 'selected' : '' }}>
-                                                    {{ $status->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('status')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
+                        </x-slot:header>
 
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="issue_date" class="form-label small fw-bold text-muted text-uppercase">Data de Emissão *</label>
-                                        <input type="date" class="form-control @error('issue_date') is-invalid @enderror"
-                                            name="issue_date" id="issue_date"
-                                            value="{{ old('issue_date', $invoice->issue_date?->format('Y-m-d')) }}"
-                                            required>
-                                        @error('issue_date')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customer_id" class="form-label small fw-bold text-muted text-uppercase">Cliente *</label>
+                                    <select class="form-select @error('customer_id') is-invalid @enderror"
+                                        name="customer_id" id="customer_id" required>
+                                        <option value="">Selecione o cliente</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id }}"
+                                                {{ old('customer_id', $invoice->customer_id) == $customer->id ? 'selected' : '' }}>
+                                                {{ $customer->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('customer_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="due_date" class="form-label small fw-bold text-muted text-uppercase">Data de Vencimento *</label>
-                                        <input type="date" class="form-control @error('due_date') is-invalid @enderror"
-                                            name="due_date" id="due_date"
-                                            value="{{ old('due_date', $invoice->due_date?->format('Y-m-d')) }}" required>
-                                        @error('due_date')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label small fw-bold text-muted text-uppercase">Status *</label>
+                                    <select class="form-select @error('status') is-invalid @enderror" name="status"
+                                        id="status" required>
+                                        @foreach ($statusOptions as $status)
+                                            <option value="{{ $status->value }}"
+                                                {{ old('status', $invoice->status) == $status->value ? 'selected' : '' }}>
+                                                {{ $status->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <x-ui.form.input 
+                                    type="date" 
+                                    name="issue_date" 
+                                    id="issue_date" 
+                                    label="Data de Emissão *" 
+                                    value="{{ old('issue_date', $invoice->issue_date?->format('Y-m-d')) }}"
+                                    required
+                                />
+                            </div>
+                            <div class="col-md-6">
+                                <x-ui.form.input 
+                                    type="date" 
+                                    name="due_date" 
+                                    id="due_date" 
+                                    label="Data de Vencimento *" 
+                                    value="{{ old('due_date', $invoice->due_date?->format('Y-m-d')) }}"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </x-ui.card>
                 </div>
 
                 <!-- Itens da Fatura -->
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white py-3">
+                    <x-ui.card>
+                        <x-slot:header>
                             <h5 class="mb-0 text-success fw-bold">
                                 <i class="bi bi-list-check me-2"></i>Itens da Fatura
                             </h5>
-                        </div>
-                        <div class="card-body">
-                            <div id="invoice-items">
-                                @foreach ($invoice->invoiceItems as $item)
-                                    <div class="item-row mb-3 p-3 border rounded" data-item-id="{{ $item->id }}">
-                                        <div class="row align-items-end">
-                                            <div class="col-md-4">
-                                                <label class="form-label small fw-bold text-muted text-uppercase">Produto *</label>
-                                                <select name="items[{{ $loop->index }}][product_id]"
-                                                    class="form-select product-select @error('items.' . $loop->index . '.product_id') is-invalid @enderror"
-                                                    required>
-                                                    <option value="">Selecione o produto</option>
-                                                    @foreach (\App\Models\Product::where('active', true)->get() as $product)
-                                                        <option value="{{ $product->id }}"
-                                                            data-price="{{ $product->price }}"
-                                                            {{ old('items.' . $loop->index . '.product_id', $item->product_id) == $product->id ? 'selected' : '' }}>
-                                                                    {{ $product->name }} -
-                                                                    {{ \App\Helpers\CurrencyHelper::format($product->price) }}
-                                                                </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('items.' . $loop->index . '.product_id')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small fw-bold text-muted text-uppercase">Quantidade *</label>
-                                                <input type="number" name="items[{{ $loop->index }}][quantity]"
-                                                    class="form-control quantity-input @error('items.' . $loop->index . '.quantity') is-invalid @enderror"
-                                                    value="{{ old('items.' . $loop->index . '.quantity', $item->quantity) }}"
-                                                    step="0.01" min="0.01" required>
-                                                @error('items.' . $loop->index . '.quantity')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label small fw-bold text-muted text-uppercase">Valor Unit. *</label>
-                                                <input type="text" name="items[{{ $loop->index }}][unit_value]"
-                                                    class="form-control unit-value-input currency-brl @error('items.' . $loop->index . '.unit_value') is-invalid @enderror"
-                                                    value="{{ \App\Helpers\CurrencyHelper::format(old('items.' . $loop->index . '.unit_value', $item->unit_value)) }}"
-                                                    required>
-                                                @error('items.' . $loop->index . '.unit_value')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
-                                                <input type="text" class="form-control total-display"
-                                                    value="{{ \App\Helpers\CurrencyHelper::format($item->total) }}" readonly>
-                                            </div>
-                                            <div class="col-md-1">
-                                                <button type="button" class="btn btn-danger btn-sm remove-item"
-                                                    title="Remover item">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <input type="hidden" name="items[{{ $loop->index }}][id]"
-                                            value="{{ $item->id }}">
-                                        <input type="hidden" name="items[{{ $loop->index }}][action]" value="update">
-                                    </div>
-                                @endforeach
-                            </div>
+                        </x-slot:header>
 
-                            <x-ui.button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" />
+                        <div id="invoice-items">
+                            @foreach ($invoice->invoiceItems as $item)
+                                <div class="item-row mb-3 p-3 border rounded bg-light" data-item-id="{{ $item->id }}">
+                                    <div class="row align-items-end">
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Produto *</label>
+                                            <select name="items[{{ $loop->index }}][product_id]"
+                                                class="form-select product-select @error('items.' . $loop->index . '.product_id') is-invalid @enderror"
+                                                required>
+                                                <option value="">Selecione o produto</option>
+                                                @foreach (\App\Models\Product::where('active', true)->get() as $product)
+                                                    <option value="{{ $product->id }}"
+                                                        data-price="{{ $product->price }}"
+                                                        {{ old('items.' . $loop->index . '.product_id', $item->product_id) == $product->id ? 'selected' : '' }}>
+                                                                {{ $product->name }} -
+                                                                {{ \App\Helpers\CurrencyHelper::format($product->price) }}
+                                                            </option>
+                                                @endforeach
+                                            </select>
+                                            @error('items.' . $loop->index . '.product_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Qtd *</label>
+                                            <input type="number" name="items[{{ $loop->index }}][quantity]"
+                                                class="form-control quantity-input @error('items.' . $loop->index . '.quantity') is-invalid @enderror"
+                                                value="{{ old('items.' . $loop->index . '.quantity', $item->quantity) }}"
+                                                step="0.01" min="0.01" required>
+                                            @error('items.' . $loop->index . '.quantity')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Valor Unit. *</label>
+                                            <input type="text" name="items[{{ $loop->index }}][unit_value]"
+                                                class="form-control unit-value-input currency-brl @error('items.' . $loop->index . '.unit_value') is-invalid @enderror"
+                                                value="{{ \App\Helpers\CurrencyHelper::format(old('items.' . $loop->index . '.unit_value', $item->unit_value)) }}"
+                                                required>
+                                            @error('items.' . $loop->index . '.unit_value')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
+                                            <input type="text" class="form-control total-display bg-white"
+                                                value="{{ \App\Helpers\CurrencyHelper::format($item->total) }}" readonly>
+                                        </div>
+                                        <div class="col-md-1 text-end">
+                                            <button type="button" class="btn btn-danger btn-sm remove-item"
+                                                title="Remover item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="items[{{ $loop->index }}][id]"
+                                        value="{{ $item->id }}">
+                                    <input type="hidden" name="items[{{ $loop->index }}][action]" value="update">
+                                </div>
+                            @endforeach
                         </div>
-                    </div>
+
+                        <x-ui.button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" class="w-100" />
+                    </x-ui.card>
                 </div>
-            </div>
+            </x-layout.grid-row>
 
             <!-- Resumo -->
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title small fw-bold text-muted text-uppercase mb-3">Resumo da Fatura</h5>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal:</span>
-                                <span id="subtotal" class="fw-bold">0,00</span>
-                                <input type="hidden" name="subtotal" id="subtotal_input" value="0">
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Desconto:</span>
-                                <span id="discount" class="fw-bold">0,00</span>
-                                <input type="hidden" name="discount" id="discount_input" value="0">
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between fw-bold fs-5 text-primary">
-                                <span>Total:</span>
-                                <span id="grandTotal">0,00</span>
-                                <input type="hidden" name="total" id="total_input" value="0">
-                            </div>
+            <x-layout.grid-row class="mt-4">
+                <div class="col-md-6 offset-md-6">
+                    <x-ui.card>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Subtotal:</span>
+                            <span id="subtotal" class="fw-bold">0,00</span>
+                            <input type="hidden" name="subtotal" id="subtotal_input" value="0">
                         </div>
-                    </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Desconto:</span>
+                            <span id="discount" class="fw-bold">0,00</span>
+                            <input type="hidden" name="discount" id="discount_input" value="0">
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold fs-4 text-primary">
+                            <span>Total:</span>
+                            <span id="grandTotal">0,00</span>
+                            <input type="hidden" name="total" id="total_input" value="0">
+                        </div>
+                    </x-ui.card>
                 </div>
-            </div>
+            </x-layout.grid-row>
 
             {{-- Botões de Ação (Footer) --}}
-            <div class="d-flex justify-content-between mt-4">
-                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Cancelar" />
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" label="Cancelar" />
                 <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
             </div>
         </form>
-    </div>
+    </x-layout.page-container>
 
+    @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Cálculo automático de totais
@@ -281,6 +277,7 @@
                         const actionInput = itemRow.querySelector('input[name$="[action]"]');
                         actionInput.value = 'delete';
                         itemRow.style.opacity = '0.5';
+                        itemRow.style.display = 'none'; // Esconder visualmente
                     } else {
                         // Remover completamente se for um item novo
                         itemRow.remove();
@@ -292,10 +289,10 @@
             // Adicionar novo item
             document.getElementById('addItemBtn').addEventListener('click', function() {
                 const itemsContainer = document.getElementById('invoice-items');
-                const newIndex = itemsContainer.children.length;
+                const newIndex = itemsContainer.querySelectorAll('.item-row').length + 100; // Offset para evitar colisão com índices existentes
 
                 const newItemHtml = `
-            <div class="item-row mb-3 p-3 border rounded">
+            <div class="item-row mb-3 p-3 border rounded bg-light">
                 <div class="row align-items-end">
                     <div class="col-md-4">
                         <label class="form-label small fw-bold text-muted text-uppercase">Produto *</label>
@@ -309,7 +306,7 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Quantidade *</label>
+                        <label class="form-label small fw-bold text-muted text-uppercase">Qtd *</label>
                         <input type="number"
                                name="items[${newIndex}][quantity]"
                                class="form-control quantity-input"
@@ -328,9 +325,9 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small fw-bold text-muted text-uppercase">Total</label>
-                        <input type="text" class="form-control total-display" value="0,00" readonly>
+                        <input type="text" class="form-control total-display bg-white" value="0,00" readonly>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-1 text-end">
                         <button type="button" class="btn btn-danger btn-sm remove-item" title="Remover item">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -352,4 +349,5 @@
             calculateTotals();
         });
     </script>
+    @endpush
 @endsection

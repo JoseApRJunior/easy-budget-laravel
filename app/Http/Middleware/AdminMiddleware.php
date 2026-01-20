@@ -17,6 +17,11 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
+        // Redirecionar se o usuário estiver inativo
+        if (! $user->is_active) {
+            return redirect()->route('verification.notice')->with('warning', 'Sua conta administrativa ainda não está ativa. Por favor, verifique seu e-mail ou entre em contato com o suporte.');
+        }
+
         // Check if user has admin role
         if (! $user->hasRole('admin')) {
             Log::warning('Admin access denied', [

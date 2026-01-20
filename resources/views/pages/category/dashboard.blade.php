@@ -99,13 +99,17 @@
                             @foreach ($recent as $category)
                                 <x-resource.table-row>
                                     <x-resource.table-cell>
-                                        <div class="fw-bold text-dark">{{ $category->name }}</div>
-                                        <div class="text-muted small">{{ $category->slug }}</div>
+                                        <x-resource.resource-info
+                                            :title="$category->name"
+                                            :subtitle="$category->slug"
+                                            titleClass="fw-bold text-dark"
+                                        />
                                     </x-resource.table-cell>
                                     <x-resource.table-cell>
-                                        <span class="badge bg-light text-dark border fw-normal">
-                                            {{ $category->parent_id ? 'Subcategoria' : 'Principal' }}
-                                        </span>
+                                        <x-ui.badge
+                                            :variant="$category->parent_id ? 'info' : 'secondary'"
+                                            :label="$category->parent_id ? 'Subcategoria' : 'Principal'"
+                                        />
                                     </x-resource.table-cell>
                                     <x-resource.table-cell>
                                         <x-ui.status-badge :item="$category" statusField="active" />
@@ -129,7 +133,6 @@
                     <x-slot:mobile>
                         @foreach ($recent as $category)
                             <x-resource.resource-mobile-item
-                                icon="tag"
                                 :href="route('provider.categories.index', ['search' => $category->name])"
                             >
                                 <x-resource.resource-mobile-header
@@ -138,8 +141,12 @@
                                 />
                                 <x-resource.resource-mobile-field
                                     label="Tipo"
-                                    :value="$category->parent_id ? 'Subcategoria' : 'Principal'"
-                                />
+                                >
+                                    <x-ui.badge
+                                        :variant="$category->parent_id ? 'info' : 'secondary'"
+                                        :label="$category->parent_id ? 'Subcategoria' : 'Principal'"
+                                    />
+                                </x-resource.resource-mobile-field>
                                 <x-resource.resource-mobile-field label="Status">
                                     <x-ui.status-badge :item="$category" statusField="active" />
                                 </x-resource.resource-mobile-field>
@@ -147,7 +154,11 @@
                         @endforeach
                     </x-slot:mobile>
                 @else
-                    <x-resource.empty-state resource="categorias recentes" />
+                    <x-resource.empty-state
+                        title="Nenhuma categoria recente"
+                        description="Suas categorias aparecerão aqui conforme forem criadas."
+                        :icon="null"
+                    />
                 @endif
             </x-resource.resource-list-card>
         </x-layout.grid-col>
@@ -184,9 +195,9 @@
                     title="Ações de Categoria"
                     icon="lightning-charge"
                 >
-                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" size="md" icon="plus-lg" label="Nova Categoria" />
-                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" size="md" icon="tags" label="Listar Categorias" />
-                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="outline-secondary" size="md" icon="trash" label="Ver Deletadas" />
+                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="outline-success" icon="plus-lg" label="Nova Categoria" />
+                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" icon="tags" label="Listar Categorias" />
+                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="outline-secondary" icon="trash" label="Ver Deletadas" />
                 </x-resource.quick-actions>
             </x-layout.v-stack>
         </x-layout.grid-col>

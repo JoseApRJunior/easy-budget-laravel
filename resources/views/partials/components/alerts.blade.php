@@ -35,6 +35,7 @@
         $flashTypes = [
             'error'   => 'danger',
             'success' => 'success',
+            'status'  => 'success',
             'message' => 'info',
             'warning' => 'warning',
         ];
@@ -51,10 +52,22 @@
                 'timestamp' => now()->toISOString()
             ] );
             $message = session($type);
+
+            // Tradução manual para mensagens comuns do Laravel se não estiverem traduzidas
+            if ($message === 'passwords.sent') {
+                $message = 'Lembramos você! Enviamos o link de redefinição de senha para o seu e-mail.';
+            } elseif ($message === 'passwords.reset') {
+                $message = 'Sucesso! Sua senha foi redefinida e você já pode acessar sua conta.';
+            } elseif ($message === 'passwords.throttled') {
+                $message = 'Por favor, aguarde antes de tentar novamente.';
+            } elseif ($message === 'passwords.user') {
+                $message = 'Não conseguimos encontrar um usuário com esse endereço de e-mail.';
+            }
+
             // Mapeia os tipos do Laravel para os tipos do EasyAlert
             $alertMethod = ($type === 'error') ? 'error' : (($type === 'success') ? 'success' : (($type === 'warning') ? 'warning' : 'info'));
         @endphp
-        
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // Pequeno delay para garantir que o easyAlert foi inicializado

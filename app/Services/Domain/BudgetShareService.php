@@ -78,34 +78,46 @@ class BudgetShareService extends AbstractBaseService
                 }
 
                 // Atualiza o status do orçamento sem escopo global (ação do cliente)
-                $budget->update([
-                    'status' => $newStatus,
-                    'customer_comment' => $comment,
-                    'status_updated_at' => now(),
-                    'status_updated_by' => null, // Ação realizada pelo cliente (público)
-                ]);
+                $budget->status = $newStatus;
+                $budget->customer_comment = $comment;
+                $budget->status_updated_at = now();
+                $budget->status_updated_by = null;
+                $budget->save();
 
-                // Marca o compartilhamento como concluído/rejeitado se for um compartilhamento real
-                if ($share) {
-                    $shareUpdateData = [
+                // Se o orçamento foi aprovado, desativamos TODOS os outros links ativos deste orçamento
+                // e atualizamos o status de todos os compartilhamentos vinculados a este orçamento
+                BudgetShare::withoutGlobalScopes()
+                    ->where('budget_id', $budget->id)
+                    ->update([
                         'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED 
                             ? \App\Enums\BudgetShareStatus::APPROVED->value 
                             : \App\Enums\BudgetShareStatus::REJECTED->value,
-                        'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? false : true,
-                    ];
+                        'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? true : false,
+                        'expires_at' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? now()->addDays(30) : null
+                    ]);
 
-                    if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
-                        $shareUpdateData['rejected_at'] = now();
+                // Marca o compartilhamento atual com os dados específicos (redundante mas garante o objeto atual)
+                if ($share) {
+                    $share->status = $newStatus === \App\Enums\BudgetStatus::APPROVED 
+                        ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                        : \App\Enums\BudgetShareStatus::REJECTED->value;
+                    
+                    if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
+                        $share->is_active = true;
+                        $share->expires_at = now()->addDays(30);
+                    } else {
+                        $share->is_active = false;
+                        if ($newStatus === \App\Enums\BudgetStatus::REJECTED) {
+                            $share->rejected_at = now();
+                        }
                     }
-
-                    $share->update($shareUpdateData);
+                    $share->save();
                 } else {
                     // Se for fallback, limpa o token do orçamento apenas se aprovado
                     if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
-                        $budget->update([
-                            'public_token' => null,
-                            'public_expires_at' => null,
-                        ]);
+                        $budget->public_token = null;
+                        $budget->public_expires_at = null;
+                        $budget->save();
                     }
                 }
 
@@ -113,7 +125,7 @@ class BudgetShareService extends AbstractBaseService
                 \App\Models\BudgetActionHistory::create([
                     'tenant_id' => $budget->tenant_id,
                     'budget_id' => $budget->id,
-                    'action' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'approved' : ($newStatus === \App\Enums\BudgetStatus::REJECTED ? 'rejected' : 'cancelled'),
+                    'action' => $newStatus->value, // Usa o valor do enum (approved/rejected/etc)
                     'old_status' => $budget->getOriginal('status'),
                     'new_status' => $newStatus->value,
                     'description' => $comment ?? ($newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado pelo cliente via link público.' : 'Orçamento rejeitado pelo cliente via link público.'),
@@ -150,6 +162,40 @@ class BudgetShareService extends AbstractBaseService
 
             if (! $budget) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
+            }
+
+            // Verifica se já existe um compartilhamento ATIVO para este mesmo orçamento e destinatário
+            $existingShare = BudgetShare::where('budget_id', $data['budget_id'])
+                ->where('recipient_email', $data['recipient_email'])
+                ->where('is_active', true)
+                ->where(function ($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', now());
+                })
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($existingShare) {
+                // Se o usuário estiver tentando criar um novo com permissões diferentes ou expiração diferente, 
+                // podemos decidir atualizar o existente ou retornar o atual.
+                // Para manter a inteligência solicitada, vamos retornar o existente para evitar duplicidade de links ativos.
+                
+                // Opcional: Atualizar a mensagem ou expiração se foram enviadas novas
+                $updateData = [];
+                if (isset($data['expires_at'])) $updateData['expires_at'] = $data['expires_at'];
+                if (isset($data['message'])) $updateData['message'] = $data['message'];
+                if (isset($data['permissions'])) $updateData['permissions'] = $data['permissions'];
+
+                if (!empty($updateData)) {
+                    $existingShare->update($updateData);
+                }
+
+                // Re-envia a notificação se solicitado
+                if ($sendNotification) {
+                    $this->sendShareNotification($existingShare, $budget);
+                }
+
+                return $this->success($existingShare, 'Link de compartilhamento ativo já existente reutilizado.');
             }
 
             // Prepara dados para o DTO
@@ -206,6 +252,11 @@ class BudgetShareService extends AbstractBaseService
 
             if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Link de compartilhamento inválido ou expirado.');
+            }
+
+            // Verifica se o compartilhamento foi revogado manualmente
+            if (! $share->is_active && $share->status !== \App\Enums\BudgetStatus::APPROVED->value) {
+                return $this->error(OperationStatus::EXPIRED, 'Este link de compartilhamento não está mais ativo.');
             }
 
             // Garante que o orçamento está carregado sem escopo global para acesso público
@@ -498,7 +549,8 @@ class BudgetShareService extends AbstractBaseService
                 })->count();
             $recentShares = BudgetShare::where('tenant_id', $tenantId)
                 ->with(['budget', 'budget.customer.commonData'])
-                ->orderBy('created_at', 'desc')
+                ->orderBy('is_active', 'desc')
+                ->orderByRaw('COALESCE(last_accessed_at, created_at) DESC')
                 ->limit(10)
                 ->get();
             $mostSharedBudgets = Budget::where('tenant_id', $tenantId)

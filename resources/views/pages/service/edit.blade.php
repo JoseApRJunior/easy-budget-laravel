@@ -187,24 +187,8 @@
                             </div>
                         </x-layout.grid-col>
                     </x-layout.grid-row>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                try {
-                                    if (window.VanillaMask) {
-                                        new VanillaMask('discount', 'currency');
-                                        new VanillaMask('total', 'currency');
-                                        document.querySelectorAll('.unit-value').forEach(function(el) {
-                                            new VanillaMask(el, 'currency');
-                                        });
-                                        document.querySelectorAll('.item-total').forEach(function(el) {
-                                            new VanillaMask(el, 'currency');
-                                        });
-                                    }
-                                } catch (e) {}
-                            });
-                        </script>
 
-                        <!-- Produtos/Serviços -->
+                    <!-- Produtos/Serviços -->
                         <x-layout.grid-row>
                             <x-layout.grid-col size="col-12">
                                 <h5 class="mb-3">

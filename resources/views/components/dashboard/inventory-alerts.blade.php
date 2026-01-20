@@ -1,8 +1,9 @@
 <div class="card border-0 shadow-sm h-100">
-    <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0 fw-bold text-dark">
-            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Alertas de Estoque
-        </h5>
+    <div class="card-header border-1 py-3 bg-transparent d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+            <h5 class="card-title mb-0 fw-bold text-dark">Alertas de Estoque</h5>
+        </div>
         @if($count > 0)
             <span class="badge rounded-pill bg-danger text-white">{{ $count }}</span>
         @endif

@@ -1,11 +1,13 @@
-@extends( 'layouts.admin' )
+<x-app-layout title="Gargalos">
+    <x-layout.page-header
+        title="Gargalos"
+        icon="exclamation-triangle"
+        :breadcrumb-items="[
+            'Análise' => url('/admin/analysis'),
+            'Gargalos' => '#'
+        ]">
+    </x-layout.page-header>
 
-@section( 'breadcrumb' )
-    <li class="breadcrumb-item"><a href="{{ url( '/admin/analysis' ) }}">Análise</a></li>
-    <li class="breadcrumb-item active">Gargalos</li>
-@endsection
-
-@section( 'admin_content' )
     <div class="card">
         <div class="card-header">
             <h5>Identificação de Gargalos - {{ $period[ 'start' ] }} a {{ $period[ 'end' ] }}</h5>
@@ -29,4 +31,4 @@
             @endif
         </div>
     </div>
-@endsection
+</x-app-layout>

@@ -241,22 +241,43 @@
 
                 <x-slot:mobile>
                     @foreach ($budget->services as $service)
-                        <x-resource.resource-mobile-item>
-                            <x-resource.resource-info
+                        <x-resource.resource-mobile-item
+                            icon="tools"
+                            :href="route('provider.services.show', $service->code)"
+                        >
+                            <x-resource.resource-mobile-header
                                 :title="$service->code"
-                                :subtitle="$service->description"
-                                icon="tools"
+                                :subtitle="$service->category?->name ?? 'Sem categoria'"
                             />
+
                             <x-slot:description>
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <x-ui.status-badge :item="$service" />
-                                    <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                                <p class="text-muted small mb-2">{{ Str::limit($service->description, 100) }}</p>
+                                <div class="row g-2 w-100">
+                                    <x-resource.resource-mobile-field
+                                        col="col-6"
+                                        label="Total"
+                                    >
+                                        <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                                    </x-resource.resource-mobile-field>
+
+                                    <x-resource.resource-mobile-field
+                                        col="col-6"
+                                        align="end"
+                                        label="Status"
+                                    >
+                                        <x-ui.status-badge :item="$service" />
+                                    </x-resource.resource-mobile-field>
                                 </div>
                             </x-slot:description>
+
                             <x-slot:actions>
-                                <x-resource.table-actions mobile>
-                                    <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="info" icon="eye" size="sm" />
-                                </x-resource.table-actions>
+                                <x-resource.action-buttons
+                                    :item="$service"
+                                    resource="services"
+                                    identifier="code"
+                                    size="sm"
+                                    :showDelete="false"
+                                />
                             </x-slot:actions>
                         </x-resource.resource-mobile-item>
                     @endforeach

@@ -1,9 +1,5 @@
-@extends('layouts.admin')
-
-@section('title', 'Configurações Globais - EasyBudget Admin')
-
-@section('content')
-    <div class="container-fluid py-4">
+<x-app-layout title="Configurações Globais">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Configurações Globais"
             icon="gear"
@@ -11,10 +7,12 @@
                 'Admin' => route('admin.dashboard'),
                 'Configurações' => '#'
             ]">
-            <div class="d-flex gap-2">
-                <x-ui.button variant="info" icon="download" label="Exportar" onclick="exportSettings()" />
-                <x-ui.button variant="danger" icon="trash" label="Limpar Cache" onclick="clearCache()" />
-            </div>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button variant="info" icon="download" label="Exportar" onclick="exportSettings()" />
+                    <x-ui.button variant="danger" icon="trash" label="Limpar Cache" onclick="clearCache()" />
+                </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- Settings Navigation -->
@@ -891,4 +889,3 @@
             });
         </script>
     @endpush
-@endsection

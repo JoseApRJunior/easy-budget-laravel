@@ -144,19 +144,6 @@ class CustomVerifyEmailController extends Controller
             );
         }
 
-        // Verificar se o usuário está ativo
-        if (! $user->is_active) {
-            $this->logSecurityEvent('USUARIO_INATIVO', $user->id, $user->tenant_id, [
-                'token_id' => $confirmationToken->id,
-                'ip' => $request->ip(),
-            ]);
-
-            return $this->redirectError(
-                'login',
-                'Usuário não encontrado. Entre em contato com o suporte.',
-            );
-        }
-
         // Verificar se o usuário pertence ao tenant correto
         if ($user->tenant_id !== $confirmationToken->tenant_id) {
             $this->logSecurityEvent('TENANT_MISMATCH', $user->id, $confirmationToken->tenant_id, [

@@ -3,45 +3,47 @@
 @section('title', 'Editar Compartilhamento')
 
 @section('content')
-<div class="container-fluid py-4">
-    <x-layout.page-header
-        title="Editar Compartilhamento"
-        icon="pencil"
-        :breadcrumb-items="[
-            'Dashboard' => route('provider.dashboard'),
-            'Orçamentos' => route('provider.budgets.index'),
-            'Compartilhamentos' => route('provider.budgets.shares.index'),
-            'Editar' => '#'
-        ]">
-        <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-    </x-layout.page-header>
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Editar Compartilhamento"
+            icon="pencil"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('provider.budgets.index'),
+                'Compartilhamentos' => route('provider.budgets.shares.index'),
+                'Editar' => '#'
+            ]">
+            <x-slot:actions>
+                <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            </x-slot:actions>
+        </x-layout.page-header>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title mb-0">
-                        <i class="bi bi-pencil me-2"></i>Configurações do Compartilhamento
-                    </h4>
-                </div>
-                <div class="card-body">
+        <x-layout.grid-row>
+            <div class="col-12">
+                <x-ui.card>
+                    <x-slot:header>
+                        <h4 class="card-title mb-0 text-primary fw-bold">
+                            <i class="bi bi-pencil me-2"></i>Configurações do Compartilhamento
+                        </h4>
+                    </x-slot:header>
+
                     <form action="{{ route('provider.budgets.shares.update', $share->id) }}" method="POST" id="editShareForm">
                         @csrf
                         @method('PUT')
                         
                         <div class="row">
                             <div class="col-md-6">
-                                <h5 class="text-primary mb-3">Informações Atuais</h5>
+                                <h5 class="text-primary mb-3 border-bottom pb-2">Informações Atuais</h5>
                                 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Token de Acesso</label>
-                                    @include('components.share-token', ['token' => $share->token])
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Token de Acesso</label>
+                                    <div><code class="bg-light px-2 py-1 rounded">{{ $share->token }}</code></div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Orçamento Atual</label>
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Orçamento Atual</label>
                                     <p class="form-control-plaintext">
-                                        <a href="{{ route('provider.budgets.show', $share->budget->code) }}" class="text-decoration-none">
+                                        <a href="{{ route('provider.budgets.show', $share->budget->code) }}" class="text-decoration-none fw-bold">
                                             #{{ str_pad($share->budget->id, 6, '0', STR_PAD_LEFT) }} - 
                                             {{ $share->budget->customer->name }} - 
                                             R$ {{ number_format($share->budget->total_value, 2, ',', '.') }}
@@ -50,12 +52,20 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Status Atual</label>
-                                    @include('components.share-status-badge', ['share' => $share])
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Status Atual</label>
+                                    <div>
+                                        @if($share->expires_at && \Carbon\Carbon::parse($share->expires_at)->isPast())
+                                            <span class="badge bg-danger">Expirado</span>
+                                        @elseif(!$share->is_active)
+                                            <span class="badge bg-secondary">Inativo</span>
+                                        @else
+                                            <span class="badge bg-success">Ativo</span>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">Criado em</label>
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Criado em</label>
                                     <p class="form-control-plaintext">
                                         {{ \Carbon\Carbon::parse($share->created_at)->format('d/m/Y H:i') }}
                                         <small class="text-muted">
@@ -66,10 +76,10 @@
                             </div>
 
                             <div class="col-md-6">
-                                <h5 class="text-primary mb-3">Alterar Configurações</h5>
+                                <h5 class="text-primary mb-3 border-bottom pb-2">Alterar Configurações</h5>
                                 
                                 <div class="mb-3">
-                                    <label for="budget_id" class="form-label">Alterar Orçamento</label>
+                                    <label for="budget_id" class="form-label fw-bold text-muted text-uppercase small">Alterar Orçamento</label>
                                     <select class="form-select @error('budget_id') is-invalid @enderror" 
                                             id="budget_id" name="budget_id">
                                         <option value="{{ $share->budget->id }}">Manter orçamento atual</option>
@@ -96,24 +106,24 @@
                                 </div>
 
                                 <div id="budgetPreview" class="mb-3" style="display: none;">
-                                    <label class="form-label fw-bold">Prévia do Novo Orçamento</label>
-                                    <div class="card border">
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Prévia do Novo Orçamento</label>
+                                    <div class="card bg-light border-0">
                                         <div class="card-body py-2">
                                             <div class="row text-sm">
                                                 <div class="col-6">
-                                                    <strong>Cliente:</strong>
-                                                    <div id="previewCustomer" class="text-muted"></div>
+                                                    <strong class="text-muted small text-uppercase">Cliente:</strong>
+                                                    <div id="previewCustomer" class="fw-bold"></div>
                                                 </div>
                                                 <div class="col-6">
-                                                    <strong>Valor:</strong>
+                                                    <strong class="text-muted small text-uppercase">Valor:</strong>
                                                     <div id="previewValue" class="text-success fw-bold"></div>
                                                 </div>
                                                 <div class="col-6 mt-2">
-                                                    <strong>Status:</strong>
+                                                    <strong class="text-muted small text-uppercase">Status:</strong>
                                                     <div id="previewStatus"></div>
                                                 </div>
                                                 <div class="col-6 mt-2">
-                                                    <strong>Data:</strong>
+                                                    <strong class="text-muted small text-uppercase">Data:</strong>
                                                     <div id="previewDate" class="text-muted"></div>
                                                 </div>
                                             </div>
@@ -122,7 +132,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="expires_at" class="form-label">Data de Expiração</label>
+                                    <label for="expires_at" class="form-label fw-bold text-muted text-uppercase small">Data de Expiração</label>
                                     <input type="datetime-local" 
                                            class="form-control @error('expires_at') is-invalid @enderror" 
                                            id="expires_at" name="expires_at" 
@@ -136,7 +146,7 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Status</label>
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Status</label>
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" 
                                                id="is_active" name="is_active" value="1" 
@@ -154,51 +164,53 @@
 
                         <div class="row">
                             <div class="col-12">
-                                <h5 class="text-primary mb-3">Permissões de Acesso</h5>
+                                <h5 class="text-primary mb-3 border-bottom pb-2">Permissões de Acesso</h5>
                                 
                                 @php
                                     $currentPermissions = json_decode($share->permissions, true);
                                 @endphp
                                 
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_view" name="permissions[can_view]" 
-                                                   value="1" {{ old('permissions.can_view', $currentPermissions['can_view'] ?? false) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="can_view">
-                                                Pode visualizar
-                                            </label>
+                                <div class="card p-3 bg-light border-0">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="can_view" name="permissions[can_view]" 
+                                                       value="1" {{ old('permissions.can_view', $currentPermissions['can_view'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="can_view">
+                                                    Pode visualizar
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_approve" name="permissions[can_approve]" 
-                                                   value="1" {{ old('permissions.can_approve', $currentPermissions['can_approve'] ?? false) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="can_approve">
-                                                Pode aprovar
-                                            </label>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="can_approve" name="permissions[can_approve]" 
+                                                       value="1" {{ old('permissions.can_approve', $currentPermissions['can_approve'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="can_approve">
+                                                    Pode aprovar
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_comment" name="permissions[can_comment]" 
-                                                   value="1" {{ old('permissions.can_comment', $currentPermissions['can_comment'] ?? false) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="can_comment">
-                                                Pode comentar
-                                            </label>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="can_comment" name="permissions[can_comment]" 
+                                                       value="1" {{ old('permissions.can_comment', $currentPermissions['can_comment'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="can_comment">
+                                                    Pode comentar
+                                                </label>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_print" name="permissions[can_print]" 
-                                                   value="1" {{ old('permissions.can_print', $currentPermissions['can_print'] ?? true) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="can_print">
-                                                Pode imprimir
-                                            </label>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="can_print" name="permissions[can_print]" 
+                                                       value="1" {{ old('permissions.can_print', $currentPermissions['can_print'] ?? true) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="can_print">
+                                                    Pode imprimir
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -211,7 +223,7 @@
                         <div class="row mt-3">
                             <div class="col-12">
                                 <div class="mb-3">
-                                    <label for="notes" class="form-label">Observações</label>
+                                    <label for="notes" class="form-label fw-bold text-muted text-uppercase small">Observações</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" 
                                               id="notes" name="notes" rows="3" 
                                               placeholder="Informações adicionais sobre este compartilhamento...">{{ old('notes', $share->notes) }}</textarea>
@@ -225,92 +237,71 @@
                             </div>
                         </div>
 
-                        <div class="row mt-4">
+                        <div class="row mt-4 pt-3 border-top">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('provider.budgets.shares.show', $share->id) }}" class="btn btn-outline-secondary">
-                                            <i class="bi bi-arrow-left me-1"></i>Voltar
-                                        </a>
-                                        <button type="button" class="btn btn-outline-warning" onclick="regenerateToken()">
-                                            <i class="bi bi-arrow-clockwise me-1"></i>Regenerar Token
-                                        </button>
+                                        <x-ui.button :href="route('provider.budgets.shares.show', $share->id)" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                                        
+                                        <x-ui.button 
+                                            type="button" 
+                                            variant="warning" 
+                                            outline 
+                                            icon="arrow-clockwise" 
+                                            label="Regenerar Token" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#regenerateTokenModal" 
+                                            data-action-url="{{ route('provider.budgets.shares.regenerate', $share->id) }}"
+                                        />
                                     </div>
                                     <div class="d-flex gap-2">
-                                        <button type="button" class="btn btn-outline-danger" onclick="confirmDelete()">
-                                            <i class="bi bi-trash me-1"></i>Excluir
-                                        </button>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-save me-1"></i>Salvar Alterações
-                                        </button>
+                                        <x-ui.button 
+                                            type="button" 
+                                            variant="danger" 
+                                            outline 
+                                            icon="trash" 
+                                            label="Excluir" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal" 
+                                            data-delete-url="{{ route('provider.budgets.shares.destroy', $share->id) }}"
+                                        />
+                                        
+                                        <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Alterações" />
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </form>
-                </div>
+                </x-ui.card>
             </div>
-        </div>
-    </div>
-</div>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 
-<!-- Modal de Regenerar Token -->
-<div class="modal fade" id="regenerateTokenModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Regeneração de Token</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja regenerar o token de acesso?</p>
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Atenção:</strong> O link antigo será invalidado e um novo será gerado.
-                    Qualquer pessoa com o link antigo não conseguirá mais acessar o orçamento.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="regenerateForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('PUT')
-                    <button type="submit" class="btn btn-warning">Regenerar Token</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+    <x-ui.confirm-modal 
+        id="regenerateTokenModal" 
+        title="Confirmar Regeneração de Token" 
+        message="Tem certeza que deseja regenerar o token de acesso?" 
+        submessage="O link antigo será invalidado e um novo será gerado. Qualquer pessoa com o link antigo não conseguirá mais acessar o orçamento."
+        confirmLabel="Regenerar Token"
+        variant="warning"
+        type="confirm" 
+        method="POST"
+        resource="token"
+    />
 
-<!-- Modal de Exclusão -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja excluir este compartilhamento?</p>
-                <p class="text-danger">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Esta ação não pode ser desfeita. O link de acesso será permanentemente removido.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Excluir Compartilhamento</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+    <x-ui.confirm-modal 
+        id="deleteModal" 
+        title="Confirmar Exclusão" 
+        message="Tem certeza que deseja excluir este compartilhamento?" 
+        submessage="Esta ação não pode ser desfeita. O link de acesso será permanentemente removido."
+        confirmLabel="Excluir Compartilhamento"
+        variant="danger"
+        type="delete" 
+        resource="compartilhamento"
+    />
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const budgetSelect = document.getElementById('budget_id');
@@ -360,64 +351,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (permissions.length === 0) {
             e.preventDefault();
-            showToast('Por favor, selecione pelo menos uma permissão.', 'error');
+            alert('Por favor, selecione pelo menos uma permissão.');
             return;
         }
     });
 });
-
-function regenerateToken() {
-    const form = document.getElementById('regenerateForm');
-    form.action = `/provider/budgets/shares/{{ $share->id }}/regenerate`;
-    
-    const modal = new bootstrap.Modal(document.getElementById('regenerateTokenModal'));
-    modal.show();
-}
-
-function confirmDelete() {
-    const form = document.getElementById('deleteForm');
-    form.action = `/provider/budgets/shares/{{ $share->id }}`;
-    
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-}
-
-function showToast(message, type = 'info') {
-    const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
-    
-    const toastContainer = document.createElement('div');
-    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-    toastContainer.innerHTML = toastHtml;
-    document.body.appendChild(toastContainer);
-    
-    const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
-    toast.show();
-    
-    setTimeout(() => {
-        document.body.removeChild(toastContainer);
-    }, 3000);
-}
-
-// Definir data mínima para expiração (hoje)
-document.addEventListener('DOMContentLoaded', function() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    
-    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    document.getElementById('expires_at').min = minDateTime;
-});
 </script>
-@endsection
+@endpush

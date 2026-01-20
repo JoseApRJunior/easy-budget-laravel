@@ -282,159 +282,136 @@ if (deleteModal) {
 
 ## 📊 1. DASHBOARD Pattern
 
-### Cabeçalho (Responsivo)
+### Estrutura Geral
+O Dashboard deve seguir o padrão de componentes Blade para garantir consistência e facilidade de manutenção.
 
+**Componentes Chave:**
+- `<x-layout.page-header>`: Cabeçalho com título, ícone e breadcrumbs.
+- `<x-layout.grid-row>`: Linha de grid (wrapper para `row g-4`).
+- `<x-dashboard.stat-card>`: Cards de estatísticas/métricas.
+- `<x-layout.grid-col>`: Coluna de grid (ex: `col-lg-8`, `col-lg-4`).
+- `<x-resource.resource-list-card>`: Card de listagem (para "Recentes", etc.).
+
+### 1. Cabeçalho
 ```blade
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-start mb-2">
-        <div class="flex-grow-1">
-            <h1 class="h4 h3-md mb-1">
-                <i class="bi bi-[icone] me-2"></i>
-                <span class="d-none d-sm-inline">Dashboard de [Módulo]</span>
-                <span class="d-sm-none">[Módulo]</span>
-            </h1>
-        </div>
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('provider.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Dashboard de [Módulo]</li>
-            </ol>
-        </nav>
-    </div>
-    <p class="text-muted mb-0 small">Descrição contextual do dashboard</p>
-</div>
+<x-layout.page-header
+    title="Dashboard de [Módulo]"
+    icon="[icone-bootstrap]"
+    description="Descrição curta do dashboard."
+    :breadcrumb-items="[
+        'Dashboard' => route('provider.dashboard'),
+        '[Módulo]' => '#'
+    ]"
+/>
 ```
 
-### Cards de Métricas (4 colunas)
+### 2. Cards de Métricas (Grid 4 Colunas)
+Use `<x-layout.grid-row>` para envolver os cards. O componente `<x-dashboard.stat-card>` já possui responsividade padrão.
 
 ```blade
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="avatar-circle bg-primary bg-gradient me-3">
-                        <i class="bi bi-[icone] text-white"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1">Título da Métrica</h6>
-                        <h3 class="mb-0">{{ $valor }}</h3>
-                    </div>
-                </div>
-                <p class="text-muted small mb-0">Descrição da métrica</p>
-            </div>
-        </div>
-    </div>
-    <!-- Repetir para outras métricas -->
-</div>
+<x-layout.grid-row>
+    <x-dashboard.stat-card
+        title="Total de [Itens]"
+        :value="$stats['total']"
+        description="Descrição da métrica."
+        icon="[icone]"
+        variant="primary"
+    />
+
+    <x-dashboard.stat-card
+        title="[Outra Métrica]"
+        :value="$stats['active']"
+        description="Descrição..."
+        icon="check-circle"
+        variant="success"
+    />
+    <!-- Adicionar mais cards conforme necessário -->
+</x-layout.grid-row>
 ```
 
-**Cores de Avatar:**
+**Variantes de Cores (`variant`):** `primary`, `success`, `warning`, `info`, `danger`, `secondary`.
 
--  `bg-primary` - Métrica principal/total
--  `bg-success` - Métricas positivas/ativas
--  `bg-secondary` - Métricas neutras/inativas
--  `bg-info` - Métricas de análise/percentuais
--  `bg-warning` - Métricas de atenção
--  `bg-danger` - Métricas críticas
-
-### Layout 8-4 (Conteúdo + Sidebar)
+### 3. Layout Principal (Grid 8-4)
+Utilize `<x-layout.grid-row>` com duas colunas principais: Conteúdo (8) e Sidebar (4).
 
 ```blade
-<div class="row g-4">
+<x-layout.grid-row>
     <!-- Conteúdo Principal (8 colunas) -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0">
-                <h5 class="mb-0">
-                    <i class="bi bi-[icone] me-2"></i>
-                    <span class="d-none d-sm-inline">Título Completo</span>
-                    <span class="d-sm-none">Título Curto</span>
-                </h5>
-            </div>
-            <div class="card-body p-0">
-                <!-- Desktop View -->
-                <div class="desktop-view">
-                    <div class="table-responsive">
-                        <table class="modern-table table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Coluna 1</th>
-                                    <th class="text-center">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Conteúdo</td>
-                                    <td class="text-center">
-                                        <a href="#" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <x-layout.grid-col size="col-lg-8">
+        <x-resource.resource-list-card
+            title="[Itens] Recentes"
+            icon="clock-history"
+            :total="$recent->count()"
+        >
+            <x-slot:desktop>
+                <x-resource.resource-table>
+                    <x-slot:thead>
+                        <x-resource.table-row>
+                            <x-resource.table-cell header>Nome</x-resource.table-cell>
+                            <x-resource.table-cell header>Status</x-resource.table-cell>
+                            <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                        </x-resource.table-row>
+                    </x-slot:thead>
+                    <x-slot:tbody>
+                        @forelse($recent as $item)
+                            <x-resource.table-row>
+                                <x-resource.table-cell>{{ $item->name }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <x-resource.status-badge :status="$item->status" />
+                                </x-resource.table-cell>
+                                <x-resource.table-cell align="center">
+                                    <x-action-buttons :item="$item" resource="[route_prefix]" />
+                                </x-resource.table-cell>
+                            </x-resource.table-row>
+                        @empty
+                            <x-resource.table-row>
+                                <x-resource.table-cell colspan="3" class="text-center text-muted">
+                                    Nenhum registro encontrado.
+                                </x-resource.table-cell>
+                            </x-resource.table-row>
+                        @endforelse
+                    </x-slot:tbody>
+                </x-resource.resource-table>
+            </x-slot:desktop>
 
-                <!-- Mobile View -->
-                <div class="mobile-view">
-                    <div class="list-group">
-                        <a href="#" class="list-group-item list-group-item-action py-3">
-                            <div class="d-flex align-items-start">
-                                <i class="bi bi-[icone] text-muted me-2 mt-1"></i>
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold mb-2">Título do Item</div>
-                                    <div class="d-flex gap-2 flex-wrap">
-                                        <span class="badge bg-primary" title="Pessoal"><i class="bi bi-person-fill"></i></span>
-                                        <span class="badge bg-success-subtle text-success">Ativa</span>
-                                    </div>
-                                </div>
-                                <i class="bi bi-chevron-right text-muted ms-2"></i>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+            <x-slot:mobile>
+                @forelse($recent as $item)
+                    <x-resource.mobile-item :item="$item" ... />
+                @empty
+                    <p class="text-muted text-center p-3">Nenhum registro encontrado.</p>
+                @endforelse
+            </x-slot:mobile>
+        </x-resource.resource-list-card>
+    </x-layout.grid-col>
 
     <!-- Sidebar (4 colunas) -->
-    <div class="col-lg-4">
-        <!-- Insights -->
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-transparent border-0">
-                <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Insights Rápidos</h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0 small text-muted">
-                    <li class="mb-2">
-                        <i class="bi bi-[icone] text-primary me-2"></i>Dica 1
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <x-layout.grid-col size="col-lg-4">
+        <x-layout.v-stack gap="4">
+            <!-- Insights / Dicas -->
+            <x-resource.resource-list-card
+                title="Insights Rápidos"
+                icon="lightbulb"
+                padding="p-3"
+                gap="3"
+            >
+                <x-dashboard.insight-item
+                    icon="lightbulb-fill"
+                    variant="warning"
+                    description="Dica contextual para o usuário."
+                />
+            </x-resource.resource-list-card>
 
-        <!-- Atalhos -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0">
-                <h6 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Atalhos</h6>
-            </div>
-            <div class="card-body d-grid gap-2">
-                <a href="{{ route('[modulo].create') }}" class="btn btn-sm btn-success">
-                    <i class="bi bi-plus-circle me-2"></i>Novo [Item]
-                </a>
-                <a href="{{ route('[modulo].index') }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-[icone] me-2"></i>Listar [Itens]
-                </a>
-                <a href="{{ route('[modulo].index', ['deleted' => 'only']) }}"
-                    class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-archive me-2"></i>Ver Deletados
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+            <!-- Ações Rápidas -->
+            <x-resource.quick-actions
+                title="Ações Rápidas"
+                icon="lightning-charge"
+            >
+                <x-ui.button type="link" :href="route('[route].create')" variant="success" size="md" icon="plus-lg" label="Novo [Item]" />
+                <x-ui.button type="link" :href="route('[route].index')" variant="outline-primary" size="md" icon="list-ul" label="Ver Todos" />
+            </x-resource.quick-actions>
+        </x-layout.v-stack>
+    </x-layout.grid-col>
+</x-layout.grid-row>
 ```
 
 ---

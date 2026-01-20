@@ -1,9 +1,10 @@
 <div class="card border-0 shadow-sm h-100">
-    <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0">
+    <div class="card-header border-1 py-3 bg-transparent">
         <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold text-dark">
-                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>Resumo Financeiro
-            </h5>
+            <div class="d-flex align-items-center">
+                <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+                <h5 class="card-title mb-0 fw-bold text-dark">Resumo Financeiro</h5>
+            </div>
             <span class="badge rounded-pill px-3 bg-primary bg-opacity-10 text-primary">
                 {{ month_year_pt(now()) }}
             </span>

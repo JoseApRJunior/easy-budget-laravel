@@ -9,6 +9,7 @@ use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -25,6 +26,7 @@ use Throwable;
  * - Tratamento específico para verificação de e-mail
  * - Métricas de performance integradas
  * - Sistema de retry automático com backoff exponencial
+ * - Deduplicação para evitar envio duplo
  */
 class SendEmailVerification implements ShouldQueue
 {
@@ -93,6 +95,18 @@ class SendEmailVerification implements ShouldQueue
         try {
             // 1. Logging inicial estruturado
             $this->logEventStart($event);
+
+            $dedupeKey = $this->buildEmailVerificationDedupKey($event);
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Envio de e-mail de verificação ignorado por deduplicação', [
+                    'user_id' => $event->user->id,
+                    'email' => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                    'dedupe_key' => $dedupeKey,
+                ]);
+
+                return;
+            }
 
             // 2. Validação inicial rigorosa
             $this->validateEvent($event);
@@ -306,6 +320,13 @@ class SendEmailVerification implements ShouldQueue
 
         // Relança a exceção para que seja tratada pela queue
         throw $exception;
+    }
+
+    private function buildEmailVerificationDedupKey(EmailVerificationRequested $event): string
+    {
+        $tokenHash = hash('sha256', (string) $event->verificationToken);
+
+        return 'email:verification:'.$event->user->id.':'.$tokenHash;
     }
 
     /**

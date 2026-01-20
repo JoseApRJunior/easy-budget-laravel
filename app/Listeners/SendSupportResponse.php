@@ -7,6 +7,7 @@ namespace App\Listeners;
 use App\Events\SupportTicketResponded;
 use App\Services\Infrastructure\MailerService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -33,6 +34,19 @@ class SendSupportResponse implements ShouldQueue
     public function handle(SupportTicketResponded $event): void
     {
         try {
+            // 1. Deduplicação para evitar envios duplicados
+            $ticketId = $event->ticket['id'] ?? 'unknown';
+            $responseId = $event->response->id ?? 'new';
+            $dedupeKey = "email:support_response:{$ticketId}:{$responseId}";
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Resposta de suporte ignorada por deduplicação', [
+                    'ticket_id' => $ticketId,
+                    'response_id' => $responseId,
+                    'dedupe_key' => $dedupeKey
+                ]);
+                return;
+            }
+
             Log::info('Processando evento SupportTicketResponded para envio de resposta de suporte', [
                 'ticket_id' => $event->ticket['id'] ?? null,
                 'ticket_subject' => $event->ticket['subject'] ?? 'Sem assunto',

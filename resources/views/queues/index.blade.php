@@ -1,8 +1,4 @@
-@extends( 'layouts.app' )
-
-@section( 'title', 'Gerenciamento de Filas' )
-
-@section( 'content' )
+<x-app-layout title="Gerenciamento de Filas">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
@@ -154,6 +150,7 @@
         </div>
     </div>
 
+    @push('scripts')
     <script>
         function refreshStats() {
             loadStats();
@@ -444,5 +441,5 @@
             setInterval( refreshStats, 30000 ); // Atualizar a cada 30 segundos
         } );
     </script>
-
-@endsection
+    @endpush
+</x-app-layout>

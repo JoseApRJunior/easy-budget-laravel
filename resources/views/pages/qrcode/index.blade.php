@@ -3,16 +3,16 @@
 @section('title', 'Gerador de QR Code')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-layout.page-container>
     <x-layout.page-header
         title="Gerador de QR Code"
         icon="qr-code"
         :breadcrumb-items="[
             'Dashboard' => route('provider.dashboard'),
             'QR Code' => '#'
-        ]">
-        <p class="text-muted mb-0">Gere QR Codes para compartilhamento e verificação de documentos</p>
-    </x-layout.page-header>
+        ]"
+        description="Gere QR Codes para compartilhamento e verificação de documentos"
+    />
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-transparent border-0 pt-3">
@@ -23,8 +23,8 @@
             </h5>
         </div>
         <div class="card-body">
-            <div class="row g-4">
-                <div class="col-md-6">
+            <x-layout.grid-row class="g-4">
+                <x-layout.grid-col size="col-md-6">
                     <form id="qrForm" class="qr-submit-form">
                         @csrf
                         <div class="form-floating mb-3">
@@ -48,24 +48,24 @@
                             <x-ui.button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" />
                         </div>
                     </form>
-                </div>
+                </x-layout.grid-col>
 
-                <div class="col-md-6 border-start-md">
+                <x-layout.grid-col size="col-md-6" class="border-start-md">
                     <div class="text-center p-3 h-100 d-flex flex-column align-items-center justify-content-center bg-light rounded shadow-inner">
-                        <h6 class="text-uppercase text-muted small mb-3">Resultado</h6>
+                        <h6 class="text-uppercase text-dark fw-bold small mb-3" style="letter-spacing: 1px;">Resultado</h6>
                         <div id="qrResult" class="qr-placeholder">
                             <div class="py-5">
-                                <i class="bi bi-qr-code text-light-emphasis" style="font-size: 4rem;"></i>
-                                <p class="text-muted mt-2">O QR Code aparecerá aqui...</p>
+                                <i class="bi bi-qr-code text-primary opacity-25" style="font-size: 4rem;"></i>
+                                <p class="text-dark opacity-75 mt-2">O QR Code aparecerá aqui...</p>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </x-layout.grid-col>
+            </x-layout.grid-row>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
+    <x-layout.grid-row>
         @php
             $actions = [
                 ['id' => 'budget', 'color' => 'primary', 'icon' => 'file-invoice', 'title' => 'Orçamentos', 'target' => '#budgetModal'],
@@ -75,7 +75,7 @@
         @endphp
 
         @foreach($actions as $action)
-        <div class="col-md-4">
+        <x-layout.grid-col size="col-md-4">
             <div class="card border-0 shadow-sm h-100 text-center hover-shadow transition">
                 <div class="card-body">
                     <div class="avatar-circle bg-{{ $action['color'] }} bg-gradient mb-3 mx-auto shadow-sm">
@@ -87,96 +87,101 @@
                         data-bs-toggle="modal" data-bs-target="{{ $action['target'] }}" />
                 </div>
             </div>
-        </div>
+        </x-layout.grid-col>
         @endforeach
-    </div>
-</div>
+    </x-layout.grid-row>
+</x-layout.page-container>
 
-<div class="modal fade" id="budgetModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-file-invoice me-2"></i>QR para Orçamento</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="budgetQrForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-floating mb-3">
-                        <input type="number" class="form-control" id="modal_budget_id" name="budget_id" placeholder="ID" required>
-                        <label for="modal_budget_id">ID do Orçamento *</label>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input type="url" class="form-control" id="modal_budget_url" name="url" placeholder="URL" required>
-                        <label for="modal_budget_url">URL de Verificação *</label>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-primary">Gerar QR Code</button>
-                </div>
-            </form>
+<x-ui.modal id="budgetModal" title="QR para Orçamento">
+    <form id="budgetQrForm">
+        @csrf
+        <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="modal_budget_id" name="budget_id" placeholder="ID" required>
+            <label for="modal_budget_id">ID do Orçamento *</label>
         </div>
-    </div>
-</div>
-
-<div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-currency-dollar me-2"></i>QR para Fatura</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="invoiceQrForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-floating mb-3">
-                        <input type="number" class="form-control" id="modal_invoice_id" name="invoice_id" placeholder="ID" required>
-                        <label for="modal_invoice_id">ID da Fatura *</label>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input type="url" class="form-control" id="modal_invoice_url" name="url" placeholder="URL" required>
-                        <label for="modal_invoice_url">URL de Verificação *</label>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-success">Gerar QR Code</button>
-                </div>
-            </form>
+        <div class="form-floating mb-3">
+            <input type="url" class="form-control" id="modal_budget_url" name="url" placeholder="URL" required>
+            <label for="modal_budget_url">URL de Verificação *</label>
         </div>
-    </div>
-</div>
-
-<div class="modal fade" id="serviceModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title"><i class="bi bi-tools me-2"></i>QR para Serviço</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="serviceQrForm">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-floating mb-3">
-                        <input type="number" class="form-control" id="modal_service_id" name="service_id" placeholder="ID" required>
-                        <label for="modal_service_id">ID do Serviço *</label>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input type="url" class="form-control" id="modal_service_url" name="url" placeholder="URL" required>
-                        <label for="modal_service_url">URL de Verificação *</label>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-sm btn-info">Gerar QR Code</button>
-                </div>
-            </form>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-primary">Gerar QR Code</button>
         </div>
-    </div>
-</div>
+    </form>
+</x-ui.modal>
 
+<x-ui.modal id="invoiceModal" title="QR para Fatura">
+    <form id="invoiceQrForm">
+        @csrf
+        <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="modal_invoice_id" name="invoice_id" placeholder="ID" required>
+            <label for="modal_invoice_id">ID da Fatura *</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="url" class="form-control" id="modal_invoice_url" name="url" placeholder="URL" required>
+            <label for="modal_invoice_url">URL de Verificação *</label>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-success">Gerar QR Code</button>
+        </div>
+    </form>
+</x-ui.modal>
+
+<x-ui.modal id="serviceModal" title="QR para Serviço">
+    <form id="serviceQrForm">
+        @csrf
+        <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="modal_service_id" name="service_id" placeholder="ID" required>
+            <label for="modal_service_id">ID do Serviço *</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="url" class="form-control" id="modal_service_url" name="url" placeholder="URL" required>
+            <label for="modal_service_url">URL de Verificação *</label>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-sm btn-info">Gerar QR Code</button>
+        </div>
+    </form>
+</x-ui.modal>
 @stop
+
+@push('styles')
+<style>
+    .border-start-md {
+        border-left: 1px solid #dee2e6;
+    }
+
+    @media (max-width: 767.98px) {
+        .border-start-md {
+            border-left: none;
+            border-top: 1px solid #dee2e6;
+            padding-top: 1.5rem;
+            margin-top: 1rem;
+        }
+    }
+
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .avatar-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+</style>
+@endpush
 
 @section('scripts')
 <script>

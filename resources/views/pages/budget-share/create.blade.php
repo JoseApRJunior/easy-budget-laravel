@@ -3,37 +3,39 @@
 @section('title', 'Criar Compartilhamento')
 
 @section('content')
-<div class="container-fluid py-4">
-    <x-layout.page-header
-        title="Criar Novo Compartilhamento"
-        icon="share"
-        :breadcrumb-items="[
-            'Dashboard' => route('provider.dashboard'),
-            'Orçamentos' => route('provider.budgets.index'),
-            'Compartilhamentos' => route('provider.budgets.shares.index'),
-            'Criar' => '#'
-        ]">
-        <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-    </x-layout.page-header>
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Criar Novo Compartilhamento"
+            icon="share"
+            :breadcrumb-items="[
+                'Dashboard' => route('provider.dashboard'),
+                'Orçamentos' => route('provider.budgets.index'),
+                'Compartilhamentos' => route('provider.budgets.shares.index'),
+                'Criar' => '#'
+            ]">
+            <x-slot:actions>
+                <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            </x-slot:actions>
+        </x-layout.page-header>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title mb-0">
-                        <i class="bi bi-share me-2"></i>Configurações do Compartilhamento
-                    </h4>
-                </div>
-                <div class="card-body">
+        <x-layout.grid-row>
+            <div class="col-12">
+                <x-ui.card>
+                    <x-slot:header>
+                        <h4 class="card-title mb-0 text-primary fw-bold">
+                            <i class="bi bi-share me-2"></i>Configurações do Compartilhamento
+                        </h4>
+                    </x-slot:header>
+
                     <form action="{{ route('provider.budgets.shares.store') }}" method="POST" id="createShareForm">
                         @csrf
                         
                         <div class="row">
                             <div class="col-md-6">
-                                <h5 class="text-primary mb-3">Selecionar Orçamento</h5>
+                                <h5 class="text-primary mb-3 border-bottom pb-2">Selecionar Orçamento</h5>
                                 
                                 <div class="mb-3">
-                                    <label for="budget_id" class="form-label">
+                                    <label for="budget_id" class="form-label fw-bold text-muted text-uppercase small">
                                         Orçamento <span class="text-danger">*</span>
                                     </label>
                                     <select class="form-select @error('budget_id') is-invalid @enderror" 
@@ -57,24 +59,24 @@
                                 </div>
 
                                 <div id="budgetPreview" class="mb-3" style="display: none;">
-                                    <label class="form-label fw-bold">Prévia do Orçamento</label>
-                                    <div class="card border">
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Prévia do Orçamento</label>
+                                    <div class="card bg-light border-0">
                                         <div class="card-body py-2">
                                             <div class="row text-sm">
                                                 <div class="col-6">
-                                                    <strong>Cliente:</strong>
-                                                    <div id="previewCustomer" class="text-muted"></div>
+                                                    <strong class="text-muted small text-uppercase">Cliente:</strong>
+                                                    <div id="previewCustomer" class="fw-bold"></div>
                                                 </div>
                                                 <div class="col-6">
-                                                    <strong>Valor:</strong>
+                                                    <strong class="text-muted small text-uppercase">Valor:</strong>
                                                     <div id="previewValue" class="text-success fw-bold"></div>
                                                 </div>
                                                 <div class="col-6 mt-2">
-                                                    <strong>Status:</strong>
+                                                    <strong class="text-muted small text-uppercase">Status:</strong>
                                                     <div id="previewStatus"></div>
                                                 </div>
                                                 <div class="col-6 mt-2">
-                                                    <strong>Data:</strong>
+                                                    <strong class="text-muted small text-uppercase">Data:</strong>
                                                     <div id="previewDate" class="text-muted"></div>
                                                 </div>
                                             </div>
@@ -84,10 +86,10 @@
                             </div>
 
                             <div class="col-md-6">
-                                <h5 class="text-primary mb-3">Configurações de Acesso</h5>
+                                <h5 class="text-primary mb-3 border-bottom pb-2">Configurações de Acesso</h5>
                                 
                                 <div class="mb-3">
-                                    <label for="expires_at" class="form-label">Data de Expiração</label>
+                                    <label for="expires_at" class="form-label fw-bold text-muted text-uppercase small">Data de Expiração</label>
                                     <input type="datetime-local" 
                                            class="form-control @error('expires_at') is-invalid @enderror" 
                                            id="expires_at" name="expires_at" 
@@ -101,47 +103,49 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Permissões de Acesso</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="can_view" name="permissions[can_view]" 
-                                               value="1" {{ old('permissions.can_view', true) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="can_view">
-                                            Pode visualizar o orçamento
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="can_approve" name="permissions[can_approve]" 
-                                               value="1" {{ old('permissions.can_approve') ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="can_approve">
-                                            Pode aprovar o orçamento
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="can_comment" name="permissions[can_comment]" 
-                                               value="1" {{ old('permissions.can_comment') ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="can_comment">
-                                            Pode adicionar comentários
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="can_print" name="permissions[can_print]" 
-                                               value="1" {{ old('permissions.can_print', true) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="can_print">
-                                            Pode imprimir o orçamento
-                                        </label>
+                                    <label class="form-label fw-bold text-muted text-uppercase small">Permissões de Acesso</label>
+                                    <div class="card p-3 bg-light border-0">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="can_view" name="permissions[can_view]" 
+                                                   value="1" {{ old('permissions.can_view', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="can_view">
+                                                Pode visualizar o orçamento
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="can_approve" name="permissions[can_approve]" 
+                                                   value="1" {{ old('permissions.can_approve') ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="can_approve">
+                                                Pode aprovar o orçamento
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="can_comment" name="permissions[can_comment]" 
+                                                   value="1" {{ old('permissions.can_comment') ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="can_comment">
+                                                Pode adicionar comentários
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="can_print" name="permissions[can_print]" 
+                                                   value="1" {{ old('permissions.can_print', true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="can_print">
+                                                Pode imprimir o orçamento
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="row mt-3">
                             <div class="col-12">
                                 <div class="mb-3">
-                                    <label for="notes" class="form-label">Observações</label>
+                                    <label for="notes" class="form-label fw-bold text-muted text-uppercase small">Observações</label>
                                     <textarea class="form-control @error('notes') is-invalid @enderror" 
                                               id="notes" name="notes" rows="3" 
                                               placeholder="Informações adicionais sobre este compartilhamento...">{{ old('notes') }}</textarea>
@@ -155,27 +159,22 @@
                             </div>
                         </div>
 
-                        <div class="row mt-4">
+                        <div class="row mt-4 pt-3 border-top">
                             <div class="col-12">
-                                <div class="d-flex justify-content-between">
-                                    <a href="{{ route('provider.budgets.shares.index') }}" class="btn btn-outline-secondary">
-                                        <i class="bi bi-arrow-left me-1"></i>Cancelar
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-share me-1"></i>Criar Compartilhamento
-                                    </button>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline label="Cancelar" />
+                                    <x-ui.button type="submit" variant="primary" icon="share" label="Criar Compartilhamento" />
                                 </div>
                             </div>
                         </div>
                     </form>
-                </div>
+                </x-ui.card>
             </div>
-        </div>
-    </div>
-</div>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const budgetSelect = document.getElementById('budget_id');
@@ -219,6 +218,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     budgetSelect.addEventListener('change', updateBudgetPreview);
     
+    // Trigger preview if already selected
+    if (budgetSelect.value) {
+        updateBudgetPreview();
+    }
+    
     // Validação do formulário
     document.getElementById('createShareForm').addEventListener('submit', function(e) {
         const budgetId = document.getElementById('budget_id').value;
@@ -226,54 +230,29 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!budgetId) {
             e.preventDefault();
-            showToast('Por favor, selecione um orçamento.', 'error');
+            alert('Por favor, selecione um orçamento.');
             return;
         }
         
         if (permissions.length === 0) {
             e.preventDefault();
-            showToast('Por favor, selecione pelo menos uma permissão.', 'error');
+            alert('Por favor, selecione pelo menos uma permissão.');
             return;
         }
     });
 });
 
-function showToast(message, type = 'info') {
-    const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
-    
-    const toastContainer = document.createElement('div');
-    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
-    toastContainer.innerHTML = toastHtml;
-    document.body.appendChild(toastContainer);
-    
-    const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
-    toast.show();
-    
-    setTimeout(() => {
-        document.body.removeChild(toastContainer);
-    }, 3000);
-}
-
 // Definir data mínima para expiração (hoje)
 document.addEventListener('DOMContentLoaded', function() {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
+    // Adjust to local ISO string for datetime-local input
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const minDateTime = now.toISOString().slice(0, 16);
     
-    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    document.getElementById('expires_at').min = minDateTime;
+    const expiresInput = document.getElementById('expires_at');
+    if(expiresInput) {
+        expiresInput.min = minDateTime;
+    }
 });
 </script>
-@endsection
+@endpush

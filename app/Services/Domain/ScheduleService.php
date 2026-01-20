@@ -254,19 +254,11 @@ class ScheduleService extends AbstractBaseService
             $statsData = $this->scheduleRepository->getStats();
             $recentUpcoming = $this->scheduleRepository->getRecentUpcoming();
 
-            $statusColors = [
-                'pending' => '#F59E0B',
-                'confirmed' => '#3B82F6',
-                'completed' => '#10B981',
-                'cancelled' => '#EF4444',
-                'no_show' => '#6B7280',
-            ];
-
             $statusBreakdown = [];
-            foreach ($statsData['by_status'] as $status => $count) {
-                $statusBreakdown[$status] = [
-                    'count' => $count,
-                    'color' => $statusColors[$status] ?? '#CBD5E1',
+            foreach (\App\Enums\ScheduleStatus::cases() as $status) {
+                $statusBreakdown[$status->label()] = [
+                    'count' => $statsData['by_status'][$status->value] ?? 0,
+                    'color' => $status->getColor(),
                 ];
             }
 
@@ -274,6 +266,10 @@ class ScheduleService extends AbstractBaseService
                 'total_schedules' => $statsData['total'],
                 'upcoming_schedules' => $statsData['upcoming'],
                 'today_schedules' => $statsData['today'],
+                'this_week_schedules' => $statsData['this_week'],
+                'completed_schedules' => $statsData['by_status'][\App\Enums\ScheduleStatus::COMPLETED->value] ?? 0,
+                'no_show_schedules' => $statsData['by_status'][\App\Enums\ScheduleStatus::NO_SHOW->value] ?? 0,
+                'pending_schedules' => $statsData['by_status'][\App\Enums\ScheduleStatus::PENDING->value] ?? 0,
                 'status_breakdown' => $statusBreakdown,
                 'recent_upcoming' => $recentUpcoming,
             ], 'Estatísticas carregadas com sucesso.');

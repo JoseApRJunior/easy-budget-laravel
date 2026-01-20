@@ -40,11 +40,11 @@ class PasswordResetLinkController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        // Buscar usuário pelo e-mail
+        // Buscar usuário pelo e-mail (mesmo inativo para permitir recuperação e reativação)
         $user = User::where('email', $request->email)->first();
 
-        if (! $user || ! $user->is_active) {
-            Log::warning('PasswordResetLinkController: Tentativa de reset para e-mail inexistente ou usuário inativo', [
+        if (! $user) {
+            Log::warning('PasswordResetLinkController: Tentativa de reset para e-mail inexistente', [
                 'email' => $request->email,
                 'ip' => $request->ip(),
             ]);
@@ -72,7 +72,7 @@ class PasswordResetLinkController extends Controller
             'user_id' => $user->id,
             'tenant_id' => $tenant->id,
             'token' => $resetToken,
-            'expires_at' => now()->addMinutes(15),
+            'expires_at' => now()->addMinutes(60),
             'type' => TokenType::PASSWORD_RESET,
         ]);
 

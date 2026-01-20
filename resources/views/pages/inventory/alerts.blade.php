@@ -3,7 +3,7 @@
 @section('title', 'Alertas de Estoque')
 
 @section('content')
-<div class="container-fluid py-4">
+<x-layout.page-container>
     <!-- Page Header -->
     <x-layout.page-header
         title="Alertas de Estoque"
@@ -453,5 +453,5 @@
             </div>
         </div>
     </div>
-</div>
+</x-layout.page-container>
 @endsection

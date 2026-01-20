@@ -9,6 +9,7 @@ use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -93,6 +94,18 @@ class SendWelcomeEmail implements ShouldQueue
         try {
             // 1. Logging inicial estruturado
             $this->logEventStart($event);
+
+            $dedupeKey = $this->buildWelcomeEmailDedupKey($event);
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Envio de e-mail de boas-vindas ignorado por deduplicação', [
+                    'user_id' => $event->user->id,
+                    'email' => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                    'dedupe_key' => $dedupeKey,
+                ]);
+
+                return;
+            }
 
             if ($event->user->email_verified_at !== null) {
                 Log::info('Ignorando envio de boas-vindas: usuário já possui e-mail verificado', [
@@ -294,6 +307,13 @@ class SendWelcomeEmail implements ShouldQueue
 
         // Relança a exceção para que seja tratada pela queue
         throw $exception;
+    }
+
+    private function buildWelcomeEmailDedupKey(UserRegistered $event): string
+    {
+        $tokenHash = hash('sha256', (string) $event->verificationToken);
+
+        return 'email:welcome:'.$event->user->id.':'.$tokenHash;
     }
 
     /**

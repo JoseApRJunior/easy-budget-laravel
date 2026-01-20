@@ -24,14 +24,14 @@
 
         <p style="text-align:center; margin:20px 0;">
             @include( 'emails.components.button', [
-                'url'  => route('login') . '?action=block_account',
+                'url'  => route('login') . '?action=block_account&token=' . ($token ?? '') . '&email=' . urlencode($email ?? ''),
                 'text' => 'Bloquear minha conta',
                 'color' => 'danger'
             ] )
         </p>
 
         <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
-        <p class="subcopy">{{ route('login') . '?action=block_account' }}</p>
+        <p class="subcopy">{{ route('login') . '?action=block_account&token=' . ($token ?? '') . '&email=' . urlencode($email ?? '') }}</p>
         <p>Este link expirará em 24 horas.</p>
 
         <p style="text-align:center; margin:20px 0;">

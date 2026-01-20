@@ -16,105 +16,110 @@
         </x-layout.page-header>
 
         <!-- Filtros de Busca -->
-        <div class="card mb-4">
-            <div class="card-header">
+        <x-ui.card class="mb-4">
+            <x-slot:header>
                 <h5 class="mb-0"><i class="bi bi-filter me-1"></i> Filtros de Busca</h5>
-            </div>
-            <div class="card-body">
-                <form id="filtersFormProducts" method="GET" action="{{ route('provider.reports.products') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="start_date"
-                                label="Data Inicial"
-                                :value="request('start_date')"
-                            />
-                        </div>
+            </x-slot:header>
+            <form id="filtersFormProducts" method="GET" action="{{ route('provider.reports.products') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="start_date"
+                            label="Data Inicial"
+                            :value="request('start_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <x-form.filter-field
-                                type="date"
-                                name="end_date"
-                                label="Data Final"
-                                :value="request('end_date')"
-                            />
-                        </div>
+                    <div class="col-md-3">
+                        <x-form.filter-field
+                            type="date"
+                            name="end_date"
+                            label="Data Final"
+                            :value="request('end_date')"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="name">Nome do Produto</label>
-                                <input type="text" class="form-control" id="name" name="name"
-                                    value="{{ request('name') ?? '' }}" placeholder="Digite o nome">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            label="Nome do Produto" 
+                            name="name" 
+                            id="name"
+                            :value="request('name') ?? ''" 
+                            placeholder="Digite o nome"
+                            wrapper-class="mb-0"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="code">Código do Produto</label>
-                                <input type="text" class="form-control" id="code" name="code"
-                                    value="{{ request('code') ?? '' }}" placeholder="Digite o código">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            label="Código do Produto" 
+                            name="code" 
+                            id="code"
+                            :value="request('code') ?? ''" 
+                            placeholder="Digite o código"
+                            wrapper-class="mb-0"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="price_min">Preço Mínimo</label>
-                                <input type="text" class="form-control money-input" id="price_min" name="price_min"
-                                    value="{{ request('price_min') ? \App\Helpers\CurrencyHelper::format(request('price_min'), 2, false) : '' }}"
-                                    placeholder="0,00" maxlength="20">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            label="Preço Mínimo" 
+                            name="price_min" 
+                            id="price_min"
+                            :value="request('price_min') ? \App\Helpers\CurrencyHelper::format(request('price_min'), 2, false) : ''" 
+                            placeholder="0,00"
+                            maxlength="20"
+                            class="money-input"
+                            wrapper-class="mb-0"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="price_max">Preço Máximo</label>
-                                <input type="text" class="form-control money-input" id="price_max" name="price_max"
-                                    value="{{ request('price_max') ? \App\Helpers\CurrencyHelper::format(request('price_max'), 2, false) : '' }}"
-                                    placeholder="0,00" maxlength="20">
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.input 
+                            label="Preço Máximo" 
+                            name="price_max" 
+                            id="price_max"
+                            :value="request('price_max') ? \App\Helpers\CurrencyHelper::format(request('price_max'), 2, false) : ''" 
+                            placeholder="0,00"
+                            maxlength="20"
+                            class="money-input"
+                            wrapper-class="mb-0"
+                        />
+                    </div>
 
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="status">Status</label>
-                                <select class="form-control" id="status" name="status">
-                                    <option value="">Todos os Status</option>
-                                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Ativo
-                                    </option>
-                                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inativo
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <x-ui.form.select label="Status" name="status" id="status" wrapper-class="mb-0">
+                            <option value="">Todos os Status</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Ativo</option>
+                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inativo</option>
+                        </x-ui.form.select>
+                    </div>
 
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterProducts" />
-                                <x-ui.button type="link" :href="route('provider.reports.products')" variant="secondary" icon="x" label="Limpar" />
-                            </div>
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" id="btnFilterProducts" />
+                            <x-ui.button type="link" :href="route('provider.reports.products')" variant="secondary" icon="x" label="Limpar" />
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
+                </div>
+            </form>
+        </x-ui.card>
 
         {{-- Empty State Inicial --}}
         @if (!request()->hasAny(['name', 'code', 'price_min', 'price_max', 'status']))
-            <div class="card border-0 shadow-sm text-center py-4">
-                <div class="card-body">
-                    <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-gray-800 mb-3">Utilize os filtros acima para gerar o relatório</h5>
-                    <p class="text-muted mb-3">
-                        Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
-                    </p>
-                    <x-ui.button type="link" :href="route('provider.products.create')" variant="primary" icon="plus" label="Criar Primeiro Produto" />
-                </div>
-            </div>
+            <x-ui.card class="border-0 shadow-sm text-center py-4">
+                <i class="bi bi-funnel-fill text-primary mb-3" style="font-size: 3rem;"></i>
+                <h5 class="text-gray-800 mb-3">Utilize os filtros acima para gerar o relatório</h5>
+                <p class="text-muted mb-3">
+                    Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
+                </p>
+                <x-ui.button type="link" :href="route('provider.products.create')" variant="primary" icon="plus" label="Criar Primeiro Produto" />
+            </x-ui.card>
         @else
             <!-- Resultados -->
-            <div class="card">
-                <div class="card-header">
+            <x-ui.card>
+                <x-slot:header>
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                             <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -141,8 +146,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body p-0">
+                </x-slot:header>
+                <div class="p-0">
 
                     <!-- Mobile View -->
                     <div class="mobile-view">
@@ -254,6 +259,7 @@
                         ])
                     @endif
                 </div>
+            </x-ui.card>
         @endif
     </div>
 @endsection

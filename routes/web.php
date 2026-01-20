@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\TenantManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\AIAnalyticsController;
 use App\Http\Controllers\Auth\CustomVerifyEmailController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\BudgetShareController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\DebugTenantController;
 use App\Http\Controllers\DocumentVerificationController;
 use App\Http\Controllers\EmailPreviewController;
 use App\Http\Controllers\ErrorController;
+use App\Http\Controllers\FinancialReportController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Integrations\MercadoPagoController;
 use App\Http\Controllers\InventoryController;
@@ -57,8 +59,6 @@ Route::group([], function () {
     // Public pages - HomeController
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
-    Route::get('/features', [HomeController::class, 'features'])->name('home.features');
-    Route::get('/pricing', [HomeController::class, 'pricing'])->name('home.pricing');
     Route::get('/about', [HomeController::class, 'about'])->name('home.about');
     Route::get('/contact', [HomeController::class, 'contact'])->name('home.contact');
     Route::post('/contact', [HomeController::class, 'contactSubmit'])->name('home.contact.submit');
@@ -123,7 +123,7 @@ Route::middleware('auth')->group(function () {
 // Email verification routes
 // Routes for email verification process
 Route::prefix('email')->name('verification.')->group(function () {
-    Route::get('/verify', [CustomVerifyEmailController::class, 'show'])->name('notice');
+    Route::get('/verify', EmailVerificationPromptController::class)->name('notice');
     Route::get('/verify/{id}/{hash}', [CustomVerifyEmailController::class, 'confirmAccount'])->middleware(['signed:relative'])->name('verify');
 });
 
@@ -337,6 +337,13 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
 
         Route::get('/budgets/{budget}/create', [InvoiceController::class, 'createFromBudget'])->name('create.from-budget');
         Route::post('/budgets/{budget}', [InvoiceController::class, 'storeFromBudget'])->name('store.from-budget');
+    });
+
+    // Financial
+    Route::prefix('financial')->name('financial.')->group(function () {
+        Route::get('/dashboard', [FinancialReportController::class, 'dashboard'])->name('dashboard');
+        Route::get('/sales', [FinancialReportController::class, 'sales'])->name('sales');
+        Route::get('/dashboard/data', [FinancialReportController::class, 'dashboardData'])->name('dashboard.data');
     });
 
     // QR Code routes - MOVIDO PARA DENTRO DO GRUPO PROVIDER

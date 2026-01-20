@@ -58,7 +58,7 @@ class Schedule extends Model
         'user_confirmation_token_id' => 'integer',
         'start_date_time' => 'immutable_datetime',
         'end_date_time' => 'immutable_datetime',
-        'status' => 'string',
+        'status' => \App\Enums\ScheduleStatus::class,
         'confirmed_at' => 'datetime',
         'completed_at' => 'datetime',
         'no_show_at' => 'datetime',

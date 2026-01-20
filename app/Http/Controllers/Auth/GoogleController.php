@@ -87,7 +87,7 @@ class GoogleController extends Controller
         $authResult = $this->socialAuthService->authenticateWithSocialProvider('google', $googleUserData);
 
         if (! $authResult->isSuccess()) {
-            return redirect()->route('home')->with('error', $authResult->getMessage());
+            return redirect()->route('login')->with('error', $authResult->getMessage());
         }
 
         // Loga o usuário

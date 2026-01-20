@@ -11,6 +11,9 @@ readonly class SupportDTO extends AbstractDTO
     public function __construct(
         public string $subject,
         public string $message,
+        public ?string $first_name = null,
+        public ?string $last_name = null,
+        public ?string $email = null,
         public string $status = 'ABERTO',
         public string $priority = 'MEDIUM',
         public ?string $category = null,
@@ -25,6 +28,9 @@ readonly class SupportDTO extends AbstractDTO
         return new self(
             subject: $data['subject'] ?? '',
             message: $data['message'] ?? '',
+            first_name: $data['first_name'] ?? null,
+            last_name: $data['last_name'] ?? null,
+            email: $data['email'] ?? null,
             status: $data['status'] ?? 'ABERTO',
             priority: $data['priority'] ?? 'MEDIUM',
             category: $data['category'] ?? null,

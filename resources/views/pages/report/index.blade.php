@@ -18,8 +18,8 @@
         <div class="row">
             <div class="col-12">
                 <!-- Tipos de Relatório -->
-                <div class="card mb-4">
-                    <div class="card-header">
+                <x-ui.card class="mb-4">
+                    <x-slot:header>
                         <div class="row align-items-center">
                             <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                                 <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -31,9 +31,8 @@
                                 </h5>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-
+                    </x-slot:header>
+                    <div class="p-0">
                         <!-- Mobile View -->
                         <div class="mobile-view">
                             <div class="list-group list-group-flush">
@@ -135,8 +134,8 @@
                             <div class="row g-3 p-3">
                                 <!-- Card Financeiro -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-primary mb-2">
                                                 <i class="bi bi-graph-up fa-2x"></i>
                                             </div>
@@ -144,13 +143,13 @@
                                             <p class="card-text text-muted small">Receitas, despesas e análises</p>
                                             <x-ui.button type="link" :href="route('reports.financial')" variant="primary" size="sm" icon="graph-up" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
 
                                 <!-- Card Clientes -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-info mb-2">
                                                 <i class="bi bi-people fa-2x"></i>
                                             </div>
@@ -158,13 +157,13 @@
                                             <p class="card-text text-muted small">Base de clientes e CRM</p>
                                             <x-ui.button type="link" :href="route('reports.customers')" variant="info" size="sm" icon="people" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
 
                                 <!-- Card Produtos -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-success mb-2">
                                                 <i class="bi bi-box fa-2x"></i>
                                             </div>
@@ -172,13 +171,13 @@
                                             <p class="card-text text-muted small">Catálogo e inventário</p>
                                             <x-ui.button type="link" :href="route('reports.products')" variant="success" size="sm" icon="box" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
 
                                 <!-- Card Serviços -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-warning mb-2">
                                                 <i class="bi bi-gear fa-2x"></i>
                                             </div>
@@ -186,13 +185,13 @@
                                             <p class="card-text text-muted small">Prestação de serviços</p>
                                             <x-ui.button type="link" :href="route('reports.services')" variant="warning" size="sm" icon="gear" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
 
                                 <!-- Card Orçamentos -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-danger mb-2">
                                                 <i class="bi bi-receipt fa-2x"></i>
                                             </div>
@@ -200,13 +199,13 @@
                                             <p class="card-text text-muted small">Propostas e vendas</p>
                                             <x-ui.button type="link" :href="route('reports.budgets')" variant="danger" size="sm" icon="receipt" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
 
                                 <!-- Card Analytics -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-secondary mb-2">
                                                 <i class="bi bi-pie-chart fa-2x"></i>
                                             </div>
@@ -214,13 +213,13 @@
                                             <p class="card-text text-muted small">Métricas avançadas</p>
                                             <x-ui.button type="link" :href="route('reports.analytics')" variant="secondary" size="sm" icon="pie-chart" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
 
                                 <!-- Card Estoque -->
                                 <div class="col-lg-4 col-md-6">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body text-center">
+                                    <x-ui.card class="h-100 border-0 shadow-sm">
+                                        <div class="text-center">
                                             <div class="text-info mb-2">
                                                 <i class="bi bi-boxes fa-2x"></i>
                                             </div>
@@ -228,20 +227,20 @@
                                             <p class="card-text text-muted small">Controle de inventário</p>
                                             <x-ui.button type="link" :href="route('provider.inventory.report')" variant="info" size="sm" icon="boxes" label="Ver Relatório" />
                                         </div>
-                                    </div>
+                                    </x-ui.card>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         </div>
 
         <!-- Relatórios Recentes -->
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
+                <x-ui.card>
+                    <x-slot:header>
                         <div class="row align-items-center">
                             <div class="col-12 col-lg-8 mb-2 mb-lg-0">
                                 <h5 class="mb-0 d-flex align-items-center flex-wrap">
@@ -258,8 +257,8 @@
                                 </h5>
                             </div>
                         </div>
-                    </div>
-                    <div class="card-body p-0">
+                    </x-slot:header>
+                    <div class="p-0">
 
                         <!-- Mobile View -->
                         <div class="mobile-view">
@@ -377,7 +376,7 @@
                             @endif
                         </div>
                     </div>
-                </div>
+                </x-ui.card>
             </div>
         </div>
     </div>

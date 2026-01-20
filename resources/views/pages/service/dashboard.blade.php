@@ -99,9 +99,9 @@
                     :total="$recent->count()"
                 >
                     @if ($recent->isNotEmpty())
-                        <x-slot name="desktop">
+                        <x-slot:desktop>
                             <x-resource.resource-table>
-                                <x-slot name="thead">
+                                <x-slot:thead>
                                     <x-resource.table-row>
                                         <x-resource.table-cell header>Código</x-resource.table-cell>
                                         <x-resource.table-cell header>Cliente</x-resource.table-cell>
@@ -110,7 +110,7 @@
                                         <x-resource.table-cell header>Data</x-resource.table-cell>
                                         <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
                                     </x-resource.table-row>
-                                </x-slot>
+                                </x-slot:thead>
 
                                 @foreach ($recent as $service)
                                     @php
@@ -138,15 +138,14 @@
                                     </x-resource.table-row>
                                 @endforeach
                             </x-resource.resource-table>
-                        </x-slot>
+                        </x-slot:desktop>
 
-                        <x-slot name="mobile">
+                        <x-slot:mobile>
                             @foreach ($recent as $service)
                                 @php
                                     $customerName = $service->budget->customer->commonData?->full_name ?? 'N/A';
                                 @endphp
                                 <x-resource.resource-mobile-item
-                                    icon="tools"
                                     :href="route('provider.services.show', $service->code)"
                                 >
                                     <x-resource.resource-mobile-header
@@ -175,7 +174,7 @@
                                     </x-layout.grid-row>
                                 </x-resource.resource-mobile-item>
                             @endforeach
-                        </x-slot>
+                        </x-slot:mobile>
                     @else
                         <x-resource.empty-state
                             title="Nenhum serviço recente encontrado"
@@ -218,9 +217,10 @@
                         title="Ações de Serviço"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" href="{{ route('provider.services.create') }}" variant="success" size="md" icon="plus-lg" label="Cadastrar Novo Serviço" />
-                        <x-ui.button type="link" href="{{ route('provider.services.index') }}" variant="outline-primary" size="md" icon="search" label="Consultar Serviços" />
-                        <x-ui.button type="link" href="{{ route('provider.reports.services') }}" variant="outline-secondary" size="md" icon="file-earmark-bar-graph" label="Relatórios de Performance" />
+                        <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-success" icon="plus-lg" label="Novo Serviço" />
+                        <x-ui.button type="link" :href="route('provider.categories.index')" variant="outline-primary" icon="tags" label="Categorias" />
+                        <x-ui.button type="link" :href="route('provider.services.index')" variant="outline-primary" icon="tools" label="Listar Serviços" />
+                        <x-ui.button type="link" :href="route('provider.services.index', ['deleted' => 'only'])" variant="outline-secondary" icon="trash" label="Ver Deletados" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

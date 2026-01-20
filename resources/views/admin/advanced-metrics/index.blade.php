@@ -1,9 +1,5 @@
-@extends('layouts.admin')
-
-@section('title', 'Advanced Metrics Dashboard - EasyBudget Admin')
-
-@section('content')
-    <div class="container-fluid py-4">
+<x-app-layout title="Advanced Metrics Dashboard">
+    <x-layout.page-container>
         <x-layout.page-header
             title="Advanced Metrics Dashboard"
             icon="graph-up-arrow"
@@ -11,45 +7,47 @@
                 'Admin' => route('admin.dashboard'),
                 'Métricas Avançadas' => '#'
             ]">
-            <div class="d-flex gap-2">
-                <!-- Date Range Selector -->
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dateRangeDropdown"
-                        data-bs-toggle="dropdown">
-                        <i class="bi bi-calendar3"></i>
-                        {{ ucfirst(str_replace('days', ' Days', str_replace('months', ' Months', request('range', '30days')))) }}
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '7days']) }}">Last 7 Days</a></li>
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '30days']) }}">Last 30 Days</a></li>
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '90days']) }}">Last 90 Days</a></li>
-                        <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '12months']) }}">Last 12 Months</a></li>
-                    </ul>
-                </div>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <!-- Date Range Selector -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dateRangeDropdown"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-calendar3"></i>
+                            {{ ucfirst(str_replace('days', ' Days', str_replace('months', ' Months', request('range', '30days')))) }}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '7days']) }}">Last 7 Days</a></li>
+                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '30days']) }}">Last 30 Days</a></li>
+                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '90days']) }}">Last 90 Days</a></li>
+                            <li><a class="dropdown-item" href="{{ request()->fullUrlWithQuery(['range' => '12months']) }}">Last 12 Months</a></li>
+                        </ul>
+                    </div>
 
-                <!-- Export Options -->
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown"
-                        data-bs-toggle="dropdown">
-                        <i class="bi bi-download"></i> Export
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item"
-                                href="{{ route('admin.metrics.export', ['format' => 'csv'] + request()->query()) }}">
-                                <i class="bi bi-file-earmark-text"></i> Export CSV
-                            </a></li>
-                        <li><a class="dropdown-item"
-                                href="{{ route('admin.metrics.export', ['format' => 'json'] + request()->query()) }}">
-                                <i class="bi bi-file-earmark-code"></i> Export JSON
-                            </a></li>
-                    </ul>
-                </div>
+                    <!-- Export Options -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item"
+                                    href="{{ route('admin.metrics.export', ['format' => 'csv'] + request()->query()) }}">
+                                    <i class="bi bi-file-earmark-text"></i> Export CSV
+                                </a></li>
+                            <li><a class="dropdown-item"
+                                    href="{{ route('admin.metrics.export', ['format' => 'json'] + request()->query()) }}">
+                                    <i class="bi bi-file-earmark-code"></i> Export JSON
+                                </a></li>
+                        </ul>
+                    </div>
 
-                <!-- Refresh Button -->
-                <button class="btn btn-outline-secondary" id="refreshMetrics" title="Refresh Metrics">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
-            </div>
+                    <!-- Refresh Button -->
+                    <button class="btn btn-outline-secondary" id="refreshMetrics" title="Refresh Metrics">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+            </x-slot:actions>
         </x-layout.page-header>
 
         <!-- Card de Filtros (SEPARADO) -->
@@ -475,10 +473,10 @@
                 </div>
             </div>
         </div>
-    </div>
-@endsection
+    </x-layout.page-container>
+</x-app-layout>
 
-@section('scripts')
+@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Chart configuration

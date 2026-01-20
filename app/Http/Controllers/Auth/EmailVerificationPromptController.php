@@ -16,8 +16,28 @@ class EmailVerificationPromptController extends Controller
      */
     public function __invoke(Request $request): RedirectResponse|View
     {
-        return $request->user()->hasVerifiedEmail()
-            ? redirect()->intended(route('provider.dashboard', absolute: false))
-            : view('auth.verify-email');
+        $user = $request->user();
+
+        // Se já está verificado e ativo, vai para o dashboard
+        if ($user->hasVerifiedEmail() && $user->is_active) {
+            return redirect()->intended(route('provider.dashboard', absolute: false));
+        }
+
+        $data = [];
+
+        // CASO 1: Conta Desativada/Bloqueada (já verificou e-mail mas foi desativado ou desativado manualmente)
+        if ($user->hasVerifiedEmail() && ! $user->is_active) {
+            $data['status'] = 'deactivated';
+            $data['title'] = 'Conta Desativada';
+            $data['message'] = 'Sua conta foi desativada pelo administrador. Para reativá-la, entre em contato com nosso suporte.';
+        }
+        // CASO 2: Conta Pendente de Ativação (ainda não verificou e-mail)
+        elseif (! $user->hasVerifiedEmail()) {
+            $data['status'] = 'pending_activation';
+            $data['title'] = 'Ative sua Conta';
+            $data['message'] = 'Para começar a usar o Easy Budget, você precisa confirmar seu endereço de e-mail.';
+        }
+
+        return view('auth.verify-email', $data);
     }
 }

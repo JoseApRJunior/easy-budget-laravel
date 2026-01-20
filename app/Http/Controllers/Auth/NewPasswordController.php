@@ -104,12 +104,19 @@ class NewPasswordController extends Controller
                 ->withErrors(['email' => __('passwords.token')]);
         }
 
-        // Atualizar senha do usuário
+        // Atualizar senha do usuário e reativar conta se necessário
         $user = $confirmationToken->user;
         $user->forceFill([
             'password' => Hash::make($request->password),
             'remember_token' => Str::random(60),
+            'is_active' => true, // Reativa a conta após reset de senha
+            'email_verified_at' => $user->email_verified_at ?? now(), // Garante e-mail verificado
         ])->save();
+
+        Log::info('NewPasswordController: Conta reativada e senha atualizada', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
 
         // Remover token usado
         $confirmationToken->delete();

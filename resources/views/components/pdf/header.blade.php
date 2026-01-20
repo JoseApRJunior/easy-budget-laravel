@@ -18,10 +18,10 @@
         <tr>
             <td style="width: 60%; vertical-align: top; padding: 0;">
                 @if($displayProvider && $displayProvider->commonData)
-                    <h5 style="font-size: 14px; font-weight: bold; color: {{ $pdfColors['dark'] }}; margin: 0 0 4px 0;">
+                    <h5 style="font-size: 14px; font-weight: bold; color: {{ $pdfColors['text'] }}; margin: 0 0 4px 0;">
                         {{ $displayProvider->commonData->company_name ?: ($displayProvider->commonData->first_name . ' ' . $displayProvider->commonData->last_name) }}
                     </h5>
-                    <div style="color: {{ $pdfColors['secondary'] }}; line-height: 1.3; font-size: 10px;">
+                    <div style="color: {{ $pdfColors['text'] }}; line-height: 1.3; font-size: 10px;">
                         @if($displayProvider->address)
                             <p style="margin: 0;">
                                 {{ $displayProvider->address->address }}, {{ $displayProvider->address->address_number }}
@@ -46,8 +46,8 @@
                         @endif
                     </div>
                 @else
-                    <h5 style="font-size: 14px; font-weight: bold; color: {{ $pdfColors['dark'] }}; margin: 0 0 4px 0;">{{ $displayTenant->name ?? 'Empresa não identificada' }}</h5>
-                    <div style="color: {{ $pdfColors['secondary'] }}; line-height: 1.3; font-size: 10px;">
+                    <h5 style="font-size: 14px; font-weight: bold; color: {{ $pdfColors['text'] }}; margin: 0 0 4px 0;">{{ $displayTenant->name ?? 'Empresa não identificada' }}</h5>
+                    <div style="color: {{ $pdfColors['text'] }}; line-height: 1.3; font-size: 10px;">
                         <p style="margin: 0;">Documento: {{ $displayTenant->document ?? '---' }}</p>
                         <p style="margin: 0;">Email: {{ $displayTenant->email ?? '---' }}</p>
                     </div>
@@ -62,7 +62,7 @@
                                     {{ $title }}{{ $code ? ': #' . $code : '' }}
                                 </h5>
                             @endif
-                            <div style="color: {{ $pdfColors['secondary'] }}; font-size: 10px; line-height: 1.3;">
+                            <div style="color: {{ $pdfColors['text'] }}; font-size: 10px; line-height: 1.3;">
                                 @if($date)
                                     <p style="margin: 0;">Emissão: {{ $date instanceof \DateTime ? $date->format('d/m/Y') : $date }}</p>
                                 @endif

@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://static.cloudflareinsights.com; object-src 'none';">
     <meta name="description" content="Easy Budget - Simplificando a gestão financeira para prestadores de serviços" />
 
-    <title>Easy Budget - @yield('title', 'Página Inicial')</title>
+    <title>Easy Budget - {{ $title ?? View::getSection('title', 'Página Inicial') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}" />
@@ -22,6 +22,7 @@
             --bg-color: {{ config('theme.colors.background') }};
             --surface-color: {{ config('theme.colors.surface') }};
             --secondary-color: {{ config('theme.colors.secondary') }};
+            --border-color: {{ config('theme.colors.border') }};
 
             /* Status e Alertas */
             --text-primary: {{ config('theme.colors.primary') }};

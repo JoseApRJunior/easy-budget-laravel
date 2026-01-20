@@ -29,9 +29,71 @@ class MetricsService
             'transacoes_hoje' => $this->countTransacoesHoje($userId),
             'comparativo_anterior' => $this->getComparativoPeriodoAnterior($userId, $period),
             'metas_alcancadas' => $this->calculateMetasAlcancadas($userId, $period),
+            'pending_budgets' => $this->getPendingBudgetsMetrics($userId),
+            'overdue_payments' => $this->getOverduePaymentsMetrics($userId),
+            'next_month_projection' => $this->calculateNextMonthProjection($userId),
             'period' => $period,
             'date_range' => $dateRange,
         ];
+    }
+
+    /**
+     * Calcula métricas de orçamentos pendentes
+     */
+    private function getPendingBudgetsMetrics(int $userId): array
+    {
+        $tenantId = $this->getTenantId($userId);
+        $pendingStatuses = [\App\Enums\BudgetStatus::PENDING->value, \App\Enums\BudgetStatus::DRAFT->value];
+
+        $query = \App\Models\Budget::where('tenant_id', $tenantId)
+            ->whereIn('status', $pendingStatuses);
+
+        return [
+            'count' => (int) $query->count(),
+            'total' => (float) $query->sum('total'),
+        ];
+    }
+
+    /**
+     * Calcula métricas de pagamentos atrasados
+     */
+    private function getOverduePaymentsMetrics(int $userId): array
+    {
+        $tenantId = $this->getTenantId($userId);
+        $overdueStatuses = [\App\Enums\InvoiceStatus::PENDING->value, \App\Enums\InvoiceStatus::OVERDUE->value];
+
+        $query = \App\Models\Invoice::where('tenant_id', $tenantId)
+            ->whereIn('status', $overdueStatuses)
+            ->where('due_date', '<', Carbon::now());
+
+        return [
+            'count' => (int) $query->count(),
+            'total' => (float) $query->sum('total'),
+        ];
+    }
+
+    /**
+     * Calcula projeção para o próximo mês
+     */
+    private function calculateNextMonthProjection(int $userId): float
+    {
+        $tenantId = $this->getTenantId($userId);
+        $startOfNextMonth = Carbon::now()->addMonth()->startOfMonth();
+        $endOfNextMonth = Carbon::now()->addMonth()->endOfMonth();
+
+        // Soma de orçamentos aprovados que vencem no próximo mês
+        $approvedBudgets = \App\Models\Budget::where('tenant_id', $tenantId)
+            ->where('status', \App\Enums\BudgetStatus::APPROVED->value)
+            ->whereBetween('due_date', [$startOfNextMonth, $endOfNextMonth])
+            ->sum('total');
+
+        // Soma de faturas pendentes que vencem no próximo mês
+        $pendingInvoices = \App\Models\Invoice::where('tenant_id', $tenantId)
+            ->where('status', \App\Enums\InvoiceStatus::PENDING->value)
+            ->whereBetween('due_date', [$startOfNextMonth, $endOfNextMonth])
+            ->sum('total');
+
+        return (float) ($approvedBudgets + $pendingInvoices);
     }
 
     /**

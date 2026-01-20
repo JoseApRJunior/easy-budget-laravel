@@ -69,6 +69,9 @@ class Budget extends Model
         'pdf_verification_hash',
         'public_token',
         'public_expires_at',
+        'customer_comment',
+        'status_updated_at',
+        'status_updated_by',
     ];
 
     /**

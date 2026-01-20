@@ -9,6 +9,7 @@ use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -25,6 +26,7 @@ use Throwable;
  * - Tratamento específico para redefinição de senha
  * - Métricas de performance integradas
  * - Sistema de retry automático com backoff exponencial
+ * - Deduplicação para evitar envio duplo
  */
 class SendPasswordResetNotification implements ShouldQueue
 {
@@ -90,20 +92,21 @@ class SendPasswordResetNotification implements ShouldQueue
         // Iniciar métricas de performance
         $this->startPerformanceTracking();
 
-        // ADICIONADO: Log crítico para verificar se o listener está sendo executado
-        Log::critical('SendPasswordResetNotification: LISTENER EXECUTADO - Verificando se evento personalizado está sendo disparado', [
-            'user_id' => $event->user->id,
-            'email' => $event->user->email,
-            'tenant_id' => $event->tenant?->id,
-            'reset_token' => substr($event->resetToken, 0, 10).'...', // Log parcial por segurança
-            'event_type' => 'password_reset_custom',
-            'listener_class' => static::class,
-            'timestamp' => now()->toISOString(),
-        ]);
-
         try {
             // 1. Logging inicial estruturado
             $this->logEventStart($event);
+
+            $dedupeKey = $this->buildPasswordResetDedupKey($event);
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Envio de e-mail de redefinição de senha ignorado por deduplicação', [
+                    'user_id' => $event->user->id,
+                    'email' => $event->user->email,
+                    'tenant_id' => $event->tenant?->id,
+                    'dedupe_key' => $dedupeKey,
+                ]);
+
+                return;
+            }
 
             // 2. Validação inicial rigorosa
             $this->validateEvent($event);
@@ -150,17 +153,6 @@ class SendPasswordResetNotification implements ShouldQueue
             // Validação rigorosa do token de redefinição usando formato base64url
             if (! validateAndSanitizeToken($event->resetToken, 'base64url')) {
                 throw new \InvalidArgumentException('Token de redefinição com formato inválido');
-            }
-
-            // Validação adicional: verificar se o usuário está ativo
-            if (isset($event->user->is_active) && ! $event->user->is_active) {
-                Log::warning('Tentativa de redefinição de senha para usuário inativo', [
-                    'user_id' => $event->user->id,
-                    'email' => $event->user->email,
-                    'is_active' => $event->user->is_active,
-                ]);
-
-                return ServiceResult::error('Usuário inativo não pode redefinir senha');
             }
 
             // Envia e-mail usando o serviço injetado com tratamento de erro específico
@@ -303,6 +295,13 @@ class SendPasswordResetNotification implements ShouldQueue
 
         // Relança a exceção para que seja tratada pela queue
         throw $exception;
+    }
+
+    private function buildPasswordResetDedupKey(PasswordResetRequested $event): string
+    {
+        $tokenHash = hash('sha256', (string) $event->resetToken);
+
+        return 'email:password_reset:'.$event->user->id.':'.$tokenHash;
     }
 
     /**

@@ -1,8 +1,4 @@
-@extends('layouts.admin')
-
-@section('title', $pageTitle . ' - Easy Budget')
-
-@section('content')
+<x-app-layout :title="$pageTitle . ' - Easy Budget'">
 <div class="container-fluid">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -224,7 +220,7 @@
     </form>
 </div>
 
-@section('scripts')
+@push('scripts')
 <script>
 function resetForm() {
     if (confirm('Deseja restaurar as configurações padrão?')) {
@@ -232,4 +228,5 @@ function resetForm() {
     }
 }
 </script>
-@endsection
+@endpush
+</x-app-layout>

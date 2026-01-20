@@ -1,226 +1,180 @@
-@extends( 'layouts.app' )
+@extends('layouts.app')
 
+@section('title', 'Serviços e Orçamentos')
 
-@section( 'content' )
-    <div class="container-fluid py-4">
+@section('content')
+    <x-layout.page-container>
         <x-layout.page-header
             title="Serviços e Orçamentos"
             icon="clipboard-data"
             :breadcrumb-items="[
-                'Dashboard' => route( 'provider.dashboard' ),
+                'Dashboard' => route('provider.dashboard'),
+                'Clientes' => route('provider.customers.index'),
                 'Serviços e Orçamentos' => '#'
             ]"
         />
 
-        <!-- Serviços -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent py-1">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-tools me-2"></i>Serviços
-                    </h5>
-                    <a href="{{ route( 'provider.services.create' ) }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-lg me-2"></i>Novo Serviço
-                    </a>
-                </div>
+        <x-layout.grid-row>
+            <!-- Serviços -->
+            <div class="col-12 mb-4">
+                <x-resource.resource-list-card
+                    title="Serviços"
+                    icon="tools"
+                    :total="$servicos->count()"
+                    :actions="[
+                        [
+                            'label' => 'Novo Serviço',
+                            'icon' => 'plus-lg',
+                            'route' => route('provider.services.create'),
+                            'variant' => 'primary'
+                        ]
+                    ]"
+                >
+                    <x-resource.resource-table :headers="['Cliente', 'Serviço', 'Orçamento', 'Data', 'Status', 'Ações']">
+                        @forelse($servicos as $servico)
+                            <x-resource.table-row>
+                                <x-resource.table-cell>
+                                    <div class="d-flex align-items-center">
+                                        <x-ui.user-avatar :name="$servico->cliente->nome ?? 'N/A'" class="me-2" />
+                                        {{ $servico->cliente->nome ?? 'N/A' }}
+                                    </div>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>{{ $servico->nome }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    R$ {{ number_format($servico->orcamento->valor ?? 0, 2, ',', '.') }}
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    {{ \Carbon\Carbon::parse($servico->data)->format('d/m/Y') }}
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    @php
+                                        $statusMap = [
+                                            'Concluído' => 'success',
+                                            'Em andamento' => 'primary',
+                                            'Pendente' => 'warning',
+                                            'Cancelado' => 'danger'
+                                        ];
+                                        $statusClass = $statusMap[$servico->status] ?? 'secondary';
+                                    @endphp
+                                    <span class="badge bg-{{ $statusClass }}">
+                                        {{ $servico->status }}
+                                    </span>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <x-resource.action-buttons>
+                                        <x-ui.button :href="route('provider.services.show', $servico->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
+                                        <x-ui.button :href="route('provider.services.edit', $servico->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button 
+                                            type="button" 
+                                            variant="danger" 
+                                            outline 
+                                            size="sm" 
+                                            icon="trash" 
+                                            title="Excluir"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal" 
+                                            data-delete-url="{{ route('provider.services.destroy', $servico->id) }}"
+                                            data-item-name="{{ $servico->nome }}"
+                                        />
+                                    </x-resource.action-buttons>
+                                </x-resource.table-cell>
+                            </x-resource.table-row>
+                        @empty
+                            <x-resource.table-row>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-tools display-4 d-block mb-3"></i>
+                                    Nenhum serviço encontrado
+                                </td>
+                            </x-resource.table-row>
+                        @endforelse
+                    </x-resource.resource-table>
+                </x-resource.resource-list-card>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="px-4">Cliente</th>
-                                <th>Serviço</th>
-                                <th>Orçamento</th>
-                                <th>Data</th>
-                                <th>Status</th>
-                                <th class="text-end px-4">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse( $servicos as $servico )
-                                <tr>
-                                    <td class="px-4">
-                                        <div class="d-flex align-items-center">
-                                            <span class="bg-opacity-10 text-primary rounded px-2 py-1 me-2 small">
-                                                {{ substr( $servico->cliente->nome, 0, 1 ) }}
-                                            </span>
-                                            {{ $servico->cliente->nome }}
-                                        </div>
-                                    </td>
-                                    <td>{{ $servico->nome }}</td>
-                                    <td>R$ {{ number_format( $servico->orcamento->valor, 2, ',', '.' ) }}</td>
-                                    <td>{{ \Carbon\Carbon::parse( $servico->data )->format( 'd/m/Y' ) }}</td>
-                                    <td>
-                                        @php
-                                            $statusClass = 'secondary';
-                                            if ( $servico->status == 'Concluído' ) {
-                                                $statusClass = 'success';
-                                            } elseif ( $servico->status == 'Em andamento' ) {
-                                                $statusClass = 'primary';
-                                            } elseif ( $servico->status == 'Pendente' ) {
-                                                $statusClass = 'warning';
-                                            }
-                                        @endphp
-                                        <span class="badge bg-{{ $statusClass }}">
-                                            {{ $servico->status }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end px-4">
-                                        <div class="d-flex justify-content-end gap-1">
-                                            <x-ui.button type="link" :href="route( 'provider.services.show', $servico->id )" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                            <x-ui.button type="link" :href="route( 'provider.services.edit', $servico->id )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
-                                                onclick="handleGenericDelete(this)" 
-                                                data-type="servico" 
-                                                data-id="{{ $servico->id }}" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-1">
-                                        <div class="text-muted">
-                                            <i class="bi bi-tools display-6 d-block mb-2"></i>
-                                            <p class="mb-0">Nenhum serviço encontrado</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+
+            <!-- Orçamentos -->
+            <div class="col-12">
+                <x-resource.resource-list-card
+                    title="Orçamentos"
+                    icon="receipt"
+                    :total="$orcamentos->count()"
+                    :actions="[
+                        [
+                            'label' => 'Novo Orçamento',
+                            'icon' => 'plus-lg',
+                            'route' => route('provider.budgets.create'),
+                            'variant' => 'primary'
+                        ]
+                    ]"
+                >
+                    <x-resource.resource-table :headers="['Cliente', 'Orçamento', 'Data', 'Status', 'Ações']">
+                        @forelse($orcamentos as $orcamento)
+                            <x-resource.table-row>
+                                <x-resource.table-cell>
+                                    <div class="d-flex align-items-center">
+                                        <x-ui.user-avatar :name="$orcamento->cliente->nome ?? 'N/A'" class="me-2" />
+                                        {{ $orcamento->cliente->nome ?? 'N/A' }}
+                                    </div>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    R$ {{ number_format($orcamento->valor, 2, ',', '.') }}
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    {{ \Carbon\Carbon::parse($orcamento->data)->format('d/m/Y') }}
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    @php
+                                        $statusMap = [
+                                            'Aprovado' => 'success',
+                                            'Pendente' => 'warning',
+                                            'Recusado' => 'danger'
+                                        ];
+                                        $statusClass = $statusMap[$orcamento->status] ?? 'secondary';
+                                    @endphp
+                                    <span class="badge bg-{{ $statusClass }}">
+                                        {{ $orcamento->status }}
+                                    </span>
+                                </x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <x-resource.action-buttons>
+                                        <x-ui.button :href="route('provider.budgets.show', $orcamento->code ?? $orcamento->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
+                                        <x-ui.button :href="route('provider.budgets.edit', $orcamento->code ?? $orcamento->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button 
+                                            type="button" 
+                                            variant="danger" 
+                                            outline 
+                                            size="sm" 
+                                            icon="trash" 
+                                            title="Excluir"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal" 
+                                            data-delete-url="{{ route('provider.budgets.destroy', $orcamento->code ?? $orcamento->id) }}"
+                                            data-item-name="Orçamento #{{ $orcamento->code ?? $orcamento->id }}"
+                                        />
+                                    </x-resource.action-buttons>
+                                </x-resource.table-cell>
+                            </x-resource.table-row>
+                        @empty
+                            <x-resource.table-row>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-receipt display-4 d-block mb-3"></i>
+                                    Nenhum orçamento encontrado
+                                </td>
+                            </x-resource.table-row>
+                        @endforelse
+                    </x-resource.resource-table>
+                </x-resource.resource-list-card>
             </div>
-        </div>
+        </x-layout.grid-row>
+    </x-layout.page-container>
 
-        <!-- Orçamentos -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent py-1">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-receipt me-2"></i>Orçamentos
-                    </h5>
-                    <a href="{{ route( 'provider.budgets.create' ) }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-lg me-2"></i>Novo Orçamento
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="px-4">Cliente</th>
-                                <th>Orçamento</th>
-                                <th>Data</th>
-                                <th>Status</th>
-                                <th class="text-end px-4">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ( $orcamentos as $orcamento )
-                                <tr>
-                                    <td class="px-4">
-                                        <div class="d-flex align-items-center">
-                                            <span class="bg-opacity-10 text-primary rounded px-2 py-1 me-2 small">
-                                                {{ substr( $orcamento->cliente->nome, 0, 1 ) }}
-                                            </span>
-                                            {{ $orcamento->cliente->nome }}
-                                        </div>
-                                    </td>
-                                    <td>R$ {{ number_format( $orcamento->valor, 2, ',', '.' ) }}</td>
-                                    <td>{{ \Carbon\Carbon::parse( $orcamento->data )->format( 'd/m/Y' ) }}</td>
-                                    <td>
-                                        @php
-                                            $statusClass = 'secondary';
-                                            if ( $orcamento->status == 'Aprovado' ) {
-                                                $statusClass = 'success';
-                                            } elseif ( $orcamento->status == 'Pendente' ) {
-                                                $statusClass = 'warning';
-                                            } elseif ( $orcamento->status == 'Recusado' ) {
-                                                $statusClass = 'danger';
-                                            }
-                                        @endphp
-                                        <span class="badge bg-{{ $statusClass }}">
-                                            {{ $orcamento->status }}
-                                        </span>
-                                    </td>
-                                    <td class="text-end px-4">
-                                        <div class="d-flex justify-content-end gap-1">
-                                            <x-ui.button type="link" :href="route( 'provider.budgets.show', $orcamento->code )" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                            <x-ui.button type="link" :href="route( 'provider.budgets.edit', $orcamento->code )" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
-                                                onclick="handleGenericDelete(this)"
-                                                data-type="orcamento" 
-                                                data-id="{{ $orcamento->id }}" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-1">
-                                        <div class="text-muted">
-                                            <i class="bi bi-receipt display-6 d-block mb-2"></i>
-                                            <p class="mb-0">Nenhum orçamento encontrado</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza que deseja excluir este item?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form id="deleteForm" method="POST" action="#">
-                        @csrf
-                        @method( 'DELETE' )
-                        <button type="submit" class="btn btn-danger">Excluir</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-
-@section( 'scripts' )
-    <script>
-        document.addEventListener( 'DOMContentLoaded', function () {
-            // Inicializa tooltips
-            const tooltipTriggerList = [].slice.call( document.querySelectorAll( '[data-bs-toggle="tooltip"]' ) );
-            tooltipTriggerList.map( function ( tooltipTriggerEl ) {
-                return new bootstrap.Tooltip( tooltipTriggerEl );
-            } );
-
-            // Listener para botões de exclusão
-            document.querySelectorAll('.btn-delete-item').forEach(button => {
-                button.addEventListener('click', function() {
-                    const type = this.getAttribute('data-type');
-                    const id = this.getAttribute('data-id');
-                    confirmDelete(type, id);
-                });
-            });
-        } );
-
-        function confirmDelete( type, id ) {
-            const modal = new bootstrap.Modal( document.getElementById( 'deleteModal' ) );
-            const form = document.getElementById( 'deleteForm' );
-            form.action = `{{ route( 'provider.dashboard' ) }}/${type}/${id}`;
-            modal.show();
-        }
-    </script>
+    <x-ui.confirm-modal 
+        id="deleteModal" 
+        title="Confirmar Exclusão" 
+        message="Tem certeza que deseja excluir <strong id='deleteModalItemName'></strong>?" 
+        submessage="Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+        type="delete" 
+        resource="item"
+    />
 @endsection

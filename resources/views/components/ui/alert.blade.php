@@ -1,4 +1,4 @@
-@props( [ 'type' => 'message', 'message' => null ] )
+@props( [ 'type' => 'message', 'message' => null, 'noContainer' => false ] )
 
 @php
     $baseClasses = 'alert alert-dismissible fade show py-1 px-2';
@@ -22,7 +22,7 @@
     $alertClass = $typeClasses[ $type ] ?? $typeClasses[ 'message' ];
     $iconClass  = $iconClasses[ $type ] ?? $iconClasses[ 'message' ];
 @endphp
-<div class="container ">
+@if(!$noContainer) <div class="container "> @endif
     <div x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" {{ $attributes->merge( [ 'class' => $baseClasses . ' ' . $alertClass ] ) }} role="alert">
         <div class="d-flex align-items-center">
@@ -33,4 +33,4 @@
             <button @click="show = false" type="button" data-bs-dismiss="alert" class="m-0 p-0 ms-2 align-self-center" style="line-height:1; font-size:.875rem; cursor:pointer; color:#dc3545; background:transparent; border:0; outline:0; box-shadow:none;" aria-label="Fechar">×</button>
         </div>
     </div>
-</div>
+@if(!$noContainer) </div> @endif

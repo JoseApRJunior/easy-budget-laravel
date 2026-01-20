@@ -1,165 +1,209 @@
 @extends( 'layouts.app' )
 
 @section( 'content' )
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <h1 class="mb-4 text-center">
-                    <i class="bi bi-building me-2"></i>
-                    Sobre o Easy Budget
-                </h1>
+    <x-layout.page-container>
+        <x-layout.page-header title="Sobre o Easy Budget" icon="building"  />
 
-                {{-- Missão --}}
-                <div class="card hover-card mb-4">
-                    <div class="card-body">
-                        <h2 class="h4 mb-3">
-                            <i class="bi bi-flag me-2"></i>
-                            Nossa Missão
-                        </h2>
-                        <p class="lead">
-                            No Easy Budget, nossa missão é simplificar e otimizar o processo de orçamentação de serviços
-                            diversos,
-                            conectando prestadores de serviços e clientes de forma eficiente e transparente. Oferecemos
-                            ferramentas
-                            intuitivas para ajudar tanto pessoas físicas quanto jurídicas a gerenciar seus orçamentos e
-                            projetos com
-                            facilidade.
-                        </p>
-                    </div>
+        {{-- Missão --}}
+        <x-ui.card class="hover-card transition-all mb-3 mt-3">
+            <x-slot:header>
+                <x-layout.h-stack gap="2">
+                    <i class="bi bi-flag fs-5 text-primary"></i>
+                    <h2 class="h5 mb-0 text-dark fw-bold">Nossa Missão</h2>
+                </x-layout.h-stack>
+            </x-slot:header>
+            <p class="lead mb-0">
+                No Easy Budget, nossa missão é simplificar e otimizar o processo de orçamentação de serviços
+                diversos,
+                conectando prestadores de serviços e clientes de forma eficiente e transparente. Oferecemos
+                ferramentas
+                intuitivas para ajudar tanto pessoas físicas quanto jurídicas a gerenciar seus orçamentos e
+                projetos com
+                facilidade.
+            </p>
+        </x-ui.card>
+
+        {{-- Quem Somos e Nossa Visão --}}
+        <x-layout.grid-row class="mb-3">
+            <x-layout.grid-col size="col-md-6">
+                <x-ui.card class="hover-card transition-all h-100">
+                    <x-slot:header>
+                        <x-layout.h-stack gap="2">
+                            <i class="bi bi-people fs-5 text-primary"></i>
+                            <h2 class="h5 mb-0 text-dark fw-bold">Quem Somos</h2>
+                        </x-layout.h-stack>
+                    </x-slot:header>
+                    <p class="lead mb-0">
+                        Somos uma equipe de profissionais apaixonados por tecnologia e gestão de projetos.
+                        Fundada em 2024,
+                        nossa plataforma tem crescido rapidamente, atendendo a uma ampla gama de setores e
+                        facilitando a conexão
+                        entre prestadores de serviços e clientes.
+                    </p>
+                </x-ui.card>
+            </x-layout.grid-col>
+            <x-layout.grid-col size="col-md-6">
+                <x-ui.card class="hover-card transition-all h-100">
+                    <x-slot:header>
+                        <x-layout.h-stack gap="2">
+                            <i class="bi bi-eye fs-5 text-primary"></i>
+                            <h2 class="h5 mb-0 text-dark fw-bold">Nossa Visão</h2>
+                        </x-layout.h-stack>
+                    </x-slot:header>
+                    <p class="lead mb-0">
+                        Imaginamos um mercado de serviços mais eficiente e transparente, onde prestadores e
+                        clientes possam
+                        colaborar de forma harmoniosa. Estamos comprometidos em continuar inovando e expandindo
+                        nossas
+                        funcionalidades para atender às necessidades em constante evolução do mercado de
+                        serviços.
+                    </p>
+                </x-ui.card>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+
+        {{-- Recursos --}}
+        <x-ui.card class="hover-card transition-all mb-3">
+            <x-slot:header>
+                <x-layout.h-stack gap="2">
+                    <i class="bi bi-gear fs-5 text-primary"></i>
+                    <h2 class="h5 mb-0 text-dark fw-bold">Nossos Recursos</h2>
+                </x-layout.h-stack>
+            </x-slot:header>
+            <div class="list-group list-group-flush border-0">
+                <x-ui.list-item padding="2" :hover="true" class="border-bottom">
+                    <x-resource.resource-info
+                        icon="file-earmark-text"
+                        title="Criação de Orçamentos:"
+                        subtitle="Ferramentas intuitivas para prestadores criarem orçamentos detalhados."
+                        icon-class="text-primary fs-5"
+                        title-class="fw-bold d-block"
+                    />
+                </x-ui.list-item>
+                <x-ui.list-item padding="2" :hover="true" class="border-bottom">
+                    <x-resource.resource-info
+                        icon="kanban"
+                        title="Gestão de Projetos:"
+                        subtitle="Acompanhamento em tempo real do progresso dos serviços."
+                        icon-class="text-primary fs-5"
+                        title-class="fw-bold d-block"
+                    />
+                </x-ui.list-item>
+                <x-ui.list-item padding="2" :hover="true" class="border-bottom">
+                    <x-resource.resource-info
+                        icon="chat-dots"
+                        title="Comunicação Integrada:"
+                        subtitle="Chat interno para facilitar a comunicação entre prestadores e clientes."
+                        icon-class="text-primary fs-5"
+                        title-class="fw-bold d-block"
+                    />
+                </x-ui.list-item>
+                <x-ui.list-item padding="2" :hover="true" class="border-bottom">
+                    <x-resource.resource-info
+                        icon="graph-up"
+                        title="Análise Financeira:"
+                        subtitle="Relatórios e dashboards para análise de desempenho e lucratividade."
+                        icon-class="text-primary fs-5"
+                        title-class="fw-bold d-block"
+                    />
+                </x-ui.list-item>
+                <x-ui.list-item padding="2" :hover="true">
+                    <x-resource.resource-info
+                        icon="people-fill"
+                        title="Múltiplos Perfis:"
+                        subtitle="Suporte para pessoas físicas e jurídicas com necessidades distintas."
+                        icon-class="text-primary fs-5"
+                        title-class="fw-bold d-block"
+                    />
+                </x-ui.list-item>
+            </div>
+        </x-ui.card>
+
+        {{-- Valores --}}
+        <x-ui.card class="hover-card transition-all mb-3">
+            <x-slot:header>
+                <x-layout.h-stack gap="2">
+                    <i class="bi bi-star fs-5 text-primary"></i>
+                    <h2 class="h5 mb-0 text-dark fw-bold">Nossos Valores</h2>
+                </x-layout.h-stack>
+            </x-slot:header>
+            <div class="row g-3 p-2">
+                <div class="col-md-4">
+                    <x-ui.list-item padding="3" :hover="true" class="h-100 bg-light border-0">
+                        <x-resource.resource-info
+                            icon="lightning"
+                            title="Eficiência"
+                            subtitle="Otimização de processos e gestão."
+                            class="flex-column text-center w-100"
+                            icon-class="text-warning fs-4 d-block mb-2"
+                            title-class="fw-bold d-block"
+                        />
+                    </x-ui.list-item>
                 </div>
-
-                {{-- Quem Somos e Nossa Visão --}}
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card hover-card h-100">
-                            <div class="card-body">
-                                <h2 class="h4 mb-3">
-                                    <i class="bi bi-people me-2"></i>
-                                    Quem Somos
-                                </h2>
-                                <p>
-                                    Somos uma equipe de profissionais apaixonados por tecnologia e gestão de projetos.
-                                    Fundada em 2024,
-                                    nossa plataforma tem crescido rapidamente, atendendo a uma ampla gama de setores e
-                                    facilitando a conexão
-                                    entre prestadores de serviços e clientes.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card hover-card h-100">
-                            <div class="card-body">
-                                <h2 class="h4 mb-3">
-                                    <i class="bi bi-eye me-2"></i>
-                                    Nossa Visão
-                                </h2>
-                                <p>
-                                    Imaginamos um mercado de serviços mais eficiente e transparente, onde prestadores e
-                                    clientes possam
-                                    colaborar de forma harmoniosa. Estamos comprometidos em continuar inovando e expandindo
-                                    nossas
-                                    funcionalidades para atender às necessidades em constante evolução do mercado de
-                                    serviços.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-md-4">
+                    <x-ui.list-item padding="3" :hover="true" class="h-100 bg-light border-0">
+                        <x-resource.resource-info
+                            icon="brightness-high"
+                            title="Transparência"
+                            subtitle="Clareza em todas as etapas."
+                            class="flex-column text-center w-100"
+                            icon-class="text-warning fs-4 d-block mb-2"
+                            title-class="fw-bold d-block"
+                        />
+                    </x-ui.list-item>
                 </div>
-
-                {{-- Recursos --}}
-                <div class="card hover-card mb-4">
-                    <div class="card-body">
-                        <h2 class="h4 mb-3">
-                            <i class="bi bi-gear me-2"></i>
-                            Nossos Recursos
-                        </h2>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <i class="bi bi-file-earmark-text me-2"></i>
-                                <strong>Criação de Orçamentos:</strong>
-                                Ferramentas intuitivas para prestadores criarem orçamentos detalhados.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-kanban me-2"></i>
-                                <strong>Gestão de Projetos:</strong>
-                                Acompanhamento em tempo real do progresso dos serviços.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-chat-dots me-2"></i>
-                                <strong>Comunicação Integrada:</strong>
-                                Chat interno para facilitar a comunicação entre prestadores e clientes.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-graph-up me-2"></i>
-                                <strong>Análise Financeira:</strong>
-                                Relatórios e dashboards para análise de desempenho e lucratividade.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-people-fill me-2"></i>
-                                <strong>Múltiplos Perfis:</strong>
-                                Suporte para pessoas físicas e jurídicas com necessidades distintas.
-                            </li>
-                        </ul>
-                    </div>
+                <div class="col-md-4">
+                    <x-ui.list-item padding="3" :hover="true" class="h-100 bg-light border-0">
+                        <x-resource.resource-info
+                            icon="lightbulb"
+                            title="Inovação"
+                            subtitle="Novas soluções constantes."
+                            class="flex-column text-center w-100"
+                            icon-class="text-warning fs-4 d-block mb-2"
+                            title-class="fw-bold d-block"
+                        />
+                    </x-ui.list-item>
                 </div>
-
-                {{-- Valores --}}
-                <div class="card hover-card mb-4">
-                    <div class="card-body">
-                        <h2 class="h4 mb-3">
-                            <i class="bi bi-star me-2"></i>
-                            Nossos Valores
-                        </h2>
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item">
-                                <i class="bi bi-lightning me-2"></i>
-                                <strong>Eficiência:</strong>
-                                Otimizamos o processo de orçamentação e gestão de serviços.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-brightness-high me-2"></i>
-                                <strong>Transparência:</strong>
-                                Promovemos clareza em todas as etapas do processo de serviço.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-lightbulb me-2"></i>
-                                <strong>Inovação:</strong>
-                                Buscamos constantemente novas soluções para melhorar nossa plataforma.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-shield-check me-2"></i>
-                                <strong>Segurança:</strong>
-                                Protegemos os dados e informações de nossos usuários com máxima prioridade.
-                            </li>
-                            <li class="list-group-item">
-                                <i class="bi bi-people me-2"></i>
-                                <strong>Colaboração:</strong>
-                                Facilitamos a conexão e cooperação entre prestadores e clientes.
-                            </li>
-                        </ul>
-                    </div>
+                <div class="col-md-6">
+                    <x-ui.list-item padding="3" :hover="true" class="h-100 bg-light border-0">
+                        <x-resource.resource-info
+                            icon="heart"
+                            title="Foco no Cliente"
+                            subtitle="Suas necessidades são nossa prioridade."
+                            class="flex-column text-center w-100"
+                            icon-class="text-warning fs-4 d-block mb-2"
+                            title-class="fw-bold d-block"
+                        />
+                    </x-ui.list-item>
                 </div>
-
-                {{-- Contato --}}
-                <div class="card hover-card mb-4">
-                    <div class="card-body text-center">
-                        <h2 class="h4 mb-3">
-                            <i class="bi bi-envelope me-2"></i>
-                            Entre em Contato
-                        </h2>
-                        <p class="mb-4">
-                            Queremos ouvir você! Se você tem alguma dúvida, sugestão ou deseja saber mais sobre como o Easy
-                            Budget pode
-                            ajudar seu negócio, não hesite em nos contatar.
-                        </p>
-                        <a href="/support" class="btn btn-primary">
-                            <i class="bi bi-headset me-2"></i>
-                            Ir para a página de Suporte
-                        </a>
-                    </div>
+                <div class="col-md-6">
+                    <x-ui.list-item padding="3" :hover="true" class="h-100 bg-light border-0">
+                        <x-resource.resource-info
+                            icon="people"
+                            title="Colaboração"
+                            subtitle="Conexão entre prestadores e clientes."
+                            class="flex-column text-center w-100"
+                            icon-class="text-warning fs-4 d-block mb-2"
+                            title-class="fw-bold d-block"
+                        />
+                    </x-ui.list-item>
                 </div>
             </div>
-        </div>
-    </div>
+        </x-ui.card>
+
+        {{-- Contato --}}
+        <x-ui.card class="hover-card transition-all text-center mb-3">
+            <x-slot:header>
+                <x-layout.h-stack gap="2" justify="center">
+                    <i class="bi bi-envelope fs-5 text-primary"></i>
+                    <h2 class="h5 mb-0 text-dark fw-bold">Entre em Contato</h2>
+                </x-layout.h-stack>
+            </x-slot:header>
+            <p class="mb-4">
+                Queremos ouvir você! Se você tem alguma dúvida, sugestão ou deseja saber mais sobre como o Easy
+                Budget pode ajudar seu negócio, não hesite em nos contatar.
+            </p>
+            <x-ui.button href="/support" variant="primary" icon="headset" label="Ir para a página de Suporte" />
+        </x-ui.card>
+    </x-layout.page-container>
 @endsection

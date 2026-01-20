@@ -128,26 +128,35 @@
                         <span>Gerenciar</span>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="managementDropdown">
-                        {{-- Entradas do menu Gerenciar apontando para os dashboards/listas principais de cada
-                                        módulo --}}
-                        <li><a class="dropdown-item" href="{{ route('provider.categories.dashboard') }}">
-                                <i class="bi bi-tags me-2"></i>Categorias</a></li>
-                        <li><a class="dropdown-item" href="{{ route('provider.products.dashboard') }}">
-                                <i class="bi bi-box me-2"></i>Produtos</a></li>
-                                  <li><a class="dropdown-item" href="{{ route('provider.inventory.dashboard') }}">
-                                <i class="bi bi-archive me-2"></i>Estoque</a></li>
+                        {{-- Processo de Venda e Execução --}}
                         <li><a class="dropdown-item" href="{{ route('provider.customers.dashboard') }}">
                                 <i class="bi bi-people me-2"></i>Clientes</a></li>
                         <li><a class="dropdown-item" href="{{ route('provider.budgets.dashboard') }}">
                                 <i class="bi bi-file-earmark-text me-2"></i>Orçamentos</a></li>
-                                <li><a class="dropdown-item" href="{{ route('provider.services.dashboard') }}">
+                        <li><a class="dropdown-item" href="{{ route('provider.services.dashboard') }}">
                                 <i class="bi bi-tools me-2"></i>Serviços</a></li>
-                        <li><a class="dropdown-item" href="{{ route('provider.budgets.shares.dashboard') }}">
-                                <i class="bi bi-share me-2"></i>Compartilhamentos</a></li>
                         <li><a class="dropdown-item" href="{{ route('provider.schedules.dashboard') }}">
                                 <i class="bi bi-calendar-event me-2"></i>Agendamentos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('provider.budgets.shares.dashboard') }}">
+                                <i class="bi bi-share me-2"></i>Compartilhamentos</a></li>
                         <li><a class="dropdown-item" href="{{ route('provider.invoices.dashboard') }}">
                                 <i class="bi bi-receipt me-2"></i>Faturas</a></li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        {{-- Gestão de Catálogo e Estoque --}}
+                        <li><a class="dropdown-item" href="{{ route('provider.products.dashboard') }}">
+                                <i class="bi bi-box me-2"></i>Produtos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('provider.inventory.dashboard') }}">
+                                <i class="bi bi-archive me-2"></i>Estoque</a></li>
+                        <li><a class="dropdown-item" href="{{ route('provider.categories.dashboard') }}">
+                                <i class="bi bi-tags me-2"></i>Categorias</a></li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        {{-- Análise e Ferramentas --}}
+                        <li><a class="dropdown-item" href="{{ route('provider.financial.dashboard') }}">
+                                <i class="bi bi-currency-dollar me-2"></i>Financeiro</a></li>
                         <li><a class="dropdown-item" href="{{ route('reports.dashboard') }}">
                                 <i class="bi bi-graph-up me-2"></i>Relatórios</a></li>
                         <li><a class="dropdown-item" href="{{ route('provider.qrcode.index') }}">

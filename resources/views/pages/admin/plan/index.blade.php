@@ -1,67 +1,72 @@
-@extends('layouts.app')
+<x-app-layout title="Gerenciamento de Planos">
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Gerenciamento de Planos"
+            icon="box-seam"
+            :breadcrumb-items="[
+                'Dashboard' => route('admin.dashboard'),
+                'Planos' => '#'
+            ]">
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
+                    <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
+                </div>
+            </x-slot:actions>
+        </x-layout.page-header>
 
-@section('content')
-<div class="container-fluid py-4">
-    <x-layout.page-header
-        title="Gerenciamento de Planos"
-        icon="box-seam"
-        :breadcrumb-items="[
-            'Dashboard' => route('admin.dashboard'),
-            'Planos' => '#'
-        ]">
-        <div class="d-flex gap-2">
-            <x-ui.button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
-            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4">
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Total de Planos"
+                :value="$stats['total']"
+                icon="box-seam"
+                variant="primary"
+            />
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Planos Ativos"
+                :value="$stats['active']"
+                icon="check-circle"
+                variant="success"
+            />
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Assinaturas Ativas"
+                :value="$stats['active_subscriptions']"
+                icon="people"
+                variant="info"
+            />
+            <x-dashboard.stat-card 
+                col="col-md-3"
+                title="Receita Mensal"
+                :value="\App\Helpers\CurrencyHelper::format($stats['monthly_revenue'])"
+                icon="currency-dollar"
+                variant="warning"
+            />
         </div>
-    </x-layout.page-header>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Planos</h5>
-                    <h3>{{ $stats['total'] }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Planos Ativos</h5>
-                    <h3>{{ $stats['active'] }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Assinaturas Ativas</h5>
-                    <h3>{{ $stats['active_subscriptions'] }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5 class="card-title">Receita Mensal</h5>
-                    <h3>{{ \App\Helpers\CurrencyHelper::format($stats['monthly_revenue']) }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search and Filter -->
-    <div class="card mb-4">
-        <div class="card-body">
+        <!-- Search and Filter -->
+        <x-ui.card class="mb-4">
+            <x-slot:header>
+                <h5 class="mb-0 text-primary fw-bold">
+                    <i class="bi bi-funnel me-2"></i>Filtros
+                </h5>
+            </x-slot:header>
             <form method="GET" action="{{ route('admin.plans.index') }}">
-                <div class="row">
+                <div class="row g-3">
                     <div class="col-md-4">
-                        <label for="search" class="form-label">Pesquisar</label>
-                        <input type="text" class="form-control" id="search" name="search" value="{{ $search }}" placeholder="Nome ou descrição...">
+                        <x-ui.form.input 
+                            name="search" 
+                            id="search" 
+                            label="Pesquisar" 
+                            value="{{ $search }}" 
+                            placeholder="Nome ou descrição..." 
+                        />
                     </div>
                     <div class="col-md-3">
-                        <label for="status" class="form-label">Status</label>
+                        <label for="status" class="form-label small fw-bold text-muted text-uppercase">Status</label>
                         <select class="form-select" id="status" name="status">
                             <option value="">Todos</option>
                             <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Ativo</option>
@@ -70,7 +75,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="sort" class="form-label">Ordenar por</label>
+                        <label for="sort" class="form-label small fw-bold text-muted text-uppercase">Ordenar por</label>
                         <select class="form-select" id="sort" name="sort">
                             <option value="name" {{ $sort == 'name' ? 'selected' : '' }}>Nome</option>
                             <option value="price" {{ $sort == 'price' ? 'selected' : '' }}>Preço</option>
@@ -79,7 +84,7 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="direction" class="form-label">Direção</label>
+                        <label for="direction" class="form-label small fw-bold text-muted text-uppercase">Direção</label>
                         <select class="form-select" id="direction" name="direction">
                             <option value="asc" {{ $direction == 'asc' ? 'selected' : '' }}>Ascendente</option>
                             <option value="desc" {{ $direction == 'desc' ? 'selected' : '' }}>Descendente</option>
@@ -87,120 +92,94 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-12 d-flex gap-2">
+                    <div class="col-12 d-flex gap-2 justify-content-end">
+                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="secondary" outline icon="x-circle" label="Limpar" />
                         <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
-                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="secondary" icon="x-circle" label="Limpar" />
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
+        </x-ui.card>
 
-    <!-- Plans Table -->
-    <div class="card">
-        <div class="card-body">
-            @if($plans->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Descrição</th>
-                                <th>Preço</th>
-                                <th>Status</th>
-                                <th>Assinaturas</th>
-                                <th>Criado em</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($plans as $plan)
-                                <tr>
-                                    <td>{{ $plan->id }}</td>
-                                    <td>
-                                        <strong>{{ $plan->name }}</strong>
-                                        @if($plan->slug)
-                                            <br><small class="text-muted">{{ $plan->slug }}</small>
-                                        @endif
-                                    </td>
-                                    <td>{{ Str::limit($plan->description, 50) }}</td>
-                                    <td>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</td>
-                                    <td>
-                                        @php
-                                            $statusClass = match($plan->status) {
-                                                'active' => 'bg-success',
-                                                'inactive' => 'bg-danger',
-                                                'draft' => 'bg-secondary',
-                                                default => 'bg-light text-dark'
-                                            };
-                                        @endphp
-                                        <span class="badge {{ $statusClass }}">{{ ucfirst($plan->status) }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">{{ $plan->planSubscriptions()->count() }}</span>
-                                    </td>
-                                    <td>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
-                                            <x-ui.button type="link" :href="route('admin.plans.edit', $plan)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
-                                            <x-ui.button type="link" :href="route('admin.plans.subscribers', $plan)" variant="info" size="sm" icon="people" title="Assinantes" />
-                                            <x-ui.button variant="danger" size="sm" icon="trash" title="Excluir"
-                                                    onclick="confirmDelete('{{ route('admin.plans.destroy', $plan) }}')" 
-                                                    :disabled="$plan->planSubscriptions()->exists()" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+        <!-- Plans Table -->
+        <x-resource.resource-list-card
+            title="Lista de Planos"
+            icon="list-ul"
+            :total="$plans->total() ?? 0"
+        >
+            <x-resource.resource-table :headers="['ID', 'Nome', 'Descrição', 'Preço', 'Status', 'Assinaturas', 'Criado em', 'Ações']">
+                @forelse($plans as $plan)
+                    <x-resource.table-row>
+                        <x-resource.table-cell>{{ $plan->id }}</x-resource.table-cell>
+                        <x-resource.table-cell>
+                            <strong>{{ $plan->name }}</strong>
+                            @if($plan->slug)
+                                <br><small class="text-muted">{{ $plan->slug }}</small>
+                            @endif
+                        </x-resource.table-cell>
+                        <x-resource.table-cell>{{ Str::limit($plan->description, 50) }}</x-resource.table-cell>
+                        <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($plan->price) }}</x-resource.table-cell>
+                        <x-resource.table-cell>
+                            @php
+                                $statusClass = match($plan->status) {
+                                    'active' => 'success',
+                                    'inactive' => 'danger',
+                                    'draft' => 'secondary',
+                                    default => 'secondary'
+                                };
+                            @endphp
+                            <span class="badge bg-{{ $statusClass }}">{{ ucfirst($plan->status) }}</span>
+                        </x-resource.table-cell>
+                        <x-resource.table-cell>
+                            <span class="badge bg-info">{{ $plan->planSubscriptions()->count() }}</span>
+                        </x-resource.table-cell>
+                        <x-resource.table-cell>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</x-resource.table-cell>
+                        <x-resource.table-cell>
+                            <x-resource.action-buttons>
+                                <x-ui.button :href="route('admin.plans.show', $plan)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
+                                <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="warning" outline size="sm" icon="people" title="Assinantes" />
+                                <x-ui.button 
+                                    type="button" 
+                                    variant="danger" 
+                                    outline 
+                                    size="sm" 
+                                    icon="trash" 
+                                    title="Excluir"
+                                    :disabled="$plan->planSubscriptions()->exists()"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal" 
+                                    data-delete-url="{{ route('admin.plans.destroy', $plan) }}"
+                                    data-item-name="{{ $plan->name }}"
+                                />
+                            </x-resource.action-buttons>
+                        </x-resource.table-cell>
+                    </x-resource.table-row>
+                @empty
+                    <x-resource.table-row>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-box-seam display-4 d-block mb-3"></i>
+                            Nenhum plano encontrado
+                        </td>
+                    </x-resource.table-row>
+                @endforelse
+            </x-resource.resource-table>
 
-                <div class="d-flex justify-content-center">
+            @if(method_exists($plans, 'links'))
+                <div class="mt-4">
                     {{ $plans->links() }}
                 </div>
-            @else
-                <div class="alert alert-info" role="alert">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Nenhum plano encontrado. 
-                    <a href="{{ route('admin.plans.create') }}" class="alert-link">Criar seu primeiro plano</a>.
-                </div>
             @endif
-        </div>
-    </div>
-</div>
+        </x-resource.resource-list-card>
+    </x-layout.page-container>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja excluir este plano?</p>
-                <p class="text-danger"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
-            </div>
-            <div class="modal-footer">
-                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    @csrf
-                    @method('DELETE')
-                    <x-ui.button type="submit" variant="danger" label="Excluir" />
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-function confirmDelete(deleteUrl) {
-    document.getElementById('deleteForm').action = deleteUrl;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
-@endpush
+    <x-ui.confirm-modal 
+        id="deleteModal" 
+        title="Confirmar Exclusão" 
+        message="Tem certeza que deseja excluir o plano <strong id='deleteModalItemName'></strong>?" 
+        submessage="Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        variant="danger"
+        type="delete" 
+        resource="plano"
+    />
+</x-app-layout>

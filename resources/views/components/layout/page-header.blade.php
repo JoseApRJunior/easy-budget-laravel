@@ -25,7 +25,7 @@
         </div>
     @endif
 
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div class="d-flex align-items-center">
             <div>
                 <h1 class="h3 mb-0">
@@ -41,19 +41,27 @@
             </div>
         </div>
 
-        @if(!empty($breadcrumbItems))
-        <nav aria-label="breadcrumb" class="d-none d-md-block">
-            <ol class="breadcrumb mb-0">
-                @foreach($breadcrumbItems as $label => $route)
-                    @if($loop->last)
-                        <li class="breadcrumb-item active" aria-current="page">{{ $label }}</li>
-                    @else
-                        <li class="breadcrumb-item"><a href="{{ $route }}">{{ $label }}</a></li>
-                    @endif
-                @endforeach
-            </ol>
-        </nav>
-        @endif
+        <div class="d-flex align-items-center gap-2">
+            @if(isset($actions))
+                <div class="page-header-actions">
+                    {{ $actions }}
+                </div>
+            @endif
+
+            @if(!empty($breadcrumbItems))
+            <nav aria-label="breadcrumb" class="d-none d-md-block">
+                <ol class="breadcrumb mb-0">
+                    @foreach($breadcrumbItems as $label => $route)
+                        @if($loop->last)
+                            <li class="breadcrumb-item active" aria-current="page">{{ $label }}</li>
+                        @else
+                            <li class="breadcrumb-item"><a href="{{ $route }}">{{ $label }}</a></li>
+                        @endif
+                    @endforeach
+                </ol>
+            </nav>
+            @endif
+        </div>
     </div>
     <div class="d-md-none mt-2">
         @if($description)

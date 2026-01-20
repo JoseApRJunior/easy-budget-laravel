@@ -1,15 +1,15 @@
-@extends('layouts.admin')
-
-@section('title', 'Relatórios Financeiros - Admin')
-
-@section('content')
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h3 mb-0 text-gray-800">Relatórios Financeiros</h1>
-            <p class="text-muted">Análise detalhada de receitas, custos e performance</p>
-        </div>
-    </div>
+<x-app-layout title="Relatórios Financeiros">
+    <x-layout.page-container>
+        <x-layout.page-header
+            title="Relatórios Financeiros"
+            subtitle="Análise detalhada de receitas, custos e performance"
+            icon="chart-bar"
+            :breadcrumb-items="[
+                'Admin' => route('admin.dashboard'),
+                'Controle Financeiro' => route('admin.financial.index'),
+                'Relatórios' => '#'
+            ]">
+        </x-layout.page-header>
 
     <!-- Filtros -->
     <div class="row mb-4">

@@ -1,7 +1,5 @@
-@extends( 'layouts.app' )
-
-@section( 'content' )
-    <div class="container-fluid py-4">
+<x-app-layout title="Configurações do Sistema">
+    <x-layout.page-container>
         @php($activeTab = $activeTab ?? 'profile')
 
         <x-layout.page-header

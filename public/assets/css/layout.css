@@ -296,6 +296,19 @@ header {
 .alert {
    border-radius: var(--border-radius-sm);
 }
+
+/* Cards Interactivos */
+.card-hover {
+    transition: var(--transition-base);
+}
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md) !important;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+
 /* Avatar no menu */
 .avatar-circle {
    width: var(--icon-size-lg);
@@ -2032,9 +2045,33 @@ input[type="number"] {
       display: none !important;
    }
 
+   .mobile-view .list-group-item {
+      background-color: var(--surface-color) !important;
+      border: 0;
+      border-bottom: 1px solid var(--form-border) !important;
+      color: var(--text-color) !important;
+   }
+
+   .mobile-view .list-group-item-action {
+      background-color: var(--surface-color) !important;
+      color: var(--text-color) !important;
+      transition: all 0.2s ease-in-out !important;
+   }
+
+   .mobile-view .list-group-item-action:hover,
+   .mobile-view .list-group-item-action:focus,
+   .mobile-view .list-group-item-action:active {
+      background-color: var(--hover-bg) !important;
+      color: var(--text-color) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+      z-index: 5 !important;
+      position: relative !important;
+   }
+
    .modern-card {
-      background: var(--surface-color);
-      color: var(--surface-color);
+      background: var(--surface-color) !important;
+      color: var(--text-color) !important;
       border-radius: var(--border-radius-lg);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
       margin-bottom: 1rem;
@@ -2170,14 +2207,6 @@ input[type="number"] {
    font-size: 0.95rem;
    opacity: 0.8;
 }
-.mobile-view .list-group-item:last-child {
-   border-bottom: 0 !important;
-}
-
-.mobile-view .list-group-item:last-child {
-   border-bottom: 0 !important;
-}
-
 /* Dashboard category icons */
 .subcategory-icon {
    font-size: 0.8rem;
@@ -2185,14 +2214,4 @@ input[type="number"] {
 
 .subcategory-icon-mobile {
    font-size: 0.875rem;
-}
-
-/* Mobile list-group styling */
-.mobile-view .list-group-item {
-   border: 0;
-   border-bottom: 1px solid var(--form-border);
-}
-
-.mobile-view .list-group-item:last-child {
-   border-bottom: 0 !important;
 }
