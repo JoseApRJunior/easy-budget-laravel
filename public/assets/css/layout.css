@@ -296,6 +296,19 @@ header {
 .alert {
    border-radius: var(--border-radius-sm);
 }
+
+/* Cards Interactivos */
+.card-hover {
+    transition: var(--transition-base);
+}
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md) !important;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+
 /* Avatar no menu */
 .avatar-circle {
    width: var(--icon-size-lg);

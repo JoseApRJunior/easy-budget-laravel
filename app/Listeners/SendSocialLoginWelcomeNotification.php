@@ -9,6 +9,7 @@ use App\Mail\SocialLoginWelcomeMail;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -74,7 +75,17 @@ class SendSocialLoginWelcomeNotification implements ShouldQueue
             // 1. Logging inicial estruturado
             $this->logEventStart($event);
 
-            // 2. Validação inicial rigorosa
+            // 2. Deduplicação para evitar envios duplicados
+            $dedupeKey = "email:social_welcome:{$event->user->id}";
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Boas-vindas social ignorada por deduplicação', [
+                    'user_id' => $event->user->id,
+                    'dedupe_key' => $dedupeKey
+                ]);
+                return;
+            }
+
+            // 3. Validação inicial rigorosa
             $this->validateEvent($event);
 
             // 3. Processamento específico do e-mail de boas-vindas social

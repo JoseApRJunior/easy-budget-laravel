@@ -8,6 +8,7 @@ use App\Events\BudgetStatusChanged;
 use App\Mail\BudgetNotificationMail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -25,6 +26,18 @@ class SendBudgetNotification implements ShouldQueue
     {
         try {
             $budget = $event->budget;
+
+            // 1. Deduplicação para evitar envios duplicados
+            $dedupeKey = "email:budget_status:{$budget->id}:{$event->newStatus}";
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Notificação de orçamento ignorada por deduplicação', [
+                    'budget_id' => $budget->id,
+                    'new_status' => $event->newStatus,
+                    'dedupe_key' => $dedupeKey
+                ]);
+                return;
+            }
+
             $customer = $budget->customer;
 
             // Verificar se o cliente tem email

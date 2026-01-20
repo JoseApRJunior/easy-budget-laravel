@@ -153,25 +153,29 @@
         </x-layout.grid-row>
 
         {{-- Nova Row para Formas de Contato Adicionais --}}
-        <x-layout.grid-row >
+        <x-layout.grid-row mb="5">
             <x-layout.grid-col size="col-md-6">
-                <x-ui.card class="h-100">
+                <x-ui.card class="h-100 position-relative card-hover cursor-pointer">
                     <x-layout.h-stack gap="3" align="center">
                         <x-ui.icon-box icon="envelope-at" variant="primary" size="md" />
                         <x-layout.v-stack gap="0">
                             <h3 class="h6 fw-bold mb-1">E-mail</h3>
-                            <p class="small text-muted mb-0">suporte@easybudget.net.br</p>
+                            <a href="mailto:suporte@easybudget.net.br" class="small text-muted mb-0 stretched-link text-decoration-none">
+                                suporte@easybudget.net.br
+                            </a>
                         </x-layout.v-stack>
                     </x-layout.h-stack>
                 </x-ui.card>
             </x-layout.grid-col>
             <x-layout.grid-col size="col-md-6">
-                <x-ui.card class="h-100">
+                <x-ui.card class="h-100 position-relative card-hover cursor-pointer">
                     <x-layout.h-stack gap="3" align="center">
                         <x-ui.icon-box icon="telephone" variant="success" size="md" />
                         <x-layout.v-stack gap="0">
                             <h3 class="h6 fw-bold mb-1">Telefone / Whatsapp</h3>
-                            <p class="small text-muted mb-0">(43) 99959-0945</p>
+                            <a href="tel:+5543999590945" class="small text-muted mb-0 stretched-link text-decoration-none">
+                                (43) 99959-0945
+                            </a>
                         </x-layout.v-stack>
                     </x-layout.h-stack>
                 </x-ui.card>
@@ -206,6 +210,15 @@
 
             messageTextarea.addEventListener('input', updateCounter);
             updateCounter();
+
+            // Bloqueio de duplo clique no envio do formulário
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function() {
+                if (submitBtn.disabled) return;
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Enviando...';
+            });
         });
     </script>
     @endpush

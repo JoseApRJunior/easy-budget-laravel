@@ -7,6 +7,7 @@ namespace App\Listeners;
 use App\Events\SupportTicketCreated;
 use App\Mail\ContactEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -75,6 +76,19 @@ class SendSupportContactEmail implements ShouldQueue
         try {
             // Log inicial estruturado
             $this->logEventStart($event);
+
+            // 1. Deduplicação para evitar envios duplicados em caso de retentativas de queue
+            $dedupeKey = $this->buildSupportEmailDedupKey($event);
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Envio de e-mail de suporte ignorado por deduplicação', [
+                    'support_id' => $event->support->id,
+                    'email' => $event->support->email,
+                    'dedupe_key' => $dedupeKey,
+                    'event_type' => 'support_ticket_created',
+                ]);
+
+                return;
+            }
 
             // Validação dos dados do evento
             $this->validateEventData($event);
@@ -191,6 +205,14 @@ class SendSupportContactEmail implements ShouldQueue
         $seq = str_pad((string) $supportId, 4, '0', STR_PAD_LEFT);
 
         return "SUP-{$yearMonth}-{$seq}";
+    }
+
+    /**
+     * Gera chave de deduplicação para o cache.
+     */
+    private function buildSupportEmailDedupKey(SupportTicketCreated $event): string
+    {
+        return 'email:support_created:'.$event->support->id;
     }
 
     /**

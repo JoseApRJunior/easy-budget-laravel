@@ -7,6 +7,7 @@ namespace App\Listeners;
 use App\Events\StatusUpdated;
 use App\Services\Infrastructure\MailerService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -33,6 +34,19 @@ class SendStatusUpdateNotification implements ShouldQueue
     public function handle(StatusUpdated $event): void
     {
         try {
+            // 1. Deduplicação para evitar envios duplicados
+            $entityType = class_basename($event->entity);
+            $dedupeKey = "email:status_update:{$entityType}:{$event->entity->id}:{$event->newStatus}";
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Notificação de status ignorada por deduplicação', [
+                    'entity_type' => $entityType,
+                    'entity_id' => $event->entity->id,
+                    'new_status' => $event->newStatus,
+                    'dedupe_key' => $dedupeKey
+                ]);
+                return;
+            }
+
             Log::info('Processando evento StatusUpdated para envio de notificação', [
                 'entity_type' => class_basename($event->entity),
                 'entity_id' => $event->entity->id,

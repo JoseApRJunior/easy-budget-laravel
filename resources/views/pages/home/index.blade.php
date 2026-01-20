@@ -64,7 +64,7 @@
                                     @endforeach
                                 </ul>
 
-                                
+
                             </div>
                         </article>
 
@@ -102,7 +102,6 @@
 
         </div>
     </section>
-
 @endsection
 
 @push( 'scripts' )

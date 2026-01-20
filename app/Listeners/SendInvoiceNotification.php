@@ -7,6 +7,7 @@ namespace App\Listeners;
 use App\Events\InvoiceCreated;
 use App\Services\Infrastructure\MailerService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -33,6 +34,16 @@ class SendInvoiceNotification implements ShouldQueue
     public function handle(InvoiceCreated $event): void
     {
         try {
+            // 1. Deduplicação para evitar envios duplicados
+            $dedupeKey = "email:invoice_created:{$event->invoice->id}";
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+                Log::warning('Notificação de fatura ignorada por deduplicação', [
+                    'invoice_id' => $event->invoice->id,
+                    'dedupe_key' => $dedupeKey
+                ]);
+                return;
+            }
+
             Log::info('Processando evento InvoiceCreated para envio de notificação de fatura', [
                 'invoice_id' => $event->invoice->id,
                 'invoice_code' => $event->invoice->code,
