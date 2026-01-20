@@ -307,9 +307,6 @@ class BudgetService extends AbstractBaseService
 
                 $updatedBudget = $budget->fresh();
 
-                // Disparar evento para notificação
-                event(new BudgetStatusChanged($updatedBudget, $oldStatus, $status, $comment));
-
                 // NOTA: A atualização de serviços em cascata agora é gerenciada pelo BudgetStatusObserver
                 // para garantir consistência em todas as formas de atualização do modelo.
 

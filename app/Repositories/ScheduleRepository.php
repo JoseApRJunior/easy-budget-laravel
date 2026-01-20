@@ -87,7 +87,7 @@ class ScheduleRepository extends AbstractTenantRepository
     /**
      * Verifica conflitos de horário.
      */
-    public function hasConflict(string $startTime, string $endTime, ?int $serviceId = null, ?int $excludeScheduleId = null): bool
+    public function hasConflict(string $startTime, string $endTime, ?int $excludeScheduleId = null): bool
     {
         $query = $this->model
             ->where('status', '!=', 'cancelled')
@@ -95,10 +95,6 @@ class ScheduleRepository extends AbstractTenantRepository
                 $q->where('start_date_time', '<', $endTime)
                     ->where('end_date_time', '>', $startTime);
             });
-
-        if ($serviceId) {
-            $query->where('service_id', $serviceId);
-        }
 
         if ($excludeScheduleId) {
             $query->where('id', '!=', $excludeScheduleId);

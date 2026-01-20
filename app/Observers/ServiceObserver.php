@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\DTOs\Invoice\InvoiceFromServiceDTO;
 use App\Enums\ServiceStatus;
+use App\Events\StatusUpdated;
 use App\Models\Service;
 use App\Services\Domain\InvoiceService;
 use Illuminate\Support\Facades\Log;
@@ -52,6 +53,20 @@ class ServiceObserver
             'is_dirty' => $service->isDirty('status'),
             'original_status' => $service->getOriginal('status'),
         ]);
+
+        // Disparar evento de notificação se o status mudou
+        if ($service->isDirty('status')) {
+            $oldStatus = $service->getOriginal('status');
+            $newStatus = $service->status;
+            
+            event(new StatusUpdated(
+                $service,
+                $oldStatus instanceof ServiceStatus ? $oldStatus->value : (string)$oldStatus,
+                $newStatus->value,
+                $newStatus->label(),
+                $service->tenant
+            ));
+        }
 
         // Verificar se o status mudou para "completed"
         if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {

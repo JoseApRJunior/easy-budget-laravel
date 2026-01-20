@@ -77,6 +77,8 @@ class BudgetShareService extends AbstractBaseService
                     return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
                 }
 
+                $oldStatus = $budget->status instanceof \App\Enums\BudgetStatus ? $budget->status->value : $budget->status;
+
                 // Atualiza o status do orçamento sem escopo global (ação do cliente)
                 $budget->status = $newStatus;
                 $budget->customer_comment = $comment;
@@ -89,8 +91,8 @@ class BudgetShareService extends AbstractBaseService
                 BudgetShare::withoutGlobalScopes()
                     ->where('budget_id', $budget->id)
                     ->update([
-                        'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED 
-                            ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                        'status' => $newStatus === \App\Enums\BudgetStatus::APPROVED
+                            ? \App\Enums\BudgetShareStatus::APPROVED->value
                             : \App\Enums\BudgetShareStatus::REJECTED->value,
                         'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? true : false,
                         'expires_at' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? now()->addDays(30) : null
@@ -98,10 +100,10 @@ class BudgetShareService extends AbstractBaseService
 
                 // Marca o compartilhamento atual com os dados específicos (redundante mas garante o objeto atual)
                 if ($share) {
-                    $share->status = $newStatus === \App\Enums\BudgetStatus::APPROVED 
-                        ? \App\Enums\BudgetShareStatus::APPROVED->value 
+                    $share->status = $newStatus === \App\Enums\BudgetStatus::APPROVED
+                        ? \App\Enums\BudgetShareStatus::APPROVED->value
                         : \App\Enums\BudgetShareStatus::REJECTED->value;
-                    
+
                     if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
                         $share->is_active = true;
                         $share->expires_at = now()->addDays(30);
@@ -176,10 +178,10 @@ class BudgetShareService extends AbstractBaseService
                 ->first();
 
             if ($existingShare) {
-                // Se o usuário estiver tentando criar um novo com permissões diferentes ou expiração diferente, 
+                // Se o usuário estiver tentando criar um novo com permissões diferentes ou expiração diferente,
                 // podemos decidir atualizar o existente ou retornar o atual.
                 // Para manter a inteligência solicitada, vamos retornar o existente para evitar duplicidade de links ativos.
-                
+
                 // Opcional: Atualizar a mensagem ou expiração se foram enviadas novas
                 $updateData = [];
                 if (isset($data['expires_at'])) $updateData['expires_at'] = $data['expires_at'];
@@ -485,7 +487,7 @@ class BudgetShareService extends AbstractBaseService
     private function sendShareNotification(BudgetShare $share, Budget $budget): void
     {
         try {
-            $shareUrl = config('app.url')."/budgets/shared/{$share->share_token}";
+            $shareUrl = config('app.url') . "/budgets/shared/{$share->share_token}";
 
             $emailData = [
                 'recipient_name' => $share->recipient_name,
@@ -573,7 +575,7 @@ class BudgetShareService extends AbstractBaseService
 
             return $this->success($stats);
         } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: '.$e->getMessage());
+            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage());
         }
     }
 }

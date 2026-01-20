@@ -7,6 +7,7 @@ namespace App\Services\Domain;
 use App\DTOs\Schedule\ScheduleDTO;
 use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Enums\OperationStatus;
+use App\Enums\ServiceStatus;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\ServiceRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
@@ -39,8 +40,8 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Serviço não encontrado.');
             }
 
-            // Verifica conflitos de horário
-            if ($this->scheduleRepository->hasConflict($dto->start_date_time, $dto->end_date_time, $dto->service_id)) {
+            // Verifica conflitos de horário (global por tenant)
+            if ($this->scheduleRepository->hasConflict($dto->start_date_time, $dto->end_date_time)) {
                 return $this->error(OperationStatus::CONFLICT, 'Conflito de horário detectado.');
             }
 
@@ -48,7 +49,7 @@ class ScheduleService extends AbstractBaseService
             $schedule = $this->scheduleRepository->createFromDTO($dto);
 
             // Atualiza o status do serviço para agendado
-            $this->serviceRepository->update($service->id, ['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
+            $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULED->value]);
 
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
@@ -72,7 +73,7 @@ class ScheduleService extends AbstractBaseService
                 $startTime = $dto->start_date_time ?? $schedule->start_date_time->format('Y-m-d H:i:s');
                 $endTime = $dto->end_date_time ?? $schedule->end_date_time->format('Y-m-d H:i:s');
 
-                if ($this->scheduleRepository->hasConflict($startTime, $endTime, $schedule->service_id, $scheduleId)) {
+                if ($this->scheduleRepository->hasConflict($startTime, $endTime, $scheduleId)) {
                     return $this->error('Conflito de horário detectado.');
                 }
             }
