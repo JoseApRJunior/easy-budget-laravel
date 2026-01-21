@@ -241,18 +241,40 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
      *
-     * @param  string  $field  Campo para busca.
-     * @param  mixed  $value  Valor do campo.
+     * @param  string|array<string, mixed>  $field Ou critérios de busca.
+     * @param  mixed|null  $value Valor do campo se $field for string.
      * @param  array  $with  Relacionamentos para carregar.
      * @param  bool  $withTrashed  Se deve incluir registros deletados.
      */
-    public function findOneBy(string $field, mixed $value, array $with = [], bool $withTrashed = false): ?Model
+    public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?Model
     {
-        return $this->model->newQuery()
-            ->when($withTrashed, fn ($q) => $q->withTrashed())
-            ->where($field, $value)
-            ->when(! empty($with), fn ($q) => $q->with($with))
+        $query = $this->model->newQuery()
+            ->when($withTrashed, fn ($q) => $q->withTrashed());
+
+        if (is_array($field)) {
+            $query->where($field);
+        } else {
+            $query->where($field, $value);
+        }
+
+        return $query->when(! empty($with), fn ($q) => $q->with($with))
             ->first();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findBy(string|array $field, mixed $value = null): Collection
+    {
+        $query = $this->model->newQuery();
+
+        if (is_array($field)) {
+            $query->where($field);
+        } else {
+            $query->where($field, $value);
+        }
+
+        return $query->get();
     }
 
     /**

@@ -32,6 +32,24 @@ class ScheduleController extends Controller
     ) {}
 
     /**
+     * Confirma um agendamento publicamente via token
+     */
+    public function publicConfirm(string $token): View
+    {
+        $result = $this->scheduleService->confirmScheduleByToken($token);
+
+        if ($result->isError()) {
+            return view('pages.schedule.confirmation-error', [
+                'error' => $result->getMessage()
+            ]);
+        }
+
+        return view('pages.schedule.confirmation-success', [
+            'schedule' => $result->getData(),
+        ]);
+    }
+
+    /**
      * Lista os agendamentos do usuário logado
      */
     public function index(Request $request): View
@@ -128,7 +146,7 @@ class ScheduleController extends Controller
 
         if ($result->isSuccess()) {
             return $this->redirectSuccess(
-                'schedules.index',
+                'provider.schedules.index',
                 'Agendamento criado com sucesso!',
             );
         }

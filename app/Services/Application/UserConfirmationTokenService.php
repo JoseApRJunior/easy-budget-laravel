@@ -198,6 +198,34 @@ class UserConfirmationTokenService extends AbstractBaseService
     }
 
     /**
+     * Valida um token de confirmação.
+     *
+     * @param  string  $token  Token em texto puro
+     * @param  TokenType  $type  Tipo de token esperado
+     * @return ServiceResult Resultado contendo o objeto do token se válido
+     */
+    public function validateToken(string $token, TokenType $type): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token, $type) {
+            $tokenRecord = $this->userConfirmationTokenRepository->findByToken($token);
+
+            if (! $tokenRecord) {
+                return $this->error(\App\Enums\OperationStatus::NOT_FOUND, 'Token não encontrado.');
+            }
+
+            if ($tokenRecord->type !== $type) {
+                return $this->error(\App\Enums\OperationStatus::INVALID_DATA, 'Tipo de token inválido.');
+            }
+
+            if ($tokenRecord->expires_at->isPast()) {
+                return $this->error(\App\Enums\OperationStatus::EXPIRED, 'Token expirado.');
+            }
+
+            return $this->success($tokenRecord, 'Token válido.');
+        }, 'Erro ao validar token.');
+    }
+
+    /**
      * Método interno para criação de tokens (evita duplicação de código).
      *
      * Centraliza a lógica comum de:

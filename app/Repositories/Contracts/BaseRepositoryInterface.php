@@ -76,6 +76,26 @@ interface BaseRepositoryInterface
     public function update(int $id, array $data): ?Model;
 
     /**
+     * Busca um único registro por critérios.
+     *
+     * @param  string|array<string, mixed>  $field Ou critérios de busca.
+     * @param  mixed|null  $value Valor do campo se $field for string.
+     * @param  array  $with Relacionamentos para carregar.
+     * @param  bool  $withTrashed Se deve incluir registros deletados.
+     * @return Model|null Modelo encontrado ou null.
+     */
+    public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?Model;
+
+    /**
+     * Busca múltiplos registros por critérios.
+     *
+     * @param  string|array<string, mixed>  $field Ou critérios de busca.
+     * @param  mixed|null  $value Valor do campo se $field for string.
+     * @return Collection<Model> Coleção de modelos.
+     */
+    public function findBy(string|array $field, mixed $value = null): Collection;
+
+    /**
      * Remove um registro pelo seu ID.
      *
      * @param  int  $id  Identificador único do registro a ser removido.

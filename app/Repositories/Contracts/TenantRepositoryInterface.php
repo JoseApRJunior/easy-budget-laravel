@@ -133,12 +133,12 @@ interface TenantRepositoryInterface extends BaseRepositoryInterface
     /**
      * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
      *
-     * @param  string  $field  Campo para busca.
-     * @param  mixed  $value  Valor do campo.
+     * @param  string|array<string, mixed>  $field Ou critérios de busca.
+     * @param  mixed|null  $value Valor do campo se $field for string.
      * @param  array  $with  Relacionamentos para carregar.
      * @param  bool  $withTrashed  Se deve incluir registros deletados.
      */
-    public function findOneBy(string $field, mixed $value, array $with = [], bool $withTrashed = false): ?Model;
+    public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?Model;
 
     /**
      * Busca registros por múltiplos IDs dentro do tenant atual.

@@ -7,6 +7,7 @@ namespace App\Services\Domain;
 use App\DTOs\Schedule\ScheduleDTO;
 use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Enums\OperationStatus;
+use App\Enums\ScheduleStatus;
 use App\Enums\ServiceStatus;
 use App\Enums\TokenType;
 use App\Repositories\ScheduleRepository;
@@ -81,6 +82,42 @@ class ScheduleService extends AbstractBaseService
 
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
+    }
+
+    /**
+     * Confirma um agendamento via token
+     */
+    public function confirmScheduleByToken(string $token): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token) {
+            // Valida o token
+            $tokenResult = $this->tokenService->validateToken($token, TokenType::SCHEDULE_CONFIRMATION);
+
+            if ($tokenResult->isError()) {
+                return $tokenResult;
+            }
+
+            $tokenRecord = $tokenResult->getData();
+
+            // Busca o agendamento vinculado ao token
+            $schedule = $this->scheduleRepository->findOneBy(['user_confirmation_token_id' => $tokenRecord->id]);
+
+            if (! $schedule) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado para este token.');
+            }
+
+            // Se já estiver confirmado, apenas retorna sucesso
+            if ($schedule->status === ScheduleStatus::CONFIRMED) {
+                return $this->success($schedule, 'Agendamento já estava confirmado.');
+            }
+
+            // Atualiza o status do agendamento
+            $this->scheduleRepository->update($schedule->id, [
+                'status' => ScheduleStatus::CONFIRMED->value
+            ]);
+
+            return $this->success($schedule->fresh(), 'Agendamento confirmado com sucesso.');
+        }, 'Erro ao confirmar agendamento.');
     }
 
     /**

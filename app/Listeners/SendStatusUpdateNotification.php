@@ -58,9 +58,13 @@ class SendStatusUpdateNotification implements ShouldQueue
 
             $mailerService = app(MailerService::class);
 
-            // Gera URL da entidade se disponível
+            // Gera URL da entidade se disponível (prefere pública para notificações de status)
             $entityUrl = null;
-            if (method_exists($event->entity, 'getUrl')) {
+            if (method_exists($event->entity, 'getPublicUrl')) {
+                $entityUrl = $event->entity->getPublicUrl();
+            }
+
+            if (!$entityUrl && method_exists($event->entity, 'getUrl')) {
                 $entityUrl = $event->entity->getUrl();
             }
 

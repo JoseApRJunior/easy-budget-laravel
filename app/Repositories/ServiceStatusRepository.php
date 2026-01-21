@@ -109,9 +109,9 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     }
 
     /**
-     * Busca status por múltiplos critérios (implementação básica)
+     * Busca status por múltiplos critérios (implementação básica para compatibilidade interna)
      */
-    public function findBy(array $criteria, ?array $orderBy = null, ?int $limit = null): array
+    protected function internalFindBy(array $criteria, ?array $orderBy = null, ?int $limit = null): array
     {
         $results = [];
 
@@ -167,13 +167,30 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     }
 
     /**
-     * Busca um status por critérios (implementação básica)
+     * {@inheritdoc}
      */
-    public function findOneBy(array $criteria): ?ServiceStatus
+    public function findBy(string|array $field, mixed $value = null): Collection
     {
-        $results = $this->findBy($criteria, null, 1);
+        $criteria = is_array($field) ? $field : [$field => $value];
+        $results = $this->internalFindBy($criteria);
 
-        return $results[0] ?? null;
+        $models = collect();
+        foreach ($results as $status) {
+            $models->push($this->enumToModel($status));
+        }
+
+        return $models;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?Model
+    {
+        $criteria = is_array($field) ? $field : [$field => $value];
+        $results = $this->internalFindBy($criteria, null, 1);
+
+        return isset($results[0]) ? $this->enumToModel($results[0]) : null;
     }
 
     /**
@@ -181,7 +198,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
      */
     public function countBy(array $criteria): int
     {
-        return count($this->findBy($criteria));
+        return count($this->internalFindBy($criteria));
     }
 
     // Implementações da BaseRepositoryInterface
@@ -246,7 +263,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
         ?int $limit = null,
         ?int $offset = null,
     ): Collection {
-        $results = $this->findBy($criteria, $orderBy, $limit);
+        $results = $this->internalFindBy($criteria, $orderBy, $limit);
 
         if ($offset) {
             $results = array_slice($results, $offset);
@@ -297,7 +314,7 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
      */
     public function paginateGlobal(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
-        $allStatuses = $this->findBy($filters);
+        $allStatuses = $this->internalFindBy($filters);
         $total = count($allStatuses);
 
         // Simula paginação para enums

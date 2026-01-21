@@ -81,7 +81,8 @@
                 <x-resource.resource-list-card
                     title="Itens do Serviço"
                     icon="list-ul"
-                    :total="$service->serviceItems->count()">
+                    :total="$service->serviceItems->count()"
+                    class="mb-4">
 
                     <x-slot name="desktop">
                         <x-resource.resource-table>

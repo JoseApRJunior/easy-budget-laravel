@@ -94,10 +94,13 @@ Route::group([], function () {
         Route::get('/view-service-status/code/{code}/token/{token}', [ServiceController::class, 'viewServiceStatus'])->name('view-status');
         Route::post('/choose-service-status', [ServiceController::class, 'chooseServiceStatus'])->name('choose-status');
         Route::get('/print/code/{code}/token/{token}', [ServiceController::class, 'print'])->name('print');
-    });
+        Route::prefix('invoices')->name('invoices.public.')->group(function () {
+            Route::get('/view/{hash}', [PublicInvoiceController::class, 'show'])->name('show');
+        });
 
-    Route::prefix('invoices')->name('invoices.public.')->group(function () {
-        Route::get('/view/{hash}', [PublicInvoiceController::class, 'show'])->name('show');
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/confirm/{token}', [ScheduleController::class, 'publicConfirm'])->name('confirm');
+        });
         Route::get('/pay/{hash}', [PublicInvoiceController::class, 'redirectToPayment'])->name('pay');
         Route::get('/status', [PublicInvoiceController::class, 'paymentStatus'])->name('status');
         Route::get('/error', [PublicInvoiceController::class, 'error'])->name('error');
@@ -769,7 +772,7 @@ Route::middleware(['auth', 'verified', 'provider'])->group(function () {
     Route::put('/p/business', [ProviderBusinessController::class, 'update'])->name('provider.business.update');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // Upload routes (require provider authentication)
 Route::middleware(['auth', 'verified', 'provider'])->group(function () {

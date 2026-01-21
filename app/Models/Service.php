@@ -240,4 +240,27 @@ class Service extends Model
     {
         return ($value === '0000-00-00 00:00:00' || empty($value)) ? null : \DateTime::createFromFormat('Y-m-d H:i:s', $value);
     }
+
+    /**
+     * Gera a URL pública para visualização/interação com o serviço.
+     */
+    public function getPublicUrl(): ?string
+    {
+        if (!$this->public_token || !$this->code) {
+            return null;
+        }
+
+        return route('services.public.view-status', [
+            'code' => $this->code,
+            'token' => $this->public_token
+        ], true);
+    }
+
+    /**
+     * Gera a URL interna para visualização do serviço.
+     */
+    public function getUrl(): string
+    {
+        return route('provider.services.show', $this->id, true);
+    }
 }

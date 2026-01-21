@@ -80,6 +80,16 @@ class AppServiceProvider extends ServiceProvider
                 {
                     throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
+
+                public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?\Illuminate\Database\Eloquent\Model
+                {
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
+                }
+
+                public function findBy(string|array $field, mixed $value = null): \Illuminate\Database\Eloquent\Collection
+                {
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
+                }
             };
         });
 
@@ -110,8 +120,8 @@ class AppServiceProvider extends ServiceProvider
         // Register policies
         $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);
 
-        Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));
-        Blade::if('anyrole', fn ($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
+        Blade::if('role', fn($role) => auth()->check() && auth()->user()->hasRole($role));
+        Blade::if('anyrole', fn($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
 
         Paginator::useBootstrapFive();
 

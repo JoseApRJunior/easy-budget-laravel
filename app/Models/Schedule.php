@@ -129,7 +129,7 @@ class Schedule extends Model
      */
     public function getUrl(): string
     {
-        return route('schedules.show', $this->id, true);
+        return route('provider.schedules.show', $this->id, true);
     }
 
     /**
@@ -141,8 +141,16 @@ class Schedule extends Model
             return null;
         }
 
-        return route('public.schedule.confirm', [
+        return route('services.public.schedules.confirm', [
             'token' => $this->userConfirmationToken->token
         ], true);
+    }
+
+    /**
+     * Retorna a URL pública (alias para getConfirmationUrl)
+     */
+    public function getPublicUrl(): ?string
+    {
+        return $this->getConfirmationUrl();
     }
 }

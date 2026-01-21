@@ -337,7 +337,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         $cases = self::cases();
 
         if (! $includeFinished) {
-            $cases = array_filter($cases, fn ($case) => ! $case->isFinished());
+            $cases = array_filter($cases, fn($case) => ! $case->isFinished());
         }
 
         usort($cases, function ($a, $b) {

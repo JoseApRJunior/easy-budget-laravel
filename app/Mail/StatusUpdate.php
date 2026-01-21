@@ -263,12 +263,21 @@ class StatusUpdate extends Mailable implements ShouldQueue
             return $this->entityUrl;
         }
 
+        // Tentar obter URL pública da entidade primeiro
+        if (method_exists($this->entity, 'getPublicUrl')) {
+            $publicUrl = $this->entity->getPublicUrl();
+            if ($publicUrl) {
+                return $publicUrl;
+            }
+        }
+
         $entityType = $this->getEntityType();
 
         return match ($entityType) {
             'budget' => config('app.url') . '/budgets/' . $this->entity->id,
             'service' => config('app.url') . '/services/' . $this->entity->id,
             'invoice' => config('app.url') . '/invoices/' . $this->entity->id,
+            'schedule' => config('app.url') . '/schedules/' . $this->entity->id,
             default => config('app.url'),
         };
     }

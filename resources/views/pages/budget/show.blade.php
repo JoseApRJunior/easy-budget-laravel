@@ -33,13 +33,10 @@
 
                 <div class="col-md-4">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="item-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
                         <div>
                             <label class="text-muted small d-block mb-1">Status Atual</label>
                             <div class="d-flex flex-column">
-                                <x-ui.status-description :item="$budget" statusField="status" />
+                                <x-ui.status-description :item="$budget" statusField="status" useColor=true />
                             </div>
                         </div>
                     </div>
@@ -70,40 +67,37 @@
                     </h6>
                     <div class="row g-3">
                         @if ($budget->customer)
-                            <div class="col-md-4">
-                                <x-resource.resource-info
-                                    title="Nome/Razão Social"
-                                    :subtitle="$budget->customer->name"
-                                    icon="person"
-                                    class="small"
-                                />
-                            </div>
-                            <div class="col-md-4">
-                                @php
-                                    $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
-                                    $docValue = $budget->customer->commonData->cnpj
-                                        ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
-                                        : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
-                                @endphp
-                                <x-resource.resource-info
-                                    :title="$docLabel"
-                                    :subtitle="$docValue"
-                                    icon="card-text"
-                                    class="small"
-                                />
-                            </div>
-                            <div class="col-md-4">
-                                <x-resource.resource-info
-                                    title="Contato Principal"
-                                    :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
-                                    icon="envelope"
-                                    class="small"
-                                />
-                            </div>
+                        <div class="col-md-4">
+                            <x-resource.resource-info
+                                title="Nome/Razão Social"
+                                :subtitle="$budget->customer->name"
+                                icon="person"
+                                class="small" />
+                        </div>
+                        <div class="col-md-4">
+                            @php
+                            $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
+                            $docValue = $budget->customer->commonData->cnpj
+                            ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
+                            : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
+                            @endphp
+                            <x-resource.resource-info
+                                :title="$docLabel"
+                                :subtitle="$docValue"
+                                icon="card-text"
+                                class="small" />
+                        </div>
+                        <div class="col-md-4">
+                            <x-resource.resource-info
+                                title="Contato Principal"
+                                :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
+                                icon="envelope"
+                                class="small" />
+                        </div>
                         @else
-                            <div class="col-12">
-                                <p class="text-muted mb-0 italic">Dados do cliente não vinculados corretamente.</p>
-                            </div>
+                        <div class="col-12">
+                            <p class="text-muted mb-0 italic">Dados do cliente não vinculados corretamente.</p>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -121,8 +115,7 @@
                                 title="Criado em"
                                 :subtitle="$budget->created_at->format('d/m/Y H:i')"
                                 icon="calendar-plus"
-                                class="small"
-                            />
+                                class="small" />
                         </div>
                         @if ($budget->due_date)
                         <div class="col-md-4">
@@ -130,8 +123,7 @@
                                 title="Vencimento"
                                 :subtitle="$budget->due_date->format('d/m/Y')"
                                 icon="calendar-event"
-                                class="small"
-                            />
+                                class="small" />
                         </div>
                         @endif
                         <div class="col-md-4">
@@ -139,8 +131,7 @@
                                 title="Última Atualização"
                                 :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
                                 icon="clock-history"
-                                class="small"
-                            />
+                                class="small" />
                         </div>
                     </div>
                 </div>
@@ -164,21 +155,21 @@
 
                 {{-- Descrição e Observações --}}
                 @if ($budget->description || $budget->payment_terms)
-                    <div class="col-12 mt-0">
-                        <hr class="text-muted opacity-25">
-                    </div>
-                    @if ($budget->description)
-                        <div class="col-md-6 mt-2">
-                            <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição</label>
-                            <p class="mb-0 text-dark small">{{ $budget->description }}</p>
-                        </div>
-                    @endif
-                    @if ($budget->payment_terms)
-                        <div class="col-md-6 mt-2">
-                            <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Condições de Pagamento</label>
-                            <p class="mb-0 text-dark small">{{ $budget->payment_terms }}</p>
-                        </div>
-                    @endif
+                <div class="col-12 mt-0">
+                    <hr class="text-muted opacity-25">
+                </div>
+                @if ($budget->description)
+                <div class="col-md-6 mt-2">
+                    <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição</label>
+                    <p class="mb-0 text-dark small">{{ $budget->description }}</p>
+                </div>
+                @endif
+                @if ($budget->payment_terms)
+                <div class="col-md-6 mt-2">
+                    <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Condições de Pagamento</label>
+                    <p class="mb-0 text-dark small">{{ $budget->payment_terms }}</p>
+                </div>
+                @endif
                 @endif
             </div>
         </div>
@@ -190,106 +181,98 @@
             title="Serviços Vinculados"
             mobileTitle="Serviços"
             icon="tools"
-            :total="$budget->services?->count() ?? 0"
-        >
+            :total="$budget->services?->count() ?? 0">
             <x-slot:actions>
                 @if ($budget->canBeEdited())
-                    <x-ui.button type="link" :href="route('provider.budgets.services.create', $budget->code)"
-                        variant="success" size="sm" icon="plus" label="Novo Serviço" />
+                <x-ui.button type="link" :href="route('provider.budgets.services.create', $budget->code)"
+                    variant="success" size="sm" icon="plus" label="Novo Serviço" />
                 @endif
             </x-slot:actions>
 
             @if ($budget->services && $budget->services->count())
-                <x-slot:desktop>
-                    <x-resource.resource-table>
-                        <x-slot:thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Descrição</th>
-                                <th>Categoria</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-end">Total</th>
-                                <th class="text-center">Ações</th>
-                            </tr>
-                        </x-slot:thead>
-                        <x-slot:tbody>
-                            @foreach ($budget->services as $service)
-                                <tr>
-                                    <td class="fw-bold text-dark">{{ $service->code }}</td>
-                                    <td>{{ Str::limit($service->description, 50) }}</td>
-                                    <td>{{ $service->category?->name ?? '-' }}</td>
-                                    <td class="text-center">
-                                        <x-ui.status-badge :item="$service" />
-                                    </td>
-                                    <td class="text-end text-primary fw-bold">
-                                        R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}
-                                    </td>
-                                    <td class="text-center">
-                                        <x-resource.action-buttons
-                                            :item="$service"
-                                            resource="services"
-                                            identifier="code"
-                                            size="sm"
-                                            :showDelete="false"
-                                        />
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </x-slot:tbody>
-                    </x-resource.resource-table>
-                </x-slot:desktop>
-
-                <x-slot:mobile>
-                    @foreach ($budget->services as $service)
-                        <x-resource.resource-mobile-item
-                            icon="tools"
-                            :href="route('provider.services.show', $service->code)"
-                        >
-                            <x-resource.resource-mobile-header
-                                :title="$service->code"
-                                :subtitle="$service->category?->name ?? 'Sem categoria'"
-                            />
-
-                            <x-slot:description>
-                                <p class="text-muted small mb-2">{{ Str::limit($service->description, 100) }}</p>
-                                <div class="row g-2 w-100">
-                                    <x-resource.resource-mobile-field
-                                        col="col-6"
-                                        label="Total"
-                                    >
-                                        <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                                    </x-resource.resource-mobile-field>
-
-                                    <x-resource.resource-mobile-field
-                                        col="col-6"
-                                        align="end"
-                                        label="Status"
-                                    >
-                                        <x-ui.status-badge :item="$service" />
-                                    </x-resource.resource-mobile-field>
-                                </div>
-                            </x-slot:description>
-
-                            <x-slot:actions>
+            <x-slot:desktop>
+                <x-resource.resource-table>
+                    <x-slot:thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Categoria</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </x-slot:thead>
+                    <x-slot:tbody>
+                        @foreach ($budget->services as $service)
+                        <tr>
+                            <td class="fw-bold text-dark">{{ $service->code }}</td>
+                            <td>{{ Str::limit($service->description, 50) }}</td>
+                            <td>{{ $service->category?->name ?? '-' }}</td>
+                            <td class="text-center">
+                                <x-ui.status-badge :item="$service" />
+                            </td>
+                            <td class="text-end text-primary fw-bold">
+                                R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}
+                            </td>
+                            <td class="text-center">
                                 <x-resource.action-buttons
                                     :item="$service"
                                     resource="services"
                                     identifier="code"
                                     size="sm"
-                                    :showDelete="false"
-                                />
-                            </x-slot:actions>
-                        </x-resource.resource-mobile-item>
-                    @endforeach
-                </x-slot:mobile>
+                                    :showDelete="false" />
+                            </td>
+                        </tr>
+                        @endforeach
+                    </x-slot:tbody>
+                </x-resource.resource-table>
+            </x-slot:desktop>
+
+            <x-slot:mobile>
+                @foreach ($budget->services as $service)
+                <x-resource.resource-mobile-item
+                    icon="tools"
+                    :href="route('provider.services.show', $service->code)">
+                    <x-resource.resource-mobile-header
+                        :title="$service->code"
+                        :subtitle="$service->category?->name ?? 'Sem categoria'" />
+
+                    <x-slot:description>
+                        <p class="text-muted small mb-2">{{ Str::limit($service->description, 100) }}</p>
+                        <div class="row g-2 w-100">
+                            <x-resource.resource-mobile-field
+                                col="col-6"
+                                label="Total">
+                                <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                            </x-resource.resource-mobile-field>
+
+                            <x-resource.resource-mobile-field
+                                col="col-6"
+                                align="end"
+                                label="Status">
+                                <x-ui.status-badge :item="$service" />
+                            </x-resource.resource-mobile-field>
+                        </div>
+                    </x-slot:description>
+
+                    <x-slot:actions>
+                        <x-resource.action-buttons
+                            :item="$service"
+                            resource="services"
+                            identifier="code"
+                            size="sm"
+                            :showDelete="false" />
+                    </x-slot:actions>
+                </x-resource.resource-mobile-item>
+                @endforeach
+            </x-slot:mobile>
             @else
-                <div class="py-5">
-                    <x-resource.empty-state
-                        resource="serviços"
-                        icon="tools"
-                        message="Nenhum serviço vinculado a este orçamento"
-                    />
-                </div>
+            <div class="py-5">
+                <x-resource.empty-state
+                    resource="serviços"
+                    icon="tools"
+                    message="Nenhum serviço vinculado a este orçamento" />
+            </div>
             @endif
         </x-resource.resource-list-card>
     </div>
@@ -310,7 +293,7 @@
             <div class="col-12 col-md-auto order-1 order-md-3">
                 <div class="d-grid d-md-flex gap-2">
                     @php
-                        $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
+                    $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
                     @endphp
 
                     <x-ui.button type="button" class="d-flex align-items-center"
@@ -323,16 +306,15 @@
                         variant="outline-secondary" icon="share-fill" label="Links" />
 
                     @if ($budget->canBeEdited())
-                        <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                            variant="primary" icon="pencil-fill" label="Editar" />
+                    <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
+                        variant="primary" icon="pencil-fill" label="Editar" />
                     @endif
 
                     <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
                         target="_blank"
                         variant="outline-secondary"
                         icon="file-earmark-pdf"
-                        label="Imprimir PDF"
-                    />
+                        label="Imprimir PDF" />
                 </div>
             </div>
         </div>
@@ -355,10 +337,10 @@
                     <p class="text-muted">O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong></p>
 
                     @if(!($budget->customer->contact->email_personal))
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            O cliente não possui e-mail pessoal cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
-                        </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        O cliente não possui e-mail pessoal cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
+                    </div>
                     @endif
 
                     <div class="mb-3">
@@ -369,9 +351,9 @@
                     <div class="alert alert-info small">
                         <i class="bi bi-info-circle me-2"></i>
                         @if($isSent)
-                            O orçamento já foi enviado. O reenvio atualizará o PDF e gerará um novo link de acesso.
+                        O orçamento já foi enviado. O reenvio atualizará o PDF e gerará um novo link de acesso.
                         @else
-                            O PDF do orçamento será gerado e o link de visualização pública será criado.
+                        O PDF do orçamento será gerado e o link de visualização pública será criado.
                         @endif
                         <br>
                         <span class="mt-1 d-block">

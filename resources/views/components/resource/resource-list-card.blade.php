@@ -8,6 +8,7 @@
 'col' => null, // Nova prop para gerenciar wrapper de grid
 'variant' => 'primary',
 'mb' => '',
+'actions' => [],
 ])
 
 @if($col)

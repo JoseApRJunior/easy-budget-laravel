@@ -582,17 +582,40 @@ class Budget extends Model
     }
 
     /**
-     * Gera código para orçamento duplicado.
+     * Gera a URL pública para visualização/interação com o orçamento.
      */
-    private function generateDuplicateCode(): string
+    public function getPublicUrl(): ?string
     {
-        $baseCode = $this->code.'-COPY';
-        $counter = 1;
-
-        while (static::where('code', $baseCode.'-'.$counter)->exists()) {
-            $counter++;
+        if (!$this->public_token || !$this->code) {
+            return null;
         }
 
-        return $baseCode.'-'.$counter;
+        return route('budgets.public.choose-status', [
+            'code' => $this->code,
+            'token' => $this->public_token
+        ], true);
+    }
+
+    /**
+     * Gera a URL para impressão do orçamento.
+     */
+    public function getPrintUrl(): ?string
+    {
+        if (!$this->public_token || !$this->code) {
+            return null;
+        }
+
+        return route('budgets.public.print', [
+            'code' => $this->code,
+            'token' => $this->public_token
+        ], true);
+    }
+
+    /**
+     * Gera a URL interna para visualização do orçamento.
+     */
+    public function getUrl(): string
+    {
+        return route('provider.budgets.show', $this->id, true);
     }
 }
