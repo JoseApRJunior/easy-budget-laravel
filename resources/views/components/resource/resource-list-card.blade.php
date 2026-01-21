@@ -7,13 +7,14 @@
 'gap' => null,
 'col' => null, // Nova prop para gerenciar wrapper de grid
 'variant' => 'primary',
+'mb' => '',
 ])
 
 @if($col)
 <div class="{{ $col }}">
     @endif
 
-    <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm ']) }}>
+    <div {{ $attributes->merge(['class' => 'card border-0 shadow-sm '.$mb]) }}>
         <div class="card-header border-1 py-3 bg-transparent">
             <div class="row align-items-center g-2">
                 <div class="col-12 col-md-auto ">

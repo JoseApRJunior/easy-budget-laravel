@@ -77,7 +77,7 @@ class Schedule extends Model
         return [
             'tenant_id' => 'required|integer|exists:tenants,id',
             'service_id' => 'required|integer|exists:services,id',
-            'user_confirmation_token_id' => 'required|integer|exists:user_confirmation_tokens,id',
+            'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'start_date_time' => 'required|date|after:now|date_format:Y-m-d H:i:s',
             'end_date_time' => 'required|date|after:start_date_time|date_format:Y-m-d H:i:s',
             'location' => 'nullable|string|max:500',
@@ -101,10 +101,48 @@ class Schedule extends Model
     }
 
     /**
+     * Get the customer through the service relationship.
+     */
+    public function getCustomerAttribute(): ?Customer
+    {
+        return $this->service?->customer;
+    }
+
+    /**
+     * Alias para compatibilidade com o MailerService que verifica method_exists('customer')
+     */
+    public function customer()
+    {
+        return $this->service?->customer();
+    }
+
+    /**
      * Get the user confirmation token that owns the Schedule.
      */
     public function userConfirmationToken(): BelongsTo
     {
         return $this->belongsTo(UserConfirmationToken::class);
+    }
+
+    /**
+     * Retorna a URL para visualização do agendamento
+     */
+    public function getUrl(): string
+    {
+        return route('schedules.show', $this->id, true);
+    }
+
+    /**
+     * Retorna a URL de confirmação pública para o cliente
+     */
+    public function getConfirmationUrl(): ?string
+    {
+        if (!$this->userConfirmationToken) {
+            return null;
+        }
+
+        return route('public.schedule.confirm', [
+            'token' => $this->userConfirmationToken->token
+        ], true);
     }
 }

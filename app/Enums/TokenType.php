@@ -38,6 +38,9 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
     /** Token para verificação de assinaturas */
     case SUBSCRIPTION_VERIFICATION = 'subscription_verification';
 
+    /** Token para agendamentos */
+    case SCHEDULE_CONFIRMATION = 'schedule_confirmation';
+
     /**
      * Retorna uma descrição para o tipo de token
      */
@@ -52,6 +55,7 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
             self::PHONE_VERIFICATION => 'Verificação de telefone',
             self::PAYMENT_VERIFICATION => 'Verificação de pagamento',
             self::SUBSCRIPTION_VERIFICATION => 'Verificação de assinatura',
+            self::SCHEDULE_CONFIRMATION => 'Confirmação de agendamento',
         };
     }
 
@@ -71,6 +75,7 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
             self::PHONE_VERIFICATION => '#17a2b8', // Azul claro
             self::PAYMENT_VERIFICATION => '#fd7e14', // Laranja
             self::SUBSCRIPTION_VERIFICATION => '#20c997', // Verde claro
+            self::SCHEDULE_CONFIRMATION => '#00caca', // Ciano
         };
     }
 
@@ -90,6 +95,7 @@ enum TokenType: string implements \App\Contracts\Interfaces\StatusEnumInterface
             self::PHONE_VERIFICATION => 'bi-phone',
             self::PAYMENT_VERIFICATION => 'bi-credit-card',
             self::SUBSCRIPTION_VERIFICATION => 'bi-receipt',
+            self::SCHEDULE_CONFIRMATION => 'bi-calendar-check',
         };
     }
 

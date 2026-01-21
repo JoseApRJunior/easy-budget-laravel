@@ -8,8 +8,10 @@ use App\DTOs\Schedule\ScheduleDTO;
 use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Enums\OperationStatus;
 use App\Enums\ServiceStatus;
+use App\Enums\TokenType;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\ServiceRepository;
+use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Services\Core\Traits\HasSafeExecution;
 use App\Services\Core\Traits\HasTenantIsolation;
@@ -23,6 +25,7 @@ class ScheduleService extends AbstractBaseService
     public function __construct(
         private ScheduleRepository $scheduleRepository,
         private ServiceRepository $serviceRepository,
+        private UserConfirmationTokenService $tokenService,
     ) {
         parent::__construct($scheduleRepository);
     }
@@ -45,8 +48,33 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::CONFLICT, 'Conflito de horário detectado.');
             }
 
+            // Gera token de confirmação para o agendamento
+            // Nota: O agendamento é vinculado ao cliente do serviço
+            $customerUser = $service->customer?->user;
+            $tokenId = null;
+
+            if ($customerUser) {
+                $tokenResult = $this->tokenService->createTokenWithGeneration(
+                    $customerUser,
+                    TokenType::SCHEDULE_CONFIRMATION,
+                    60 * 24 * 7 // 1 semana de expiração
+                );
+
+                if ($tokenResult->isSuccess()) {
+                    $tokenId = $tokenResult->getData()->id;
+                }
+            }
+
             // Cria o agendamento
             $schedule = $this->scheduleRepository->createFromDTO($dto);
+
+            // Vincula o token se gerado
+            if ($tokenId) {
+                $this->scheduleRepository->update($schedule->id, [
+                    'user_confirmation_token_id' => $tokenId
+                ]);
+                $schedule = $schedule->fresh();
+            }
 
             // Atualiza o status do serviço para agendado
             $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULED->value]);

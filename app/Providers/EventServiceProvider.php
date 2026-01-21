@@ -28,11 +28,13 @@ use App\Listeners\SendSupportResponse;
 use App\Listeners\SendWelcomeEmail;
 use App\Models\Budget;
 use App\Models\Service;
+use App\Models\Schedule;
 use App\Models\ServiceItem;
 use App\Observers\BudgetObserver;
 use App\Observers\BudgetStatusObserver;
 use App\Observers\InventoryObserver;
 use App\Observers\ServiceObserver;
+use App\Observers\ScheduleObserver;
 use App\Observers\ServiceItemObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -127,6 +129,7 @@ class EventServiceProvider extends ServiceProvider
 
         // Registrar observers para o modelo Service (geração automática de faturas + controle de estoque)
         Service::observe([ServiceObserver::class, $inventoryObserver]);
+        Schedule::observe([ScheduleObserver::class]);
 
         Budget::observe([BudgetObserver::class, BudgetStatusObserver::class, $inventoryObserver]);
         ServiceItem::observe([ServiceItemObserver::class, $inventoryObserver]);

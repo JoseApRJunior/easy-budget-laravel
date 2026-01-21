@@ -136,7 +136,7 @@
             title="Lista de Clientes"
             mobileTitle="Clientes"
             icon="people"
-            :total="$customers->total()"
+            :total="$customers instanceof \Illuminate\Pagination\LengthAwarePaginator ? $customers->total() : $customers->count()"
             padding="p-0"
         >
             <x-slot:headerActions>

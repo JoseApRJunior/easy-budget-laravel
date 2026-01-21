@@ -29,6 +29,9 @@
                     <form method="POST" action="{{ route('provider.schedules.store', $service) }}" id="scheduleForm">
                         @csrf
 
+                        <input type="hidden" name="service_id" value="{{ $service->id }}">
+                        <input type="hidden" name="customer_id" value="{{ $service->budget->customer_id }}">
+
                         <div class="row">
                             <div class="col-md-6">
                                 <x-ui.form.input 

@@ -86,7 +86,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Atualização de Status - '.$this->getEntityTitle(),
+            subject: 'Atualização de Status - ' . $this->getEntityTitle(),
         );
     }
 
@@ -111,7 +111,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
                     'status_changed_at' => now()->format('d/m/Y H:i'),
                 ],
                 'company' => $this->getCompanyData(),
-                'urlSuporte' => config('app.url').'/support',
+                'urlSuporte' => config('app.url') . '/support',
                 'tenant' => $this->tenant,
                 'entity' => $this->entity,
                 'isSystemEmail' => false,
@@ -139,6 +139,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 'Orçamento' => \App\Enums\BudgetStatus::class,
                 'Fatura' => \App\Enums\InvoiceStatus::class,
                 'Serviço' => \App\Enums\ServiceStatus::class,
+                'Agendamento' => \App\Enums\ScheduleStatus::class,
                 default => null,
             };
 
@@ -173,10 +174,11 @@ class StatusUpdate extends Mailable implements ShouldQueue
         $entityType = $this->getEntityType();
 
         return match ($entityType) {
-            'budget' => 'Orçamento '.$this->getEntityCode(),
-            'service' => 'Serviço '.$this->getEntityCode(),
-            'invoice' => 'Fatura '.$this->getEntityCode(),
-            default => ucfirst($entityType).' '.$this->getEntityCode(),
+            'budget' => 'Orçamento ' . $this->getEntityCode(),
+            'service' => 'Serviço ' . $this->getEntityCode(),
+            'invoice' => 'Fatura ' . $this->getEntityCode(),
+            'schedule' => 'Agendamento ' . $this->getEntityCode(),
+            default => ucfirst($entityType) . ' ' . $this->getEntityCode(),
         };
     }
 
@@ -191,7 +193,8 @@ class StatusUpdate extends Mailable implements ShouldQueue
             'budget' => $this->entity->code ?? 'N/A',
             'service' => $this->entity->code ?? 'N/A',
             'invoice' => $this->entity->code ?? 'N/A',
-            default => $this->entity->id ?? 'N/A',
+            'schedule' => $this->entity->service?->code ?? (string) $this->entity->id,
+            default => (string) ($this->entity->id ?? 'N/A'),
         };
     }
 
@@ -206,6 +209,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
             'budget' => $this->entity->description ?? 'Orçamento sem descrição',
             'service' => $this->entity->description ?? 'Serviço sem descrição',
             'invoice' => $this->entity->notes ?? 'Fatura sem observações',
+            'schedule' => ($this->entity->start_date_time?->format('d/m/Y H:i') ?? 'N/A') . ' em ' . ($this->entity->location ?? 'Local não definido'),
             default => 'Entidade atualizada',
         };
     }
@@ -262,9 +266,9 @@ class StatusUpdate extends Mailable implements ShouldQueue
         $entityType = $this->getEntityType();
 
         return match ($entityType) {
-            'budget' => config('app.url').'/budgets/'.$this->entity->id,
-            'service' => config('app.url').'/services/'.$this->entity->id,
-            'invoice' => config('app.url').'/invoices/'.$this->entity->id,
+            'budget' => config('app.url') . '/budgets/' . $this->entity->id,
+            'service' => config('app.url') . '/services/' . $this->entity->id,
+            'invoice' => config('app.url') . '/invoices/' . $this->entity->id,
             default => config('app.url'),
         };
     }
@@ -303,7 +307,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
         try {
             // Verificar se a entidade tem um relacionamento provider ou tenant
             $provider = null;
-            
+
             if (method_exists($this->entity, 'provider')) {
                 $provider = $this->entity->provider()
                     ->withoutGlobalScopes()
@@ -338,7 +342,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";
@@ -347,13 +351,13 @@ class StatusUpdate extends Mailable implements ShouldQueue
 
                 $document = null;
                 if ($commonData) {
-                    $document = $commonData->cnpj 
-                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) 
+                    $document = $commonData->cnpj
+                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
                         : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
                 }
 
                 return [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : ($this->tenant?->name ?? $this->entity->tenant?->name ?? 'Minha Empresa')),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : ($this->tenant?->name ?? $this->entity->tenant?->name ?? 'Minha Empresa')),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
@@ -367,7 +371,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
 
         // Fallback para o nome do tenant
         $tenantName = $this->tenant?->name ?? (method_exists($this->entity, 'tenant') ? $this->entity->tenant?->name : null);
-        
+
         if ($tenantName) {
             return [
                 'company_name' => $tenantName,

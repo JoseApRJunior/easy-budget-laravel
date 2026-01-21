@@ -24,7 +24,8 @@
                 <x-resource.resource-list-card
                     title="Serviço {{ $service->code }}"
                     icon="tools"
-                    padding="p-4">
+                    padding="p-4"
+                    mb="mb-4">
                     <x-slot name="headerActions">
                         <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
                         <div class="ms-2">
@@ -120,7 +121,7 @@
 
                     <x-slot name="mobile">
                         @foreach ($service->serviceItems as $item)
-                        <x-resource.resource-mobile-item icon="box-seam">
+                        <x-resource.resource-mobile-item>
                             <x-resource.resource-mobile-header
                                 :title="$item->product?->name ?? 'Produto não encontrado'" />
 
@@ -144,7 +145,7 @@
                         </x-resource.resource-mobile-item>
                         @endforeach
 
-                        <x-resource.resource-mobile-field label="Total dos Itens" class="bg-body-secondary p-3">
+                        <x-resource.resource-mobile-field label="Total dos Itens" class=" p-3">
                             <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
                         </x-resource.resource-mobile-field>
                     </x-slot>

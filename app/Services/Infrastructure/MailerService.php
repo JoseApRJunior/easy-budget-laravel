@@ -674,7 +674,23 @@ class MailerService
                 $entityUrl,
             );
 
-            Mail::send($mailable);
+            // Tentar encontrar o e-mail do destinatário
+            $to = null;
+            if (method_exists($entity, 'customer') && $entity->customer) {
+                $to = $entity->customer->email;
+            } elseif (method_exists($entity, 'user') && $entity->user) {
+                $to = $entity->user->email;
+            }
+
+            if ($to) {
+                Mail::to($to)->send($mailable);
+            } else {
+                Log::warning('Não foi possível encontrar um destinatário para a notificação de status', [
+                    'entity_type' => class_basename($entity),
+                    'entity_id' => $entity->id,
+                ]);
+                return ServiceResult::error(OperationStatus::ERROR, 'Destinatário não encontrado.');
+            }
 
             Log::info('Notificação de atualização de status enviada com sucesso', [
                 'entity_type' => class_basename($entity),
@@ -854,7 +870,16 @@ class MailerService
                 $company,
             );
 
-            Mail::send($mailable);
+            $to = $ticket['customer_email'] ?? $ticket['email'] ?? null;
+
+            if ($to) {
+                Mail::to($to)->send($mailable);
+            } else {
+                Log::warning('Não foi possível encontrar um destinatário para a resposta de suporte', [
+                    'ticket_id' => $ticket['id'] ?? 'N/A',
+                ]);
+                return ServiceResult::error(OperationStatus::ERROR, 'Destinatário não encontrado.');
+            }
 
             Log::info('Resposta de suporte enviada com sucesso', [
                 'ticket_id' => $ticket['id'] ?? null,
