@@ -25,33 +25,33 @@
 
                 <x-layout.grid-row class="mb-4">
                     <x-layout.grid-col md="6">
-                        <x-ui.card class="bg-light border-0" no-padding>
+                        <x-ui.card class="bg-light dark:bg-gray-800 border-0" no-padding>
                             <div class="p-3">
-                                <h6 class="card-title text-muted mb-3 small text-uppercase fw-bold">
+                                <h6 class="card-title text-muted dark:text-gray-400 mb-3 small text-uppercase fw-bold">
                                     <i class="bi bi-person-circle me-2"></i>
                                     Cliente
                                 </h6>
-                                <h5 class="mb-1">{{ $service->customer?->common_data?->first_name }}
+                                <h5 class="mb-1 text-gray-900 dark:text-white">{{ $service->customer?->common_data?->first_name }}
                                     {{ $service->customer?->common_data?->last_name }}
                                 </h5>
-                                <p class="text-muted mb-0 small">{{ $service->customer?->contact?->email }}</p>
+                                <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->customer?->contact?->email }}</p>
                                 @if ($service->customer?->contact?->phone)
-                                <p class="text-muted mb-0 small">{{ $service->customer?->contact?->phone }}</p>
+                                <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->customer?->contact?->phone }}</p>
                                 @endif
                             </div>
                         </x-ui.card>
                     </x-layout.grid-col>
 
                     <x-layout.grid-col md="6">
-                        <x-ui.card class="bg-light border-0" no-padding>
+                        <x-ui.card class="bg-light dark:bg-gray-800 border-0" no-padding>
                             <div class="p-3">
-                                <h6 class="card-title text-muted mb-3 small text-uppercase fw-bold">
+                                <h6 class="card-title text-muted dark:text-gray-400 mb-3 small text-uppercase fw-bold">
                                     <i class="bi bi-receipt me-2"></i>
                                     Orçamento
                                 </h6>
-                                <h5 class="mb-1">{{ $service->budget?->code }}</h5>
-                                <p class="text-muted mb-0 small">{{ $service->budget?->description }}</p>
-                                <p class="mb-0 mt-2">
+                                <h5 class="mb-1 text-gray-900 dark:text-white">{{ $service->budget?->code }}</h5>
+                                <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->budget?->description }}</p>
+                                <p class="mb-0 mt-2 text-gray-900 dark:text-white">
                                     <strong>Total:
                                         {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
                                 </p>
@@ -61,53 +61,53 @@
                 </x-layout.grid-row>
 
                 <div class="mb-4">
-                    <h6 class="mb-3 small text-uppercase fw-bold text-muted">
+                    <h6 class="mb-3 small text-uppercase fw-bold text-muted dark:text-gray-400">
                         <i class="bi bi-tools me-2"></i>
                         Detalhes do Serviço
                     </h6>
 
                     @if ($service->description)
-                    <p class="mb-3">{{ $service->description }}</p>
+                    <p class="mb-3 text-gray-700 dark:text-gray-300">{{ $service->description }}</p>
                     @endif
 
                     <x-layout.grid-row class="g-3">
                         <x-layout.grid-col md="4">
-                            <div class="p-2 bg-light rounded">
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Categoria</small>
-                                <span>{{ $service->category?->name }}</span>
+                            <div class="p-2 bg-light dark:bg-gray-800 rounded">
+                                <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Categoria</small>
+                                <span class="text-gray-900 dark:text-white">{{ $service->category?->name }}</span>
                             </div>
                         </x-layout.grid-col>
                         <x-layout.grid-col md="4">
-                            <div class="p-2 bg-light rounded">
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Valor</small>
-                                <span>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                            <div class="p-2 bg-light dark:bg-gray-800 rounded">
+                                <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Valor</small>
+                                <span class="text-gray-900 dark:text-white">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                             </div>
                         </x-layout.grid-col>
                         <x-layout.grid-col md="4">
-                            <div class="p-2 bg-light rounded">
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Desconto</small>
-                                <span>{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
+                            <div class="p-2 bg-light dark:bg-gray-800 rounded">
+                                <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Desconto</small>
+                                <span class="text-gray-900 dark:text-white">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
                             </div>
                         </x-layout.grid-col>
 
                         @if ($service->due_date)
                         <x-layout.grid-col md="4">
-                            <div class="p-2 bg-light rounded">
-                                <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Prazo</small>
-                                <span>{{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}</span>
+                            <div class="p-2 bg-light dark:bg-gray-800 rounded">
+                                <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Prazo</small>
+                                <span class="text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}</span>
                             </div>
                         </x-layout.grid-col>
                         @endif
                     </x-layout.grid-row>
                 </div>
 
-                @if ($service->status->value === 'pending')
+                @if (in_array($service->status->value, ['pending', 'scheduling', 'scheduled']))
                 <x-ui.card class="border-warning mb-4 shadow-none" style="background-color: rgba(255, 193, 7, 0.05);">
                     <h6 class="card-title text-warning mb-3 fw-bold">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         Ação Necessária
                     </h6>
-                    <p class="mb-3 small">Por favor, informe o status atual deste serviço:</p>
+                    <p class="mb-3 small text-gray-700 dark:text-gray-300">Por favor, confirme ou informe o status deste serviço/agendamento:</p>
 
                     <form method="POST" action="{{ route('services.public.choose-status') }}">
                         @csrf
@@ -118,19 +118,29 @@
                             <x-layout.grid-col md="8">
                                 <x-ui.form.select
                                     name="service_status_id"
-                                    label="Status do Serviço"
+                                    label="Sua Decisão"
                                     required>
-                                    <option value="">Selecione o status...</option>
-                                    @foreach ([\App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED] as $status)
+                                    @php
+                                    $options = $service->status === \App\Enums\ServiceStatus::SCHEDULING
+                                    ? [\App\Enums\ServiceStatus::SCHEDULED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED]
+                                    : [\App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED];
+                                    @endphp
+                                    @foreach ($options as $status)
                                     <option value="{{ $status->value }}"
                                         {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
+                                        @if ($status === \App\Enums\ServiceStatus::APPROVED)
+                                        Aprovar Serviço
+                                        @elseif ($status === \App\Enums\ServiceStatus::SCHEDULED)
+                                        Confirmar Agendamento
+                                        @else
                                         {{ $status->getDescription() }}
+                                        @endif
                                     </option>
                                     @endforeach
                                 </x-ui.form.select>
                             </x-layout.grid-col>
                             <x-layout.grid-col md="4">
-                                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Atualizar" class="w-100" />
+                                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Enviar Decisão" class="w-100" />
                             </x-layout.grid-col>
                         </x-layout.grid-row>
                     </form>

@@ -6,6 +6,7 @@ namespace App\Services\Domain;
 
 use App\DTOs\Service\ServiceDTO;
 use App\DTOs\Service\ServiceItemDTO;
+use App\Enums\ScheduleStatus;
 use App\Enums\ServiceStatus;
 use App\Repositories\ServiceItemRepository;
 use App\Repositories\ServiceRepository;
@@ -260,7 +261,37 @@ class ServiceService extends AbstractBaseService
 
             $this->repository->update($service->id, ['status' => $status]);
 
+            // Sincronizar com agendamentos se necessário
+            $this->syncScheduleStatus($service, $newStatusEnum);
+
             return ServiceResult::success($service->fresh(), 'Status do serviço atualizado com sucesso.');
         });
+    }
+
+    /**
+     * Sincroniza o status do serviço com seus agendamentos.
+     */
+    private function syncScheduleStatus($service, ServiceStatus $newStatus): void
+    {
+        // Se o serviço foi aprovado pelo cliente ou o agendamento foi confirmado
+        if (in_array($newStatus, [ServiceStatus::APPROVED, ServiceStatus::SCHEDULED])) {
+            $service->schedules()
+                ->where('status', ScheduleStatus::PENDING->value)
+                ->update([
+                    'status' => ScheduleStatus::CONFIRMED->value,
+                    'confirmed_at' => now(),
+                ]);
+        }
+
+        // Se o serviço foi rejeitado ou cancelado, cancelamos os agendamentos pendentes ou confirmados
+        if (in_array($newStatus, [ServiceStatus::REJECTED, ServiceStatus::CANCELLED])) {
+            $service->schedules()
+                ->whereIn('status', [ScheduleStatus::PENDING->value, ScheduleStatus::CONFIRMED->value])
+                ->update([
+                    'status' => ScheduleStatus::CANCELLED->value,
+                    'cancelled_at' => now(),
+                    'cancellation_reason' => 'Serviço ' . $newStatus->label() . ' pelo cliente.',
+                ]);
+        }
     }
 }

@@ -280,6 +280,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/{schedule}', [ScheduleController::class, 'show'])->name('show');
         Route::get('/{schedule}/edit', [ScheduleController::class, 'edit'])->name('edit');
         Route::put('/{schedule}', [ScheduleController::class, 'update'])->name('update');
+        Route::post('/{schedule}/cancel', [ScheduleController::class, 'cancel'])->name('cancel');
         Route::delete('/{schedule}', [ScheduleController::class, 'destroy'])->name('destroy');
         Route::get('/calendar/data', [ScheduleController::class, 'getCalendarData'])->name('calendar.data');
         Route::get('/check-conflicts', [ScheduleController::class, 'checkConflicts'])->name('check-conflicts');

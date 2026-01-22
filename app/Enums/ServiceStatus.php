@@ -273,9 +273,9 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     {
         return match ($currentStatus) {
             self::DRAFT->value => [self::PENDING->value, self::CANCELLED->value],
-            self::PENDING->value => [self::SCHEDULING->value, self::SCHEDULED->value, self::PREPARING->value, self::ON_HOLD->value, self::CANCELLED->value, self::EXPIRED->value, self::DRAFT->value],
+            self::PENDING->value => [self::SCHEDULING->value, self::SCHEDULED->value, self::PREPARING->value, self::ON_HOLD->value, self::CANCELLED->value, self::EXPIRED->value, self::DRAFT->value, self::APPROVED->value, self::REJECTED->value],
             self::SCHEDULING->value => [self::SCHEDULED->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::PENDING->value],
-            self::SCHEDULED->value => [self::PREPARING->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::ON_HOLD->value],
+            self::SCHEDULED->value => [self::PREPARING->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::ON_HOLD->value, self::APPROVED->value, self::REJECTED->value],
             self::PREPARING->value => [self::IN_PROGRESS->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::ON_HOLD->value],
             self::IN_PROGRESS->value => [self::COMPLETED->value, self::PARTIAL->value, self::ON_HOLD->value, self::CANCELLED->value],
             self::ON_HOLD->value => [self::SCHEDULED->value, self::PREPARING->value, self::IN_PROGRESS->value, self::NOT_PERFORMED->value, self::CANCELLED->value],

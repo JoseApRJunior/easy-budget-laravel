@@ -77,8 +77,10 @@ class ScheduleService extends AbstractBaseService
                 $schedule = $schedule->fresh();
             }
 
-            // Atualiza o status do serviço para agendado
-            $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULED->value]);
+            // Atualiza o status do serviço apenas se não estiver em processo de agendamento (SCHEDULING) ou agendado (SCHEDULED)
+            if (! in_array($service->status, [ServiceStatus::SCHEDULING, ServiceStatus::SCHEDULED])) {
+                $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULING->value]);
+            }
 
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');

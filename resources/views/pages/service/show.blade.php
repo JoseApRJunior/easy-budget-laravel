@@ -345,8 +345,17 @@
 
                         {{-- Status SCHEDULING ou ON_HOLD --}}
                         @if ($statusValue === 'scheduling' || $statusValue === 'on_hold')
+                        @php
+                        $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
+                        @endphp
+
+                        @if ($pendingSchedule)
+                        <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
+                            data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
+                        @else
                         <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
                             data-bs-toggle="modal" data-bs-target="#scheduleModal" />
+                        @endif
 
                         <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                             data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
@@ -481,7 +490,7 @@
                     <input type="number" name="service_duration" class="form-control" required value="60" min="30" max="480">
                 </div>
                 @php
-                    $customerAddress = $service->budget?->customer?->address;
+                $customerAddress = $service->budget?->customer?->address;
                 @endphp
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
@@ -531,6 +540,55 @@
                 <x-ui.button type="submit" form="scheduleForm" variant="info" label="Agendar" />
             </x-slot>
         </x-ui.modal>
+
+        @if ($pendingSchedule)
+        {{-- Modal para Visualizar Agendamento Pendente --}}
+        <x-ui.modal id="pendingScheduleModal" title="Agendamento Pendente">
+            <div class="mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bi bi-calendar-event text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0 fw-bold text-dark">Aguardando Confirmação do Cliente</h6>
+                        <p class="text-muted small mb-0">O cliente recebeu a proposta abaixo por e-mail.</p>
+                    </div>
+                </div>
+
+                <div class="card bg-light border-0">
+                    <div class="card-body">
+                        <x-layout.v-stack gap="2">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Data:</span>
+                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($pendingSchedule->start_date_time)->format('d/m/Y') }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Horário:</span>
+                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($pendingSchedule->start_date_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($pendingSchedule->end_date_time)->format('H:i') }}</span>
+                            </div>
+                            @if($pendingSchedule->location)
+                            <div class="d-flex flex-column mt-2">
+                                <span class="text-muted mb-1">Localização:</span>
+                                <span class="text-dark small"><i class="bi bi-geo-alt me-1"></i>{{ $pendingSchedule->location }}</span>
+                            </div>
+                            @endif
+                        </x-layout.v-stack>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-muted small">Deseja alterar esta data? Você precisará cancelar o agendamento atual e propor um novo.</p>
+
+            <x-slot name="footer">
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Fechar" />
+                <form action="{{ route('provider.schedules.cancel', $pendingSchedule->id) }}" method="POST" class="d-inline">
+                    @csrf
+                    @method('POST')
+                    <x-ui.button type="submit" variant="outline-danger" icon="x-circle" label="Cancelar Agendamento" />
+                </form>
+            </x-slot>
+        </x-ui.modal>
+        @endif
 </x-layout.page-container>
 @endsection
 

@@ -229,7 +229,7 @@ class ScheduleController extends Controller
             return redirect()->back()->with('error', $result->getMessage());
         }
 
-        return redirect()->route('provider.schedules.index')
+        return redirect()->back()
             ->with('success', 'Agendamento cancelado com sucesso!');
     }
 

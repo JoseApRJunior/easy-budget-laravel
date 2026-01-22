@@ -330,6 +330,7 @@ class ServiceController extends Controller
                 ServiceStatus::APPROVED->value,
                 ServiceStatus::REJECTED->value,
                 ServiceStatus::CANCELLED->value,
+                ServiceStatus::SCHEDULED->value,
             ])],
         ]);
 
