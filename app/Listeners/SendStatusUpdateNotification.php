@@ -42,8 +42,9 @@ class SendStatusUpdateNotification implements ShouldQueue
                     'entity_type' => $entityType,
                     'entity_id' => $event->entity->id,
                     'new_status' => $event->newStatus,
-                    'dedupe_key' => $dedupeKey
+                    'dedupe_key' => $dedupeKey,
                 ]);
+
                 return;
             }
 
@@ -64,8 +65,13 @@ class SendStatusUpdateNotification implements ShouldQueue
                 $entityUrl = $event->entity->getPublicUrl();
             }
 
-            if (!$entityUrl && method_exists($event->entity, 'getUrl')) {
-                $entityUrl = $event->entity->getUrl();
+            // IMPORTANTE: Nunca envie a URL administrativa (/p/) para o cliente
+            // Se não houver URL pública, não enviamos link no e-mail ou usamos um fallback seguro
+            if (! $entityUrl) {
+                Log::warning('Public URL not found for entity in StatusUpdate notification', [
+                    'entity_type' => get_class($event->entity),
+                    'entity_id' => $event->entity->id ?? null,
+                ]);
             }
 
             $result = $mailerService->sendStatusUpdateNotification(

@@ -10,7 +10,6 @@ use App\Http\Requests\ScheduleRequest;
 use App\Models\User;
 use App\Repositories\ServiceRepository;
 use App\Services\Domain\ScheduleService;
-use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -40,7 +39,7 @@ class ScheduleController extends Controller
 
         if ($result->isError()) {
             return view('pages.schedule.confirmation-error', [
-                'error' => $result->getMessage()
+                'error' => $result->getMessage(),
             ]);
         }
 
@@ -145,6 +144,19 @@ class ScheduleController extends Controller
         $result = $this->scheduleService->createSchedule($dto);
 
         if ($result->isSuccess()) {
+            // Se houver um referer que contenha 'services', redireciona de volta para ele
+            // Caso contrário, usa o padrão show service se possível
+            $referer = $request->header('referer');
+            if ($referer && str_contains($referer, '/services/')) {
+                return redirect()->to($referer)->with('success', 'Agendamento criado com sucesso!');
+            }
+
+            // Fallback para show service se o service_id estiver disponível
+            if ($dto->service_id) {
+                return redirect()->route('provider.services.show', $dto->service_id)
+                    ->with('success', 'Agendamento criado com sucesso!');
+            }
+
             return $this->redirectSuccess(
                 'provider.schedules.index',
                 'Agendamento criado com sucesso!',

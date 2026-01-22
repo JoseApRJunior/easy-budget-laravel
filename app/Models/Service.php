@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ServiceStatus;
+use App\Models\Traits\HasPublicToken;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use HasFactory, TenantScoped;
+    use HasFactory, HasPublicToken, TenantScoped;
 
     /**
      * Boot the model.
@@ -20,6 +21,7 @@ class Service extends Model
     {
         parent::boot();
         static::bootTenantScoped();
+        static::bootHasPublicToken();
     }
 
     /**
@@ -246,13 +248,13 @@ class Service extends Model
      */
     public function getPublicUrl(): ?string
     {
-        if (!$this->public_token || !$this->code) {
+        if (! $this->public_token || ! $this->code) {
             return null;
         }
 
         return route('services.public.view-status', [
             'code' => $this->code,
-            'token' => $this->public_token
+            'token' => $this->public_token,
         ], true);
     }
 

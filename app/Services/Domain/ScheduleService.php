@@ -72,7 +72,7 @@ class ScheduleService extends AbstractBaseService
             // Vincula o token se gerado
             if ($tokenId) {
                 $this->scheduleRepository->update($schedule->id, [
-                    'user_confirmation_token_id' => $tokenId
+                    'user_confirmation_token_id' => $tokenId,
                 ]);
                 $schedule = $schedule->fresh();
             }
@@ -113,7 +113,7 @@ class ScheduleService extends AbstractBaseService
 
             // Atualiza o status do agendamento
             $this->scheduleRepository->update($schedule->id, [
-                'status' => ScheduleStatus::CONFIRMED->value
+                'status' => ScheduleStatus::CONFIRMED->value,
             ]);
 
             return $this->success($schedule->fresh(), 'Agendamento confirmado com sucesso.');
@@ -278,12 +278,12 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 
-            if ($schedule->status !== 'pending') {
-                return $this->error(OperationStatus::CONFLICT, 'Apenas agendamentos pendentes podem ser confirmados.');
+            if ($schedule->status === ScheduleStatus::CONFIRMED) {
+                return $this->success($schedule, 'Agendamento já estava confirmado.');
             }
 
             $success = $this->scheduleRepository->update($scheduleId, [
-                'status' => 'confirmed',
+                'status' => ScheduleStatus::CONFIRMED->value,
                 'confirmed_at' => now(),
             ]);
 

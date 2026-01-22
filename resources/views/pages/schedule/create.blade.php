@@ -56,18 +56,40 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
-                                <x-ui.form.input 
-                                    type="text" 
-                                    name="location" 
-                                    id="location" 
-                                    label="Local do Agendamento" 
-                                    value="{{ old('location') }}"
-                                    placeholder="Ex: Escritório do cliente, Sala de reunião, etc."
-                                />
+                        @php
+                            $customerAddress = $service->customer?->address;
+                        @endphp
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small text-muted text-uppercase">CEP</label>
+                                <input type="text" id="cep" name="cep" class="form-control" data-cep-lookup data-mask="00000-000" placeholder="00000-000" value="{{ $customerAddress?->cep }}">
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Endereço</label>
+                                <input type="text" id="address" name="address" class="form-control" placeholder="Rua, Av, etc." value="{{ $customerAddress?->address }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Número</label>
+                                <input type="text" id="address_number" name="address_number" class="form-control" placeholder="Nº" value="{{ $customerAddress?->address_number }}">
                             </div>
                         </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Bairro</label>
+                                <input type="text" id="neighborhood" name="neighborhood" class="form-control" placeholder="Bairro" value="{{ $customerAddress?->neighborhood }}">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold small text-muted text-uppercase">Cidade</label>
+                                <input type="text" id="city" name="city" class="form-control" placeholder="Cidade" value="{{ $customerAddress?->city }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold small text-muted text-uppercase">UF</label>
+                                <input type="text" id="state" name="state" class="form-control" maxlength="2" placeholder="UF" value="{{ $customerAddress?->state }}">
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="location" id="location_hidden">
 
                         <div class="row mt-3">
                             <div class="col-md-12">
@@ -187,6 +209,39 @@
             });
 
             endDateTimeInput.addEventListener('change', checkConflicts);
+
+            // Máscaras e Concatenação de Endereço
+            if (typeof VanillaMask !== 'undefined') {
+                const cepInput = document.getElementById('cep');
+                if (cepInput) {
+                    new VanillaMask('cep', 'cep');
+                }
+            }
+
+            const scheduleForm = document.getElementById('scheduleForm');
+            if (scheduleForm) {
+                scheduleForm.addEventListener('submit', function(e) {
+                    const cep = document.getElementById('cep')?.value || '';
+                    const address = document.getElementById('address')?.value || '';
+                    const number = document.getElementById('address_number')?.value || '';
+                    const neighborhood = document.getElementById('neighborhood')?.value || '';
+                    const city = document.getElementById('city')?.value || '';
+                    const state = document.getElementById('state')?.value || '';
+
+                    let fullLocation = '';
+                    if (address) fullLocation += address;
+                    if (number) fullLocation += `, ${number}`;
+                    if (neighborhood) fullLocation += ` - ${neighborhood}`;
+                    if (city) fullLocation += ` - ${city}`;
+                    if (state) fullLocation += `/${state}`;
+                    if (cep) fullLocation += ` (CEP: ${cep})`;
+
+                    const hiddenLocation = document.getElementById('location_hidden');
+                    if (hiddenLocation) {
+                        hiddenLocation.value = fullLocation.trim();
+                    }
+                });
+            }
         });
     </script>
 @endpush

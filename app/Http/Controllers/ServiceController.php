@@ -291,6 +291,100 @@ class ServiceController extends Controller
     }
 
     /**
+     * Visualiza o status de um serviço publicamente.
+     */
+    public function viewServiceStatus(string $code, string $token): View
+    {
+        $result = $this->serviceService->findByCode($code, [
+            'budget.customer',
+            'category',
+            'serviceItems.product',
+        ]);
+
+        if ($result->isError()) {
+            abort(404, 'Serviço não encontrado.');
+        }
+
+        $service = $result->getData();
+
+        // Validar o token
+        if ($service->public_token !== $token) {
+            abort(403, 'Acesso negado. Token inválido.');
+        }
+
+        return view('pages.service.public.view-status', [
+            'service' => $service,
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * Atualiza o status de um serviço via link público (ação do cliente).
+     */
+    public function chooseServiceStatus(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'service_code' => ['required', 'string'],
+            'token' => ['required', 'string'],
+            'service_status_id' => ['required', 'string', Rule::in([
+                ServiceStatus::APPROVED->value,
+                ServiceStatus::REJECTED->value,
+                ServiceStatus::CANCELLED->value,
+            ])],
+        ]);
+
+        $code = $request->input('service_code');
+        $token = $request->input('token');
+        $newStatus = $request->input('service_status_id');
+
+        $result = $this->serviceService->findByCode($code);
+        if ($result->isError()) {
+            abort(404, 'Serviço não encontrado.');
+        }
+
+        $service = $result->getData();
+
+        // Validar o token
+        if ($service->public_token !== $token) {
+            abort(403, 'Acesso negado.');
+        }
+
+        $updateResult = $this->serviceService->changeStatusByCode($code, $newStatus);
+
+        if ($updateResult->isError()) {
+            return redirect()->back()->with('error', $updateResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Status do serviço atualizado com sucesso!');
+    }
+
+    /**
+     * Versão para impressão do status do serviço.
+     */
+    public function print(string $code, string $token): View
+    {
+        $result = $this->serviceService->findByCode($code, [
+            'budget.customer',
+            'category',
+            'serviceItems.product',
+        ]);
+
+        if ($result->isError()) {
+            abort(404, 'Serviço não encontrado.');
+        }
+
+        $service = $result->getData();
+
+        if ($service->public_token !== $token) {
+            abort(403, 'Acesso negado.');
+        }
+
+        return view('pages.service.public.print', [
+            'service' => $service,
+        ]);
+    }
+
+    /**
      * Remove the specified service from storage.
      */
     public function destroy(string $code): RedirectResponse

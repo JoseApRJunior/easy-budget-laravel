@@ -137,20 +137,38 @@ class Schedule extends Model
      */
     public function getConfirmationUrl(): ?string
     {
-        if (!$this->userConfirmationToken) {
+        if (! $this->userConfirmationToken) {
             return null;
         }
 
         return route('services.public.schedules.confirm', [
-            'token' => $this->userConfirmationToken->token
+            'token' => $this->userConfirmationToken->token,
         ], true);
     }
 
     /**
-     * Retorna a URL pública (alias para getConfirmationUrl)
+     * Retorna a URL pública (usa o padrão do serviço para visualização do cliente)
+     */
+    /**
+     * Retorna a URL pública para visualização do status do agendamento.
+     * Prioriza a URL do serviço relacionado, pois ela contém o status completo.
      */
     public function getPublicUrl(): ?string
     {
-        return $this->getConfirmationUrl();
+        // Se tiver token de confirmação de usuário, usamos a rota de confirmação
+        if ($this->userConfirmationToken) {
+            return $this->getConfirmationUrl();
+        }
+
+        if (! $this->service) {
+            return null;
+        }
+
+        // Tenta obter a URL pública do serviço
+        $url = $this->service->getPublicUrl();
+
+        // Se a URL do serviço for nula (raro agora com o trait), retornamos a rota administrativa
+        // Mas o listener deve tratar isso para não enviar para o cliente
+        return $url;
     }
 }

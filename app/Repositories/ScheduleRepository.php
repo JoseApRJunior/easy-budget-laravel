@@ -8,7 +8,6 @@ use App\DTOs\Schedule\ScheduleDTO;
 use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Models\Schedule;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -77,7 +76,7 @@ class ScheduleRepository extends AbstractTenantRepository
     {
         $query = $this->model
             ->whereBetween('start_date_time', [$startDate, $endDate])
-            ->with(['service', 'service.customer', 'confirmationToken']);
+            ->with(['service', 'service.customer', 'userConfirmationToken']);
 
         $this->applyAllScheduleFilters($query, $filters);
 

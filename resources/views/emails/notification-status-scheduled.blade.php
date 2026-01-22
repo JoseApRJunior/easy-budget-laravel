@@ -1,95 +1,64 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('emails.layouts.base')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Easy Budget - Serviço Agendado</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-        }
+@section('title', 'Serviço Agendado - #' . $emailData['service_code'])
 
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            background-color: #0D6EFD;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            font-size: 0.9em;
-            color: #6c757d;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #0D6EFD;
-            color: white !important;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>Seu Serviço foi Agendado!</h1>
-        </div>
-        <div class='content'>
-            <p>Olá, {{ $emailData[ 'first_name' ] }}.</p>
-            <p>Temos o prazer de informar que seu serviço <strong>#{{ $emailData[ 'service_code' ] }}</strong> foi
-                agendado com
-                sucesso.</p>
-            <p>Você pode visualizar os detalhes completos do agendamento e do serviço no link abaixo.</p>
-
-
-            <p>Acesse o serviço para mais detalhes:</p>
-            <a href="{{ $emailData[ 'link' ] }}" class="btn">Acessar Serviço</a>
-            <p style="margin-top: 20px;">Se tiver alguma dúvida, entre em contato conosco.</p>
-            <p>
-                <strong>{{ $company[ 'company_name' ] }}</strong><br>
-                Email: {{ $company[ 'email_business' ] ?? $company[ 'email' ] }}<br>
-                Telefone: {{ $company[ 'phone_business' ] ?? $company[ 'phone' ] }}
-            </p>
-            <hr>
-            <a href="{{ $urlSuporte }}" class="btn">Suporte Easy Budget</a>
-        </div>
-        <div class='footer'>
-            <p>Este é um e-mail automático, por favor não responda.</p>
-            <p>&copy; {{ date( "Y" ) }} Easy Budget.<br>Todos os direitos reservados.</p>
-        </div>
+@section('content')
+<div class="content">
+    <div class="notice">
+        <span class="icon">📅</span>
+        <span>Atualização no seu agendamento!</span>
     </div>
-</body></html>
+
+    <h1>Agendamento #{{ $emailData['service_code'] }}</h1>
+
+    <p>Olá, <strong>{{ $emailData['first_name'] }}</strong>.</p>
+
+    <p>Houve uma atualização no status do seu agendamento:</p>
+
+    <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }}; background: #f8fafc; padding: 15px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 16px;">
+            Status do Agendamento: <strong style="color: {{ $statusColor ?? '#0d6efd' }};">{{ $emailData['service_status_name'] }}</strong>
+        </p>
+        @if(!empty($emailData['service_status_description']))
+        <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280;">
+            {{ $emailData['service_status_description'] }}
+        </p>
+        @endif
+    </div>
+
+    @if(!empty($emailData['related_service_status']))
+    <div class="panel" style="border-left: 4px solid {{ $emailData['related_service_status_color'] ?? '#6c757d' }}; background: #f8fafc; padding: 15px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 14px;">
+            Status do Serviço Relacionado: <strong style="color: {{ $emailData['related_service_status_color'] ?? '#6c757d' }};">{{ $emailData['related_service_status'] }}</strong>
+        </p>
+    </div>
+    @endif
+
+    <div class="panel">
+        <p><strong>Descrição do Serviço:</strong><br>{{ $emailData['service_description'] }}</p>
+        @if($entity->start_date_time)
+        <p><strong>Data e Horário:</strong><br>{{ $entity->start_date_time->format('d/m/Y \à\s H:i') }}</p>
+        @endif
+        @if($entity->location)
+        <p><strong>Local:</strong><br>{{ $entity->location }}</p>
+        @endif
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{{ $emailData['link'] }}" class="btn">Visualizar Agendamento</a>
+    </div>
+
+    <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
+    <p class="subcopy" style="word-break: break-all; color: #6b7280; font-size: 12px; background: #f3f4f6; padding: 10px; border-radius: 4px; margin-top: 10px;">
+        {{ $emailData['link'] }}
+    </p>
+
+    <p>Você pode acompanhar todos os detalhes, solicitar alterações ou entrar em contato conosco diretamente pela plataforma.</p>
+
+    <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+
+    <p style="font-size: 14px; color: #6b7280;">
+        Se tiver alguma dúvida, não hesite em nos contatar.
+    </p>
+</div>
+@endsection

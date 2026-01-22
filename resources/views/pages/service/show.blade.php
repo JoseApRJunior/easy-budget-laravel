@@ -480,12 +480,49 @@
                     <label class="form-label">Duração (minutos)</label>
                     <input type="number" name="service_duration" class="form-control" required value="60" min="30" max="480">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Localização</label>
-                    <input type="text" name="location" class="form-control" placeholder="Opcional">
+                @php
+                    $customerAddress = $service->budget?->customer?->address;
+                @endphp
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">CEP</label>
+                        <div class="input-group">
+                            <input type="text" id="cep" name="cep" class="form-control" data-cep-lookup data-mask="00000-000" placeholder="00000-000" value="{{ $customerAddress?->cep }}">
+                            <span class="input-group-text d-none" id="cep-loader">
+                                <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Número</label>
+                        <input type="text" id="address_number" name="address_number" class="form-control" placeholder="Nº" value="{{ $customerAddress?->address_number }}">
+                    </div>
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label">Observações</label>
+                    <label class="form-label small fw-bold text-muted text-uppercase">Endereço</label>
+                    <input type="text" id="address" name="address" class="form-control" placeholder="Rua, Av, etc." value="{{ $customerAddress?->address }}">
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Bairro</label>
+                        <input type="text" id="neighborhood" name="neighborhood" class="form-control" placeholder="Bairro" value="{{ $customerAddress?->neighborhood }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Cidade</label>
+                        <input type="text" id="city" name="city" class="form-control" placeholder="Cidade" value="{{ $customerAddress?->city }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted text-uppercase">UF</label>
+                        <input type="text" id="state" name="state" class="form-control" maxlength="2" placeholder="UF" value="{{ $customerAddress?->state }}">
+                    </div>
+                </div>
+
+                <input type="hidden" name="location" id="schedule_location_hidden">
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Observações</label>
                     <textarea name="notes" class="form-control" rows="3"></textarea>
                 </div>
             </form>
@@ -544,6 +581,36 @@
                         confirmButton.classList.add('btn-primary');
                     }
                 }
+            });
+        }
+        // Máscaras para o modal de agendamento
+        if (typeof VanillaMask !== 'undefined') {
+            const cepInput = document.getElementById('cep');
+            if (cepInput) {
+                new VanillaMask('cep', 'cep');
+            }
+        }
+
+        // Concatenação de endereço no modal de agendamento
+        const scheduleForm = document.getElementById('scheduleForm');
+        if (scheduleForm) {
+            scheduleForm.addEventListener('submit', function(e) {
+                const cep = document.getElementById('cep')?.value || '';
+                const address = document.getElementById('address')?.value || '';
+                const number = document.getElementById('address_number')?.value || '';
+                const neighborhood = document.getElementById('neighborhood')?.value || '';
+                const city = document.getElementById('city')?.value || '';
+                const state = document.getElementById('state')?.value || '';
+
+                let fullLocation = '';
+                if (address) fullLocation += address;
+                if (number) fullLocation += `, ${number}`;
+                if (neighborhood) fullLocation += ` - ${neighborhood}`;
+                if (city) fullLocation += ` - ${city}`;
+                if (state) fullLocation += `/${state}`;
+                if (cep) fullLocation += ` (CEP: ${cep})`;
+
+                document.getElementById('schedule_location_hidden').value = fullLocation.trim();
             });
         }
     });

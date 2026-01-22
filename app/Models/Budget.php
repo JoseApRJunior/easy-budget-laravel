@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BudgetStatus;
+use App\Models\Traits\HasPublicToken;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,7 @@ use Illuminate\Support\Carbon;
 class Budget extends Model
 {
     use HasFactory;
+    use HasPublicToken;
     use TenantScoped;
 
     /**
@@ -39,6 +41,7 @@ class Budget extends Model
     {
         parent::boot();
         static::bootTenantScoped();
+        static::bootHasPublicToken();
     }
 
     /**
@@ -459,7 +462,7 @@ class Budget extends Model
             'version_number' => $this->getNextVersionNumber(),
             'changes_description' => $changeDescription,
             'budget_data' => $this->toArray(),
-            'services_data' => $this->services->map(fn($s) => [
+            'services_data' => $this->services->map(fn ($s) => [
                 'id' => $s->id,
                 'category_id' => $s->category_id,
                 'description' => $s->description,
@@ -550,7 +553,6 @@ class Budget extends Model
         return true;
     }
 
-
     /**
      * Duplica o orçamento.
      */
@@ -586,13 +588,13 @@ class Budget extends Model
      */
     public function getPublicUrl(): ?string
     {
-        if (!$this->public_token || !$this->code) {
+        if (! $this->public_token || ! $this->code) {
             return null;
         }
 
         return route('budgets.public.choose-status', [
             'code' => $this->code,
-            'token' => $this->public_token
+            'token' => $this->public_token,
         ], true);
     }
 
@@ -601,13 +603,13 @@ class Budget extends Model
      */
     public function getPrintUrl(): ?string
     {
-        if (!$this->public_token || !$this->code) {
+        if (! $this->public_token || ! $this->code) {
             return null;
         }
 
         return route('budgets.public.print', [
             'code' => $this->code,
-            'token' => $this->public_token
+            'token' => $this->public_token,
         ], true);
     }
 

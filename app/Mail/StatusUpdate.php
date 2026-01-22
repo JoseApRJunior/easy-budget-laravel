@@ -85,8 +85,16 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     public function envelope(): Envelope
     {
+        $statusPrefix = match ($this->status) {
+            'approved', 'confirmed' => '✅ Confirmado',
+            'cancelled', 'rejected' => '❌ Cancelado',
+            'completed', 'finished' => '🏁 Concluído',
+            'pending' => '⏳ Pendente',
+            default => '🔔 Atualização',
+        };
+
         return new Envelope(
-            subject: 'Atualização de Status - ' . $this->getEntityTitle(),
+            subject: $statusPrefix.': '.$this->getEntityTitle().' #'.$this->getEntityCode(),
         );
     }
 
@@ -95,29 +103,62 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+        $statusDescription = null;
+        if (isset($this->entity->status) && method_exists($this->entity->status, 'getDescription')) {
+            $statusDescription = $this->entity->status->getDescription();
+        }
+
+        $serviceStatus = null;
+        $serviceStatusColor = null;
+        if ($this->getEntityType() === 'schedule' && isset($this->entity->service?->status)) {
+            $serviceStatus = $this->entity->service->status->label();
+            $serviceStatusColor = $this->entity->service->status->getColor();
+        }
+
         return new Content(
-            view: 'emails.notification-status',
+            view: $this->getViewName(),
             with: [
                 'emailData' => [
                     'first_name' => $this->getUserFirstName(),
                     'service_code' => $this->getEntityCode(),
                     'service_status_name' => $this->statusName,
+                    'service_status_description' => $statusDescription,
                     'service_description' => $this->getEntityDescription(),
                     'service_total' => $this->getEntityTotal(),
                     'link' => $this->entityUrl ?? $this->generateEntityUrl(),
-                    'entity_type' => $this->getEntityType(),
+                    'entity_type' => $this->getEntityTitle(),
                     'old_status' => $this->getEntityOldStatus(),
                     'new_status' => $this->status,
                     'status_changed_at' => now()->format('d/m/Y H:i'),
+                    'related_service_status' => $serviceStatus,
+                    'related_service_status_color' => $serviceStatusColor,
                 ],
                 'company' => $this->getCompanyData(),
-                'urlSuporte' => config('app.url') . '/support',
+                'urlSuporte' => config('app.url').'/support',
                 'tenant' => $this->tenant,
                 'entity' => $this->entity,
                 'isSystemEmail' => false,
                 'statusColor' => $this->getStatusColor(),
             ],
         );
+    }
+
+    /**
+     * Determina o nome da view baseado no tipo de entidade e status.
+     *
+     * @return string Nome da view
+     */
+    private function getViewName(): string
+    {
+        $entityType = $this->getEntityType();
+
+        // Se for um agendamento
+        if ($entityType === 'schedule') {
+            return 'emails.notification-status-scheduled';
+        }
+
+        // Fallback para o template genérico
+        return 'emails.notification-status';
     }
 
     /**
@@ -174,11 +215,11 @@ class StatusUpdate extends Mailable implements ShouldQueue
         $entityType = $this->getEntityType();
 
         return match ($entityType) {
-            'budget' => 'Orçamento ' . $this->getEntityCode(),
-            'service' => 'Serviço ' . $this->getEntityCode(),
-            'invoice' => 'Fatura ' . $this->getEntityCode(),
-            'schedule' => 'Agendamento ' . $this->getEntityCode(),
-            default => ucfirst($entityType) . ' ' . $this->getEntityCode(),
+            'budget' => 'Orçamento',
+            'service' => 'Serviço',
+            'invoice' => 'Fatura',
+            'schedule' => 'Agendamento',
+            default => 'Notificação',
         };
     }
 
@@ -205,13 +246,15 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getEntityDescription(): string
     {
-        return match ($this->getEntityType()) {
-            'budget' => $this->entity->description ?? 'Orçamento sem descrição',
-            'service' => $this->entity->description ?? 'Serviço sem descrição',
-            'invoice' => $this->entity->notes ?? 'Fatura sem observações',
-            'schedule' => ($this->entity->start_date_time?->format('d/m/Y H:i') ?? 'N/A') . ' em ' . ($this->entity->location ?? 'Local não definido'),
-            default => 'Entidade atualizada',
+        $description = match ($this->getEntityType()) {
+            'budget' => $this->entity->description,
+            'service' => $this->entity->description,
+            'invoice' => $this->entity->notes,
+            'schedule' => $this->entity->service?->description,
+            default => null,
         };
+
+        return $description ?: 'Sem descrição detalhada';
     }
 
     /**
@@ -227,6 +270,9 @@ class StatusUpdate extends Mailable implements ShouldQueue
             'invoice' => $this->entity->total ?? 0,
             default => 0,
         };
+
+        // Garante que o valor seja numérico antes de formatar
+        $total = is_numeric($total) ? (float) $total : 0;
 
         return number_format($total, 2, ',', '.');
     }
@@ -274,31 +320,34 @@ class StatusUpdate extends Mailable implements ShouldQueue
         $entityType = $this->getEntityType();
 
         return match ($entityType) {
-            'budget' => config('app.url') . '/budgets/' . $this->entity->id,
-            'service' => config('app.url') . '/services/' . $this->entity->id,
-            'invoice' => config('app.url') . '/invoices/' . $this->entity->id,
-            'schedule' => config('app.url') . '/schedules/' . $this->entity->id,
+            'budget' => config('app.url').'/budgets/'.$this->entity->id,
+            'service' => config('app.url').'/services/'.$this->entity->id,
+            'invoice' => config('app.url').'/invoices/'.$this->entity->id,
+            'schedule' => config('app.url').'/schedules/'.$this->entity->id,
             default => config('app.url'),
         };
     }
 
     /**
-     * Obtém o primeiro nome do usuário (se disponível através da entidade).
+     * Obtém o nome amigável do usuário.
      *
-     * @return string Nome do usuário ou padrão
+     * @return string Nome do usuário
      */
     private function getUserFirstName(): string
     {
-        // Tentar obter o nome do usuário através de relacionamentos
-        if (method_exists($this->entity, 'user') && $this->entity->user) {
-            return $this->entity->user->name ?? 'Usuário';
+        if (isset($this->entity->customer)) {
+            $name = $this->entity->customer->name ?? $this->entity->customer->first_name ?? 'Cliente';
+
+            return explode(' ', $name)[0];
         }
 
-        if (method_exists($this->entity, 'customer') && $this->entity->customer) {
-            return $this->entity->customer->first_name ?? 'Cliente';
+        if (isset($this->entity->service->customer)) {
+            $name = $this->entity->service->customer->name ?? $this->entity->service->customer->first_name ?? 'Cliente';
+
+            return explode(' ', $name)[0];
         }
 
-        return 'Usuário';
+        return 'Cliente';
     }
 
     /**
@@ -321,9 +370,9 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 $provider = $this->entity->provider()
                     ->withoutGlobalScopes()
                     ->with([
-                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                        'contact' => fn($q) => $q->withoutGlobalScopes(),
-                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                        'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                        'address' => fn ($q) => $q->withoutGlobalScopes(),
                     ])
                     ->first();
             }
@@ -332,9 +381,9 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 $provider = $this->tenant->provider()
                     ->withoutGlobalScopes()
                     ->with([
-                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                        'contact' => fn($q) => $q->withoutGlobalScopes(),
-                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                        'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                        'address' => fn ($q) => $q->withoutGlobalScopes(),
                     ])
                     ->first();
             }
@@ -361,12 +410,12 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 $document = null;
                 if ($commonData) {
                     $document = $commonData->cnpj
-                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
-                        : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
+                        ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
+                        : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
                 }
 
                 return [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : ($this->tenant?->name ?? $this->entity->tenant?->name ?? 'Minha Empresa')),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : ($this->tenant?->name ?? $this->entity->tenant?->name ?? 'Minha Empresa')),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
