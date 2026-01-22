@@ -37,7 +37,9 @@
     <div class="panel">
         <p><strong>Descrição do Serviço:</strong><br>{{ $emailData['service_description'] }}</p>
         @if($entity->start_date_time)
-        <p><strong>Data e Horário:</strong><br>{{ $entity->start_date_time->format('d/m/Y \à\s H:i') }}</p>
+        <p><strong>Data e Horário:</strong><br>
+            {{ $entity->start_date_time->format('d/m/Y') }} das {{ $entity->start_date_time->format('H:i') }} às {{ $entity->end_date_time->format('H:i') }}
+        </p>
         @endif
         @if($entity->location)
         <p><strong>Local:</strong><br>{{ $entity->location }}</p>

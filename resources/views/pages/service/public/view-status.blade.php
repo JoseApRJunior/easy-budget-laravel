@@ -71,6 +71,30 @@
                     @endif
 
                     <x-layout.grid-row class="g-3">
+                        @php
+                        $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
+                        $confirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->first();
+                        $activeSchedule = $confirmedSchedule ?? $pendingSchedule;
+                        @endphp
+
+                        @if ($activeSchedule)
+                        <x-layout.grid-col md="12" class="mb-2">
+                            <div class="p-3 bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-10 border border-{{ $confirmedSchedule ? 'success' : 'warning' }} border-opacity-25 rounded d-flex align-items-center">
+                                <i class="bi bi-calendar-check fs-4 text-{{ $confirmedSchedule ? 'success' : 'warning' }} me-3"></i>
+                                <div>
+                                    <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">
+                                        {{ $confirmedSchedule ? 'Agendamento Confirmado' : 'Proposta de Agendamento' }}
+                                    </small>
+                                    <span class="text-gray-900 dark:text-white fw-bold">
+                                        {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('d/m/Y') }}
+                                        às {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }}
+                                        até {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </x-layout.grid-col>
+                        @endif
+
                         <x-layout.grid-col md="4">
                             <div class="p-2 bg-light dark:bg-gray-800 rounded">
                                 <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Categoria</small>

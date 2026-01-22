@@ -469,123 +469,166 @@
 
         {{-- Modal para Agendamento --}}
         <x-ui.modal id="scheduleModal" title="Agendar Serviço">
-            <form id="scheduleForm" action="{{ route('provider.schedules.store', $service->code) }}" method="POST">
-                @csrf
+            <x-ui.form id="scheduleForm" action="{{ route('provider.schedules.store', $service->code) }}" method="POST">
                 <input type="hidden" name="service_id" value="{{ $service->id }}">
                 <input type="hidden" name="provider_id" value="{{ auth()->id() }}">
                 <input type="hidden" name="customer_id" value="{{ $service->budget?->customer_id }}">
                 <input type="hidden" name="service_type" value="{{ $service->category?->name ?? 'Serviço' }}">
 
-                <div class="mb-3">
-                    <label class="form-label">Data do Serviço</label>
-                    <input type="date" name="service_date" class="form-control" required
-                        value="{{ $service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('Y-m-d') : date('Y-m-d') }}">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Horário</label>
-                    <input type="time" name="service_time" class="form-control" required value="08:00">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Duração (minutos)</label>
-                    <input type="number" name="service_duration" class="form-control" required value="60" min="30" max="480">
-                </div>
+                <x-layout.grid-row g="3">
+                    <x-layout.grid-col size="col-md-6">
+                        <x-ui.form.input
+                            type="date"
+                            name="service_date"
+                            label="Data do Serviço"
+                            required
+                            :value="$service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('Y-m-d') : date('Y-m-d')" />
+                    </x-layout.grid-col>
+
+                    <x-layout.grid-col size="col-md-3">
+                        <x-ui.form.input
+                            type="time"
+                            name="service_time"
+                            label="Horário"
+                            required
+                            value="08:00" />
+                    </x-layout.grid-col>
+
+                    <x-layout.grid-col size="col-md-3">
+                        <x-ui.form.input
+                            type="number"
+                            name="service_duration"
+                            label="Duração (min)"
+                            required
+                            value="60"
+                            min="30"
+                            max="480" />
+                    </x-layout.grid-col>
+                </x-layout.grid-row>
+
                 @php
                 $customerAddress = $service->budget?->customer?->address;
                 @endphp
-                <div class="row g-2 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted text-uppercase">CEP</label>
-                        <div class="input-group">
-                            <input type="text" id="cep" name="cep" class="form-control" data-cep-lookup data-mask="00000-000" placeholder="00000-000" value="{{ $customerAddress?->cep }}">
-                            <span class="input-group-text d-none" id="cep-loader">
-                                <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Número</label>
-                        <input type="text" id="address_number" name="address_number" class="form-control" placeholder="Nº" value="{{ $customerAddress?->address_number }}">
-                    </div>
+
+                <hr class="my-4">
+                <h6 class="fw-bold mb-3 text-uppercase small text-muted">Local de Execução</h6>
+
+                <x-layout.grid-row g="3">
+                    <x-layout.grid-col size="col-md-6">
+                        <x-ui.form.input
+                            id="cep"
+                            name="cep"
+                            label="CEP"
+                            data-cep-lookup
+                            data-mask="00000-000"
+                            placeholder="00000-000"
+                            :value="$customerAddress?->cep" />
+                    </x-layout.grid-col>
+                    <x-layout.grid-col size="col-md-6">
+                        <x-ui.form.input
+                            id="address_number"
+                            name="address_number"
+                            label="Número"
+                            placeholder="Nº"
+                            :value="$customerAddress?->address_number" />
+                    </x-layout.grid-col>
+                </x-layout.grid-row>
+
+                <div class="mt-3">
+                    <x-ui.form.input
+                        id="address"
+                        name="address"
+                        label="Endereço"
+                        placeholder="Rua, Av, etc."
+                        :value="$customerAddress?->address" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Endereço</label>
-                    <input type="text" id="address" name="address" class="form-control" placeholder="Rua, Av, etc." value="{{ $customerAddress?->address }}">
-                </div>
-
-                <div class="row g-2 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Bairro</label>
-                        <input type="text" id="neighborhood" name="neighborhood" class="form-control" placeholder="Bairro" value="{{ $customerAddress?->neighborhood }}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Cidade</label>
-                        <input type="text" id="city" name="city" class="form-control" placeholder="Cidade" value="{{ $customerAddress?->city }}">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted text-uppercase">UF</label>
-                        <input type="text" id="state" name="state" class="form-control" maxlength="2" placeholder="UF" value="{{ $customerAddress?->state }}">
-                    </div>
-                </div>
+                <x-layout.grid-row g="3" class="mt-1">
+                    <x-layout.grid-col size="col-md-5">
+                        <x-ui.form.input
+                            id="neighborhood"
+                            name="neighborhood"
+                            label="Bairro"
+                            placeholder="Bairro"
+                            :value="$customerAddress?->neighborhood" />
+                    </x-layout.grid-col>
+                    <x-layout.grid-col size="col-md-5">
+                        <x-ui.form.input
+                            id="city"
+                            name="city"
+                            label="Cidade"
+                            placeholder="Cidade"
+                            :value="$customerAddress?->city" />
+                    </x-layout.grid-col>
+                    <x-layout.grid-col size="col-md-2">
+                        <x-ui.form.input
+                            id="state"
+                            name="state"
+                            label="UF"
+                            maxlength="2"
+                            placeholder="UF"
+                            :value="$customerAddress?->state" />
+                    </x-layout.grid-col>
+                </x-layout.grid-row>
 
                 <input type="hidden" name="location" id="schedule_location_hidden">
 
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Observações</label>
-                    <textarea name="notes" class="form-control" rows="3"></textarea>
+                <div class="mt-3">
+                    <x-ui.form.textarea
+                        name="notes"
+                        label="Observações"
+                        rows="3" />
                 </div>
-            </form>
+            </x-ui.form>
             <x-slot name="footer">
                 <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-ui.button type="submit" form="scheduleForm" variant="info" label="Agendar" />
+                <x-ui.button type="submit" form="scheduleForm" variant="info" icon="calendar-check" label="Agendar Serviço" />
             </x-slot>
         </x-ui.modal>
 
         @if ($pendingSchedule)
         {{-- Modal para Visualizar Agendamento Pendente --}}
         <x-ui.modal id="pendingScheduleModal" title="Agendamento Pendente">
-            <div class="mb-4">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
-                        <i class="bi bi-calendar-event text-warning fs-4"></i>
-                    </div>
+            <x-ui.alert type="warning" class="mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-hourglass-split fs-4 me-3"></i>
                     <div>
-                        <h6 class="mb-0 fw-bold text-dark">Aguardando Confirmação do Cliente</h6>
-                        <p class="text-muted small mb-0">O cliente recebeu a proposta abaixo por e-mail.</p>
+                        <strong class="d-block">Aguardando Confirmação do Cliente</strong>
+                        <span class="small">O cliente recebeu a proposta abaixo por e-mail e precisa aprovar para confirmar.</span>
                     </div>
                 </div>
+            </x-ui.alert>
 
-                <div class="card bg-light border-0">
-                    <div class="card-body">
-                        <x-layout.v-stack gap="2">
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Data:</span>
-                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($pendingSchedule->start_date_time)->format('d/m/Y') }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-muted">Horário:</span>
-                                <span class="fw-bold text-dark">{{ \Carbon\Carbon::parse($pendingSchedule->start_date_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($pendingSchedule->end_date_time)->format('H:i') }}</span>
-                            </div>
-                            @if($pendingSchedule->location)
-                            <div class="d-flex flex-column mt-2">
-                                <span class="text-muted mb-1">Localização:</span>
-                                <span class="text-dark small"><i class="bi bi-geo-alt me-1"></i>{{ $pendingSchedule->location }}</span>
-                            </div>
-                            @endif
-                        </x-layout.v-stack>
-                    </div>
-                </div>
-            </div>
+            <x-ui.card class="bg-light border-0 shadow-none mb-4">
+                <x-layout.v-stack gap="3">
+                    <x-resource.resource-mobile-field
+                        label="Data Proposta"
+                        :value="\Carbon\Carbon::parse($pendingSchedule->start_date_time)->format('d/m/Y')"
+                        icon="calendar-event" />
 
-            <p class="text-muted small">Deseja alterar esta data? Você precisará cancelar o agendamento atual e propor um novo.</p>
+                    <x-resource.resource-mobile-field
+                        label="Horário"
+                        :value="\Carbon\Carbon::parse($pendingSchedule->start_date_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($pendingSchedule->end_date_time)->format('H:i')"
+                        icon="clock" />
+
+                    @if($pendingSchedule->location)
+                    <x-resource.resource-mobile-field
+                        label="Localização"
+                        :value="$pendingSchedule->location"
+                        icon="geo-alt" />
+                    @endif
+                </x-layout.v-stack>
+            </x-ui.card>
+
+            <p class="text-muted small text-center px-3">
+                Deseja propor uma nova data? Cancele o agendamento atual primeiro.
+            </p>
 
             <x-slot name="footer">
                 <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Fechar" />
-                <form action="{{ route('provider.schedules.cancel', $pendingSchedule->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    @method('POST')
+                <x-ui.form action="{{ route('provider.schedules.cancel', $pendingSchedule->id) }}" method="POST" class="d-inline">
                     <x-ui.button type="submit" variant="outline-danger" icon="x-circle" label="Cancelar Agendamento" />
-                </form>
+                </x-ui.form>
             </x-slot>
         </x-ui.modal>
         @endif
