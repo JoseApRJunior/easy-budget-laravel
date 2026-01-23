@@ -33,13 +33,13 @@
         <x-resource.resource-header-divider />
 
         {{-- Segunda Linha: Cliente --}}
-        <x-resource.resource-header-section title="Dados do Cliente" icon="person">
+        <x-resource.resource-header-section title="Dados do Cliente" icon="people">
             @if ($budget->customer)
             <x-layout.grid-col size="col-md-4">
                 <x-resource.resource-info
                     title="Nome/Razão Social"
                     :subtitle="$budget->customer->name"
-                    icon="person"
+                    icon="person-badge"
                     :href="route('provider.customers.show', $budget->customer->id)"
                     class="small" />
             </x-layout.grid-col>

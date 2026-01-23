@@ -44,13 +44,13 @@
             <x-resource.resource-header-divider />
 
             {{-- Segunda Linha: Dados do Cliente --}}
-            <x-resource.resource-header-section title="Dados do Cliente" icon="person">
+            <x-resource.resource-header-section title="Dados do Cliente" icon="people">
                 @if ($service->customer)
                 <x-layout.grid-col size="col-md-3">
                     <x-resource.resource-info
                         title="Nome/Razão Social"
                         :subtitle="$service->customer->name"
-                        icon="person"
+                        icon="person-badge"
                         :href="route('provider.customers.show', $service->customer->id)"
                         class="small" />
                 </x-layout.grid-col>
@@ -152,35 +152,23 @@
             <div class="col-md-4 mt-2">
                 <div class="bg-light p-3 rounded-3 border border-light-subtle h-100 d-flex flex-column justify-content-center">
                     <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted small">Mão de Obra:</span>
-                        <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($service->labor_cost) }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted small">Materiais:</span>
-                        <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($service->material_cost) }}</span>
+                        <span class="text-muted small">Desconto:</span>
+                        <span class="fw-semibold small text-danger">R$ {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
                     </div>
                     <div class="d-flex justify-content-between pt-2 border-top border-secondary-subtle">
-                        <span class="fw-bold">Total:</span>
+                        <span class="fw-bold">Total Final:</span>
                         <span class="fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                     </div>
                 </div>
             </div>
 
             {{-- Descrição e Observações --}}
-            @if ($service->description || $service->notes)
-            <x-resource.resource-header-divider />
             @if ($service->description)
-            <div class="col-md-6 mt-2">
+            <x-resource.resource-header-divider />
+            <div class="col-12 mt-2">
                 <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição do Serviço</label>
                 <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $service->description }}</p>
             </div>
-            @endif
-            @if ($service->notes)
-            <div class="col-md-6 mt-2">
-                <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Observações Internas</label>
-                <p class="mb-0 text-dark small">{{ $service->notes }}</p>
-            </div>
-            @endif
             @endif
         </x-resource.resource-header-card>
 
@@ -343,56 +331,6 @@
 
             <x-layout.grid-col size="col-lg-4">
                 <x-layout.v-stack>
-                    {{-- Informações do Cliente --}}
-                    <x-resource.resource-list-card
-                        title="Cliente"
-                        icon="person-circle"
-                        padding="p-4">
-                        @if ($service->budget?->customer)
-                        <div class="mb-4">
-                            <x-resource.resource-info
-                                :title="$service->budget->customer->commonData?->full_name"
-                                :subtitle="$service->budget->customer->commonData?->company_name"
-                                icon="person"
-                                titleClass="fw-bold text-dark"
-                                subtitleClass="text-muted small"
-                                :href="route('provider.customers.show', $service->budget->customer)" />
-                        </div>
-
-                        <x-layout.v-stack gap="3" class="mb-4">
-                            @if ($service->budget->customer->contact?->email)
-                            <x-resource.resource-mobile-field
-                                label="E-mail"
-                                :value="$service->budget->customer->contact->email"
-                                icon="envelope" />
-                            @endif
-
-                            @if ($service->budget->customer->contact?->phone)
-                            <x-resource.resource-mobile-field
-                                label="Telefone"
-                                :value="$service->budget->customer->contact->phone"
-                                icon="telephone" />
-                            @endif
-
-                            @if ($service->budget->customer->contact?->phone_business)
-                            <x-resource.resource-mobile-field
-                                label="WhatsApp"
-                                icon="whatsapp">
-                                <a href="https://wa.me/{{ preg_replace('/\D/', '', $service->budget->customer->contact->phone_business) }}" target="_blank" class="text-decoration-none fw-bold">
-                                    {{ $service->budget->customer->contact->phone_business }}
-                                </a>
-                            </x-resource.resource-mobile-field>
-                            @endif
-                        </x-layout.v-stack>
-
-                        <div class="d-grid">
-                            <x-ui.button type="link" href="{{ route('provider.customers.show', $service->budget->customer) }}" variant="outline-primary" size="sm" icon="eye" label="Ver Perfil Completo" />
-                        </div>
-                        @else
-                        <x-resource.empty-state title="Cliente não vinculado" description="Este serviço não possui um cliente vinculado via orçamento." icon="person-x" />
-                        @endif
-                    </x-resource.resource-list-card>
-
                     <x-resource.quick-actions title="Ações do Serviço" icon="lightning-charge" variant="secondary">
                         @if ($isApproved)
                         {{-- Status PENDING --}}
