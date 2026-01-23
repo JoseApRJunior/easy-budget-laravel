@@ -15,165 +15,126 @@
         <p class="text-muted mb-0">Visualize as informações completas do orçamento</p>
     </x-layout.page-header>
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <div class="row g-4">
-                {{-- Primeira Linha: Informações Principais --}}
+    <x-resource.resource-header-card>
+        {{-- Primeira Linha: Informações Principais --}}
+        <x-resource.resource-header-item
+            label="Código"
+            :value="$budget->code" />
+
+        <x-resource.resource-header-item
+            label="Status Atual">
+            <x-ui.status-description :item="$budget" statusField="status" :useColor="true" />
+        </x-resource.resource-header-item>
+
+        <x-resource.resource-header-item
+            label="Total Geral"
+            :value="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)" />
+
+        <x-resource.resource-header-divider />
+
+        {{-- Segunda Linha: Cliente --}}
+        <x-resource.resource-header-section title="Dados do Cliente" icon="person">
+            @if ($budget->customer)
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Nome/Razão Social"
+                    :subtitle="$budget->customer->name"
+                    icon="person"
+                    :href="route('provider.customers.show', $budget->customer->id)"
+                    class="small" />
+            </x-layout.grid-col>
+            <x-layout.grid-col size="col-md-4">
+                @php
+                $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
+                $docValue = $budget->customer->commonData->cnpj
+                ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
+                : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
+                @endphp
+                <x-resource.resource-info
+                    :title="$docLabel"
+                    :subtitle="$docValue"
+                    icon="card-text"
+                    class="small" />
+            </x-layout.grid-col>
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Contato Principal"
+                    :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
+                    icon="envelope"
+                    class="small" />
+            </x-layout.grid-col>
+            @else
+            <x-layout.grid-col size="col-12">
+                <p class="text-muted mb-0 italic">Dados do cliente não vinculados corretamente.</p>
+            </x-layout.grid-col>
+            @endif
+        </x-resource.resource-header-section>
+
+        <x-resource.resource-header-divider />
+
+        {{-- Terceira Linha: Resumo Financeiro e Datas --}}
+        <div class="col-md-8 mt-2">
+            <div class="row g-3">
                 <div class="col-md-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="item-icon">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </div>
-                        <div>
-                            <label class="text-muted small d-block mb-1">Código</label>
-                            <h5 class="mb-0 fw-bold">{{ $budget->code }}</h5>
-                        </div>
-                    </div>
+                    <x-resource.resource-info
+                        title="Criado em"
+                        :subtitle="$budget->created_at->format('d/m/Y H:i')"
+                        icon="calendar-plus"
+                        class="small" />
                 </div>
-
+                @if ($budget->due_date)
                 <div class="col-md-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div>
-                            <label class="text-muted small d-block mb-1">Status Atual</label>
-                            <div class="d-flex flex-column">
-                                <x-ui.status-description :item="$budget" statusField="status" useColor=true />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="item-icon">
-                            <i class="bi bi-cash-stack"></i>
-                        </div>
-                        <div>
-                            <label class="text-muted small d-block mb-1">Total Geral</label>
-                            <h5 class="mb-0 fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</h5>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Divisor --}}
-                <div class="col-12 mt-0">
-                    <hr class="text-muted opacity-25">
-                </div>
-
-                {{-- Segunda Linha: Cliente --}}
-                <div class="col-12 mt-2">
-                    <h6 class="fw-bold mb-3 d-flex align-items-center">
-                        <i class="bi bi-person me-2"></i>
-                        Dados do Cliente
-                    </h6>
-                    <div class="row g-3">
-                        @if ($budget->customer)
-                        <div class="col-md-4">
-                            <x-resource.resource-info
-                                title="Nome/Razão Social"
-                                :subtitle="$budget->customer->name"
-                                icon="person"
-                                class="small" />
-                        </div>
-                        <div class="col-md-4">
-                            @php
-                            $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
-                            $docValue = $budget->customer->commonData->cnpj
-                            ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
-                            : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
-                            @endphp
-                            <x-resource.resource-info
-                                :title="$docLabel"
-                                :subtitle="$docValue"
-                                icon="card-text"
-                                class="small" />
-                        </div>
-                        <div class="col-md-4">
-                            <x-resource.resource-info
-                                title="Contato Principal"
-                                :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
-                                icon="envelope"
-                                class="small" />
-                        </div>
-                        @else
-                        <div class="col-12">
-                            <p class="text-muted mb-0 italic">Dados do cliente não vinculados corretamente.</p>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Divisor --}}
-                <div class="col-12 mt-0">
-                    <hr class="text-muted opacity-25">
-                </div>
-
-                {{-- Terceira Linha: Resumo Financeiro e Datas --}}
-                <div class="col-md-8 mt-2">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <x-resource.resource-info
-                                title="Criado em"
-                                :subtitle="$budget->created_at->format('d/m/Y H:i')"
-                                icon="calendar-plus"
-                                class="small" />
-                        </div>
-                        @if ($budget->due_date)
-                        <div class="col-md-4">
-                            <x-resource.resource-info
-                                title="Vencimento"
-                                :subtitle="$budget->due_date->format('d/m/Y')"
-                                icon="calendar-event"
-                                class="small" />
-                        </div>
-                        @endif
-                        <div class="col-md-4">
-                            <x-resource.resource-info
-                                title="Última Atualização"
-                                :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
-                                icon="clock-history"
-                                class="small" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4 mt-2">
-                    <div class="bg-light p-3 rounded-3 border border-light-subtle">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted small">Subtotal:</span>
-                            <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted small">Desconto:</span>
-                            <span class="text-warning fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between pt-2 border-top border-secondary-subtle">
-                            <span class="fw-bold">Total:</span>
-                            <span class="fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Descrição e Observações --}}
-                @if ($budget->description || $budget->payment_terms)
-                <div class="col-12 mt-0">
-                    <hr class="text-muted opacity-25">
-                </div>
-                @if ($budget->description)
-                <div class="col-md-6 mt-2">
-                    <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição</label>
-                    <p class="mb-0 text-dark small">{{ $budget->description }}</p>
+                    <x-resource.resource-info
+                        title="Vencimento"
+                        :subtitle="$budget->due_date->format('d/m/Y')"
+                        icon="calendar-event"
+                        class="small" />
                 </div>
                 @endif
-                @if ($budget->payment_terms)
-                <div class="col-md-6 mt-2">
-                    <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Condições de Pagamento</label>
-                    <p class="mb-0 text-dark small">{{ $budget->payment_terms }}</p>
+                <div class="col-md-4">
+                    <x-resource.resource-info
+                        title="Última Atualização"
+                        :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
+                        icon="clock-history"
+                        class="small" />
                 </div>
-                @endif
-                @endif
             </div>
         </div>
-    </div>
+
+        <div class="col-md-4 mt-2">
+            <div class="bg-light p-3 rounded-3 border border-light-subtle">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">Subtotal:</span>
+                    <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted small">Desconto:</span>
+                    <span class="text-warning fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
+                </div>
+                <div class="d-flex justify-content-between pt-2 border-top border-secondary-subtle">
+                    <span class="fw-bold">Total:</span>
+                    <span class="fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Descrição e Observações --}}
+        @if ($budget->description || $budget->payment_terms)
+        <x-resource.resource-header-divider />
+        @if ($budget->description)
+        <div class="col-md-6 mt-2">
+            <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição</label>
+            <p class="mb-0 text-dark small">{{ $budget->description }}</p>
+        </div>
+        @endif
+        @if ($budget->payment_terms)
+        <div class="col-md-6 mt-2">
+            <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Condições de Pagamento</label>
+            <p class="mb-0 text-dark small">{{ $budget->payment_terms }}</p>
+        </div>
+        @endif
+        @endif
+    </x-resource.resource-header-card>
 
     {{-- Serviços Vinculados --}}
     <div class="mt-4">

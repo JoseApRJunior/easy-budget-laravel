@@ -90,6 +90,13 @@
                                         às {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }}
                                         até {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
                                     </span>
+
+                                    @if ($activeSchedule->notes)
+                                    <div class="mt-2 small text-muted border-top pt-2">
+                                        <strong>Observações:</strong><br>
+                                        {{ $activeSchedule->notes }}
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </x-layout.grid-col>

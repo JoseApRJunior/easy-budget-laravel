@@ -163,7 +163,14 @@ class ServiceController extends Controller
      */
     public function show(string $code): View
     {
-        $result = $this->serviceService->findByCode($code, ['budget.customer', 'category', 'serviceItems.product']);
+        $result = $this->serviceService->findByCode($code, [
+            'customer.commonData',
+            'customer.contact',
+            'customer.address',
+            'budget',
+            'category',
+            'serviceItems.product'
+        ]);
 
         if ($result->isError()) {
             abort(404, $result->getMessage());

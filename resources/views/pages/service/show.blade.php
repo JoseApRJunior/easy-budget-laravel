@@ -18,64 +18,174 @@
     <x-ui.alert type="message" :message="'Este serviço já possui ' . $service->invoices->count() . ' fatura(s). <a href=\"' . route(' provider.invoices.index', ['search'=> $service->code]) . '\" class=\"alert-link\">Ver faturas</a>'" />
         @endif
 
+        @php
+        $statusValue = $service->status->value;
+        $budgetStatus = $service->budget?->status->value;
+        $isApproved = $budgetStatus === 'approved';
+        $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
+        @endphp
+
+        {{-- Informações do Serviço (Padrão Budget) --}}
+        <x-resource.resource-header-card>
+            {{-- Primeira Linha: Informações Principais --}}
+            <x-resource.resource-header-item
+                label="Código do Serviço"
+                :value="$service->code" />
+
+            <x-resource.resource-header-item
+                label="Status Atual">
+                <x-ui.status-description :item="$service" statusField="status" :useColor="true" />
+            </x-resource.resource-header-item>
+
+            <x-resource.resource-header-item
+                label="Total do Serviço"
+                :value="'R$ ' . \App\Helpers\CurrencyHelper::format($service->total)" />
+
+            <x-resource.resource-header-divider />
+
+            {{-- Segunda Linha: Dados do Cliente --}}
+            <x-resource.resource-header-section title="Dados do Cliente" icon="person">
+                @if ($service->customer)
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Nome/Razão Social"
+                        :subtitle="$service->customer->name"
+                        icon="person"
+                        :href="route('provider.customers.show', $service->customer->id)"
+                        class="small" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    @php
+                    $docLabel = $service->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
+                    $docValue = $service->customer->commonData->cnpj
+                    ? \App\Helpers\DocumentHelper::formatCnpj($service->customer->commonData->cnpj)
+                    : ($service->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($service->customer->commonData->cpf) : '-');
+                    @endphp
+                    <x-resource.resource-info
+                        :title="$docLabel"
+                        :subtitle="$docValue"
+                        icon="card-text"
+                        class="small" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Contato Principal"
+                        :subtitle="$service->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($service->customer?->contact?->phone_personal ?? '') ?: '-'"
+                        icon="envelope"
+                        class="small" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    @php
+                    $address = $service->customer?->address;
+                    $addressText = $address
+                    ? "{$address->address}, {$address->address_number} - {$address->neighborhood}, {$address->city}/{$address->state}"
+                    : 'Não informado';
+                    @endphp
+                    <x-resource.resource-info
+                        title="Endereço"
+                        :subtitle="$addressText"
+                        icon="geo-alt"
+                        class="small" />
+                </x-layout.grid-col>
+                @else
+                <x-layout.grid-col size="col-12">
+                    <p class="text-muted mb-0 italic">Dados do cliente não vinculados a este serviço.</p>
+                </x-layout.grid-col>
+                @endif
+            </x-resource.resource-header-section>
+
+            <x-resource.resource-header-divider />
+
+            {{-- Terceira Linha: Vínculos e Detalhes --}}
+            <x-resource.resource-header-section title="Vínculos e Detalhes" icon="link-45deg">
+                <div class="col-md-4">
+                    <x-resource.resource-info
+                        title="Categoria"
+                        :subtitle="$service->category?->name ?? 'Não definida'"
+                        icon="tag"
+                        class="small" />
+                </div>
+                <div class="col-md-4">
+                    <x-resource.resource-info
+                        title="Orçamento Vinculado"
+                        :subtitle="$service->budget?->code ?? 'N/A'"
+                        icon="file-earmark-text"
+                        :href="route('provider.budgets.show', $service->budget?->code)"
+                        class="small fw-bold" />
+                </div>
+                @if ($service->due_date)
+                <div class="col-md-4">
+                    <x-resource.resource-info
+                        title="Prazo de Entrega"
+                        :subtitle="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')"
+                        icon="calendar-event"
+                        class="small" />
+                </div>
+                @endif
+            </x-resource.resource-header-section>
+
+            <x-resource.resource-header-divider />
+
+            {{-- Terceira Linha: Resumo Financeiro e Datas --}}
+            <div class="col-md-8 mt-2">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <x-resource.resource-info
+                            title="Criado em"
+                            :subtitle="$service->created_at->format('d/m/Y H:i')"
+                            icon="calendar-plus"
+                            class="small" />
+                    </div>
+                    <div class="col-md-4">
+                        <x-resource.resource-info
+                            title="Última Atualização"
+                            :subtitle="$service->updated_at?->format('d/m/Y H:i')"
+                            icon="clock-history"
+                            class="small" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mt-2">
+                <div class="bg-light p-3 rounded-3 border border-light-subtle h-100 d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted small">Mão de Obra:</span>
+                        <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($service->labor_cost) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted small">Materiais:</span>
+                        <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($service->material_cost) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between pt-2 border-top border-secondary-subtle">
+                        <span class="fw-bold">Total:</span>
+                        <span class="fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Descrição e Observações --}}
+            @if ($service->description || $service->notes)
+            <x-resource.resource-header-divider />
+            @if ($service->description)
+            <div class="col-md-6 mt-2">
+                <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição do Serviço</label>
+                <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $service->description }}</p>
+            </div>
+            @endif
+            @if ($service->notes)
+            <div class="col-md-6 mt-2">
+                <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Observações Internas</label>
+                <p class="mb-0 text-dark small">{{ $service->notes }}</p>
+            </div>
+            @endif
+            @endif
+        </x-resource.resource-header-card>
+
         <x-layout.grid-row>
             <x-layout.grid-col size="col-lg-8">
-                {{-- Informações Básicas do Serviço --}}
-                <x-resource.resource-list-card
-                    title="Serviço {{ $service->code }}"
-                    icon="tools"
-                    padding="p-4"
-                    mb="mb-4">
-                    <x-slot name="headerActions">
-                        <small class="text-muted">Criado em {{ $service->created_at->format('d/m/Y H:i') }}</small>
-                        <div class="ms-2">
-                            <x-ui.status-description :item="$service" statusField="status" />
-                        </div>
-                    </x-slot>
-
-                    <x-layout.grid-row class="mb-4">
-                        <x-layout.grid-col size="col-12 col-md-6">
-                            <h6 class="text-muted mb-3">
-                                <i class="bi bi-tag me-2"></i>
-                                Informações Gerais
-                            </h6>
-                            <x-resource.resource-mobile-field label="Categoria" :value="$service->category?->name ?? 'Não definida'" />
-                            <x-resource.resource-mobile-field label="Orçamento">
-                                <a href="{{ route('provider.budgets.show', $service->budget?->code) }}"
-                                    class="text-decoration-none fw-bold">
-                                    {{ $service->budget?->code ?? 'N/A' }}
-                                </a>
-                            </x-resource.resource-mobile-field>
-                            @if ($service->due_date)
-                            <x-resource.resource-mobile-field label="Prazo" :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')" />
-                            @endif
-                        </x-layout.grid-col>
-                        <x-layout.grid-col size="col-12 col-md-6">
-                            <h6 class="text-muted mb-3">
-                                <i class="bi bi-currency-dollar me-2"></i>
-                                Valores
-                            </h6>
-                            <x-resource.resource-mobile-field label="Total">
-                                <span class="text-success fw-bold fs-5">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                            </x-resource.resource-mobile-field>
-                            <x-resource.resource-mobile-field label="Desconto">
-                                <span class="text-danger fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
-                            </x-resource.resource-mobile-field>
-                            <x-resource.resource-mobile-field label="Subtotal" :value="\App\Helpers\CurrencyHelper::format($service->total + $service->discount)" />
-                        </x-layout.grid-col>
-                    </x-layout.grid-row>
-
-                    @if ($service->description)
-                    <div class="mb-0">
-                        <h6 class="text-muted mb-3">
-                            <i class="bi bi-card-text me-2"></i>
-                            Descrição
-                        </h6>
-                        <p class="text-muted mb-0">{{ $service->description }}</p>
-                    </div>
-                    @endif
-                </x-resource.resource-list-card>
-
                 {{-- Itens do Serviço --}}
                 @if ($service->serviceItems && $service->serviceItems->count() > 0)
                 <x-resource.resource-list-card
@@ -168,6 +278,8 @@
                                     <x-resource.table-cell header>Data</x-resource.table-cell>
                                     <x-resource.table-cell header>Horário</x-resource.table-cell>
                                     <x-resource.table-cell header>Localização</x-resource.table-cell>
+                                    <x-resource.table-cell header class="text-center">Status</x-resource.table-cell>
+                                    <x-resource.table-cell header class="text-end">Ações</x-resource.table-cell>
                                 </x-resource.table-row>
                             </x-slot>
 
@@ -189,6 +301,12 @@
                                     <span class="text-muted small">Não informada</span>
                                     @endif
                                 </x-resource.table-cell>
+                                <x-resource.table-cell class="text-center">
+                                    <x-ui.status-badge :item="$schedule" statusField="status" />
+                                </x-resource.table-cell>
+                                <x-resource.table-cell class="text-end">
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
+                                </x-resource.table-cell>
                             </x-resource.table-row>
                             @endforeach
                         </x-resource.resource-table>
@@ -197,6 +315,11 @@
                     <x-slot name="mobile">
                         @foreach ($service->schedules as $schedule)
                         <x-resource.resource-mobile-item icon="calendar-event">
+                            <x-slot:actions>
+                                <x-resource.table-actions mobile>
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
+                                </x-resource.table-actions>
+                            </x-slot:actions>
                             <x-resource.resource-mobile-header
                                 :title="\Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y')"
                                 :subtitle="\Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i')" />
@@ -206,6 +329,11 @@
                                 :value="$schedule->location"
                                 icon="geo-alt" />
                             @endif
+                            <x-resource.resource-mobile-field
+                                label="Status"
+                                icon="info-circle">
+                                <x-ui.status-badge :item="$schedule" statusField="status" />
+                            </x-resource.resource-mobile-field>
                         </x-resource.resource-mobile-item>
                         @endforeach
                     </x-slot>
@@ -264,12 +392,6 @@
                         <x-resource.empty-state title="Cliente não vinculado" description="Este serviço não possui um cliente vinculado via orçamento." icon="person-x" />
                         @endif
                     </x-resource.resource-list-card>
-
-                    @php
-                    $statusValue = $service->status->value;
-                    $budgetStatus = $service->budget?->status->value;
-                    $isApproved = $budgetStatus === 'approved';
-                    @endphp
 
                     <x-resource.quick-actions title="Ações do Serviço" icon="lightning-charge" variant="secondary">
                         @if ($isApproved)
@@ -345,10 +467,6 @@
 
                         {{-- Status SCHEDULING ou ON_HOLD --}}
                         @if ($statusValue === 'scheduling' || $statusValue === 'on_hold')
-                        @php
-                        $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
-                        @endphp
-
                         @if ($pendingSchedule)
                         <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
                             data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
@@ -437,7 +555,7 @@
         </div>
 
         {{-- Modal de Confirmação de Exclusão --}}
-        <x-ui.modal id="deleteModal" title="Confirmar Exclusão">
+        <x-ui.modal id="deleteModal" title="Confirmar Exclusão" icon="trash-fill">
             Tem certeza de que deseja excluir o serviço <strong>{{ $service->code }}</strong>?
             <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
 
@@ -452,7 +570,7 @@
         </x-ui.modal>
 
         {{-- Modal Reutilizável para Ações de Status --}}
-        <x-ui.modal id="actionModal" title="Ação de Status">
+        <x-ui.modal id="actionModal" title="Ação de Status" icon="gear-fill">
             <form id="actionForm" action="{{ route('provider.services.change-status', $service->code) }}" method="POST">
                 @csrf
                 <input type="hidden" name="status" id="actionStatusInput">
@@ -468,7 +586,7 @@
         </x-ui.modal>
 
         {{-- Modal para Agendamento --}}
-        <x-ui.modal id="scheduleModal" title="Agendar Serviço">
+        <x-ui.modal id="scheduleModal" title="Agendar Serviço" icon="calendar-check">
             <x-ui.form id="scheduleForm" action="{{ route('provider.schedules.store', $service->code) }}" method="POST">
                 <input type="hidden" name="service_id" value="{{ $service->id }}">
                 <input type="hidden" name="provider_id" value="{{ auth()->id() }}">
@@ -476,7 +594,7 @@
                 <input type="hidden" name="service_type" value="{{ $service->category?->name ?? 'Serviço' }}">
 
                 <x-layout.grid-row g="3">
-                    <x-layout.grid-col size="col-md-6">
+                    <x-layout.grid-col size="col-md-5">
                         <x-ui.form.input
                             type="date"
                             name="service_date"
@@ -494,7 +612,7 @@
                             value="08:00" />
                     </x-layout.grid-col>
 
-                    <x-layout.grid-col size="col-md-3">
+                    <x-layout.grid-col size="col-md-4">
                         <x-ui.form.input
                             type="number"
                             name="service_duration"
@@ -577,18 +695,19 @@
                     <x-ui.form.textarea
                         name="notes"
                         label="Observações"
+                        placeholder="Observações adicionais para este agendamento..."
                         rows="3" />
                 </div>
             </x-ui.form>
             <x-slot name="footer">
                 <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-ui.button type="submit" form="scheduleForm" variant="info" icon="calendar-check" label="Agendar Serviço" />
+                <x-ui.button type="submit" form="scheduleForm" variant="info" label="Agendar Serviço" />
             </x-slot>
         </x-ui.modal>
 
         @if ($pendingSchedule)
         {{-- Modal para Visualizar Agendamento Pendente --}}
-        <x-ui.modal id="pendingScheduleModal" title="Agendamento Pendente">
+        <x-ui.modal id="pendingScheduleModal" title="Agendamento Pendente" icon="hourglass-split">
             <x-ui.alert type="warning" class="mb-4">
                 <div class="d-flex align-items-center">
                     <i class="bi bi-hourglass-split fs-4 me-3"></i>

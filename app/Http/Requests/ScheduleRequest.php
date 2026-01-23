@@ -29,6 +29,7 @@ class ScheduleRequest extends FormRequest
             'start_date_time' => 'required|date',
             'end_date_time' => 'required|date|after:start_date_time',
             'location' => 'nullable|string|max:500',
+            'notes' => 'nullable|string|max:1000',
             'customer_id' => 'required|exists:customers,id',
         ];
 
