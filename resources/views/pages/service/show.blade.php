@@ -219,34 +219,28 @@
                     </x-slot>
 
                     <x-slot name="mobile">
-                        @foreach ($service->serviceItems as $item)
-                        <x-resource.resource-mobile-item>
-                            <x-resource.resource-mobile-header
-                                :title="$item->product?->name ?? 'Produto não encontrado'" />
+                        <div class="p-3">
+                            @foreach ($service->serviceItems as $item)
+                            <div class="mb-3 pb-3 {{ !$loop->last ? 'border-bottom border-light-subtle' : '' }}">
+                                <div class="fw-bold text-dark mb-1">{{ $item->product?->name ?? 'Produto não encontrado' }}</div>
+                                <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
+                                    <span>Qtd: <span class="text-dark fw-semibold">{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</span></span>
+                                    <span>Unit: <span class="text-dark fw-semibold">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span></span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">Subtotal:</span>
+                                    <span class="text-success fw-bold h6 mb-0">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</span>
+                                </div>
+                            </div>
+                            @endforeach
 
-                            <x-layout.grid-row g="2" class="mb-2">
-                                <x-resource.resource-mobile-field
-                                    label="Qtd"
-                                    :value="\App\Helpers\CurrencyHelper::format($item->quantity, false)"
-                                    col="col-6" />
-                                <x-resource.resource-mobile-field
-                                    label="Unit"
-                                    :value="\App\Helpers\CurrencyHelper::format($item->unit_value)"
-                                    col="col-6"
-                                    align="end" />
-                            </x-layout.grid-row>
-
-                            <x-resource.resource-mobile-field
-                                label="Total"
-                                col="col-12">
-                                <span class="text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</span>
-                            </x-resource.resource-mobile-field>
-                        </x-resource.resource-mobile-item>
-                        @endforeach
-
-                        <x-resource.resource-mobile-field label="Total dos Itens" class=" p-3">
-                            <strong class="text-success">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</strong>
-                        </x-resource.resource-mobile-field>
+                            <div class="bg-light p-3 rounded-3 mt-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-muted small">TOTAL DOS ITENS</span>
+                                    <span class="h5 mb-0 text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </x-slot>
                 </x-resource.resource-list-card>
                 @endif
@@ -293,7 +287,7 @@
                                     <x-ui.status-badge :item="$schedule" statusField="status" />
                                 </x-resource.table-cell>
                                 <x-resource.table-cell class="text-end">
-                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
                                 </x-resource.table-cell>
                             </x-resource.table-row>
                             @endforeach
@@ -301,29 +295,34 @@
                     </x-slot>
 
                     <x-slot name="mobile">
-                        @foreach ($service->schedules as $schedule)
-                        <x-resource.resource-mobile-item icon="calendar-event">
-                            <x-slot:actions>
-                                <x-resource.table-actions mobile>
-                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
-                                </x-resource.table-actions>
-                            </x-slot:actions>
-                            <x-resource.resource-mobile-header
-                                :title="\Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y')"
-                                :subtitle="\Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i')" />
-                            @if ($schedule->location)
-                            <x-resource.resource-mobile-field
-                                label="Local"
-                                :value="$schedule->location"
-                                icon="geo-alt" />
-                            @endif
-                            <x-resource.resource-mobile-field
-                                label="Status"
-                                icon="info-circle">
-                                <x-ui.status-badge :item="$schedule" statusField="status" />
-                            </x-resource.resource-mobile-field>
-                        </x-resource.resource-mobile-item>
-                        @endforeach
+                        <div class="p-3">
+                            @foreach ($service->schedules as $schedule)
+                            <div class="mb-4 {{ !$loop->last ? 'border-bottom border-light-subtle pb-4' : '' }}">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-bold text-dark h6 mb-0">{{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}</div>
+                                            <div class="small text-muted">
+                                                {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
+                                            </div>
+                                        </div>
+                                        <x-ui.status-badge :item="$schedule" statusField="status" />
+                                    </div>
+
+                                    @if ($schedule->location)
+                                    <div class="bg-light p-2 rounded small mb-2">
+                                        <i class="bi bi-geo-alt text-primary me-1"></i>
+                                        <span class="text-dark">{{ $schedule->location }}</span>
+                                    </div>
+                                    @endif
+
+                                    <div class="d-flex justify-content-end">
+                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" />
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
                     </x-slot>
                 </x-resource.resource-list-card>
                 @endif
