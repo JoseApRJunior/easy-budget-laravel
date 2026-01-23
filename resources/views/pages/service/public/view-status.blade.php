@@ -1,7 +1,7 @@
 @extends('layouts.guest')
 
 @section('content')
-<x-layout.page-container>
+<x-layout.page-container :fluid="false">
     <x-ui.card class="mb-4">
         <x-slot name="header">
             <x-layout.h-stack justify="between" align="center">
@@ -31,16 +31,16 @@
             <x-ui.alert type="error" :message="session('error')" />
             @endif
 
-            <x-layout.grid-row>
-                <x-layout.grid-col md="6">
-                    <x-ui.card class="bg-light dark:bg-gray-800 border-0 h-100">
+            <x-layout.grid-row class="g-4 mb-4">
+                <x-layout.grid-col size="col-md-6">
+                    <x-ui.card class="bg-white dark:bg-gray-800 border shadow-sm h-100">
                         <x-layout.v-stack spacing="2">
-                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold">
+                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold border-bottom pb-2">
                                 <i class="bi bi-person-circle me-2"></i>
                                 Cliente
                             </h6>
                             @if($service->budget?->customer?->commonData)
-                            <h5 class="mb-1 text-gray-900 dark:text-white">
+                            <h5 class="mb-1 text-gray-900 dark:text-white fw-bold">
                                 {{ $service->budget->customer->commonData->first_name }}
                                 {{ $service->budget->customer->commonData->last_name }}
                             </h5>
@@ -50,11 +50,16 @@
 
                             @if($service->budget?->customer?->contact)
                             <p class="text-muted dark:text-gray-400 mb-0 small">
+                                <i class="bi bi-envelope me-1"></i>
                                 {{ $service->budget->customer->contact->email_personal ?? $service->budget->customer->contact->email_business }}
                             </p>
-                            @if ($service->budget->customer->contact->phone_personal || $service->budget->customer->contact->phone_business)
+                            @php
+                            $phone = $service->budget->customer->contact->phone_personal ?? $service->budget->customer->contact->phone_business;
+                            @endphp
+                            @if ($phone)
                             <p class="text-muted dark:text-gray-400 mb-0 small">
-                                {{ $service->budget->customer->contact->phone_personal ?? $service->budget->customer->contact->phone_business }}
+                                <i class="bi bi-whatsapp me-1"></i>
+                                {{ \App\Helpers\MaskHelper::formatPhone($phone) }}
                             </p>
                             @endif
                             @endif
@@ -62,20 +67,23 @@
                     </x-ui.card>
                 </x-layout.grid-col>
 
-                <x-layout.grid-col md="6">
-                    <x-ui.card class="bg-light dark:bg-gray-800 border-0 h-100">
+                <x-layout.grid-col size="col-md-6">
+                    <x-ui.card class="bg-white dark:bg-gray-800 border shadow-sm h-100">
                         <x-layout.v-stack spacing="2">
-                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold">
+                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold border-bottom pb-2">
                                 <i class="bi bi-receipt me-2"></i>
                                 Orçamento
                             </h6>
-                            <h5 class="mb-1 text-gray-900 dark:text-white">{{ $service->budget?->code }}</h5>
+                            <h5 class="mb-1 text-gray-900 dark:text-white fw-bold">{{ $service->budget?->code }}</h5>
                             @if($service->budget?->description)
-                            <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->budget->description }}</p>
+                            <p class="text-muted dark:text-gray-400 mb-0 small italic">{{ $service->budget->description }}</p>
                             @endif
-                            <p class="mb-0 mt-2 text-gray-900 dark:text-white">
-                                <strong>Total: {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
-                            </p>
+                            <div class="mt-auto pt-3">
+                                <p class="mb-0 text-primary dark:text-primary-400 fs-5">
+                                    <span class="text-muted small fw-normal">Total:</span>
+                                    <strong>{{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
+                                </p>
+                            </div>
                         </x-layout.v-stack>
                     </x-ui.card>
                 </x-layout.grid-col>
