@@ -169,7 +169,7 @@ class ServiceController extends Controller
             'customer.address',
             'budget',
             'category',
-            'serviceItems.product'
+            'serviceItems.product',
         ]);
 
         if ($result->isError()) {
@@ -303,7 +303,8 @@ class ServiceController extends Controller
     public function viewServiceStatus(string $code, string $token): View
     {
         $result = $this->serviceService->findByCode($code, [
-            'budget.customer',
+            'budget.customer.commonData',
+            'budget.customer.contact',
             'category',
             'serviceItems.product',
             'schedules',
@@ -323,6 +324,7 @@ class ServiceController extends Controller
         return view('pages.service.public.view-status', [
             'service' => $service,
             'token' => $token,
+            'title' => "Status do Serviço - {$service->code}",
         ]);
     }
 

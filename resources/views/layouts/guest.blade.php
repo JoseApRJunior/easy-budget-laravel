@@ -15,9 +15,9 @@
         @endif
 
         @if (isset($slot))
-            {{ $slot }}
+        {{ $slot }}
         @else
-            @yield('content')
+        @yield('content')
         @endif
     </main>
 
