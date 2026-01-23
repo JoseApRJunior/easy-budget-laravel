@@ -13,132 +13,129 @@
             </x-layout.h-stack>
         </x-slot>
 
-        @if (session('success'))
-        <x-ui.alert type="success" :message="session('success')" class="mb-4" />
-        @endif
+        <x-layout.v-stack spacing="4">
+            @if (session('success'))
+            <x-ui.alert type="success" :message="session('success')" />
+            @endif
 
-        @if (session('error'))
-        <x-ui.alert type="error" :message="session('error')" class="mb-4" />
-        @endif
+            @if (session('error'))
+            <x-ui.alert type="error" :message="session('error')" />
+            @endif
 
-        <x-layout.grid-row class="mb-4">
-            <x-layout.grid-col md="6">
-                <x-ui.card class="bg-light dark:bg-gray-800 border-0 h-100">
-                    <x-layout.v-stack spacing="2">
-                        <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold">
-                            <i class="bi bi-person-circle me-2"></i>
-                            Cliente
-                        </h6>
-                        @if($service->budget?->customer?->commonData)
-                        <h5 class="mb-1 text-gray-900 dark:text-white">
-                            {{ $service->budget->customer->commonData->first_name }}
-                            {{ $service->budget->customer->commonData->last_name }}
-                        </h5>
-                        @else
-                        <h5 class="mb-1 text-muted">Cliente não identificado</h5>
-                        @endif
+            <x-layout.grid-row>
+                <x-layout.grid-col md="6">
+                    <x-ui.card class="bg-light dark:bg-gray-800 border-0 h-100">
+                        <x-layout.v-stack spacing="2">
+                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold">
+                                <i class="bi bi-person-circle me-2"></i>
+                                Cliente
+                            </h6>
+                            @if($service->budget?->customer?->commonData)
+                            <h5 class="mb-1 text-gray-900 dark:text-white">
+                                {{ $service->budget->customer->commonData->first_name }}
+                                {{ $service->budget->customer->commonData->last_name }}
+                            </h5>
+                            @else
+                            <h5 class="mb-1 text-muted">Cliente não identificado</h5>
+                            @endif
 
-                        @if($service->budget?->customer?->contact)
-                        <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->budget->customer->contact->email_personal ?? $service->budget->customer->contact->email_business }}</p>
-                        @if ($service->budget->customer->contact->phone_personal || $service->budget->customer->contact->phone_business)
-                        <p class="text-muted dark:text-gray-400 mb-0 small">
-                            {{ $service->budget->customer->contact->phone_personal ?? $service->budget->customer->contact->phone_business }}
-                        </p>
-                        @endif
-                        @endif
-                    </x-layout.v-stack>
-                </x-ui.card>
-            </x-layout.grid-col>
+                            @if($service->budget?->customer?->contact)
+                            <p class="text-muted dark:text-gray-400 mb-0 small">
+                                {{ $service->budget->customer->contact->email_personal ?? $service->budget->customer->contact->email_business }}
+                            </p>
+                            @if ($service->budget->customer->contact->phone_personal || $service->budget->customer->contact->phone_business)
+                            <p class="text-muted dark:text-gray-400 mb-0 small">
+                                {{ $service->budget->customer->contact->phone_personal ?? $service->budget->customer->contact->phone_business }}
+                            </p>
+                            @endif
+                            @endif
+                        </x-layout.v-stack>
+                    </x-ui.card>
+                </x-layout.grid-col>
 
-            <x-layout.grid-col md="6">
-                <x-ui.card class="bg-light dark:bg-gray-800 border-0 h-100">
-                    <x-layout.v-stack spacing="2">
-                        <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold">
-                            <i class="bi bi-receipt me-2"></i>
-                            Orçamento
-                        </h6>
-                        <h5 class="mb-1 text-gray-900 dark:text-white">{{ $service->budget?->code }}</h5>
-                        <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->budget?->description }}</p>
-                        <p class="mb-0 mt-2 text-gray-900 dark:text-white">
-                            <strong>Total: {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
-                        </p>
-                    </x-layout.v-stack>
-                </x-ui.card>
-            </x-layout.grid-col>
-        </x-layout.grid-row>
+                <x-layout.grid-col md="6">
+                    <x-ui.card class="bg-light dark:bg-gray-800 border-0 h-100">
+                        <x-layout.v-stack spacing="2">
+                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold">
+                                <i class="bi bi-receipt me-2"></i>
+                                Orçamento
+                            </h6>
+                            <h5 class="mb-1 text-gray-900 dark:text-white">{{ $service->budget?->code }}</h5>
+                            @if($service->budget?->description)
+                            <p class="text-muted dark:text-gray-400 mb-0 small">{{ $service->budget->description }}</p>
+                            @endif
+                            <p class="mb-0 mt-2 text-gray-900 dark:text-white">
+                                <strong>Total: {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
+                            </p>
+                        </x-layout.v-stack>
+                    </x-ui.card>
+                </x-layout.grid-col>
+            </x-layout.grid-row>
 
-        <x-layout.v-stack spacing="4" class="mb-4">
-            <div>
-                <h6 class="mb-3 small text-uppercase fw-bold text-muted dark:text-gray-400">
-                    <i class="bi bi-tools me-2"></i>
-                    Detalhes do Serviço
-                </h6>
-
+            <x-resource.resource-header-section title="Detalhes do Serviço" icon="tools">
                 @if ($service->description)
-                <p class="mb-3 text-gray-700 dark:text-gray-300">{{ $service->description }}</p>
+                <x-layout.grid-col md="12">
+                    <p class="mb-0 text-gray-700 dark:text-gray-300">{{ $service->description }}</p>
+                </x-layout.grid-col>
                 @endif
 
-                <x-layout.grid-row class="g-3">
-                    @php
-                    $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
-                    $confirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->first();
-                    $activeSchedule = $confirmedSchedule ?? $pendingSchedule;
-                    @endphp
+                @php
+                $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
+                $confirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->first();
+                $activeSchedule = $confirmedSchedule ?? $pendingSchedule;
+                @endphp
 
-                    @if ($activeSchedule)
-                    <x-layout.grid-col md="12" class="mb-2">
-                        <div class="p-3 bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-10 border border-{{ $confirmedSchedule ? 'success' : 'warning' }} border-opacity-25 rounded d-flex align-items-center">
-                            <i class="bi bi-calendar-check fs-4 text-{{ $confirmedSchedule ? 'success' : 'warning' }} me-3"></i>
-                            <x-layout.v-stack spacing="1">
-                                <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">
-                                    {{ $confirmedSchedule ? 'Agendamento Confirmado' : 'Proposta de Agendamento' }}
-                                </small>
-                                <span class="text-gray-900 dark:text-white fw-bold">
-                                    {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('d/m/Y') }}
-                                    às {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }}
-                                    até {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
-                                </span>
+                @if ($activeSchedule)
+                <x-layout.grid-col md="12">
+                    <div class="p-3 bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-10 border border-{{ $confirmedSchedule ? 'success' : 'warning' }} border-opacity-25 rounded d-flex align-items-center">
+                        <i class="bi bi-calendar-check fs-4 text-{{ $confirmedSchedule ? 'success' : 'warning' }} me-3"></i>
+                        <x-layout.v-stack spacing="1">
+                            <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">
+                                {{ $confirmedSchedule ? 'Agendamento Confirmado' : 'Proposta de Agendamento' }}
+                            </small>
+                            <span class="text-gray-900 dark:text-white fw-bold">
+                                {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('d/m/Y') }}
+                                às {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }}
+                                até {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
+                            </span>
 
-                                @if ($activeSchedule->notes)
-                                <div class="mt-2 small text-muted border-top pt-2">
-                                    <strong>Observações:</strong><br>
-                                    {{ $activeSchedule->notes }}
-                                </div>
-                                @endif
-                            </x-layout.v-stack>
-                        </div>
-                    </x-layout.grid-col>
-                    @endif
+                            @if ($activeSchedule->notes)
+                            <div class="mt-2 small text-muted border-top pt-2">
+                                <strong>Observações:</strong><br>
+                                {{ $activeSchedule->notes }}
+                            </div>
+                            @endif
+                        </x-layout.v-stack>
+                    </div>
+                </x-layout.grid-col>
+                @endif
 
-                    <x-layout.grid-col md="4">
-                        <div class="p-2 bg-light dark:bg-gray-800 rounded">
-                            <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Categoria</small>
-                            <span class="text-gray-900 dark:text-white">{{ $service->category?->name }}</span>
-                        </div>
-                    </x-layout.grid-col>
-                    <x-layout.grid-col md="4">
-                        <div class="p-2 bg-light dark:bg-gray-800 rounded">
-                            <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Valor</small>
-                            <span class="text-gray-900 dark:text-white">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                        </div>
-                    </x-layout.grid-col>
-                    <x-layout.grid-col md="4">
-                        <div class="p-2 bg-light dark:bg-gray-800 rounded">
-                            <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Desconto</small>
-                            <span class="text-gray-900 dark:text-white">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
-                        </div>
-                    </x-layout.grid-col>
+                <x-resource.resource-header-item
+                    label="Categoria"
+                    :value="$service->category?->name"
+                    icon="tag"
+                    iconVariant="info" />
 
-                    @if ($service->due_date)
-                    <x-layout.grid-col md="4">
-                        <div class="p-2 bg-light dark:bg-gray-800 rounded">
-                            <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Prazo</small>
-                            <span class="text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}</span>
-                        </div>
-                    </x-layout.grid-col>
-                    @endif
-                </x-layout.grid-row>
-            </div>
+                <x-resource.resource-header-item
+                    label="Valor"
+                    :value="\App\Helpers\CurrencyHelper::format($service->total)"
+                    icon="cash-stack"
+                    iconVariant="success" />
+
+                <x-resource.resource-header-item
+                    label="Desconto"
+                    :value="\App\Helpers\CurrencyHelper::format($service->discount)"
+                    icon="percent"
+                    iconVariant="warning" />
+
+                @if ($service->due_date)
+                <x-resource.resource-header-item
+                    label="Prazo"
+                    :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')"
+                    icon="calendar-event"
+                    iconVariant="secondary" />
+                @endif
+            </x-resource.resource-header-section>
 
             @if (in_array($service->status->value, ['pending', 'scheduling', 'scheduled']))
             <x-ui.card class="border-warning shadow-none" style="background-color: rgba(255, 193, 7, 0.05);">
@@ -186,43 +183,41 @@
             </x-ui.card>
             @endif
 
-            <div class="mb-0">
-                <h6 class="mb-3 small text-uppercase fw-bold text-muted dark:text-gray-400">
-                    <i class="bi bi-list-check me-2"></i>
-                    Itens do Serviço
-                </h6>
-                <x-resource.resource-table>
-                    <x-slot name="thead">
+            <x-resource.resource-header-section title="Itens do Serviço" icon="list-check">
+                <x-layout.grid-col md="12">
+                    <x-resource.resource-table>
+                        <x-slot name="thead">
+                            <x-resource.table-row>
+                                <x-resource.table-cell header>Item</x-resource.table-cell>
+                                <x-resource.table-cell header class="text-center">Qtd</x-resource.table-cell>
+                                <x-resource.table-cell header class="text-end">V. Unitário</x-resource.table-cell>
+                                <x-resource.table-cell header class="text-end">Total</x-resource.table-cell>
+                            </x-resource.table-row>
+                        </x-slot>
+
+                        @foreach ($service->serviceItems as $item)
                         <x-resource.table-row>
-                            <x-resource.table-cell header>Item</x-resource.table-cell>
-                            <x-resource.table-cell header class="text-center">Qtd</x-resource.table-cell>
-                            <x-resource.table-cell header class="text-end">V. Unitário</x-resource.table-cell>
-                            <x-resource.table-cell header class="text-end">Total</x-resource.table-cell>
+                            <x-resource.table-cell>
+                                <div class="fw-bold text-gray-900 dark:text-white">{{ $item->product?->name }}</div>
+                                @if ($item->notes)
+                                <small class="text-muted">{{ $item->notes }}</small>
+                                @endif
+                            </x-resource.table-cell>
+                            <x-resource.table-cell class="text-center">{{ $item->quantity }}</x-resource.table-cell>
+                            <x-resource.table-cell class="text-end">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</x-resource.table-cell>
+                            <x-resource.table-cell class="text-end fw-bold">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</x-resource.table-cell>
                         </x-resource.table-row>
-                    </x-slot>
+                        @endforeach
 
-                    @foreach ($service->serviceItems as $item)
-                    <x-resource.table-row>
-                        <x-resource.table-cell>
-                            <div class="fw-bold text-gray-900 dark:text-white">{{ $item->product?->name }}</div>
-                            @if ($item->notes)
-                            <small class="text-muted">{{ $item->notes }}</small>
-                            @endif
-                        </x-resource.table-cell>
-                        <x-resource.table-cell class="text-center">{{ $item->quantity }}</x-resource.table-cell>
-                        <x-resource.table-cell class="text-end">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</x-resource.table-cell>
-                        <x-resource.table-cell class="text-end fw-bold">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</x-resource.table-cell>
-                    </x-resource.table-row>
-                    @endforeach
-
-                    <x-slot name="tfoot">
-                        <x-resource.table-row class="table-light dark:bg-gray-800">
-                            <x-resource.table-cell colspan="3" class="text-end fw-bold">Total dos Itens:</x-resource.table-cell>
-                            <x-resource.table-cell class="text-end fw-bold">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</x-resource.table-cell>
-                        </x-resource.table-row>
-                    </x-slot>
-                </x-resource.resource-table>
-            </div>
+                        <x-slot name="tfoot">
+                            <x-resource.table-row class="table-light dark:bg-gray-800">
+                                <x-resource.table-cell colspan="3" class="text-end fw-bold">Total dos Itens:</x-resource.table-cell>
+                                <x-resource.table-cell class="text-end fw-bold">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</x-resource.table-cell>
+                            </x-resource.table-row>
+                        </x-slot>
+                    </x-resource.resource-table>
+                </x-layout.grid-col>
+            </x-resource.resource-header-section>
         </x-layout.v-stack>
 
         <x-slot name="footer">
