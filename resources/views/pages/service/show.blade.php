@@ -421,7 +421,7 @@
 
                         {{-- Botão Cancelar - Sempre disponível para status não finais --}}
                         @if (!in_array($statusValue, ['completed', 'partial', 'cancelled', 'not_performed', 'expired']))
-                        <x-ui.button type="button" variant="outline-danger" icon="x-circle" label="Cancelar"
+                        <x-ui.button type="button" variant="danger" icon="x-circle" label="Cancelar"
                             data-bs-toggle="modal" data-bs-target="#actionModal" data-status="cancelled"
                             data-title="Cancelar Serviço"
                             data-message="Deseja cancelar definitivamente o serviço {{ $service->code }}?" />
@@ -434,26 +434,26 @@
 
                         @if ($service->canBeEdited())
                         <x-ui.button type="link" href="{{ route('provider.services.edit', $service->code) }}"
-                            variant="outline-primary" icon="pencil" label="Editar Serviço" />
+                            variant="primary" icon="pencil" label="Editar Serviço" />
                         @endif
 
                         @if ($service->budget)
                         <x-ui.button type="link" href="{{ route('provider.budgets.show', $service->budget->code) }}"
-                            variant="outline-info" icon="receipt" label="Ver Orçamento" />
+                            variant="info" icon="receipt" label="Ver Orçamento" />
                         @endif
 
                         {{-- Botões de Fatura --}}
                         @if ($service->status->isFinished() || $statusValue === 'completed')
                         <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
-                            variant="outline-success" icon="receipt" label="Criar Fatura" />
+                            variant="success" icon="receipt" label="Criar Fatura" />
                         @else
                         @if($service->serviceItems && $service->serviceItems->count() > 0)
                         <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
-                            variant="outline-warning" icon="receipt" label="Criar Fatura Parcial" />
+                            variant="warning" icon="receipt" label="Criar Fatura Parcial" />
                         @endif
                         @endif
 
-                        <x-ui.button type="button" variant="outline-secondary" onclick="window.print()" icon="printer" label="Imprimir" />
+                        <x-ui.button type="button" variant="secondary" onclick="window.print()" icon="printer" label="Imprimir" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

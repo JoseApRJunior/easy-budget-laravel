@@ -233,11 +233,11 @@
                         title="Ações de Orçamento"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.budgets.create')" variant="outline-success" icon="plus-lg" label="Novo Orçamento" />
-                        <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" icon="person-plus" label="Novo Cliente" />
-                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-primary" icon="file-earmark-text" label="Listar Orçamentos" />
-                        <x-ui.button type="link" :href="route('provider.customers.index')" variant="outline-primary" icon="people" label="Listar Clientes" />
-                        <x-ui.button type="link" :href="route('provider.budgets.index', ['deleted' => 'only'])" variant="outline-secondary" icon="trash" label="Ver Deletados" />
+                        <x-ui.button type="link" :href="route('provider.budgets.create')" variant="success" icon="plus-lg" label="Novo Orçamento" />
+                        <x-ui.button type="link" :href="route('provider.customers.create')" variant="success" icon="person-plus" label="Novo Cliente" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="primary" icon="file-earmark-text" label="Listar Orçamentos" />
+                        <x-ui.button type="link" :href="route('provider.customers.index')" variant="primary" icon="people" label="Listar Clientes" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Ver Deletados" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

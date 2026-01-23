@@ -1,45 +1,67 @@
 @props([
-    'variant' => 'primary',
-    'outline' => false,
-    'icon' => null,
-    'size' => null,
-    'type' => null,
-    'href' => null,
-    'label' => null,
-    'bold' => true,
+'variant' => 'primary',
+'outline' => false,
+'icon' => null,
+'size' => null,
+'type' => null,
+'href' => null,
+'label' => null,
+'bold' => true,
 ])
 
 @php
-    // Se tiver href, é um link, a menos que o tipo seja explicitamente outra coisa
-    $isLink = $href !== null || $type === 'link';
-    $tag = $isLink ? 'a' : 'button';
-    
-    // Se for botão e não tiver tipo, o padrão é 'button'
-    // Mas se estiver dentro de um formulário, às vezes queremos 'submit'
-    $buttonType = $type ?: ($isLink ? null : 'button');
+// Se tiver href, é um link
+$isLink = $href !== null || $type === 'link';
+$tag = $isLink ? 'a' : 'button';
+$buttonType = $type ?: ($isLink ? null : 'button');
 
-    $classes = 'btn ';
-    $classes .= $outline ? "btn-outline-{$variant}" : "btn-{$variant}";
-    if ($variant === 'info' && !$outline) {
-        $classes .= ' text-white';
-    }
-    if ($size) {
-        $classes .= " btn-{$size}";
-    }
-    if ($bold) {
-        $classes .= ' fw-bold';
-    }
+// Base das classes
+$classes = 'btn ';
+$classes .= $outline ? "btn-outline-{$variant}" : "btn-{$variant}";
+
+// Lógica de Cor do Texto (Só se aplica se NÃO for outline)
+// Se for outline, o Bootstrap já cuida da cor do texto (que deve ser igual à borda)
+if (!$outline) {
+// Lista de botões que PRECISAM de texto branco
+$whiteTextVariants = ['primary', 'secondary', 'success', 'danger', 'dark'];
+
+// Lista de botões que PRECISAM de texto escuro
+$darkTextVariants = ['warning', 'info', 'light'];
+
+if (in_array($variant, $whiteTextVariants)) {
+$classes .= ' text-white';
+} elseif (in_array($variant, $darkTextVariants)) {
+// Aqui usamos text-dark (quase preto) para leitura máxima.
+// Se você quiser aquele seu cinza específico APENAS nos fundos claros,
+// crie uma classe CSS .text-slate e use aqui em vez de text-dark.
+$classes .= ' text-dark';
+}
+}
+
+if ($size) {
+$classes .= " btn-{$size}";
+}
+
+// Bootstrap já tem fw-bold, mas se quiser garantir:
+if ($bold) {
+$classes .= ' fw-bold';
+}
 @endphp
 
 <{{ $tag }}
-    @if($isLink) 
-        href="{{ $href }}" 
-    @else 
-        type="{{ $buttonType }}" 
+    @if($isLink)
+    href="{{ $href }}"
+    @else
+    type="{{ $buttonType }}"
     @endif
+
+    {{-- Removemos o style inline hardcoded para evitar problemas de especificidade --}}
     {{ $attributes->merge(['class' => $classes]) }}>
+
     @if($icon)
-        <i class="bi bi-{{ $icon }} {{ ($label || !$slot->isEmpty()) ? 'me-2' : '' }}"></i>
+    {{-- Adicionei a verificação de margin-end apenas se houver texto --}}
+    <i class="bi bi-{{ $icon }} {{ ($label || !$slot->isEmpty()) ? 'me-2' : '' }}"></i>
     @endif
+
     {{ $slot->isEmpty() ? $label : $slot }}
 </{{ $tag }}>
