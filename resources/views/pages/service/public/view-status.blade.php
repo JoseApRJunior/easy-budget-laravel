@@ -5,10 +5,19 @@
     <x-ui.card class="mb-4">
         <x-slot name="header">
             <x-layout.h-stack justify="between" align="center">
-                <x-layout.v-stack spacing="0">
-                    <h5 class="mb-0 text-muted">Status do Serviço</h5>
-                    <small class="text-muted">Código: {{ $service->code }}</small>
-                </x-layout.v-stack>
+                <x-resource.resource-info
+                    title="Status do Serviço"
+                    :subtitle="'Código: ' . $service->code"
+                    icon="gear"
+                    titleClass="text-muted fw-normal">
+                    @if($service->public_expires_at)
+                    <span class="ms-2 text-muted opacity-50">•</span>
+                    <span class="ms-2 text-muted" title="Link válido até">
+                        <i class="bi bi-clock-history me-1"></i>
+                        {{ \Carbon\Carbon::parse($service->public_expires_at)->format('d/m/Y') }}
+                    </span>
+                    @endif
+                </x-resource.resource-info>
                 <x-ui.status-badge :item="$service" />
             </x-layout.h-stack>
         </x-slot>
