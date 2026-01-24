@@ -32,7 +32,58 @@
             @endif
 
             <x-layout.grid-row class="g-4 mb-4">
-                <x-layout.grid-col size="col-md-6">
+                {{-- Card do Prestador --}}
+                <x-layout.grid-col size="col-md-4">
+                    <x-ui.card class="bg-white dark:bg-gray-800 border shadow-sm h-100">
+                        <x-layout.v-stack spacing="2">
+                            <h6 class="card-title text-primary dark:text-primary-400 mb-2 small text-uppercase fw-bold border-bottom pb-2">
+                                <i class="bi bi-shop me-2"></i>
+                                Prestador de Serviço
+                            </h6>
+                            @php
+                            $provider = $service->tenant?->provider;
+                            $providerName = $provider?->businessData?->fantasy_name
+                            ?? ($provider?->commonData ? $provider->commonData->first_name . ' ' . $provider->commonData->last_name : $service->tenant?->name);
+                            @endphp
+                            <h5 class="mb-1 text-gray-900 dark:text-white fw-bold">
+                                {{ $providerName }}
+                            </h5>
+
+                            @if($provider?->contact)
+                            <p class="text-muted dark:text-gray-400 mb-0 small">
+                                <i class="bi bi-envelope me-1"></i>
+                                {{ $provider->contact->email_personal ?? $provider->contact->email_business }}
+                            </p>
+                            @php
+                            $providerPhone = $provider->contact->phone_personal ?? $provider->contact->phone_business;
+                            $providerWhatsapp = $provider->contact->phone_whatsapp ?? $providerPhone;
+                            @endphp
+                            @if ($providerPhone)
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <a href="tel:{{ preg_replace('/\D/', '', $providerPhone) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    <i class="bi bi-telephone me-1"></i> Ligar
+                                </a>
+                                @if($providerWhatsapp)
+                                <a href="https://wa.me/{{ preg_replace('/\D/', '', $providerWhatsapp) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+                                    <i class="bi bi-whatsapp me-1"></i> WhatsApp
+                                </a>
+                                @endif
+                            </div>
+                            @endif
+                            @endif
+
+                            @if($provider?->address)
+                            <p class="text-muted dark:text-gray-400 mb-0 mt-2 small">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ $provider->address->city }} - {{ $provider->address->state }}
+                            </p>
+                            @endif
+                        </x-layout.v-stack>
+                    </x-ui.card>
+                </x-layout.grid-col>
+
+                {{-- Card do Cliente --}}
+                <x-layout.grid-col size="col-md-4">
                     <x-ui.card class="bg-white dark:bg-gray-800 border shadow-sm h-100">
                         <x-layout.v-stack spacing="2">
                             <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold border-bottom pb-2">
@@ -63,11 +114,24 @@
                             </p>
                             @endif
                             @endif
+
+                            @if($service->budget?->customer?->address)
+                            <p class="text-muted dark:text-gray-400 mb-0 mt-2 small">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                {{ $service->budget->customer->address->street }}, {{ $service->budget->customer->address->number }}
+                                <br>
+                                {{ $service->budget->customer->address->district }} - {{ $service->budget->customer->address->city }}/{{ $service->budget->customer->address->state }}
+                            </p>
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($service->budget->customer->address->street . ', ' . $service->budget->customer->address->number . ' - ' . $service->budget->customer->address->city . ' - ' . $service->budget->customer->address->state) }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3 mt-2 w-fit-content">
+                                <i class="bi bi-map me-1"></i> Ver no Mapa
+                            </a>
+                            @endif
                         </x-layout.v-stack>
                     </x-ui.card>
                 </x-layout.grid-col>
 
-                <x-layout.grid-col size="col-md-6">
+                {{-- Card do Orçamento --}}
+                <x-layout.grid-col size="col-md-4">
                     <x-ui.card class="bg-white dark:bg-gray-800 border shadow-sm h-100">
                         <x-layout.v-stack spacing="2">
                             <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold border-bottom pb-2">
@@ -75,54 +139,67 @@
                                 Orçamento
                             </h6>
                             <h5 class="mb-1 text-gray-900 dark:text-white fw-bold">{{ $service->budget?->code }}</h5>
-                            @if($service->budget?->description)
-                            <p class="text-muted dark:text-gray-400 mb-0 small italic">{{ $service->budget->description }}</p>
-                            @endif
-                            <div class="mt-auto pt-3">
+                            <div class="mt-auto pt-1">
                                 <p class="mb-0 text-primary dark:text-primary-400 fs-5">
                                     <span class="text-muted small fw-normal">Total:</span>
                                     <strong>{{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
                                 </p>
+                                @if($service->budget?->payment_terms)
+                                <p class="text-muted dark:text-gray-400 mb-0 mt-2 small">
+                                    <strong>Condições:</strong> {{ $service->budget->payment_terms }}
+                                </p>
+                                @endif
                             </div>
                         </x-layout.v-stack>
                     </x-ui.card>
                 </x-layout.grid-col>
             </x-layout.grid-row>
 
+            {{-- Destaque para o Agendamento --}}
+            @php
+            $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
+            $confirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->first();
+            $activeSchedule = $confirmedSchedule ?? $pendingSchedule;
+            @endphp
+
+            @if ($activeSchedule)
+            <div class="mb-4">
+                <div class="p-4 bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-10 border border-{{ $confirmedSchedule ? 'success' : 'warning' }} border-opacity-25 rounded-4 shadow-sm d-flex flex-column flex-md-row align-items-center">
+                    <div class="rounded-circle bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-25 p-3 mb-3 mb-md-0 me-md-4">
+                        <i class="bi bi-calendar-check fs-2 text-{{ $confirmedSchedule ? 'success' : 'warning' }}"></i>
+                    </div>
+                    <div class="text-center text-md-start flex-grow-1">
+                        <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold ls-wider mb-1" style="font-size: 0.75rem;">
+                            {{ $confirmedSchedule ? 'Agendamento Confirmado' : 'Aguardando Confirmação de Agendamento' }}
+                        </small>
+                        <h3 class="text-gray-900 dark:text-white fw-bold mb-1">
+                            {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('d/m/Y') }}
+                            <span class="text-muted fw-normal mx-2">|</span>
+                            {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }} às {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
+                        </h3>
+                        @if ($activeSchedule->notes)
+                        <p class="mb-0 text-muted small mt-2">
+                            <strong>Obs:</strong> {{ $activeSchedule->notes }}
+                        </p>
+                        @endif
+                    </div>
+                    @if($confirmedSchedule)
+                    <div class="ms-md-auto mt-3 mt-md-0">
+                        <span class="badge bg-success px-3 py-2 rounded-pill">
+                            <i class="bi bi-check-circle-fill me-1"></i> Confirmado
+                        </span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             <x-resource.resource-header-section title="Detalhes do Serviço" icon="tools">
                 @if ($service->description)
                 <x-layout.grid-col md="12">
-                    <p class="mb-0 text-gray-700 dark:text-gray-300">{{ $service->description }}</p>
-                </x-layout.grid-col>
-                @endif
-
-                @php
-                $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
-                $confirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->first();
-                $activeSchedule = $confirmedSchedule ?? $pendingSchedule;
-                @endphp
-
-                @if ($activeSchedule)
-                <x-layout.grid-col md="12">
-                    <div class="p-3 bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-10 border border-{{ $confirmedSchedule ? 'success' : 'warning' }} border-opacity-25 rounded d-flex align-items-center">
-                        <i class="bi bi-calendar-check fs-4 text-{{ $confirmedSchedule ? 'success' : 'warning' }} me-3"></i>
-                        <x-layout.v-stack spacing="1">
-                            <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold" style="font-size: 0.7rem;">
-                                {{ $confirmedSchedule ? 'Agendamento Confirmado' : 'Proposta de Agendamento' }}
-                            </small>
-                            <span class="text-gray-900 dark:text-white fw-bold">
-                                {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('d/m/Y') }}
-                                às {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }}
-                                até {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
-                            </span>
-
-                            @if ($activeSchedule->notes)
-                            <div class="mt-2 small text-muted border-top pt-2">
-                                <strong>Observações:</strong><br>
-                                {{ $activeSchedule->notes }}
-                            </div>
-                            @endif
-                        </x-layout.v-stack>
+                    <div class="p-3 bg-light dark:bg-gray-700 rounded mb-3">
+                        <h6 class="small text-muted text-uppercase fw-bold mb-2">Descrição do Trabalho</h6>
+                        <p class="mb-0 text-gray-700 dark:text-gray-300">{{ $service->description }}</p>
                     </div>
                 </x-layout.grid-col>
                 @endif
@@ -134,20 +211,20 @@
                     iconVariant="info" />
 
                 <x-resource.resource-header-item
-                    label="Valor"
+                    label="Valor Total"
                     :value="\App\Helpers\CurrencyHelper::format($service->total)"
                     icon="cash-stack"
                     iconVariant="success" />
 
                 <x-resource.resource-header-item
-                    label="Desconto"
+                    label="Desconto Aplicado"
                     :value="\App\Helpers\CurrencyHelper::format($service->discount)"
                     icon="percent"
                     iconVariant="warning" />
 
                 @if ($service->due_date)
                 <x-resource.resource-header-item
-                    label="Prazo"
+                    label="Prazo de Entrega"
                     :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')"
                     icon="calendar-event"
                     iconVariant="secondary" />

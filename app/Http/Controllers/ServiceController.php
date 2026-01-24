@@ -305,9 +305,14 @@ class ServiceController extends Controller
         $result = $this->serviceService->findByCode($code, [
             'budget.customer.commonData',
             'budget.customer.contact',
+            'budget.customer.address',
             'category',
             'serviceItems.product',
             'schedules',
+            'tenant.provider.businessData',
+            'tenant.provider.commonData',
+            'tenant.provider.contact',
+            'tenant.provider.address',
         ]);
 
         if ($result->isError()) {
