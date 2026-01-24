@@ -306,6 +306,7 @@ class ServiceController extends Controller
             'budget.customer.commonData',
             'budget.customer.contact',
             'budget.customer.address',
+            'budget.services.category',
             'category',
             'serviceItems.product',
             'schedules',
