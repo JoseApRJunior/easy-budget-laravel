@@ -105,7 +105,7 @@
                 <x-layout.grid-col size="col-md-4">
                     <x-ui.card class="glass-card h-100">
                         <x-layout.v-stack spacing="2">
-                            <h6 class="card-title text-primary dark:text-primary-400 mb-2 small text-uppercase fw-bold border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <h6 class="card-title text-neutral-soft mb-2 small text-uppercase fw-bold border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <i class="bi bi-shop me-2"></i>
                                 Prestador de Serviço
                             </h6>
@@ -114,45 +114,42 @@
                             $providerName = $provider?->businessData?->fantasy_name
                             ?? ($provider?->commonData ? $provider->commonData->first_name . ' ' . $provider->commonData->last_name : $service->tenant?->name);
                             @endphp
-                            <h5 class="mb-1 text-gray-900 dark:text-white fw-bold">
+                            <h5 class="mb-1 text-neutral-strong fw-bold">
                                 {{ $providerName }}
                             </h5>
 
                             @if($provider?->contact)
-                            <p class="text-muted dark:text-gray-400 mb-0 small">
+                            <p class="text-neutral-soft mb-0 small">
                                 <i class="bi bi-envelope me-1"></i>
                                 {{ $provider->contact->email_personal ?? $provider->contact->email_business }}
                             </p>
                             @php
                             $providerPhone = $provider->contact->phone_personal ?? $provider->contact->phone_business;
-                            $providerWhatsapp = $provider->contact->phone_whatsapp ?? $providerPhone;
                             @endphp
                             @if ($providerPhone)
                             <div class="d-flex flex-wrap gap-2 mt-2">
-                                <a href="tel:{{ preg_replace('/\D/', '', $providerPhone) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <a href="tel:{{ preg_replace('/\D/', '', $providerPhone) }}" class="btn btn-sm btn-neutral-outline rounded-pill px-3">
                                     <i class="bi bi-telephone me-1"></i> Ligar
                                 </a>
-                                @if($providerWhatsapp)
-                                <a href="https://wa.me/{{ preg_replace('/\D/', '', $providerWhatsapp) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+                                <a href="https://wa.me/{{ preg_replace('/\D/', '', $providerPhone) }}" target="_blank" class="btn btn-sm btn-success bg-opacity-75 rounded-pill px-3">
                                     <i class="bi bi-whatsapp me-1"></i> WhatsApp
                                 </a>
-                                @endif
                             </div>
                             @endif
                             @endif
 
                             @if($provider?->address)
-                            <div class="text-muted dark:text-gray-400 mt-3 pt-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <div class="text-neutral-soft mt-3 pt-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <div class="d-flex align-items-start gap-2 small mb-2">
                                     <i class="bi bi-geo-alt mt-1"></i>
                                     <div>
-                                        <div class="fw-bold">{{ $provider->address->address }}{{ $provider->address->address_number ? ', ' . $provider->address->address_number : '' }}</div>
+                                        <div class="fw-bold text-neutral-strong">{{ $provider->address->address }}{{ $provider->address->address_number ? ', ' . $provider->address->address_number : '' }}</div>
                                         <div>{{ $provider->address->neighborhood }}</div>
                                         <div>{{ $provider->address->city }} - {{ $provider->address->state }}</div>
                                         <div class="opacity-75">CEP: {{ $provider->address->cep }}</div>
                                     </div>
                                 </div>
-                                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($provider->address->address . ', ' . $provider->address->address_number . ' - ' . $provider->address->city . ' - ' . $provider->address->state) }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3 w-100">
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($provider->address->address . ', ' . $provider->address->address_number . ' - ' . $provider->address->city . ' - ' . $provider->address->state) }}" target="_blank" class="btn btn-sm btn-neutral-outline rounded-pill px-3 w-100">
                                     <i class="bi bi-map me-1"></i> Ver no Mapa
                                 </a>
                             </div>
@@ -165,21 +162,21 @@
                 <x-layout.grid-col size="col-md-4">
                     <x-ui.card class="glass-card h-100">
                         <x-layout.v-stack spacing="2">
-                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <h6 class="card-title text-neutral-soft mb-2 small text-uppercase fw-bold border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <i class="bi bi-person-circle me-2"></i>
                                 Cliente
                             </h6>
                             @if($service->budget?->customer?->commonData)
-                            <h5 class="mb-1 text-gray-900 dark:text-white fw-bold">
+                            <h5 class="mb-1 text-neutral-strong fw-bold">
                                 {{ $service->budget->customer->commonData->first_name }}
                                 {{ $service->budget->customer->commonData->last_name }}
                             </h5>
                             @else
-                            <h5 class="mb-1 text-muted">Cliente não identificado</h5>
+                            <h5 class="mb-1 text-neutral-soft">Cliente não identificado</h5>
                             @endif
 
                             @if($service->budget?->customer?->contact)
-                            <p class="text-muted dark:text-gray-400 mb-0 small">
+                            <p class="text-neutral-soft mb-0 small">
                                 <i class="bi bi-envelope me-1"></i>
                                 {{ $service->budget->customer->contact->email_personal ?? $service->budget->customer->contact->email_business }}
                             </p>
@@ -188,10 +185,10 @@
                             @endphp
                             @if ($phone)
                             <div class="d-flex flex-wrap gap-2 mt-2">
-                                <a href="tel:{{ preg_replace('/\D/', '', $phone) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <a href="tel:{{ preg_replace('/\D/', '', $phone) }}" class="btn btn-sm btn-neutral-outline rounded-pill px-3">
                                     <i class="bi bi-telephone me-1"></i> Ligar
                                 </a>
-                                <a href="https://wa.me/{{ preg_replace('/\D/', '', $phone) }}" target="_blank" class="btn btn-sm btn-success rounded-pill px-3">
+                                <a href="https://wa.me/{{ preg_replace('/\D/', '', $phone) }}" target="_blank" class="btn btn-sm btn-success bg-opacity-75 rounded-pill px-3">
                                     <i class="bi bi-whatsapp me-1"></i> WhatsApp
                                 </a>
                             </div>
@@ -199,17 +196,17 @@
                             @endif
 
                             @if($service->budget?->customer?->address)
-                            <div class="text-muted dark:text-gray-400 mt-3 pt-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <div class="text-neutral-soft mt-3 pt-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <div class="d-flex align-items-start gap-2 small mb-2">
                                     <i class="bi bi-geo-alt mt-1"></i>
                                     <div>
-                                        <div class="fw-bold">{{ $service->budget->customer->address->address }}{{ $service->budget->customer->address->address_number ? ', ' . $service->budget->customer->address->address_number : '' }}</div>
+                                        <div class="fw-bold text-neutral-strong">{{ $service->budget->customer->address->address }}{{ $service->budget->customer->address->address_number ? ', ' . $service->budget->customer->address->address_number : '' }}</div>
                                         <div>{{ $service->budget->customer->address->neighborhood }}</div>
                                         <div>{{ $service->budget->customer->address->city }} - {{ $service->budget->customer->address->state }}</div>
                                         <div class="opacity-75">CEP: {{ $service->budget->customer->address->cep }}</div>
                                     </div>
                                 </div>
-                                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($service->budget->customer->address->address . ', ' . $service->budget->customer->address->address_number . ' - ' . $service->budget->customer->address->city . ' - ' . $service->budget->customer->address->state) }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3 w-100">
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($service->budget->customer->address->address . ', ' . $service->budget->customer->address->address_number . ' - ' . $service->budget->customer->address->city . ' - ' . $service->budget->customer->address->state) }}" target="_blank" class="btn btn-sm btn-neutral-outline rounded-pill px-3 w-100">
                                     <i class="bi bi-map me-1"></i> Ver no Mapa
                                 </a>
                             </div>
@@ -222,22 +219,22 @@
                 <x-layout.grid-col size="col-md-4">
                     <x-ui.card class="glass-card h-100">
                         <x-layout.v-stack spacing="2">
-                            <h6 class="card-title text-muted dark:text-gray-400 mb-2 small text-uppercase fw-bold border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
+                            <h6 class="card-title text-neutral-soft mb-2 small text-uppercase fw-bold border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <i class="bi bi-briefcase me-2"></i>
                                 Resumo do Projeto
                             </h6>
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="text-muted small">Orçamento:</span>
-                                <span class="fw-bold text-gray-900 dark:text-white">{{ $service->budget?->code }}</span>
+                                <span class="text-neutral-soft small">Orçamento:</span>
+                                <span class="fw-bold text-neutral-strong">{{ $service->budget?->code }}</span>
                             </div>
 
                             <div class="mt-2 pt-2 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
                                 <p class="mb-0 text-primary dark:text-primary-400 fs-5">
-                                    <span class="text-muted small fw-normal">Total Geral:</span>
+                                    <span class="text-neutral-soft small fw-normal">Total Geral:</span>
                                     <strong>{{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}</strong>
                                 </p>
                                 @if($service->budget?->payment_terms)
-                                <p class="text-muted dark:text-gray-400 mb-0 mt-1 small">
+                                <p class="text-neutral-soft mb-0 mt-1 small">
                                     <i class="bi bi-credit-card me-1"></i> {{ $service->budget->payment_terms }}
                                 </p>
                                 @endif
@@ -245,20 +242,20 @@
 
                             @if($service->budget && $service->budget->services->count() > 1)
                             <div class="mt-3">
-                                <h6 class="small text-muted text-uppercase fw-bold mb-2" style="font-size: 0.7rem;">
+                                <h6 class="small text-neutral-soft text-uppercase fw-bold mb-2" style="font-size: 0.7rem;">
                                     Outros Serviços no Projeto
                                 </h6>
                                 <div class="d-flex flex-column gap-2">
                                     @foreach($service->budget->services as $relatedService)
                                     @if($relatedService->id !== $service->id)
-                                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-white bg-opacity-25 border border-white border-opacity-50">
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-white bg-opacity-30 border border-white border-opacity-40">
                                         <div class="d-flex align-items-center gap-2 overflow-hidden">
-                                            <i class="bi bi-gear small opacity-50 text-gray-900 dark:text-white"></i>
+                                            <i class="bi bi-gear small opacity-50 text-neutral-strong"></i>
                                             <div class="d-flex flex-column overflow-hidden">
-                                                <span class="fw-bold text-gray-900 dark:text-white" style="font-size: 0.75rem;">
+                                                <span class="fw-bold text-neutral-strong" style="font-size: 0.75rem;">
                                                     {{ $relatedService->code }}
                                                 </span>
-                                                <span class="small text-truncate text-muted dark:text-gray-400" title="{{ $relatedService->description ?? 'Serviço' }}">
+                                                <span class="small text-truncate text-neutral-soft" title="{{ $relatedService->description ?? 'Serviço' }}">
                                                     {{ $relatedService->category?->name ?? 'Serviço' }}
                                                 </span>
                                             </div>
