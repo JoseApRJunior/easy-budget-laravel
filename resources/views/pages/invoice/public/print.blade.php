@@ -75,7 +75,7 @@
         <i class="bi bi-printer me-2"></i>
         Imprimir
       </button>
-      <a href="{{ route( 'provider.invoices.public.view-status', [ 'code' => $invoice->code, 'token' => request( 'token' ) ] ) }}"
+      <a href="{{ route('services.public.invoices.public.show', ['hash' => $invoice->public_hash]) }}"
         class="btn btn-outline-secondary ms-2">
         <i class="bi bi-arrow-left me-2"></i>
         Voltar
@@ -86,7 +86,7 @@
     <div class="header text-center">
       <h1 class="mb-2">{{ $invoice->tenant->name ?? 'Easy Budget' }}</h1>
       <h3 class="text-muted">Fatura #{{ $invoice->code }}</h3>
-      <p class="mb-0">{{ date( 'd/m/Y H:i:s' ) }}</p>
+      <p class="mb-0">{{ date('d/m/Y H:i:s') }}</p>
     </div>
 
     <!-- Status e informações principais -->
@@ -97,13 +97,24 @@
             <i class="bi bi-person-circle me-2"></i>
             Dados do Cliente
           </h5>
-          <strong>{{ $invoice->customer->common_data->first_name }}
-            {{ $invoice->customer->common_data->last_name }}</strong><br>
-          <span class="text-muted">{{ $invoice->customer->contact->email }}</span><br>
-          @if( $invoice->customer->contact->phone )
-            <span class="text-muted">{{ $invoice->customer->contact->phone }}</span><br>
+          @if($invoice->customer?->commonData)
+            <strong>{{ $invoice->customer->commonData->first_name }}
+              {{ $invoice->customer->commonData->last_name }}</strong><br>
+          @else
+            <strong>Cliente não identificado</strong><br>
           @endif
-          @if( $invoice->customer->address )
+
+          @if($invoice->customer?->contact)
+            <span class="text-muted">{{ $invoice->customer->contact->email_personal ?? $invoice->customer->contact->email_business }}</span><br>
+            @php
+              $phone = $invoice->customer->contact->phone_personal ?? $invoice->customer->contact->phone_business;
+            @endphp
+            @if($phone)
+              <span class="text-muted">{{ \App\Helpers\MaskHelper::formatPhone($phone) }}</span><br>
+            @endif
+          @endif
+
+          @if($invoice->customer?->address)
             <small class="text-muted">
               {{ $invoice->customer->address->address }},
               {{ $invoice->customer->address->address_number }},
@@ -120,12 +131,11 @@
             <i class="bi bi-receipt me-2"></i>
             Serviço
           </h5>
-          <strong>Código:</strong> {{ $invoice->service->code }}<br>
-          <strong>Descrição:</strong> {{ $invoice->service->description }}<br>
-          <strong>Valor do Serviço:</strong> {{ \App\Helpers\CurrencyHelper::format($invoice->service->total) }}<br>
+          <strong>Código:</strong> {{ $invoice->service?->code }}<br>
+          <strong>Descrição:</strong> {{ $invoice->service?->description }}<br>
           <strong>Status:</strong>
-          <span class="badge bg-{{ $invoice->service->status->color() }} status-badge">
-            {{ $invoice->service->status->label() }}
+          <span class="badge bg-{{ $invoice->status?->getColor() ?? 'secondary' }}">
+            {{ $invoice->status?->getName() ?? 'N/A' }}
           </span>
         </div>
       </div>

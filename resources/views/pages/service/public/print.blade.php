@@ -64,7 +64,7 @@
     <!-- Botão de impressão (não aparece na impressão) -->
     <div class="text-center no-print mb-3 py-3">
       <x-ui.button onclick="window.print()" variant="primary" icon="printer" label="Imprimir" />
-      <x-ui.button type="link" :href="route( 'provider.services.public.view-status', [ 'code' => $service->code, 'token' => request( 'token' ) ] )"
+      <x-ui.button type="link" :href="route('services.public.view-status', ['code' => $service->code, 'token' => request('token')])"
         variant="outline-secondary" icon="arrow-left" label="Voltar" class="ms-2" />
     </div>
 
@@ -83,18 +83,29 @@
             <i class="bi bi-person-circle me-2"></i>
             Dados do Cliente
           </h5>
-          <strong>{{ $service->customer->common_data->first_name }}
-            {{ $service->customer->common_data->last_name }}</strong><br>
-          <span class="text-muted">{{ $service->customer->contact->email }}</span><br>
-          @if( $service->customer->contact->phone )
-            <span class="text-muted">{{ $service->customer->contact->phone }}</span><br>
+          @if($service->budget?->customer?->commonData)
+            <strong>{{ $service->budget->customer->commonData->first_name }}
+              {{ $service->budget->customer->commonData->last_name }}</strong><br>
+          @else
+            <strong>Cliente não identificado</strong><br>
           @endif
-          @if( $service->customer->address )
+
+          @if($service->budget?->customer?->contact)
+            <span class="text-muted">{{ $service->budget->customer->contact->email_personal ?? $service->budget->customer->contact->email_business }}</span><br>
+            @php
+              $phone = $service->budget->customer->contact->phone_personal ?? $service->budget->customer->contact->phone_business;
+            @endphp
+            @if($phone)
+              <span class="text-muted">{{ \App\Helpers\MaskHelper::formatPhone($phone) }}</span><br>
+            @endif
+          @endif
+
+          @if($service->budget?->customer?->address)
             <small class="text-muted">
-              {{ $service->customer->address->address }},
-              {{ $service->customer->address->address_number }},
-              {{ $service->customer->address->neighborhood }},
-              {{ $service->customer->address->city }} - {{ $service->customer->address->state }}
+              {{ $service->budget->customer->address->address }},
+              {{ $service->budget->customer->address->address_number }},
+              {{ $service->budget->customer->address->neighborhood }},
+              {{ $service->budget->customer->address->city }} - {{ $service->budget->customer->address->state }}
             </small>
           @endif
         </div>
@@ -106,9 +117,9 @@
             <i class="bi bi-receipt me-2"></i>
             Orçamento
           </h5>
-          <strong>Código:</strong> {{ $service->budget->code }}<br>
-          <strong>Descrição:</strong> {{ $service->budget->description }}<br>
-          <strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($service->budget->total) }}<br>
+          <strong>Código:</strong> {{ $service->budget?->code }}<br>
+          <strong>Descrição:</strong> {{ $service->budget?->description }}<br>
+          <strong>Total do Orçamento:</strong> {{ \App\Helpers\CurrencyHelper::format($service->budget?->total) }}<br>
           <strong>Status:</strong>
           <x-ui.status-badge :item="$service->budget" />
         </div>
@@ -125,7 +136,7 @@
       <div class="row">
         <div class="col-md-6">
           <strong>Categoria:</strong><br>
-          {{ $service->category->name }}<br><br>
+          {{ $service->category?->name ?? 'Não informada' }}<br><br>
 
           @if( $service->description )
             <strong>Descrição:</strong><br>
@@ -193,13 +204,23 @@
     @endif
 
     <!-- Observações -->
-    @if( $service->budget->payment_terms )
+    @if( $service->budget?->payment_terms )
       <div class="info-box">
         <h5 class="text-muted mb-3">
           <i class="bi bi-file-text me-2"></i>
           Condições de Pagamento
         </h5>
-        <p>{{ $service->budget->payment_terms }}</p>
+        {{ $service->budget->payment_terms }}
+      </div>
+    @endif
+
+    @if( $service->budget?->notes )
+      <div class="info-box">
+        <h5 class="text-muted mb-3">
+          <i class="bi bi-chat-left-text me-2"></i>
+          Observações Adicionais
+        </h5>
+        {{ $service->budget->notes }}
       </div>
     @endif
 
