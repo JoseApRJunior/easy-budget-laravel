@@ -386,9 +386,9 @@
                                 <small class="text-neutral-soft opacity-75">{{ $item->notes }}</small>
                                 @endif
                             </td>
-                            <td class="text-center p-3 text-neutral-strong">{{ $item->quantity }}</td>
+                            <td class="text-center p-3 text-neutral-strong">{{ (int) $item->quantity }}</td>
                             <td class="text-end p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</td>
-                            <td class="text-end fw-bold p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</td>
+                            <td class="text-end fw-bold p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) ($item->unit_value * $item->quantity)) }}</td>
                         </tr>
                         @empty
                         <tr>
@@ -403,7 +403,9 @@
                         <x-slot name="tfoot">
                             <tr class="bg-light bg-opacity-50">
                                 <td colspan="3" class="text-end fw-bold p-3 text-neutral-strong">Total dos Itens:</td>
-                                <td class="text-end fw-bold p-3 fs-5 text-primary">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</td>
+                                <td class="text-end fw-bold p-3 fs-5 text-primary">
+                                    {{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum(fn($item) => $item->unit_value * $item->quantity)) }}
+                                </td>
                             </tr>
                         </x-slot>
                         @endif
@@ -421,7 +423,7 @@
                 </x-layout.grid-col>
                 <x-layout.grid-col md="6" class="text-center text-md-end mt-3 mt-md-0">
                     @if($service->public_expires_at && \Carbon\Carbon::parse($service->public_expires_at)->isFuture())
-                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success border-opacity-25">
+                    <span class="badge bg-success text-white rounded-pill px-3 py-2 shadow-sm">
                         <i class="bi bi-shield-check me-1"></i> Link de Acesso Seguro e Válido
                     </span>
                     @endif
