@@ -312,7 +312,7 @@
                 </x-layout.grid-row>
             </div>
 
-            @if (in_array($service->status->value, ['pending', 'scheduling', 'scheduled']))
+            @if (in_array($service->status->value, ['pending', 'scheduling']))
             <div class="mb-4">
                 <div class="glass-card border-0 shadow-sm overflow-hidden">
                     <div class="bg-warning opacity-50" style="height: 4px;"></div>
@@ -321,9 +321,19 @@
                             <span class="p-2 bg-warning bg-opacity-10 rounded-circle me-2 border border-warning border-opacity-25">
                                 <i class="bi bi-exclamation-circle-fill text-warning"></i>
                             </span>
-                            Ação Necessária
+                            @if($service->status === \App\Enums\ServiceStatus::SCHEDULING)
+                            Confirmação de Agendamento
+                            @else
+                            Aprovação do Orçamento
+                            @endif
                         </h6>
-                        <p class="mb-4 text-neutral-soft small">Por favor, confirme ou informe o status deste serviço/agendamento:</p>
+                        <p class="mb-4 text-neutral-soft small">
+                            @if($service->status === \App\Enums\ServiceStatus::SCHEDULING)
+                            O orçamento já foi aprovado! Agora, por favor, <strong>confirme o agendamento</strong> proposto abaixo ou solicite uma alteração:
+                            @else
+                            Por favor, revise os detalhes abaixo e <strong>aprove o orçamento</strong> para que possamos iniciar o serviço:
+                            @endif
+                        </p>
 
                         <form method="POST" action="{{ route('services.public.choose-status') }}">
                             @csrf
@@ -338,19 +348,22 @@
                                         labelClass="text-neutral-soft fw-bold small mb-2"
                                         required>
                                         @php
-                                        $options = $service->status === \App\Enums\ServiceStatus::SCHEDULING
-                                        ? [\App\Enums\ServiceStatus::SCHEDULED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED]
-                                        : [\App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED];
+                                        // Como o orçamento já foi aprovado, focamos apenas no agendamento
+                                        $options = [
+                                        \App\Enums\ServiceStatus::SCHEDULED,
+                                        \App\Enums\ServiceStatus::REJECTED,
+                                        \App\Enums\ServiceStatus::CANCELLED
+                                        ];
                                         @endphp
                                         @foreach ($options as $status)
                                         <option value="{{ $status->value }}"
                                             {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
-                                            @if ($status === \App\Enums\ServiceStatus::APPROVED)
-                                            Aprovar Serviço
-                                            @elseif ($status === \App\Enums\ServiceStatus::SCHEDULED)
-                                            Confirmar Agendamento
+                                            @if ($status === \App\Enums\ServiceStatus::SCHEDULED)
+                                            Confirmar Agendamento Proposto
+                                            @elseif ($status === \App\Enums\ServiceStatus::REJECTED)
+                                            Solicitar Alteração de Data/Horário
                                             @else
-                                            {{ $status->getDescription() }}
+                                            Cancelar Agendamento / Serviço
                                             @endif
                                         </option>
                                         @endforeach
@@ -431,9 +444,5 @@
             </x-layout.grid-row>
         </x-slot>
     </x-ui.card>
-
-    <x-layout.h-stack justify="center" class="mt-4 mb-5">
-        <p class="text-muted small mb-0">&copy; {{ date('Y') }} {{ config('app.name') }}. Todos os direitos reservados.</p>
-    </x-layout.h-stack>
 </x-layout.page-container>
 @endsection
