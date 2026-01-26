@@ -2215,3 +2215,80 @@ input[type="number"] {
 .subcategory-icon-mobile {
    font-size: 0.875rem;
 }
+
+/* Glassmorphism & Public Status Page Styles */
+.glass-card {
+    background: var(--contrast-overlay) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.03) !important;
+    border-radius: 1.25rem !important;
+}
+
+.dark .glass-card {
+    background: rgba(30, 41, 59, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.text-neutral-strong {
+    color: var(--text-color) !important;
+}
+
+.text-neutral-soft {
+    color: var(--small-text-color) !important;
+}
+
+.dark .text-neutral-strong {
+    color: var(--contrast-text) !important;
+}
+
+.dark .text-neutral-soft {
+    color: var(--contrast-text-secondary) !important;
+}
+
+.btn-neutral-outline {
+    border-color: var(--form-border);
+    color: var(--small-text-color);
+    background: transparent;
+}
+
+.btn-neutral-outline:hover {
+    background: var(--form-input-bg);
+    border-color: var(--form-input-border);
+    color: var(--text-color);
+}
+
+.header-accent {
+    background: var(--contrast-overlay) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+
+.dark .header-accent {
+    background: rgba(30, 41, 59, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.main-container-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.dark .main-container-card {
+    background: transparent !important;
+}
+
+.section-glass {
+    background: var(--contrast-overlay) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}

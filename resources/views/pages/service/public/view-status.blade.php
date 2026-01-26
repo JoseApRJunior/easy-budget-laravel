@@ -1,94 +1,28 @@
 @extends('layouts.guest')
 
 @section('content')
-<style>
-    body {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        background-attachment: fixed;
-        min-height: 100vh;
-    }
-
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.03) !important;
-        border-radius: 1.25rem !important;
-    }
-
-    .dark .glass-card {
-        background: rgba(30, 41, 59, 0.7) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-
-    /* Cores de texto mais neutras */
-    .text-neutral-strong {
-        color: #1e293b !important;
-    }
-
-    .text-neutral-soft {
-        color: #64748b !important;
-    }
-
-    .dark .text-neutral-strong {
-        color: #f1f5f9 !important;
-    }
-
-    .dark .text-neutral-soft {
-        color: #94a3b8 !important;
-    }
-
-    .btn-neutral-outline {
-        border-color: #e2e8f0;
-        color: #475569;
-        background: transparent;
-    }
-
-    .btn-neutral-outline:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-        color: #1e293b;
-    }
-
-    .main-container-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    .dark .main-container-card {
-        background: transparent !important;
-    }
-
-    .section-glass {
-        background: rgba(255, 255, 255, 0.25) !important;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-</style>
 <x-layout.page-container :fluid="false">
     <x-ui.card class="mb-4 main-container-card">
-        <x-slot name="header" class="bg-transparent border-0">
-            <x-layout.h-stack justify="between" align="center">
-                <x-resource.resource-info
-                    title="Status do Serviço"
-                    :subtitle="'Código: ' . $service->code"
-                    icon="gear"
-                    titleClass="text-muted fw-normal">
-                    @if($service->public_expires_at)
-                    <span class="ms-2 text-muted opacity-50">•</span>
-                    <span class="ms-2 text-muted" title="Link válido até">
-                        <i class="bi bi-clock-history me-1"></i>
-                        {{ \Carbon\Carbon::parse($service->public_expires_at)->format('d/m/Y') }}
-                    </span>
-                    @endif
-                </x-resource.resource-info>
-                <x-ui.status-badge :item="$service" />
-            </x-layout.h-stack>
+        <x-slot name="header" class="bg-transparent border-0 p-0 mb-3">
+            <div class="header-accent">
+                <x-layout.h-stack justify="between" align="center">
+                    <x-resource.resource-info
+                        title="Status do Serviço"
+                        :subtitle="'Código: ' . $service->code"
+                        icon="gear"
+                        titleClass="text-neutral-strong fw-bold"
+                        subtitleClass="text-neutral-soft">
+                        @if($service->public_expires_at)
+                        <span class="ms-2 text-neutral-soft opacity-50">•</span>
+                        <span class="ms-2 text-neutral-soft small" title="Link válido até">
+                            <i class="bi bi-clock-history me-1"></i>
+                            {{ \Carbon\Carbon::parse($service->public_expires_at)->format('d/m/Y') }}
+                        </span>
+                        @endif
+                    </x-resource.resource-info>
+                    <x-ui.status-badge :item="$service" />
+                </x-layout.h-stack>
+            </div>
         </x-slot>
 
         <x-layout.v-stack spacing="4">
@@ -277,154 +211,216 @@
             $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
             $confirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->first();
             $activeSchedule = $confirmedSchedule ?? $pendingSchedule;
+            $isConfirmed = (bool) $confirmedSchedule;
             @endphp
 
             @if ($activeSchedule)
             <div class="mb-4">
-                <div class="p-4 glass-card border-{{ $confirmedSchedule ? 'success' : 'warning' }} border-opacity-50 d-flex flex-column flex-md-row align-items-center" style="background: rgba({{ $confirmedSchedule ? '25, 135, 84' : '255, 193, 7' }}, 0.1) !important;">
-                    <div class="rounded-circle bg-{{ $confirmedSchedule ? 'success' : 'warning' }} bg-opacity-25 p-3 mb-3 mb-md-0 me-md-4">
-                        <i class="bi bi-calendar-check fs-2 text-{{ $confirmedSchedule ? 'success' : 'warning' }}"></i>
+                <div class="glass-card overflow-hidden border-0 shadow-sm">
+                    <div class="d-flex flex-column flex-md-row">
+                        {{-- Indicador Lateral --}}
+                        <div class="bg-{{ $isConfirmed ? 'success' : 'warning' }} opacity-50" style="width: 6px;"></div>
+
+                        <div class="p-4 d-flex flex-column flex-md-row align-items-center flex-grow-1" style="background: var(--contrast-overlay);">
+                            <div class="rounded-4 bg-{{ $isConfirmed ? 'success' : 'warning' }} bg-opacity-10 p-3 mb-3 mb-md-0 me-md-4 border border-{{ $isConfirmed ? 'success' : 'warning' }} border-opacity-25 shadow-sm">
+                                <i class="bi bi-calendar2-check fs-1 text-{{ $isConfirmed ? 'success' : 'warning' }}"></i>
+                            </div>
+
+                            <div class="text-center text-md-start flex-grow-1">
+                                <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                                    <span class="text-neutral-soft text-uppercase fw-bold ls-wider small" style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                                        {{ $isConfirmed ? 'Agendamento Confirmado' : 'Aguardando Sua Confirmação' }}
+                                    </span>
+                                    @if(!$isConfirmed)
+                                    <span class="spinner-grow spinner-grow-sm text-warning opacity-75" role="status"></span>
+                                    @endif
+                                </div>
+
+                                <h3 class="text-neutral-strong fw-bold mb-0 display-6 d-flex align-items-center justify-content-center justify-content-md-start flex-wrap gap-2" style="font-size: 1.85rem;">
+                                    <span>{{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->translatedFormat('d \d\e F') }}</span>
+                                    <span class="text-neutral-soft fw-light opacity-50 d-none d-md-inline">|</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-neutral-strong">{{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }}</span>
+                                        <span class="text-neutral-soft fw-light small opacity-75" style="font-size: 1rem;">às</span>
+                                        <span class="text-neutral-strong">{{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}</span>
+                                    </div>
+                                </h3>
+
+                                @if ($activeSchedule->notes)
+                                <div class="mt-3 p-2 px-3 rounded-3 d-inline-block shadow-sm" style="background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(4px);">
+                                    <p class="mb-0 text-neutral-strong small">
+                                        <i class="bi bi-info-circle text-neutral-soft me-1"></i>
+                                        <strong class="text-neutral-soft fw-bold">Obs:</strong> {{ $activeSchedule->notes }}
+                                    </p>
+                                </div>
+                                @endif
+                            </div>
+
+                            <div class="ms-md-auto mt-4 mt-md-0">
+                                @if($isConfirmed)
+                                <div class="px-4 py-2 rounded-pill shadow-sm d-inline-flex align-items-center bg-success bg-opacity-10 border border-success border-opacity-20" style="color: var(--text-success); font-size: 0.85rem; font-weight: 700;">
+                                    <i class="bi bi-check-circle-fill me-2"></i> CONFIRMADO
+                                </div>
+                                @else
+                                <div class="px-4 py-2 rounded-pill shadow-sm d-inline-flex align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-20" style="color: var(--text-warning); font-size: 0.85rem; font-weight: 700;">
+                                    <i class="bi bi-hourglass-split me-2"></i> PENDENTE
+                                </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-center text-md-start flex-grow-1">
-                        <small class="text-muted dark:text-gray-400 d-block text-uppercase fw-bold ls-wider mb-1" style="font-size: 0.75rem;">
-                            {{ $confirmedSchedule ? 'Agendamento Confirmado' : 'Aguardando Confirmação de Agendamento' }}
-                        </small>
-                        <h3 class="text-gray-900 dark:text-white fw-bold mb-1">
-                            {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('d/m/Y') }}
-                            <span class="text-muted fw-normal mx-2">|</span>
-                            {{ \Carbon\Carbon::parse($activeSchedule->start_date_time)->format('H:i') }} às {{ \Carbon\Carbon::parse($activeSchedule->end_date_time)->format('H:i') }}
-                        </h3>
-                        @if ($activeSchedule->notes)
-                        <p class="mb-0 text-muted small mt-2">
-                            <strong>Obs:</strong> {{ $activeSchedule->notes }}
-                        </p>
-                        @endif
-                    </div>
-                    @if($confirmedSchedule)
-                    <div class="ms-md-auto mt-3 mt-md-0">
-                        <span class="badge bg-success px-3 py-2 rounded-pill">
-                            <i class="bi bi-check-circle-fill me-1"></i> Confirmado
-                        </span>
-                    </div>
-                    @endif
                 </div>
             </div>
             @endif
 
-            <x-resource.resource-header-section title="Detalhes do Serviço" icon="tools" class="border-0 shadow-none bg-transparent">
-                @if ($service->description)
-                <x-layout.grid-col md="12">
-                    <div class="p-3 glass-card rounded mb-3">
-                        <h6 class="small text-muted text-uppercase fw-bold mb-2">Descrição do Trabalho</h6>
-                        <p class="mb-0 text-gray-700 dark:text-gray-300">{{ $service->description }}</p>
-                    </div>
-                </x-layout.grid-col>
-                @endif
+            <div class="mb-4">
+                <x-layout.grid-row class="g-3">
+                    @if ($service->description)
+                    <x-layout.grid-col md="12">
+                        <div class="p-3 glass-card rounded-4 mb-1 border-0 shadow-sm">
+                            <h6 class="text-neutral-soft text-uppercase fw-bold mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">Descrição do Trabalho</h6>
+                            <p class="mb-0 text-neutral-strong">{{ $service->description }}</p>
+                        </div>
+                    </x-layout.grid-col>
+                    @endif
 
-                <x-resource.resource-header-item
-                    label="Categoria"
-                    :value="$service->category?->name"
-                    icon="tag"
-                    iconVariant="info" />
+                    <x-layout.grid-col md="3" sm="6">
+                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
+                            <div class="p-2 bg-info bg-opacity-10 rounded-3 text-info">
+                                <i class="bi bi-tag fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Categoria</h6>
+                                <p class="mb-0 text-neutral-strong fw-bold">{{ $service->category?->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </x-layout.grid-col>
 
-                <x-resource.resource-header-item
-                    label="Valor Total"
-                    :value="\App\Helpers\CurrencyHelper::format($service->total)"
-                    icon="cash-stack"
-                    iconVariant="success" />
+                    <x-layout.grid-col md="3" sm="6">
+                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
+                            <div class="p-2 bg-success bg-opacity-10 rounded-3 text-success">
+                                <i class="bi bi-cash-stack fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Valor Total</h6>
+                                <p class="mb-0 text-neutral-strong fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</p>
+                            </div>
+                        </div>
+                    </x-layout.grid-col>
 
-                <x-resource.resource-header-item
-                    label="Desconto Aplicado"
-                    :value="\App\Helpers\CurrencyHelper::format($service->discount)"
-                    icon="percent"
-                    iconVariant="warning" />
+                    <x-layout.grid-col md="3" sm="6">
+                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
+                            <div class="p-2 bg-warning bg-opacity-10 rounded-3 text-warning">
+                                <i class="bi bi-percent fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Desconto</h6>
+                                <p class="mb-0 text-neutral-strong fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</p>
+                            </div>
+                        </div>
+                    </x-layout.grid-col>
 
-                @if ($service->due_date)
-                <x-resource.resource-header-item
-                    label="Prazo de Entrega"
-                    :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')"
-                    icon="calendar-event"
-                    iconVariant="secondary" />
-                @endif
-            </x-resource.resource-header-section>
+                    @if ($service->due_date)
+                    <x-layout.grid-col md="3" sm="6">
+                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
+                            <div class="p-2 bg-secondary bg-opacity-10 rounded-3 text-secondary">
+                                <i class="bi bi-calendar-event fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Prazo de Entrega</h6>
+                                <p class="mb-0 text-neutral-strong fw-bold">{{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}</p>
+                            </div>
+                        </div>
+                    </x-layout.grid-col>
+                    @endif
+                </x-layout.grid-row>
+            </div>
 
             @if (in_array($service->status->value, ['pending', 'scheduling', 'scheduled']))
-            <x-ui.card class="glass-card border-warning shadow-none" style="background-color: rgba(255, 193, 7, 0.08) !important;">
-                <h6 class="card-title text-warning mb-3 fw-bold">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Ação Necessária
-                </h6>
-                <p class="mb-3 small text-gray-700 dark:text-gray-300">Por favor, confirme ou informe o status deste serviço/agendamento:</p>
+            <div class="mb-4">
+                <div class="glass-card border-0 shadow-sm overflow-hidden">
+                    <div class="bg-warning opacity-50" style="height: 4px;"></div>
+                    <div class="p-4" style="background: var(--contrast-overlay);">
+                        <h6 class="text-neutral-strong mb-3 fw-bold d-flex align-items-center">
+                            <span class="p-2 bg-warning bg-opacity-10 rounded-circle me-2 border border-warning border-opacity-25">
+                                <i class="bi bi-exclamation-circle-fill text-warning"></i>
+                            </span>
+                            Ação Necessária
+                        </h6>
+                        <p class="mb-4 text-neutral-soft small">Por favor, confirme ou informe o status deste serviço/agendamento:</p>
 
-                <form method="POST" action="{{ route('services.public.choose-status') }}">
-                    @csrf
-                    <input type="hidden" name="service_code" value="{{ $service->code }}">
-                    <input type="hidden" name="token" value="{{ $token }}">
+                        <form method="POST" action="{{ route('services.public.choose-status') }}">
+                            @csrf
+                            <input type="hidden" name="service_code" value="{{ $service->code }}">
+                            <input type="hidden" name="token" value="{{ $token }}">
 
-                    <x-layout.grid-row align="end">
-                        <x-layout.grid-col md="8">
-                            <x-ui.form.select
-                                name="service_status_id"
-                                label="Sua Decisão"
-                                required>
-                                @php
-                                $options = $service->status === \App\Enums\ServiceStatus::SCHEDULING
-                                ? [\App\Enums\ServiceStatus::SCHEDULED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED]
-                                : [\App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED];
-                                @endphp
-                                @foreach ($options as $status)
-                                <option value="{{ $status->value }}"
-                                    {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
-                                    @if ($status === \App\Enums\ServiceStatus::APPROVED)
-                                    Aprovar Serviço
-                                    @elseif ($status === \App\Enums\ServiceStatus::SCHEDULED)
-                                    Confirmar Agendamento
-                                    @else
-                                    {{ $status->getDescription() }}
-                                    @endif
-                                </option>
-                                @endforeach
-                            </x-ui.form.select>
-                        </x-layout.grid-col>
-                        <x-layout.grid-col md="4">
-                            <x-ui.button type="submit" variant="primary" icon="check-circle" label="Enviar Decisão" class="w-100" />
-                        </x-layout.grid-col>
-                    </x-layout.grid-row>
-                </form>
-            </x-ui.card>
+                            <x-layout.grid-row align="end" class="g-3">
+                                <x-layout.grid-col md="8">
+                                    <x-ui.form.select
+                                        name="service_status_id"
+                                        label="SUA DECISÃO"
+                                        labelClass="text-neutral-soft fw-bold small mb-2"
+                                        required>
+                                        @php
+                                        $options = $service->status === \App\Enums\ServiceStatus::SCHEDULING
+                                        ? [\App\Enums\ServiceStatus::SCHEDULED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED]
+                                        : [\App\Enums\ServiceStatus::APPROVED, \App\Enums\ServiceStatus::REJECTED, \App\Enums\ServiceStatus::CANCELLED];
+                                        @endphp
+                                        @foreach ($options as $status)
+                                        <option value="{{ $status->value }}"
+                                            {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
+                                            @if ($status === \App\Enums\ServiceStatus::APPROVED)
+                                            Aprovar Serviço
+                                            @elseif ($status === \App\Enums\ServiceStatus::SCHEDULED)
+                                            Confirmar Agendamento
+                                            @else
+                                            {{ $status->getDescription() }}
+                                            @endif
+                                        </option>
+                                        @endforeach
+                                    </x-ui.form.select>
+                                </x-layout.grid-col>
+                                <x-layout.grid-col md="4">
+                                    <x-ui.button type="submit" variant="primary" icon="check-circle" label="Enviar Decisão" class="w-100 py-2 fw-bold shadow-sm" style="background: var(--primary-color); border: none;" />
+                                </x-layout.grid-col>
+                            </x-layout.grid-row>
+                        </form>
+                    </div>
+                </div>
+            </div>
             @endif
 
-            <x-resource.resource-header-section title="Itens do Serviço" icon="list-check" class="border-0 shadow-none bg-transparent">
+            <x-resource.resource-header-section title="Itens do Serviço" icon="list-check" class="border-0 shadow-none bg-transparent mt-4 mb-0 text-neutral-strong">
                 <x-layout.grid-col md="12">
-                    <div class="glass-card rounded-4 overflow-hidden p-0 border-0">
+                    <div class="glass-card rounded-4 overflow-hidden p-0 border-0 shadow-sm">
                         <x-resource.resource-table class="mb-0">
                             <x-slot name="thead">
-                                <x-resource.table-row class="bg-transparent">
-                                    <x-resource.table-cell header class="border-0 bg-transparent opacity-75">Item</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-center border-0 bg-transparent opacity-75">Qtd</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-end border-0 bg-transparent opacity-75">V. Unitário</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-end border-0 bg-transparent opacity-75">Total</x-resource.table-cell>
+                                <x-resource.table-row style="background: var(--contrast-overlay) !important;">
+                                    <x-resource.table-cell header class="border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">Item</x-resource.table-cell>
+                                    <x-resource.table-cell header class="text-center border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">Qtd</x-resource.table-cell>
+                                    <x-resource.table-cell header class="text-end border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">V. Unitário</x-resource.table-cell>
+                                    <x-resource.table-cell header class="text-end border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">Total</x-resource.table-cell>
                                 </x-resource.table-row>
                             </x-slot>
 
                             @foreach ($service->serviceItems as $item)
-                            <x-resource.table-row class="bg-transparent border-top" style="border-color: rgba(0,0,0,0.05) !important;">
-                                <x-resource.table-cell class="border-0">
-                                    <div class="fw-bold text-gray-900 dark:text-white">{{ $item->product?->name }}</div>
+                            <x-resource.table-row class="bg-transparent" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
+                                <x-resource.table-cell class="border-0 p-3">
+                                    <div class="fw-bold text-neutral-strong">{{ $item->product?->name }}</div>
                                     @if ($item->notes)
-                                    <small class="text-muted">{{ $item->notes }}</small>
+                                    <small class="text-neutral-soft opacity-75">{{ $item->notes }}</small>
                                     @endif
                                 </x-resource.table-cell>
-                                <x-resource.table-cell class="text-center border-0">{{ $item->quantity }}</x-resource.table-cell>
-                                <x-resource.table-cell class="text-end border-0">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</x-resource.table-cell>
-                                <x-resource.table-cell class="text-end fw-bold border-0">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</x-resource.table-cell>
+                                <x-resource.table-cell class="text-center border-0 p-3 text-neutral-strong">{{ $item->quantity }}</x-resource.table-cell>
+                                <x-resource.table-cell class="text-end border-0 p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</x-resource.table-cell>
+                                <x-resource.table-cell class="text-end fw-bold border-0 p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</x-resource.table-cell>
                             </x-resource.table-row>
                             @endforeach
 
                             <x-slot name="tfoot">
-                                <x-resource.table-row class="bg-transparent border-top" style="border-color: rgba(0,0,0,0.1) !important;">
-                                    <x-resource.table-cell colspan="3" class="text-end fw-bold border-0">Total dos Itens:</x-resource.table-cell>
-                                    <x-resource.table-cell class="text-end fw-bold border-0 fs-5 text-primary">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</x-resource.table-cell>
+                                <x-resource.table-row style="background: var(--contrast-overlay) !important; border-top: 1px solid rgba(255,255,255,0.2) !important;">
+                                    <x-resource.table-cell colspan="3" class="text-end fw-bold border-0 p-3 text-neutral-strong">Total dos Itens:</x-resource.table-cell>
+                                    <x-resource.table-cell class="text-end fw-bold border-0 p-3 fs-5 text-primary">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</x-resource.table-cell>
                                 </x-resource.table-row>
                             </x-slot>
                         </x-resource.resource-table>
@@ -434,15 +430,20 @@
         </x-layout.v-stack>
 
         <x-slot name="footer" class="bg-transparent border-0 mt-4">
-            <x-layout.h-stack justify="between" align="center">
-                <x-ui.button type="link" :href="route('services.public.print', ['code' => $service->code, 'token' => $token])" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" size="sm" class="glass-card" />
-
-                <div class="text-muted small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Link válido até:
-                    <span class="fw-bold">{{ $service->public_expires_at ? \Carbon\Carbon::parse($service->public_expires_at)->format('d/m/Y H:i') : 'Indeterminado' }}</span>
-                </div>
-            </x-layout.h-stack>
+            <x-layout.grid-row class="mt-4 mb-2">
+                <x-layout.grid-col md="6" class="text-center text-md-start">
+                    <a href="{{ route('services.public.print', ['code' => $service->code, 'token' => $token]) }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-printer me-2"></i> Imprimir Orçamento
+                    </a>
+                </x-layout.grid-col>
+                <x-layout.grid-col md="6" class="text-center text-md-end mt-3 mt-md-0">
+                    @if($service->public_expires_at && \Carbon\Carbon::parse($service->public_expires_at)->isFuture())
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 border border-success border-opacity-25">
+                        <i class="bi bi-shield-check me-1"></i> Link de Acesso Seguro e Válido
+                    </span>
+                    @endif
+                </x-layout.grid-col>
+            </x-layout.grid-row>
         </x-slot>
     </x-ui.card>
 
