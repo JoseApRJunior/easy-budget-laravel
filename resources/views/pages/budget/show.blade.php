@@ -19,15 +19,22 @@
         {{-- Primeira Linha: Informações Principais --}}
         <x-resource.resource-header-item
             label="Código"
+            icon="hash"
+            iconVariant="secondary"
             :value="$budget->code" />
 
         <x-resource.resource-header-item
-            label="Status Atual">
-            <x-ui.status-description :item="$budget" statusField="status" :useColor="true" />
+            label="Status Atual"
+            icon="info-circle"
+            iconVariant="info">
+            <x-ui.status-description :item="$budget" statusField="status" :useColor="false" class="text-dark fw-medium" />
         </x-resource.resource-header-item>
 
         <x-resource.resource-header-item
             label="Total Geral"
+            icon="currency-dollar"
+            iconVariant="success"
+            valueClass="text-success"
             :value="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)" />
 
         <x-resource.resource-header-divider />
@@ -37,11 +44,12 @@
             @if ($budget->customer)
             <x-layout.grid-col size="col-md-4">
                 <x-resource.resource-info
-                    title="Nome/Razão Social"
+                    title="Cliente"
                     :subtitle="$budget->customer->name"
-                    icon="person-badge"
-                    :href="route('provider.customers.show', $budget->customer->id)"
-                    class="small" />
+                    icon="person-fill"
+                    iconClass="text-primary fs-5"
+                    titleClass="text-muted small fw-bold text-uppercase"
+                    :href="route('provider.customers.show', $budget->customer->id)" />
             </x-layout.grid-col>
             <x-layout.grid-col size="col-md-4">
                 @php
@@ -54,14 +62,16 @@
                     :title="$docLabel"
                     :subtitle="$docValue"
                     icon="card-text"
-                    class="small" />
+                    iconClass="text-secondary fs-5"
+                    titleClass="text-muted small fw-bold text-uppercase" />
             </x-layout.grid-col>
             <x-layout.grid-col size="col-md-4">
                 <x-resource.resource-info
-                    title="Contato Principal"
+                    title="E-mail/Contato"
                     :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
-                    icon="envelope"
-                    class="small" />
+                    icon="envelope-fill"
+                    iconClass="text-info fs-5"
+                    titleClass="text-muted small fw-bold text-uppercase" />
             </x-layout.grid-col>
             @else
             <x-layout.grid-col size="col-12">
@@ -80,7 +90,8 @@
                         title="Criado em"
                         :subtitle="$budget->created_at->format('d/m/Y H:i')"
                         icon="calendar-plus"
-                        class="small" />
+                        iconClass="text-secondary"
+                        titleClass="text-muted small fw-bold text-uppercase" />
                 </div>
                 @if ($budget->due_date)
                 <div class="col-md-4">
@@ -88,32 +99,34 @@
                         title="Vencimento"
                         :subtitle="$budget->due_date->format('d/m/Y')"
                         icon="calendar-event"
-                        class="small" />
+                        iconClass="text-warning"
+                        titleClass="text-muted small fw-bold text-uppercase" />
                 </div>
                 @endif
                 <div class="col-md-4">
                     <x-resource.resource-info
-                        title="Última Atualização"
+                        title="Atualizado"
                         :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
                         icon="clock-history"
-                        class="small" />
+                        iconClass="text-info"
+                        titleClass="text-muted small fw-bold text-uppercase" />
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mt-2">
-            <div class="bg-light p-3 rounded-3 border border-light-subtle">
+            <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
                 <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small">Subtotal:</span>
+                    <span class="text-muted small fw-medium">Subtotal:</span>
                     <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted small">Desconto:</span>
-                    <span class="text-warning fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
+                    <span class="text-muted small fw-medium">Desconto:</span>
+                    <span class="text-danger fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
                 </div>
-                <div class="d-flex justify-content-between pt-2 border-top border-secondary-subtle">
-                    <span class="fw-bold">Total:</span>
-                    <span class="fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
+                <div class="d-flex justify-content-between pt-2 border-top" style="border-color: #e2e8f0 !important;">
+                    <span class="fw-bold text-dark">Total Líquido:</span>
+                    <span class="fw-bold text-success fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
                 </div>
             </div>
         </div>
@@ -255,12 +268,13 @@
                 <div class="d-grid d-md-flex gap-2">
                     @php
                     $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
+                    $isDraft = $budget->status->value === 'draft';
                     @endphp
 
                     <x-ui.button type="button" class="d-flex align-items-center"
                         variant="{{ $isSent ? 'outline-info' : 'info' }}"
                         icon="send-fill"
-                        label="{{ $isSent ? 'Reenviar' : 'Enviar' }}"
+                        label="{{ $isSent ? 'Reenviar' : ($isDraft ? 'Enviar' : 'Enviar') }}"
                         data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
 
                     <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"

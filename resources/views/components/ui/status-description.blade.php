@@ -29,8 +29,8 @@
 @endphp
 
 @if($description)
-    <span {{ $attributes->merge(['class' => 'small ' . ($useColor ? '' : 'text-muted'), 'style' => $style]) }}>
-        <i class="{{ $icon }} me-1 opacity-75"></i>
+    <span {{ $attributes->merge(['class' => 'small ' . ($useColor ? '' : (str_contains($attributes->get('class', ''), 'text-') ? '' : 'text-muted')), 'style' => $style]) }}>
+        <i class="{{ $icon }} me-1 {{ str_contains($attributes->get('class', ''), 'text-') ? '' : 'opacity-75' }}"></i>
         {{ $description }}
     </span>
 @endif
