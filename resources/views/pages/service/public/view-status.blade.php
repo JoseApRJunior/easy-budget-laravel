@@ -330,8 +330,8 @@
                             <input type="hidden" name="service_code" value="{{ $service->code }}">
                             <input type="hidden" name="token" value="{{ $token }}">
 
-                            <x-layout.grid-row align="end" class="g-3">
-                                <x-layout.grid-col md="8">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-8">
                                     <x-ui.form.select
                                         name="service_status_id"
                                         label="SUA DECISÃO"
@@ -355,11 +355,11 @@
                                         </option>
                                         @endforeach
                                     </x-ui.form.select>
-                                </x-layout.grid-col>
-                                <x-layout.grid-col md="4">
-                                    <x-ui.button type="submit" variant="primary" icon="check-circle" label="Enviar Decisão" class="w-100 py-2 fw-bold shadow-sm" style="background: var(--primary-color); border: none;" />
-                                </x-layout.grid-col>
-                            </x-layout.grid-row>
+                                </div>
+                                <div class="col-md-4">
+                                    <x-ui.button type="submit" variant="primary" icon="check-circle" label="Enviar Decisão" class="w-100 py-2 fw-bold shadow-sm" style="height: 42px; background: var(--primary-color); border: none;" />
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
