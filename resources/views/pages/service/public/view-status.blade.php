@@ -284,54 +284,30 @@
                     </x-layout.grid-col>
                     @endif
 
-                    <x-layout.grid-col md="3" sm="6">
-                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
-                            <div class="p-2 bg-info bg-opacity-10 rounded-3 text-info">
-                                <i class="bi bi-tag fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Categoria</h6>
-                                <p class="mb-0 text-neutral-strong fw-bold">{{ $service->category?->name ?? 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </x-layout.grid-col>
+                    <x-dashboard.stat-card
+                        title="Categoria"
+                        :value="$service->category?->name ?? 'N/A'"
+                        icon="tag"
+                        variant="info" />
 
-                    <x-layout.grid-col md="3" sm="6">
-                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
-                            <div class="p-2 bg-success bg-opacity-10 rounded-3 text-success">
-                                <i class="bi bi-cash-stack fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Valor Total</h6>
-                                <p class="mb-0 text-neutral-strong fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->total) }}</p>
-                            </div>
-                        </div>
-                    </x-layout.grid-col>
+                    <x-dashboard.stat-card
+                        title="Valor Total"
+                        :value="\App\Helpers\CurrencyHelper::format($service->total)"
+                        icon="cash-stack"
+                        variant="success" />
 
-                    <x-layout.grid-col md="3" sm="6">
-                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
-                            <div class="p-2 bg-warning bg-opacity-10 rounded-3 text-warning">
-                                <i class="bi bi-percent fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Desconto</h6>
-                                <p class="mb-0 text-neutral-strong fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->discount) }}</p>
-                            </div>
-                        </div>
-                    </x-layout.grid-col>
+                    <x-dashboard.stat-card
+                        title="Desconto"
+                        :value="\App\Helpers\CurrencyHelper::format($service->discount)"
+                        icon="percent"
+                        variant="warning" />
 
                     @if ($service->due_date)
-                    <x-layout.grid-col md="3" sm="6">
-                        <div class="p-3 glass-card rounded-4 h-100 border-0 shadow-sm d-flex align-items-center gap-3">
-                            <div class="p-2 bg-secondary bg-opacity-10 rounded-3 text-secondary">
-                                <i class="bi bi-calendar-event fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="text-neutral-soft text-uppercase fw-bold mb-0" style="font-size: 0.65rem; letter-spacing: 0.05em;">Prazo de Entrega</h6>
-                                <p class="mb-0 text-neutral-strong fw-bold">{{ \Carbon\Carbon::parse($service->due_date)->format('d/m/Y') }}</p>
-                            </div>
-                        </div>
-                    </x-layout.grid-col>
+                    <x-dashboard.stat-card
+                        title="Prazo de Entrega"
+                        :value="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')"
+                        icon="calendar-event"
+                        variant="secondary" />
                     @endif
                 </x-layout.grid-row>
             </div>
@@ -390,43 +366,50 @@
             </div>
             @endif
 
-            <x-resource.resource-header-section title="Itens do Serviço" icon="list-check" class="border-0 shadow-none bg-transparent mt-4 mb-0 text-neutral-strong">
-                <x-layout.grid-col md="12">
-                    <div class="glass-card rounded-4 overflow-hidden p-0 border-0 shadow-sm">
-                        <x-resource.resource-table class="mb-0">
-                            <x-slot name="thead">
-                                <x-resource.table-row style="background: var(--contrast-overlay) !important;">
-                                    <x-resource.table-cell header class="border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">Item</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-center border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">Qtd</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-end border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">V. Unitário</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-end border-0 bg-transparent text-neutral-soft small text-uppercase fw-bold p-3">Total</x-resource.table-cell>
-                                </x-resource.table-row>
-                            </x-slot>
+            <div class="mt-4">
+                <x-resource.resource-list-card title="Itens do Serviço" icon="list-check">
+                    <x-resource.resource-table class="mb-0">
+                        <x-slot name="thead">
+                            <tr>
+                                <th class="p-3">Item</th>
+                                <th class="text-center p-3">Qtd</th>
+                                <th class="text-end p-3">V. Unitário</th>
+                                <th class="text-end p-3">Total</th>
+                            </tr>
+                        </x-slot>
 
-                            @foreach ($service->serviceItems as $item)
-                            <x-resource.table-row class="bg-transparent" style="border-top: 1px solid rgba(255,255,255,0.1) !important;">
-                                <x-resource.table-cell class="border-0 p-3">
-                                    <div class="fw-bold text-neutral-strong">{{ $item->product?->name }}</div>
-                                    @if ($item->notes)
-                                    <small class="text-neutral-soft opacity-75">{{ $item->notes }}</small>
-                                    @endif
-                                </x-resource.table-cell>
-                                <x-resource.table-cell class="text-center border-0 p-3 text-neutral-strong">{{ $item->quantity }}</x-resource.table-cell>
-                                <x-resource.table-cell class="text-end border-0 p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</x-resource.table-cell>
-                                <x-resource.table-cell class="text-end fw-bold border-0 p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</x-resource.table-cell>
-                            </x-resource.table-row>
-                            @endforeach
+                        @forelse ($service->serviceItems as $item)
+                        <tr wire:key="item-{{ $item->id }}">
+                            <td class="p-3">
+                                <div class="fw-bold text-neutral-strong">{{ $item->product?->name }}</div>
+                                @if ($item->notes)
+                                <small class="text-neutral-soft opacity-75">{{ $item->notes }}</small>
+                                @endif
+                            </td>
+                            <td class="text-center p-3 text-neutral-strong">{{ $item->quantity }}</td>
+                            <td class="text-end p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->unit_value) }}</td>
+                            <td class="text-end fw-bold p-3 text-neutral-strong">{{ \App\Helpers\CurrencyHelper::format((float) $item->total_value) }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-neutral-soft border-0">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Nenhum item registrado para este serviço.
+                            </td>
+                        </tr>
+                        @endforelse
 
-                            <x-slot name="tfoot">
-                                <x-resource.table-row style="background: var(--contrast-overlay) !important; border-top: 1px solid rgba(255,255,255,0.2) !important;">
-                                    <x-resource.table-cell colspan="3" class="text-end fw-bold border-0 p-3 text-neutral-strong">Total dos Itens:</x-resource.table-cell>
-                                    <x-resource.table-cell class="text-end fw-bold border-0 p-3 fs-5 text-primary">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</x-resource.table-cell>
-                                </x-resource.table-row>
-                            </x-slot>
-                        </x-resource.resource-table>
-                    </div>
-                </x-layout.grid-col>
-            </x-resource.resource-header-section>
+                        @if($service->serviceItems->isNotEmpty())
+                        <x-slot name="tfoot">
+                            <tr class="bg-light bg-opacity-50">
+                                <td colspan="3" class="text-end fw-bold p-3 text-neutral-strong">Total dos Itens:</td>
+                                <td class="text-end fw-bold p-3 fs-5 text-primary">{{ \App\Helpers\CurrencyHelper::format((float) $service->serviceItems->sum('total_value')) }}</td>
+                            </tr>
+                        </x-slot>
+                        @endif
+                    </x-resource.resource-table>
+                </x-resource.resource-list-card>
+            </div>
         </x-layout.v-stack>
 
         <x-slot name="footer" class="bg-transparent border-0 mt-4">
