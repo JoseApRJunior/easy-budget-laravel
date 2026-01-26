@@ -36,7 +36,7 @@ class AlertNotificationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.alert-notification',
+            view: 'emails.system.alert-notification',
             with: [
                 'alert' => $this->alert,
                 'severityColor' => $this->alert->getSeverityColor(),

@@ -78,7 +78,7 @@ class SupportResponse extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.support',
+            view: 'emails.system.support',
             with: [
                 'ticket' => [
                     'id' => $this->ticket['id'] ?? null,

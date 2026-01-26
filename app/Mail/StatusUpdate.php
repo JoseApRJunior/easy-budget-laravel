@@ -154,7 +154,27 @@ class StatusUpdate extends Mailable implements ShouldQueue
 
         // Se for um agendamento
         if ($entityType === 'schedule') {
-            return 'emails.notification-status-scheduled';
+            return 'emails.schedule.notification-status-scheduled';
+        }
+
+        // Se for um serviço
+        if ($entityType === 'service') {
+            return match ($this->status) {
+                'in_progress' => 'emails.service.notification-status-in-progress',
+                'on_hold' => 'emails.service.notification-status-on-hold',
+                'partial' => 'emails.service.notification-status-partial',
+                'completed', 'finished' => 'emails.service.notification-status-completed',
+                'cancelled', 'rejected' => 'emails.service.notification-status-cancelled',
+                default => 'emails.notification-status',
+            };
+        }
+
+        // Se for um orçamento (budget)
+        if ($entityType === 'budget') {
+            return match ($this->status) {
+                'approved' => 'emails.budget.notification-status-approval',
+                default => 'emails.notification-status',
+            };
         }
 
         // Fallback para o template genérico
