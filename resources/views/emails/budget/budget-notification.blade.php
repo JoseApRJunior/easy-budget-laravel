@@ -43,11 +43,24 @@
             </div>
         @endif
 
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ $budgetUrl }}" class="btn">Ver Orçamento Completo</a>
-        </div>
+        @if($notificationType === 'rejected')
+            <div style="text-align: center; margin: 30px 0;">
+                <p>Este orçamento foi marcado como rejeitado.</p>
+                <p>Caso deseje negociar ou tenha dúvidas, entre em contato conosco:</p>
+                @if(!empty($company['phone']))
+                    <p><strong>Telefone:</strong> {{ $company['phone'] }}</p>
+                @endif
+                @if(!empty($company['email']))
+                    <p><strong>Email:</strong> {{ $company['email'] }}</p>
+                @endif
+            </div>
+        @else
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ $budgetUrl }}" class="btn">Ver Orçamento Completo</a>
+            </div>
 
-        <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
-        <p class="subcopy">{{ $budgetUrl }}</p>
+            <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
+            <p class="subcopy">{{ $budgetUrl }}</p>
+        @endif
     </div>
 @endsection
