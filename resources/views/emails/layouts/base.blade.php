@@ -1,14 +1,14 @@
 @php
-    $bgColor = '#f1f5f9';
-    $textColor = config('theme.colors.text', '#1e293b');
-    $whiteColor = '#ffffff';
-    $borderColor = config('theme.colors.border', '#e2e8f0');
-    $primaryColor = config('theme.colors.primary', '#093172');
-    $contrastColor = config('theme.colors.contrast_text', '#ffffff');
-    $inputBgColor = '#f8fafc';
-    $smallTextColor = config('theme.colors.small_text', '#475569');
-    $secondaryColor = config('theme.colors.secondary', '#94a3b8');
-    $headerBg = $statusColor ?? $primaryColor;
+$bgColor = '#f1f5f9';
+$textColor = config('theme.colors.text', '#1e293b');
+$whiteColor = '#ffffff';
+$borderColor = config('theme.colors.border', '#e2e8f0');
+$primaryColor = config('theme.colors.primary', '#093172');
+$contrastColor = config('theme.colors.contrast_text', '#ffffff');
+$inputBgColor = '#f8fafc';
+$smallTextColor = config('theme.colors.small_text', '#475569');
+$secondaryColor = config('theme.colors.secondary', '#94a3b8');
+$headerBg = $statusColor ?? $primaryColor;
 @endphp
 <!doctype html>
 <html lang="pt-BR">
@@ -181,10 +181,18 @@
             {{ $company['address_line1'] }}<br>
             @endif
             @if(!empty($company['address_line2']))
-            {{ $company['address_line2'] }}<br>
+            @php
+            $address2 = $company['address_line2'];
+            if (str_contains($address2, 'CEP:')) {
+            $parts = explode('CEP:', $address2);
+            $cep = trim($parts[1]);
+            $address2 = $parts[0] . 'CEP: ' . \App\Helpers\MaskHelper::formatCEP($cep);
+            }
+            @endphp
+            {!! $address2 !!}<br>
             @endif
             @if(!empty($company['phone']) || !empty($company['email']))
-            {{ $company['phone'] ?? '' }} {{ !empty($company['phone']) && !empty($company['email']) ? '|' : '' }} {{ $company['email'] ?? '' }}
+            {{ !empty($company['phone']) ? \App\Helpers\MaskHelper::formatPhone($company['phone']) : '' }} {{ !empty($company['phone']) && !empty($company['email']) ? '|' : '' }} {{ $company['email'] ?? '' }}
             @endif
             <p style="margin-top: 10px; font-size: 10px; color: #9ca3af;">
                 Enviado via {{ config('app.name', 'Easy Budget') }}

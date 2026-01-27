@@ -59,9 +59,11 @@ class ServiceObserver
             $oldStatus = $service->getOriginal('status');
             $newStatus = $service->status;
             
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string)$oldStatus;
+            
             event(new StatusUpdated(
                 $service,
-                $oldStatus instanceof ServiceStatus ? $oldStatus->value : (string)$oldStatus,
+                $oldStatusValue,
                 $newStatus->value,
                 $newStatus->label(),
                 $service->tenant

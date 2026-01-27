@@ -24,13 +24,21 @@ class BudgetObserver
 
         if (isset($changes['status'])) {
             $action = 'budget_status_changed';
-            $description = "Status alterado para: {$changes['status']}";
+            
+            $newStatus = $changes['status'];
+            $oldStatus = $budget->getOriginal('status');
+            
+            $newStatusValue = $newStatus instanceof \UnitEnum ? $newStatus->value : (string)$newStatus;
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string)$oldStatus;
+            
+            $statusLabel = $newStatus instanceof \App\Enums\BudgetStatus ? $newStatus->label() : $newStatusValue;
+            $description = "Status alterado para: {$statusLabel}";
 
             // Disparar evento de notificação
             event(new BudgetStatusChanged(
                 $budget,
-                (string)$budget->getOriginal('status'),
-                (string)$changes['status'],
+                $oldStatusValue,
+                $newStatusValue,
                 $budget->status_comment ?? $budget->customer_comment
             ));
         }

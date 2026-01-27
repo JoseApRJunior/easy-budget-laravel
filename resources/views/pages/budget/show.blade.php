@@ -26,14 +26,14 @@
         <x-resource.resource-header-item
             label="Status Atual"
             icon="info-circle"
-            iconVariant="info">
+            iconVariant="secondary">
             <x-ui.status-description :item="$budget" statusField="status" :useColor="false" class="text-dark fw-medium" />
         </x-resource.resource-header-item>
 
         <x-resource.resource-header-item
             label="Total Geral"
             icon="currency-dollar"
-            iconVariant="success"
+            iconVariant="secondary"
             valueClass="text-success"
             :value="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)" />
 
@@ -47,7 +47,7 @@
                     title="Cliente"
                     :subtitle="$budget->customer->name"
                     icon="person-fill"
-                    iconClass="text-primary fs-5"
+                    iconClass="text-secondary fs-5"
                     titleClass="text-muted small fw-bold text-uppercase"
                     :href="route('provider.customers.show', $budget->customer->id)" />
             </x-layout.grid-col>
@@ -70,7 +70,7 @@
                     title="E-mail/Contato"
                     :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
                     icon="envelope-fill"
-                    iconClass="text-info fs-5"
+                    iconClass="text-secondary fs-5"
                     titleClass="text-muted small fw-bold text-uppercase" />
             </x-layout.grid-col>
             @else
@@ -99,7 +99,7 @@
                         title="Vencimento"
                         :subtitle="$budget->due_date->format('d/m/Y')"
                         icon="calendar-event"
-                        iconClass="text-warning"
+                        iconClass="text-secondary"
                         titleClass="text-muted small fw-bold text-uppercase" />
                 </div>
                 @endif
@@ -108,7 +108,7 @@
                         title="Atualizado"
                         :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
                         icon="clock-history"
-                        iconClass="text-info"
+                        iconClass="text-secondary"
                         titleClass="text-muted small fw-bold text-uppercase" />
                 </div>
             </div>
@@ -258,10 +258,8 @@
                 <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-3" />
             </div>
 
-            <div class="col-12 col-md text-center d-none d-md-block order-md-2">
-                <small class="text-muted">
-                    Informações oficiais geradas pelo sistema Easy Budget
-                </small>
+            <div class="col-12 col-md order-2 order-md-2">
+                {{-- Espaçador central --}}
             </div>
 
             <div class="col-12 col-md-auto order-1 order-md-3">
@@ -272,9 +270,9 @@
                     @endphp
 
                     <x-ui.button type="button" class="d-flex align-items-center"
-                        variant="{{ $isSent ? 'outline-info' : 'info' }}"
+                        variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
                         icon="send-fill"
-                        label="{{ $isSent ? 'Reenviar' : ($isDraft ? 'Enviar' : 'Enviar') }}"
+                        label="{{ ($isSent && !$isDraft) ? 'Reenviar' : 'Enviar' }}"
                         data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
 
                     <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
@@ -304,7 +302,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-info text-white border-0">
                     <h5 class="modal-title" id="sendToCustomerModalLabel">
-                        <i class="bi bi-send-fill me-2"></i>{{ $isSent ? 'Reenviar Orçamento' : 'Enviar Orçamento' }}
+                        <i class="bi bi-send-fill me-2"></i>{{ ($isSent && !$isDraft) ? 'Reenviar Orçamento' : 'Enviar Orçamento' }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -340,7 +338,7 @@
                 <div class="modal-footer border-0 p-4 pt-0">
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-info px-4 text-white" {{ !($budget->customer->contact->email_personal) ? 'disabled' : '' }}>
-                        <i class="bi bi-send me-2"></i>{{ $isSent ? 'Reenviar Agora' : 'Enviar E-mail' }}
+                        <i class="bi bi-send me-2"></i>{{ ($isSent && !$isDraft) ? 'Reenviar Agora' : 'Enviar E-mail' }}
                     </button>
                 </div>
             </div>

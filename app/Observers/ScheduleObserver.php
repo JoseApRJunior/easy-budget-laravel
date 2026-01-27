@@ -28,9 +28,11 @@ class ScheduleObserver
             $oldStatus = $schedule->getOriginal('status');
             $newStatus = $schedule->status;
             
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string)$oldStatus;
+            
             event(new StatusUpdated(
                 $schedule,
-                $oldStatus instanceof ScheduleStatus ? $oldStatus->value : (string)$oldStatus,
+                $oldStatusValue,
                 $newStatus->value,
                 $newStatus->label(),
                 $schedule->tenant

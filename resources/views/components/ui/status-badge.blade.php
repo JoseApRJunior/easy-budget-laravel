@@ -28,12 +28,13 @@ $color = $metadata['color_hex'] ?? $metadata['color'] ?? '#6c757d';
 
 // Ajuste especial para visibilidade do status 'draft' (cinza claro)
 $isDraft = (isset($metadata['value']) && $metadata['value'] === 'draft') ||
-(isset($label) && strtolower($label) === 'rascunho');
+    (isset($label) && strtolower($label) === 'rascunho');
 
 if ($isDraft) {
-$badgeStyle = "background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: 600;";
+    // Contraste melhorado para Rascunho: fundo cinza azulado leve, texto mais escuro e borda definida
+    $badgeStyle = "background-color: #e2e8f0; color: #1e293b; border: 1px solid #94a3b8; font-weight: 600;";
 } else {
-$badgeStyle = "background-color: {$color}20; color: {$color}; border: 1px solid {$color}40;";
+    $badgeStyle = "background-color: {$color}20; color: {$color}; border: 1px solid {$color}40;";
 }
 } else {
 $badgeClass = 'bg-secondary text-white';
