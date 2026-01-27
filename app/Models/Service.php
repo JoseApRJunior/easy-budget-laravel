@@ -88,6 +88,20 @@ class Service extends Model
     ];
 
     /**
+     * Verifica se o serviço já foi finalizado (sucesso, falha ou cancelamento).
+     */
+    public function isFinished(): bool
+    {
+        return in_array($this->status, [
+            ServiceStatus::COMPLETED,
+            ServiceStatus::PARTIAL,
+            ServiceStatus::CANCELLED,
+            ServiceStatus::NOT_PERFORMED,
+            ServiceStatus::EXPIRED,
+        ], true);
+    }
+
+    /**
      * Regras de validação para o modelo Service.
      */
     public static function businessRules(): array

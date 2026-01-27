@@ -86,6 +86,20 @@ class BudgetShareService extends AbstractBaseService
                 $budget->status_updated_by = null;
                 $budget->save();
 
+                // Sincroniza o status dos serviços vinculados
+                $serviceStatus = match ($newStatus) {
+                    \App\Enums\BudgetStatus::APPROVED => \App\Enums\ServiceStatus::APPROVED,
+                    \App\Enums\BudgetStatus::REJECTED => \App\Enums\ServiceStatus::REJECTED,
+                    \App\Enums\BudgetStatus::CANCELLED => \App\Enums\ServiceStatus::CANCELLED,
+                    default => null,
+                };
+
+                if ($serviceStatus) {
+                    $budget->services()->withoutGlobalScopes()->update([
+                        'status' => $serviceStatus->value,
+                    ]);
+                }
+
                 // Se o orçamento foi aprovado, desativamos TODOS os outros links ativos deste orçamento
                 // e atualizamos o status de todos os compartilhamentos vinculados a este orçamento
                 BudgetShare::withoutGlobalScopes()
@@ -128,9 +142,14 @@ class BudgetShareService extends AbstractBaseService
                     'tenant_id' => $budget->tenant_id,
                     'budget_id' => $budget->id,
                     'action' => $newStatus->value, // Usa o valor do enum (approved/rejected/etc)
-                    'old_status' => $budget->getOriginal('status'),
+                    'old_status' => $oldStatus,
                     'new_status' => $newStatus->value,
-                    'description' => $comment ?? ($newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado pelo cliente via link público.' : 'Orçamento rejeitado pelo cliente via link público.'),
+                    'description' => $comment ?? match ($newStatus) {
+                        \App\Enums\BudgetStatus::APPROVED => 'Orçamento aprovado pelo cliente via link público.',
+                        \App\Enums\BudgetStatus::REJECTED => 'Orçamento rejeitado pelo cliente via link público.',
+                        \App\Enums\BudgetStatus::CANCELLED => 'Orçamento cancelado pelo cliente via link público.',
+                        default => "Status alterado para {$newStatus->value} via link público.",
+                    },
                     'metadata' => [
                         'via' => 'public_share',
                         'share_token' => $token,
@@ -140,7 +159,12 @@ class BudgetShareService extends AbstractBaseService
                     'user_agent' => request()->userAgent(),
                 ]);
 
-                $message = $newStatus === \App\Enums\BudgetStatus::APPROVED ? 'Orçamento aprovado com sucesso.' : 'Orçamento rejeitado com sucesso.';
+                $message = match ($newStatus) {
+                    \App\Enums\BudgetStatus::APPROVED => 'Orçamento aprovado com sucesso.',
+                    \App\Enums\BudgetStatus::REJECTED => 'Orçamento rejeitado com sucesso.',
+                    \App\Enums\BudgetStatus::CANCELLED => 'Orçamento cancelado com sucesso.',
+                    default => 'Status atualizado com sucesso.',
+                };
 
                 return $this->success($budget, $message);
             });

@@ -204,6 +204,18 @@ class Budget extends Model
     }
 
     /**
+     * Verifica se o orçamento já foi finalizado (aprovado, rejeitado, cancelado ou concluído).
+     */
+    public function isFinished(): bool
+    {
+        return in_array($this->status, [
+            BudgetStatus::COMPLETED,
+            BudgetStatus::CANCELLED,
+            BudgetStatus::REJECTED,
+        ], true);
+    }
+
+    /**
      * Get the customer that owns the Budget.
      */
     public function customer(): BelongsTo

@@ -147,6 +147,34 @@
         </div>
         @endif
         @endif
+
+        {{-- Comentário do Cliente --}}
+        @if ($budget->customer_comment)
+        <x-resource.resource-header-divider />
+        <div class="col-12 mt-2">
+            <div class="alert alert-warning mb-0 border-0 shadow-sm" style="background-color: #fff3cd;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-chat-quote-fill fs-5 me-2 text-warning"></i>
+                    <label class="small fw-bold text-uppercase mb-0 text-dark">Comentário do Cliente</label>
+                </div>
+                <p class="mb-0 text-dark small fst-italic">"{{ $budget->customer_comment }}"</p>
+            </div>
+        </div>
+        @endif
+
+        {{-- Comentário de Status (Interno/Prestador) --}}
+        @if ($budget->status_comment)
+        <x-resource.resource-header-divider />
+        <div class="col-12 mt-2">
+            <div class="alert alert-info mb-0 border-0 shadow-sm" style="background-color: #cff4fc;">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-info-circle-fill fs-5 me-2 text-info"></i>
+                    <label class="small fw-bold text-uppercase mb-0 text-dark">Observação do Status</label>
+                </div>
+                <p class="mb-0 text-dark small fst-italic">"{{ $budget->status_comment }}"</p>
+            </div>
+        </div>
+        @endif
     </x-resource.resource-header-card>
 
     {{-- Serviços Vinculados --}}
@@ -250,6 +278,88 @@
             @endif
         </x-resource.resource-list-card>
     </div>
+
+    {{-- Histórico de Ações --}}
+    @if($budget->actionHistory && $budget->actionHistory->isNotEmpty())
+    <div class="mt-4">
+        <x-resource.resource-list-card
+            title="Histórico de Ações"
+            mobileTitle="Histórico"
+            icon="clock-history"
+            :total="$budget->actionHistory->count()">
+
+            <x-slot:desktop>
+                <x-resource.resource-table>
+                    <x-slot:thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Ação</th>
+                            <th>Descrição/Comentário</th>
+                            <th>Usuário/Origem</th>
+                        </tr>
+                    </x-slot:thead>
+                    <x-slot:tbody>
+                        @foreach ($budget->actionHistory as $history)
+                        <tr>
+                            <td class="text-muted small">{{ $history->created_at->format('d/m/Y H:i') }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ $history->action_label }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-dark">{{ $history->description }}</span>
+                                @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
+                                <div class="mt-1 small text-muted fst-italic">
+                                    <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
+                                </div>
+                                @endif
+                            </td>
+                            <td class="small text-muted">
+                                @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
+                                <span class="badge bg-info text-white">Cliente (Link Público)</span>
+                                @elseif($history->user)
+                                {{ $history->user->name }}
+                                @else
+                                Sistema
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </x-slot:tbody>
+                </x-resource.resource-table>
+            </x-slot:desktop>
+
+            <x-slot:mobile>
+                @foreach ($budget->actionHistory as $history)
+                <div class="border-bottom p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-light text-dark border">{{ $history->action_label }}</span>
+                        <span class="text-muted small">{{ $history->created_at->format('d/m/Y H:i') }}</span>
+                    </div>
+                    <p class="mb-1 small text-dark">{{ $history->description }}</p>
+                    @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
+                    <div class="mt-1 small text-muted fst-italic p-2 bg-light rounded">
+                        <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
+                    </div>
+                    @endif
+                    <div class="mt-2 text-end">
+                        <span class="badge bg-secondary text-white small" style="font-size: 0.7rem;">
+                            @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
+                            Cliente (Link Público)
+                            @elseif($history->user)
+                            {{ $history->user->name }}
+                            @else
+                            Sistema
+                            @endif
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </x-slot:mobile>
+        </x-resource.resource-list-card>
+    </div>
+    @endif
 
     {{-- Botões de Ação --}}
     <div class="mt-auto pt-4 pb-2">

@@ -260,7 +260,8 @@ class BudgetShareController extends Controller
      */
     public function approve(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        $result = $this->budgetShareService->approveBudget($token);
+        $comment = $request->input('comment');
+        $result = $this->budgetShareService->approveBudget($token, $comment);
 
         if ($request->expectsJson()) {
             return $this->jsonResponse($result);
@@ -280,7 +281,8 @@ class BudgetShareController extends Controller
      */
     public function reject(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        $result = $this->budgetShareService->rejectBudget($token);
+        $comment = $request->input('comment');
+        $result = $this->budgetShareService->rejectBudget($token, $comment);
 
         if ($request->expectsJson()) {
             return $this->jsonResponse($result);
@@ -300,7 +302,8 @@ class BudgetShareController extends Controller
      */
     public function cancel(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        $result = $this->budgetShareService->cancelBudget($token);
+        $comment = $request->input('comment');
+        $result = $this->budgetShareService->cancelBudget($token, $comment);
 
         if ($request->expectsJson()) {
             return $this->jsonResponse($result);

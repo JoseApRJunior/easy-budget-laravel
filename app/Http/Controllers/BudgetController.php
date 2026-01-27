@@ -135,6 +135,9 @@ class BudgetController extends Controller
                 // $q->ordered(); // Ordered might not exist on ServiceItem, check if needed
             },
             'services.category',
+            'actionHistory' => function ($q) {
+                $q->orderBy('created_at', 'desc');
+            },
         ]);
 
         if ($result->isError()) {
