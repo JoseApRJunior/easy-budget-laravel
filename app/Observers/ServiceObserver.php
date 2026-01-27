@@ -55,7 +55,7 @@ class ServiceObserver
         ]);
 
         // Disparar evento de notificação se o status mudou
-        if ($service->isDirty('status')) {
+        if ($service->isDirty('status') && ! $service->suppressStatusNotification) {
             $oldStatus = $service->getOriginal('status');
             $newStatus = $service->status;
             

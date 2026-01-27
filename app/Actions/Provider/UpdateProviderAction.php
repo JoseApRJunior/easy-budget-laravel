@@ -19,9 +19,9 @@ use App\Repositories\ContactRepository;
 use App\Repositories\ProviderRepository;
 use App\Repositories\UserRepository;
 use App\Services\Infrastructure\FileUploadService;
+use Exception;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 /**
  * Action responsável por atualizar os dados de um prestador.
@@ -42,11 +42,6 @@ class UpdateProviderAction
     /**
      * Executa a atualização do provedor.
      *
-     * @param Provider $provider
-     * @param User $user
-     * @param ProviderUpdateDTO $dto
-     * @param int $tenantId
-     * @return Provider
      * @throws Exception
      */
     public function execute(Provider $provider, User $user, ProviderUpdateDTO $dto, int $tenantId): Provider

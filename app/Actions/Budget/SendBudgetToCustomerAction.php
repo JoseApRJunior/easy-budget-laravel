@@ -39,7 +39,7 @@ class SendBudgetToCustomerAction
             // Preparar dados da empresa (Tenant/Provider) para o e-mail
             $provider = $budget->tenant->provider;
             $companyData = [];
-            
+
             if ($provider) {
                 $commonData = $provider->commonData;
                 $address = $provider->address;
@@ -52,7 +52,7 @@ class SendBudgetToCustomerAction
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";

@@ -98,7 +98,7 @@ class AIAnalyticsController extends Controller
 
         // Determine main segment (the one with most customers)
         $mainSegment = 'Indefinido';
-        if (!empty($segments)) {
+        if (! empty($segments)) {
             $mainSegment = array_search(max($segments), $segments);
         }
 
@@ -123,7 +123,7 @@ class AIAnalyticsController extends Controller
             'new_customers_month' => (int) $newCustomersMonth,
             'churn_rate' => (float) ($retention['churn_rate'] ?? 0),
             'main_segment' => $mainSegment,
-            'segments' => $segments // Return full segments for charts
+            'segments' => $segments, // Return full segments for charts
         ]);
     }
 

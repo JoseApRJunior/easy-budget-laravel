@@ -6,8 +6,8 @@ namespace App\Actions\Inventory;
 
 use App\Models\Product;
 use App\Models\ProductInventory;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Action para gerenciar a reserva de estoque de um produto.
@@ -17,9 +17,6 @@ class ReserveProductStockAction
     /**
      * Reserva uma quantidade do estoque.
      *
-     * @param Product $product
-     * @param int $quantity
-     * @return ProductInventory
      * @throws Exception
      */
     public function reserve(Product $product, int $quantity): ProductInventory
@@ -48,9 +45,6 @@ class ReserveProductStockAction
     /**
      * Libera uma quantidade reservada do estoque (sem saída física).
      *
-     * @param Product $product
-     * @param int $quantity
-     * @return ProductInventory
      * @throws Exception
      */
     public function release(Product $product, int $quantity): ProductInventory
@@ -58,8 +52,8 @@ class ReserveProductStockAction
         return DB::transaction(function () use ($product, $quantity) {
             $inventory = $product->inventory;
 
-            if (!$inventory || $inventory->reserved_quantity < $quantity) {
-                throw new Exception("Quantidade reservada insuficiente para liberação.");
+            if (! $inventory || $inventory->reserved_quantity < $quantity) {
+                throw new Exception('Quantidade reservada insuficiente para liberação.');
             }
 
             $inventory->decrement('reserved_quantity', $quantity);
@@ -71,13 +65,6 @@ class ReserveProductStockAction
     /**
      * Confirma uma reserva transformando-a em saída física.
      *
-     * @param Product $product
-     * @param int $quantity
-     * @param UpdateProductStockAction $updateAction
-     * @param string|null $reason
-     * @param int|null $referenceId
-     * @param string|null $referenceType
-     * @return ProductInventory
      * @throws Exception
      */
     public function confirm(

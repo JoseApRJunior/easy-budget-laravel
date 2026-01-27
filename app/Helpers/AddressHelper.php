@@ -14,7 +14,7 @@ class AddressHelper
      */
     public static function format($addressData): string
     {
-        if (!$addressData) {
+        if (! $addressData) {
             return 'Não informado';
         }
 
@@ -28,21 +28,24 @@ class AddressHelper
                 $addressData->state ? "- {$addressData->state}" : null,
                 $addressData->cep ? MaskHelper::formatCEP($addressData->cep) : null,
             ]);
+
             return implode(', ', $parts);
         }
 
         // Se for um array ou objeto (pode vir como JSON decodificado)
         $data = is_array($addressData) ? $addressData : (is_object($addressData) ? (array) $addressData : null);
 
-        if (!$data) {
+        if (! $data) {
             // Se for uma string (já formatada ou JSON)
             if (is_string($addressData)) {
                 $decoded = json_decode($addressData, true);
                 if (json_last_error() === JSON_ERROR_NONE) {
                     return self::format($decoded);
                 }
+
                 return $addressData;
             }
+
             return 'Não informado';
         }
 
@@ -63,6 +66,6 @@ class AddressHelper
             $cep ? MaskHelper::formatCEP($cep) : null,
         ]);
 
-        return !empty($parts) ? implode(', ', $parts) : 'Endereço incompleto';
+        return ! empty($parts) ? implode(', ', $parts) : 'Endereço incompleto';
     }
 }

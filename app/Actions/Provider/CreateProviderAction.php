@@ -4,31 +4,34 @@ declare(strict_types=1);
 
 namespace App\Actions\Provider;
 
-use App\Models\Provider;
-use App\Models\User;
-use App\Models\Tenant;
-use App\Models\CommonData;
-use App\Repositories\ProviderRepository;
-use App\Repositories\CommonDataRepository;
-use App\Repositories\ContactRepository;
-use App\Repositories\AddressRepository;
-use App\Repositories\RoleRepository;
-use App\Repositories\PlanRepository;
-use App\Repositories\PlanSubscriptionRepository;
-use App\DTOs\Provider\ProviderDTO;
+use App\DTOs\Common\AddressDTO;
 use App\DTOs\Common\CommonDataDTO;
 use App\DTOs\Common\ContactDTO;
-use App\DTOs\Common\AddressDTO;
+use App\DTOs\Provider\ProviderDTO;
 use App\DTOs\Tenant\PlanSubscriptionDTO;
-use App\Enums\OperationStatus;
+use App\Models\CommonData;
+use App\Models\Provider;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Repositories\AddressRepository;
+use App\Repositories\CommonDataRepository;
+use App\Repositories\ContactRepository;
+use App\Repositories\PlanRepository;
+use App\Repositories\PlanSubscriptionRepository;
+use App\Repositories\ProviderRepository;
+use App\Repositories\RoleRepository;
 use Exception;
 
 class CreateProviderAction
 {
     private const ROLE_PROVIDER = 'provider';
+
     private const PLAN_SLUG_TRIAL = 'trial';
+
     private const SUBSCRIPTION_STATUS_ACTIVE = 'active';
+
     private const PAYMENT_METHOD_TRIAL = 'trial';
+
     private const TRIAL_DAYS = 7;
 
     public function __construct(
@@ -44,10 +47,6 @@ class CreateProviderAction
     /**
      * Cria um provider com todos os dados relacionados.
      *
-     * @param array $userData
-     * @param User $user
-     * @param Tenant $tenant
-     * @return array
      * @throws Exception
      */
     public function execute(array $userData, User $user, Tenant $tenant): array
@@ -102,7 +101,7 @@ class CreateProviderAction
     {
         $providerRole = $this->roleRepository->findByName(self::ROLE_PROVIDER);
 
-        if (!$providerRole) {
+        if (! $providerRole) {
             throw new Exception('Role provider não encontrado.');
         }
 
@@ -120,10 +119,10 @@ class CreateProviderAction
      */
     private function setupTrialSubscription(Provider $provider, Tenant $tenant): array
     {
-        $plan = $this->planRepository->findBySlug(self::PLAN_SLUG_TRIAL) 
+        $plan = $this->planRepository->findBySlug(self::PLAN_SLUG_TRIAL)
                 ?? $this->planRepository->findFreeActive();
 
-        if (!$plan) {
+        if (! $plan) {
             throw new Exception('Plano trial não encontrado.');
         }
 
@@ -136,8 +135,8 @@ class CreateProviderAction
             end_date: now()->addDays(self::TRIAL_DAYS),
             transaction_date: now(),
             payment_method: self::PAYMENT_METHOD_TRIAL,
-            payment_id: 'TRIAL_' . uniqid(),
-            public_hash: 'TRIAL_HASH_' . uniqid(),
+            payment_id: 'TRIAL_'.uniqid(),
+            public_hash: 'TRIAL_HASH_'.uniqid(),
             tenant_id: $tenant->id
         ));
 

@@ -8,11 +8,9 @@ use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Tenant;
 use App\Services\Admin\FinancialControlService;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class FinancialControlController extends Controller

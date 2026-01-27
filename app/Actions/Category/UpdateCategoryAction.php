@@ -44,7 +44,7 @@ class UpdateCategoryAction
         $i = 1;
 
         while ($this->repository->existsBySlug($slug, $excludeId)) {
-            $slug = $base . '-' . $i;
+            $slug = $base.'-'.$i;
             $i++;
         }
 

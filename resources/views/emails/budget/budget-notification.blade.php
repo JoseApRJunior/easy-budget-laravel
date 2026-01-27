@@ -38,7 +38,7 @@
 
         @if($customMessage)
             <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }};">
-                <p><strong>Mensagem do Profissional:</strong></p>
+                <p><strong>{{ $notificationType === 'rejected' ? 'Motivo da Rejeição' : 'Mensagem do Profissional' }}:</strong></p>
                 <p>{{ $customMessage }}</p>
             </div>
         @endif

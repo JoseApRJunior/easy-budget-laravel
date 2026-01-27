@@ -6,8 +6,8 @@ namespace App\Actions\Product;
 
 use App\Models\Product;
 use App\Repositories\ProductRepository;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class DeleteProductAction
 {

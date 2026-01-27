@@ -16,14 +16,13 @@ class RecordInventoryMovementAction
     /**
      * Registra uma movimentação de estoque.
      *
-     * @param Product $product Produto que está sendo movimentado.
-     * @param string $type Tipo da movimentação (in, out, adjustment).
-     * @param int $quantity Quantidade movimentada.
-     * @param int $previousQuantity Quantidade antes da movimentação.
-     * @param string|null $reason Motivo da movimentação.
-     * @param int|null $referenceId ID de referência (ex: ID do pedido).
-     * @param string|null $referenceType Tipo de referência (ex: Order, Sale).
-     * @return InventoryMovement
+     * @param  Product  $product  Produto que está sendo movimentado.
+     * @param  string  $type  Tipo da movimentação (in, out, adjustment).
+     * @param  int  $quantity  Quantidade movimentada.
+     * @param  int  $previousQuantity  Quantidade antes da movimentação.
+     * @param  string|null  $reason  Motivo da movimentação.
+     * @param  int|null  $referenceId  ID de referência (ex: ID do pedido).
+     * @param  string|null  $referenceType  Tipo de referência (ex: Order, Sale).
      */
     public function execute(
         Product $product,

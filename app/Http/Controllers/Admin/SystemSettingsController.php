@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Domain\SystemSettingsService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class SystemSettingsController extends Controller
 {

@@ -15,6 +15,12 @@ class Service extends Model
     use HasFactory, HasPublicToken, TenantScoped;
 
     /**
+     * Propriedade temporária para suprimir notificações de status.
+     * Útil para atualizações em lote via Budget.
+     */
+    public bool $suppressStatusNotification = false;
+
+    /**
      * Boot the model.
      */
     protected static function boot()

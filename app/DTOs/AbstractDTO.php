@@ -37,6 +37,7 @@ abstract readonly class AbstractDTO
                     if ($item instanceof \BackedEnum) {
                         return $item->value;
                     }
+
                     return $item;
                 }, $value);
             } else {
@@ -97,8 +98,6 @@ abstract readonly class AbstractDTO
      * Método auxiliar para instanciar o DTO a partir de um array.
      * Usa Reflection para mapear apenas os argumentos existentes no construtor.
      * Ignora chaves extras no array de entrada (previne erros).
-     *
-     * @return static
      */
     public static function fromArray(array $data): static
     {

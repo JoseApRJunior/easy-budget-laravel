@@ -44,8 +44,8 @@ readonly class ProductDTO extends AbstractDTO
 
     /**
      * Converte o DTO para um array formatado para persistência no banco de dados.
-     * 
-     * @param bool $includeNulls Se deve incluir campos nulos (útil para create, perigoso para update)
+     *
+     * @param  bool  $includeNulls  Se deve incluir campos nulos (útil para create, perigoso para update)
      */
     public function toDatabaseArray(bool $includeNulls = true): array
     {

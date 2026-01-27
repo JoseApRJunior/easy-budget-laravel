@@ -68,6 +68,7 @@ enum SupportStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
         foreach (self::cases() as $case) {
             $options[$case->value] = $case->label();
         }
+
         return $options;
     }
 
@@ -148,7 +149,7 @@ enum SupportStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
 
     public function getIcon(): string
     {
-        return 'bi-' . $this->icon();
+        return 'bi-'.$this->icon();
     }
 
     public function isActive(): bool

@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Provider;
 
-use App\DTOs\Provider\ProviderRegistrationDTO;
-use App\Models\Tenant;
-use App\Models\User;
 use App\Actions\Tenant\CreateTenantAction;
 use App\Actions\User\CreateUserAction;
-use App\Actions\Provider\CreateProviderAction;
-use Illuminate\Support\Facades\DB;
+use App\DTOs\Provider\ProviderRegistrationDTO;
+use App\Models\Tenant;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class RegisterProviderAction
 {
@@ -24,8 +22,6 @@ class RegisterProviderAction
     /**
      * Executa o fluxo completo de registro de um novo provedor.
      *
-     * @param ProviderRegistrationDTO $dto
-     * @return array
      * @throws Exception
      */
     public function execute(ProviderRegistrationDTO $dto): array

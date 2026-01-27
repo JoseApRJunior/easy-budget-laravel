@@ -6,7 +6,6 @@ namespace App\DTOs\Product;
 
 use App\DTOs\AbstractDTO;
 use App\Helpers\CurrencyHelper;
-
 use App\Helpers\DateHelper;
 
 /**

@@ -90,6 +90,8 @@ class BudgetStatusObserver
                     'new_status' => $newServiceStatus->value,
                 ]);
 
+                // Suprimir notificações individuais para evitar flood
+                $service->suppressStatusNotification = true;
                 $service->update(['status' => $newServiceStatus]);
             }
         }

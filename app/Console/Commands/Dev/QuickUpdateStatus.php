@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Console\Commands\Dev;
 
 use App\Models\Budget;
-use App\Models\Service;
 use App\Models\Schedule;
+use App\Models\Service;
 use Illuminate\Console\Command;
 
 class QuickUpdateStatus extends Command
 {
-
     /**
      * Exemplos de uso:
      *
@@ -70,7 +69,7 @@ class QuickUpdateStatus extends Command
                         $schedule->update(['status' => $scheduleStatus]);
                         $this->info("Agendamento vinculado (ID: {$schedule->id}) atualizado para: {$scheduleStatus}");
                     } else {
-                        $this->warn("Nenhum agendamento encontrado para este serviço.");
+                        $this->warn('Nenhum agendamento encontrado para este serviço.');
                     }
                 }
                 break;
@@ -86,6 +85,7 @@ class QuickUpdateStatus extends Command
                         }
                     } else {
                         $this->error("Serviço {$identifier} não encontrado.");
+
                         return 1;
                     }
                 } else {
@@ -93,12 +93,14 @@ class QuickUpdateStatus extends Command
                 }
                 break;
             default:
-                $this->error("Tipo inválido. Use: budget, service ou schedule.");
+                $this->error('Tipo inválido. Use: budget, service ou schedule.');
+
                 return 1;
         }
 
-        if (!$model) {
-            $this->error("Registro não encontrado.");
+        if (! $model) {
+            $this->error('Registro não encontrado.');
+
             return 1;
         }
 

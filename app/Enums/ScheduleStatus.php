@@ -106,6 +106,6 @@ enum ScheduleStatus: string implements StatusEnumInterface
      */
     public function isFinished(): bool
     {
-        return !$this->isActive();
+        return ! $this->isActive();
     }
 }
