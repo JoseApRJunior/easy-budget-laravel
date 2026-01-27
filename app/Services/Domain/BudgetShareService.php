@@ -81,7 +81,9 @@ class BudgetShareService extends AbstractBaseService
 
                 // Atualiza o status do orçamento sem escopo global (ação do cliente)
                 $budget->status = $newStatus;
-                $budget->customer_comment = $comment;
+                // Usamos a propriedade transiente para passar o comentário para o Observer
+                // sem tentar salvar na tabela budgets (coluna removida)
+                $budget->transient_customer_comment = $comment;
                 $budget->status_updated_at = now();
                 $budget->status_updated_by = null;
                 $budget->save();

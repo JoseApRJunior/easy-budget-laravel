@@ -35,6 +35,12 @@ class Budget extends Model
     use TenantScoped;
 
     /**
+     * Propriedade temporária para armazenar comentário do cliente durante o ciclo de vida do request.
+     * Não é persistida no banco de dados.
+     */
+    public ?string $transient_customer_comment = null;
+
+    /**
      * Boot the model.
      */
     protected static function boot()
@@ -73,10 +79,33 @@ class Budget extends Model
         'pdf_verification_hash',
         'public_token',
         'public_expires_at',
-        'customer_comment',
         'status_updated_at',
         'status_updated_by',
     ];
+
+    /**
+     * Get the customer comment (from history or temporary attribute).
+     */
+    public function getCustomerCommentAttribute(?string $value): ?string
+    {
+        // Se o valor foi definido manualmente na propriedade transiente, retorna ele.
+        if (! empty($this->transient_customer_comment)) {
+            return $this->transient_customer_comment;
+        }
+
+        // Se o valor veio do banco (caso existisse a coluna, ou cache), usa ele.
+        if (! empty($value)) {
+            return $value;
+        }
+
+        // Caso contrário, busca do histórico (última ação relevante)
+        $lastAction = $this->actionHistory()
+            ->whereNotNull('metadata->customer_comment')
+            ->latest()
+            ->first();
+
+        return $lastAction?->metadata['customer_comment'] ?? null;
+    }
 
     /**
      * The attributes that should be cast.

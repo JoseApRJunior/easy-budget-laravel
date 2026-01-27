@@ -40,8 +40,14 @@ class SendBudgetNotification implements ShouldQueue
 
             $customer = $budget->customer;
 
+            // Garantir que o token público exista
+            if (empty($budget->public_token)) {
+                $budget->public_token = \App\Models\Budget::generateUniquePublicToken();
+                $budget->saveQuietly();
+            }
+
             // Verificar se o cliente tem email
-            if (! $customer->contact || ! $customer->contact->email_personal) {
+            if (! $customer || ! $customer->contact?->email_personal) {
                 Log::info('Cliente sem email para notificação', [
                     'budget_id' => $budget->id,
                     'customer_id' => $customer->id,
@@ -86,12 +92,12 @@ class SendBudgetNotification implements ShouldQueue
                 }
 
                 $companyData = [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $budget->tenant->name),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : $budget->tenant->name),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
                     'address_line2' => $addressLine2,
-                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
+                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
                 ];
             } else {
                 $companyData = [
@@ -115,7 +121,6 @@ class SendBudgetNotification implements ShouldQueue
                 'customer_email' => $customer->contact->email_personal,
                 'notification_type' => $notificationType,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Erro ao enviar notificação de orçamento', [
                 'budget_id' => $event->budget->id,

@@ -158,10 +158,10 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $attachments = [];
 
         // Adicionar PDF do orçamento se existir
-        if ($this->budget->attachment && file_exists(storage_path('app/'.$this->budget->attachment))) {
+        if ($this->budget->attachment && file_exists(storage_path('app/' . $this->budget->attachment))) {
             $attachments[] = [
-                'path' => storage_path('app/'.$this->budget->attachment),
-                'as' => 'orcamento-'.$this->budget->code.'.pdf',
+                'path' => storage_path('app/' . $this->budget->attachment),
+                'as' => 'orcamento-' . $this->budget->code . '.pdf',
                 'mime' => 'application/pdf',
             ];
         }
@@ -176,7 +176,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
      */
     private function generateSubject(): string
     {
-        $budgetTitle = 'Orçamento '.$this->budget->code;
+        $budgetTitle = 'Orçamento ' . $this->budget->code;
 
         return match ($this->notificationType) {
             'created' => __('emails.budget.subject.created', ['budget' => $budgetTitle], $this->locale),
@@ -200,11 +200,15 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             return $this->publicUrl;
         }
 
-        if ($this->budget->pdf_verification_hash) {
-            return config('app.url').'/budget/'.$this->budget->pdf_verification_hash;
+        if ($this->budget->public_token) {
+            return route('budgets.public.shared.view', ['token' => $this->budget->public_token]);
         }
 
-        return config('app.url').'/budgets/'.$this->budget->id;
+        if ($this->budget->pdf_verification_hash) {
+            return config('app.url') . '/budget/' . $this->budget->pdf_verification_hash;
+        }
+
+        return config('app.url') . '/budgets/' . $this->budget->id;
     }
 
     /**
@@ -252,7 +256,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";
@@ -261,13 +265,13 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
 
                 $document = null;
                 if ($commonData) {
-                    $document = $commonData->cnpj 
-                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) 
+                    $document = $commonData->cnpj
+                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
                         : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
                 }
 
                 return [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : ($this->tenant?->name ?? $this->budget->tenant?->name ?? 'Minha Empresa')),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : ($this->tenant?->name ?? $this->budget->tenant?->name ?? 'Minha Empresa')),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
@@ -281,7 +285,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
 
         // Fallback para o nome do tenant se não houver provider
         $tenantName = $this->tenant?->name ?? $this->budget->tenant?->name;
-        
+
         if ($tenantName) {
             return [
                 'company_name' => $tenantName,
