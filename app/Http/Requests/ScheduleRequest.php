@@ -110,7 +110,7 @@ class ScheduleRequest extends FormRequest
 
         // Calcula start_date_time e end_date_time
         if ($this->service_date && $this->service_time) {
-            $start = \Carbon\Carbon::parse($this->service_date . ' ' . $this->service_time);
+            $start = \Carbon\Carbon::parse($this->service_date.' '.$this->service_time);
             $duration = (int) ($this->service_duration ?? 60);
             $end = $start->copy()->addMinutes($duration);
 

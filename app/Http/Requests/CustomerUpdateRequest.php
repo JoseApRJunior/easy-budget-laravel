@@ -94,7 +94,7 @@ class CustomerUpdateRequest extends FormRequest
                 'company_size',
             ]);
         }
-        // Removido o bloco que limpava campos de PF quando era PJ, 
+        // Removido o bloco que limpava campos de PF quando era PJ,
         // para permitir salvar birth_date e outros campos mesmo para CNPJ (MEI, etc)
     }
 
@@ -131,7 +131,7 @@ class CustomerUpdateRequest extends FormRequest
                 'cpf',
                 \Illuminate\Validation\Rule::unique('common_datas', 'cpf')
                     ->where('tenant_id', $tenantId)
-                    ->ignore($this->excludeCustomerId, 'customer_id')
+                    ->ignore($this->excludeCustomerId, 'customer_id'),
             ],
             'birth_date' => 'nullable|date_format:d/m/Y|before_or_equal:today|after:01/01/1900',
             'profession_id' => 'nullable|exists:professions,id',
@@ -146,7 +146,7 @@ class CustomerUpdateRequest extends FormRequest
                 'cnpj',
                 \Illuminate\Validation\Rule::unique('common_datas', 'cnpj')
                     ->where('tenant_id', $tenantId)
-                    ->ignore($this->excludeCustomerId, 'customer_id')
+                    ->ignore($this->excludeCustomerId, 'customer_id'),
             ],
             'fantasy_name' => 'nullable|string|max:255',
             'founding_date' => 'nullable|date_format:d/m/Y|before_or_equal:today',

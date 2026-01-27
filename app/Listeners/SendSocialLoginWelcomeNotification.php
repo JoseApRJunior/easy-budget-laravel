@@ -80,8 +80,9 @@ class SendSocialLoginWelcomeNotification implements ShouldQueue
             if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
                 Log::warning('Boas-vindas social ignorada por deduplicação', [
                     'user_id' => $event->user->id,
-                    'dedupe_key' => $dedupeKey
+                    'dedupe_key' => $dedupeKey,
                 ]);
+
                 return;
             }
 

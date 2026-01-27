@@ -116,7 +116,7 @@ class ServiceController extends Controller
                 // Verificar se orçamento está editável (skill: budget-lifecycle-rules)
                 if (! $budget->canBeEdited()) {
                     return redirect()->route('provider.budgets.show', $budget->code)
-                        ->with('error', 'Orçamentos com status ' . $budget->status->label() . ' não podem ter serviços adicionados.');
+                        ->with('error', 'Orçamentos com status '.$budget->status->label().' não podem ter serviços adicionados.');
                 }
             }
         }

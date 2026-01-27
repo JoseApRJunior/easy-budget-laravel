@@ -39,8 +39,9 @@ class SendInvoiceNotification implements ShouldQueue
             if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
                 Log::warning('Notificação de fatura ignorada por deduplicação', [
                     'invoice_id' => $event->invoice->id,
-                    'dedupe_key' => $dedupeKey
+                    'dedupe_key' => $dedupeKey,
                 ]);
+
                 return;
             }
 

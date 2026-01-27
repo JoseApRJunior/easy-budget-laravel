@@ -10,7 +10,6 @@ use App\Services\Application\AuditLogService;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;

@@ -222,7 +222,7 @@ class Customer extends Model
         }
 
         if ($this->commonData?->first_name || $this->commonData?->last_name) {
-            return trim(($this->commonData->first_name ?? '') . ' ' . ($this->commonData->last_name ?? ''));
+            return trim(($this->commonData->first_name ?? '').' '.($this->commonData->last_name ?? ''));
         }
 
         return null;

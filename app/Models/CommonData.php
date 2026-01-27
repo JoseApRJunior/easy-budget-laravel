@@ -86,7 +86,7 @@ class CommonData extends Model
             return $this->company_name ?? '';
         }
 
-        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
     }
 
     /**
@@ -197,6 +197,6 @@ class CommonData extends Model
             return $this->company_name ?? '';
         }
 
-        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
     }
 }

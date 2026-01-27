@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class BudgetActionHistory extends Model
 {
@@ -137,6 +137,7 @@ class BudgetActionHistory extends Model
     public function getActionLabelAttribute(): string
     {
         $actions = self::getAvailableActions();
+
         return $actions[$this->action] ?? ucfirst($this->action);
     }
 

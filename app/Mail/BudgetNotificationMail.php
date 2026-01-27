@@ -158,10 +158,10 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $attachments = [];
 
         // Adicionar PDF do orçamento se existir
-        if ($this->budget->attachment && file_exists(storage_path('app/' . $this->budget->attachment))) {
+        if ($this->budget->attachment && file_exists(storage_path('app/'.$this->budget->attachment))) {
             $attachments[] = [
-                'path' => storage_path('app/' . $this->budget->attachment),
-                'as' => 'orcamento-' . $this->budget->code . '.pdf',
+                'path' => storage_path('app/'.$this->budget->attachment),
+                'as' => 'orcamento-'.$this->budget->code.'.pdf',
                 'mime' => 'application/pdf',
             ];
         }
@@ -176,7 +176,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
      */
     private function generateSubject(): string
     {
-        $budgetTitle = 'Orçamento ' . $this->budget->code;
+        $budgetTitle = 'Orçamento '.$this->budget->code;
 
         return match ($this->notificationType) {
             'created' => __('emails.budget.subject.created', ['budget' => $budgetTitle], $this->locale),
@@ -205,10 +205,10 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         }
 
         if ($this->budget->pdf_verification_hash) {
-            return config('app.url') . '/budget/' . $this->budget->pdf_verification_hash;
+            return config('app.url').'/budget/'.$this->budget->pdf_verification_hash;
         }
 
-        return config('app.url') . '/budgets/' . $this->budget->id;
+        return config('app.url').'/budgets/'.$this->budget->id;
     }
 
     /**
@@ -227,9 +227,9 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             $provider = $this->budget->provider()
                 ->withoutGlobalScopes()
                 ->with([
-                    'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                    'contact' => fn($q) => $q->withoutGlobalScopes(),
-                    'address' => fn($q) => $q->withoutGlobalScopes(),
+                    'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                    'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                    'address' => fn ($q) => $q->withoutGlobalScopes(),
                 ])
                 ->first();
 
@@ -237,9 +237,9 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                 $provider = $this->tenant->provider()
                     ->withoutGlobalScopes()
                     ->with([
-                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                        'contact' => fn($q) => $q->withoutGlobalScopes(),
-                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                        'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                        'address' => fn ($q) => $q->withoutGlobalScopes(),
                     ])
                     ->first();
             }
@@ -266,12 +266,12 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                 $document = null;
                 if ($commonData) {
                     $document = $commonData->cnpj
-                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
-                        : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
+                        ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
+                        : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
                 }
 
                 return [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : ($this->tenant?->name ?? $this->budget->tenant?->name ?? 'Minha Empresa')),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : ($this->tenant?->name ?? $this->budget->tenant?->name ?? 'Minha Empresa')),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,

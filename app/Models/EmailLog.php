@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class EmailLog extends Model
 {
@@ -126,7 +126,7 @@ class EmailLog extends Model
     {
         return $this->belongsTo(EmailTemplate::class, 'email_template_id');
     }
-    
+
     // ... rest of class ...
 
     /**

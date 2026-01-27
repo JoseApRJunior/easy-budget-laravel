@@ -42,8 +42,9 @@ class SendSupportResponse implements ShouldQueue
                 Log::warning('Resposta de suporte ignorada por deduplicação', [
                     'ticket_id' => $ticketId,
                     'response_id' => $responseId,
-                    'dedupe_key' => $dedupeKey
+                    'dedupe_key' => $dedupeKey,
                 ]);
+
                 return;
             }
 

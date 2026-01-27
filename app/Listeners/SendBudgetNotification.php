@@ -33,8 +33,9 @@ class SendBudgetNotification implements ShouldQueue
                 Log::warning('Notificação de orçamento ignorada por deduplicação', [
                     'budget_id' => $budget->id,
                     'new_status' => $event->newStatus,
-                    'dedupe_key' => $dedupeKey
+                    'dedupe_key' => $dedupeKey,
                 ]);
+
                 return;
             }
 
@@ -92,12 +93,12 @@ class SendBudgetNotification implements ShouldQueue
                 }
 
                 $companyData = [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : $budget->tenant->name),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $budget->tenant->name),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
                     'address_line2' => $addressLine2,
-                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
+                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
                 ];
             } else {
                 $companyData = [

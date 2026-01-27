@@ -34,7 +34,7 @@
 
             <x-resource.resource-header-item
                 label="Status Atual">
-                <x-ui.status-description :item="$service" statusField="status" :useColor="true" />
+                <x-ui.status-description :item="$service" statusField="status" :useColor="false" class="text-dark fw-medium" />
             </x-resource.resource-header-item>
 
             <x-resource.resource-header-item

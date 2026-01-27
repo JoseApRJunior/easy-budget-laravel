@@ -19,11 +19,11 @@ use App\Services\Infrastructure\QueueService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\View\View;
 
 /**
  * Controller avançado para preview de e-mails com funcionalidades completas.
@@ -289,8 +289,11 @@ class EmailPreviewController extends Controller
         return new class($subject, $html, $data, $recipient) extends \Illuminate\Mail\Mailable
         {
             private string $emailSubject;
+
             private string $htmlContent;
+
             private array $data;
+
             private string $recipient;
 
             public function __construct(string $subject, string $html, array $data, string $recipient)

@@ -212,9 +212,9 @@ class InvoiceNotification extends Mailable implements ShouldQueue
             $provider = $this->invoice->provider()
                 ->withoutGlobalScopes()
                 ->with([
-                    'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                    'contact' => fn($q) => $q->withoutGlobalScopes(),
-                    'address' => fn($q) => $q->withoutGlobalScopes(),
+                    'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                    'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                    'address' => fn ($q) => $q->withoutGlobalScopes(),
                 ])
                 ->first();
 
@@ -222,9 +222,9 @@ class InvoiceNotification extends Mailable implements ShouldQueue
                 $provider = $this->tenant->provider()
                     ->withoutGlobalScopes()
                     ->with([
-                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                        'contact' => fn($q) => $q->withoutGlobalScopes(),
-                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                        'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                        'address' => fn ($q) => $q->withoutGlobalScopes(),
                     ])
                     ->first();
             }
@@ -241,7 +241,7 @@ class InvoiceNotification extends Mailable implements ShouldQueue
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";
@@ -250,9 +250,9 @@ class InvoiceNotification extends Mailable implements ShouldQueue
 
                 $document = null;
                 if ($commonData) {
-                    $document = $commonData->cnpj 
-                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) 
-                        : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
+                    $document = $commonData->cnpj
+                        ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
+                        : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
                 }
 
                 return [
@@ -270,7 +270,7 @@ class InvoiceNotification extends Mailable implements ShouldQueue
 
         // Fallback para o nome do tenant se não houver provider
         $tenantName = $this->tenant?->name ?? $this->invoice->tenant?->name;
-        
+
         if ($tenantName) {
             return [
                 'company_name' => $tenantName,

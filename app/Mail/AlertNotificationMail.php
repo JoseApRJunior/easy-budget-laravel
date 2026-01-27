@@ -16,9 +16,6 @@ class AlertNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * @var array|null
-     */
     private ?array $companyData = null;
 
     public function __construct(

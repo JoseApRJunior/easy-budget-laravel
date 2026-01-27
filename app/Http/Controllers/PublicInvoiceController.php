@@ -8,7 +8,6 @@ use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Invoice;
 use App\Services\Infrastructure\PaymentMercadoPagoInvoiceService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**

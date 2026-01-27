@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\BudgetStatus;
-use App\Helpers\DateHelper;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -62,8 +61,8 @@ class BudgetStoreRequest extends FormRequest
             'discount.numeric' => 'O desconto deve ser um valor numérico.',
             'discount.min' => 'O desconto não pode ser negativo.',
             'due_date.date' => 'A data de vencimento deve ser uma data válida.',
-        'due_date.after_or_equal' => 'A data de vencimento deve ser hoje ou uma data posterior.',
-        'description.max' => 'A descrição não pode ter mais de 1000 caracteres.',
+            'due_date.after_or_equal' => 'A data de vencimento deve ser hoje ou uma data posterior.',
+            'description.max' => 'A descrição não pode ter mais de 1000 caracteres.',
             'payment_terms.max' => 'Os termos de pagamento não podem ter mais de 2000 caracteres.',
         ];
     }
