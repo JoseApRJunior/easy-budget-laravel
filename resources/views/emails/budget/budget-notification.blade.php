@@ -58,11 +58,14 @@
             </div>
         @else
             <div style="text-align: center; margin: 30px 0;">
-                <a href="{{ $budgetUrl }}" class="btn">Ver Orçamento Completo</a>
+                <!-- Adicionado text-decoration: none inline para garantir compatibilidade -->
+                <a href="{{ $budgetUrl }}" class="btn" style="text-decoration: none;">Ver Orçamento Completo</a>
             </div>
 
-            <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
-            <p class="subcopy">{{ $budgetUrl }}</p>
+            <div style="margin-top: 20px;">
+                <p style="margin-bottom: 10px;">Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
+                <p class="subcopy">{{ $budgetUrl }}</p>
+            </div>
         @endif
     </div>
 @endsection

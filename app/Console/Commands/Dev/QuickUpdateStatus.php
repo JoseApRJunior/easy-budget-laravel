@@ -63,6 +63,9 @@ class QuickUpdateStatus extends Command
                     $model->actionHistory()->delete();
                     $this->info('Histórico de ações limpo.');
 
+                    // Preparar supressão de notificações
+                    $model->suppressStatusNotification = true;
+
                     // Atualizar serviços vinculados
                     $services = $model->services;
                     foreach ($services as $service) {
@@ -75,16 +78,16 @@ class QuickUpdateStatus extends Command
                             if ($serviceStatus) {
                                 $service->update(['status' => $serviceStatus]);
                                 $this->info("Serviço {$service->code} atualizado para: {$status}");
-                                
+
                                 // Se tiver agendamento e o status for cancelled/draft/pending, talvez devêssemos resetar agendamento também?
                                 // O usuário pediu "restaurar estado de service e scheduled".
                                 // Vou assumir que se o status for resetado, o agendamento deve seguir.
                                 if (in_array($status, ['draft', 'pending', 'cancelled'])) {
-                                     $schedule = Schedule::where('service_id', $service->id)->latest()->first();
-                                     if ($schedule) {
-                                         $schedule->update(['status' => $status === 'draft' ? 'pending' : $status]); // Schedule não tem draft geralmente
-                                         $this->info("Agendamento do serviço {$service->code} atualizado.");
-                                     }
+                                    $schedule = Schedule::where('service_id', $service->id)->latest()->first();
+                                    if ($schedule) {
+                                        $schedule->update(['status' => $status === 'draft' ? 'pending' : $status]); // Schedule não tem draft geralmente
+                                        $this->info("Agendamento do serviço {$service->code} atualizado.");
+                                    }
                                 }
                             }
                         } catch (\Exception $e) {
@@ -139,6 +142,16 @@ class QuickUpdateStatus extends Command
         }
 
         $model->update(['status' => $status]);
+
+        // Se o status for draft, garantimos a remoção do token APÓS o update
+        // Isso evita que Observers/Listeners recriem o token durante a transição
+        if (strtolower($type) === 'budget' && $status === 'draft') {
+            $model->refresh(); // Garante que temos a instância atualizada
+            $model->public_token = null;
+            $model->public_expires_at = null;
+            $model->saveQuietly();
+            $this->info('Token público invalidado e removido com sucesso.');
+        }
 
         $this->info("{$type} atualizado com sucesso para: {$status}");
 
