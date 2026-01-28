@@ -150,6 +150,20 @@ class QuickUpdateStatus extends Command
             $model->public_token = null;
             $model->public_expires_at = null;
             $model->saveQuietly();
+
+            // Também invalidamos quaisquer tokens de compartilhamento ativos na tabela budget_shares
+            try {
+                \App\Models\BudgetShare::where('budget_id', $model->id)
+                    ->update([
+                        'is_active' => false,
+                        'status' => 'expired',
+                        'expires_at' => now()
+                    ]);
+                $this->info('Tokens de compartilhamento (budget_shares) invalidados.');
+            } catch (\Exception $e) {
+                $this->warn('Não foi possível invalidar budget_shares: ' . $e->getMessage());
+            }
+
             $this->info('Token público invalidado e removido com sucesso.');
         }
 
