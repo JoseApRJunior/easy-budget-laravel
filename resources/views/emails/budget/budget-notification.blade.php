@@ -39,15 +39,27 @@
         </div>
 
         @if($customMessage)
+            @php
+                $isCustomerAction = in_array($notificationType, ['approved', 'rejected', 'cancelled']);
+                $messageLabel = 'Mensagem do Profissional';
+                
+                if ($notificationType === 'rejected') {
+                    $messageLabel = 'Motivo da Rejeição (Cliente)';
+                } elseif ($notificationType === 'cancelled') {
+                    $messageLabel = 'Motivo do Cancelamento (Cliente)';
+                } elseif ($notificationType === 'approved') {
+                    $messageLabel = 'Observação do Cliente';
+                }
+            @endphp
             <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }};">
-                <p><strong>{{ $notificationType === 'rejected' ? 'Motivo da Rejeição' : 'Mensagem do Profissional' }}:</strong></p>
+                <p><strong>{{ $messageLabel }}:</strong></p>
                 <p>{!! nl2br(e($customMessage)) !!}</p>
             </div>
         @endif
 
-        @if($notificationType === 'rejected')
+        @if(in_array($notificationType, ['rejected', 'cancelled']))
             <div style="text-align: center; margin: 30px 0;">
-                <p>Este orçamento foi marcado como rejeitado.</p>
+                <p>Este orçamento foi marcado como {{ $notificationType === 'rejected' ? 'rejeitado' : 'cancelado' }}.</p>
                 <p>Caso deseje negociar ou tenha dúvidas, entre em contato conosco:</p>
                 @if(!empty($company['phone']))
                     <p><strong>Telefone:</strong> {{ $company['phone'] }}</p>
