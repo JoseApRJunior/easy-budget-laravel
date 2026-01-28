@@ -155,6 +155,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
         return match ($entityType) {
             'schedule' => 'emails.schedule.status-update',
             'service' => 'emails.service.status-update',
+            'budget' => 'emails.budget.budget-notification',
             default => 'emails.notification-status',
         };
     }

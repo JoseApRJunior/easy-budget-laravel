@@ -89,11 +89,12 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $this->company = $company ?? [];
         $this->publicUrl = $publicUrl;
         $this->customMessage = $customMessage;
+        $this->locale = $locale;
 
         \Illuminate\Support\Facades\Log::info('[BudgetNotificationMail] Construindo email', [
             'customMessage' => $customMessage,
             'notificationType' => $notificationType,
-            'budget_code' => $budget->code
+            'budget_code' => $budget->code,
         ]);
 
         if ($locale) {
@@ -113,12 +114,12 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             subject: $this->generateSubject(),
             tags: ['budget-notification', $this->notificationType],
             metadata: [
-                'budget_id' => $this->budget->id,
-                'budget_code' => $this->budget->code,
-                'customer_id' => $this->customer->id,
-                'tenant_id' => $this->tenant?->id,
-                'locale' => $this->locale,
-                'notification_type' => $this->notificationType,
+                'budget_id' => (string) $this->budget->id,
+                'budget_code' => (string) $this->budget->code,
+                'customer_id' => (string) $this->customer->id,
+                'tenant_id' => (string) ($this->tenant?->id ?? ''),
+                'locale' => (string) $this->locale,
+                'notification_type' => (string) $this->notificationType,
             ],
         );
     }

@@ -1,6 +1,12 @@
 @extends('emails.layouts.base')
 
-@section('title', $notificationType === 'created' ? 'Novo Orçamento Criado' : ($notificationType === 'updated' ? 'Orçamento Atualizado' : ($notificationType === 'approved' ? 'Orçamento Aprovado' : ($notificationType === 'rejected' ? 'Orçamento Rejeitado' : 'Notificação de Orçamento'))))
+@php
+$notificationType = $notificationType ?? ($emailData['new_status'] ?? 'updated');
+$customMessage = $customMessage ?? ($emailData['service_status_description'] ?? null);
+$statusColor = $statusColor ?? ($emailData['status_color'] ?? '#0d6efd');
+@endphp
+
+@section('title', $notificationType === 'created' ? 'Novo Orçamento Criado' : ($notificationType === 'updated' ? 'Orçamento Atualizado' : ($notificationType === 'approved' ? 'Orçamento Aprovado' : ($notificationType === 'rejected' ? 'Orçamento Rejeitado' : ($notificationType === 'cancelled' ? 'Orçamento Cancelado' : 'Notificação de Orçamento'))))))
 
 @section('content')
 <div class="content">
@@ -15,26 +21,30 @@
         📧 Aqui está o seu orçamento!
         @elseif($notificationType === 'rejected')
         ❌ Seu orçamento foi rejeitado.
+        @elseif($notificationType === 'cancelled')
+        🚫 Seu orçamento foi cancelado.
         @else
         📋 Você recebeu uma notificação sobre seu orçamento.
         @endif
     </h1>
 
-    <p>Olá, {{ $budgetData['customer_name'] }}.</p>
+    <p>Olá, {{ $budgetData['customer_name'] ?? ($emailData['first_name'] ?? 'Cliente') }}.</p>
 
     <div class="panel">
-        <p><strong>Código:</strong> {{ $budgetData['code'] }}</p>
-        <p><strong>Valor Total:</strong> R$ {{ $budgetData['total'] }}</p>
-        @if($budgetData['discount'] !== '0,00')
+        <p><strong>Código:</strong> {{ $budgetData['code'] ?? ($emailData['service_code'] ?? 'N/A') }}</p>
+        <p><strong>Valor Total:</strong> R$ {{ $budgetData['total'] ?? ($emailData['service_total'] ?? '0,00') }}</p>
+        @if(isset($budgetData['discount']) && $budgetData['discount'] !== '0,00')
         <p><strong>Desconto:</strong> R$ {{ $budgetData['discount'] }}</p>
         @endif
-        @if($budgetData['due_date'])
+        @if(isset($budgetData['due_date']) && $budgetData['due_date'])
         <p><strong>Validade:</strong> {{ $budgetData['due_date'] }}</p>
         @endif
-        <p><strong>Status:</strong> {{ $budgetData['status'] }}</p>
+        <p><strong>Status:</strong> {{ $budgetData['status'] ?? ($emailData['service_status_name'] ?? 'N/A') }}</p>
 
-        @if($budgetData['description'])
+        @if(isset($budgetData['description']) && $budgetData['description'])
         <p><strong>Descrição:</strong><br>{{ $budgetData['description'] }}</p>
+        @elseif(isset($emailData['service_description']) && $emailData['service_description'])
+        <p><strong>Descrição:</strong><br>{{ $emailData['service_description'] }}</p>
         @endif
     </div>
 
@@ -60,24 +70,22 @@
     @if(in_array($notificationType, ['rejected', 'cancelled']))
     <div style="text-align: center; margin: 30px 0;">
         <p>Este orçamento foi marcado como {{ $notificationType === 'rejected' ? 'rejeitado' : 'cancelado' }}.</p>
-        <p>Caso deseje negociar ou tenha dúvidas, entre em contato conosco:</p>
-        @if(!empty($company['phone']))
-        <p><strong>Telefone:</strong> {{ $company['phone'] }}</p>
-        @endif
-        @if(!empty($company['email']))
-        <p><strong>Email:</strong> {{ $company['email'] }}</p>
-        @endif
     </div>
     @else
+    @php
+    $budgetUrl = $budgetUrl ?? ($emailData['link'] ?? '#');
+    @endphp
     <div style="text-align: center; margin: 30px 0;">
         <!-- Adicionado text-decoration: none inline para garantir compatibilidade -->
         <a href="{{ $budgetUrl }}" class="btn" style="text-decoration: none;">Ver Orçamento Completo</a>
     </div>
 
+    @if($budgetUrl !== '#')
     <div style="margin-top: 20px;">
         <p style="margin-bottom: 10px;">Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
         <p class="subcopy">{{ $budgetUrl }}</p>
     </div>
+    @endif
     @endif
 </div>
 @endsection
