@@ -24,11 +24,14 @@ class BudgetStatusChanged
 
     public ?string $comment;
 
-    public function __construct(Budget $budget, string $oldStatus, string $newStatus, ?string $comment = null)
+    public bool $suppressNotification;
+
+    public function __construct(Budget $budget, string $oldStatus, string $newStatus, ?string $comment = null, bool $suppressNotification = false)
     {
         $this->budget = $budget;
         $this->oldStatus = $oldStatus;
         $this->newStatus = $newStatus;
         $this->comment = $comment;
+        $this->suppressNotification = $suppressNotification;
     }
 }

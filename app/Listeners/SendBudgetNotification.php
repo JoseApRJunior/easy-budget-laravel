@@ -25,6 +25,16 @@ class SendBudgetNotification implements ShouldQueue
     public function handle(BudgetStatusChanged $event): void
     {
         try {
+            // Verificar se a notificação deve ser suprimida
+            if ($event->suppressNotification) {
+                Log::info('Notificação de orçamento suprimida', [
+                    'budget_id' => $event->budget->id,
+                    'new_status' => $event->newStatus,
+                ]);
+
+                return;
+            }
+
             $budget = $event->budget;
 
             // 1. Deduplicação para evitar envios duplicados

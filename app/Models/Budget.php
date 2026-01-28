@@ -41,6 +41,12 @@ class Budget extends Model
     public ?string $transient_customer_comment = null;
 
     /**
+     * Propriedade temporária para suprimir notificações de status durante o ciclo de vida do request.
+     * Não é persistida no banco de dados.
+     */
+    public bool $suppressStatusNotification = false;
+
+    /**
      * Boot the model.
      */
     protected static function boot()

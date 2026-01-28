@@ -101,6 +101,8 @@ class SendBudgetToCustomerAction
                 $pdfPath = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
 
                 // 3. Atualizar orçamento: status para pendente e anexo
+                // Suprimir notificação de status pois enviaremos e-mail dedicado abaixo
+                $budget->suppressStatusNotification = true;
                 $budget->update([
                     'status' => \App\Enums\BudgetStatus::PENDING,
                     'attachment' => $pdfPath,
