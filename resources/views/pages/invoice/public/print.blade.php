@@ -75,7 +75,7 @@
         <i class="bi bi-printer me-2"></i>
         Imprimir
       </button>
-      <a href="{{ route('services.public.invoices.public.show', ['hash' => $invoice->public_hash]) }}"
+      <a href="{{ $invoice->getPublicUrl() }}"
         class="btn btn-outline-secondary ms-2">
         <i class="bi bi-arrow-left me-2"></i>
         Voltar

@@ -279,6 +279,9 @@
         </small>
         <div class="d-flex gap-2">
             @if ($invoice->status === 'pending')
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareInvoiceModal">
+                    <i class="bi bi-share-fill me-2"></i>Compartilhar
+                </button>
                 <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-fill me-2"></i>Editar
                 </a>
@@ -296,9 +299,69 @@
     </div>
     </div>
 
+    <!-- Share Invoice Modal -->
+    <div class="modal fade" id="shareInvoiceModal" tabindex="-1" aria-labelledby="shareInvoiceModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shareInvoiceModalLabel">Compartilhar Fatura</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Link Público</label>
+                        <div class="input-group">
+                            <input type="text" id="publicShareLink" class="form-control" value="{{ $invoice->getPublicUrl() }}" readonly>
+                            <button class="btn btn-outline-primary" type="button" onclick="copyShareLink()">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Qualquer pessoa com este link poderá visualizar a fatura.</small>
+                    </div>
 
+                    @if($invoice->status === 'pending')
+                    <hr>
+                    <div class="mb-3">
+                        <h6 class="mb-3">Enviar por E-mail</h6>
+                        <form action="{{ route('provider.invoices.share', $invoice->code) }}" method="POST">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="recipient_email" class="form-label">E-mail do Destinatário</label>
+                                <input type="email" name="recipient_email" class="form-control" id="recipient_email" value="{{ $invoice->customer->email ?? '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Mensagem (Opcional)</label>
+                                <textarea name="message" class="form-control" id="message" rows="3">Olá, segue o link para visualização e pagamento da sua fatura.</textarea>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send me-2"></i>Enviar Link por E-mail
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
+        function copyShareLink() {
+            const copyText = document.getElementById("publicShareLink");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            
+            // Feedback visual simples
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2"></i>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 2000);
+        }
+
         let newStatus = '';
 
         // Função para alterar status

@@ -337,7 +337,8 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::delete('/{code}', [InvoiceController::class, 'destroy'])->name('destroy');
         Route::get('/search/ajax', [InvoiceController::class, 'search'])->name('search');
         Route::get('/{code}/print', [InvoiceController::class, 'print'])->name('print');
-        Route::get('/export', [InvoiceController::class, 'export'])->name('export');
+            Route::post('/{code}/share', [InvoiceController::class, 'share'])->name('share');
+            Route::get('/export', [InvoiceController::class, 'export'])->name('export');
 
         Route::get('/budgets/{budget}/create', [InvoiceController::class, 'createFromBudget'])->name('create.from-budget');
         Route::post('/budgets/{budget}', [InvoiceController::class, 'storeFromBudget'])->name('store.from-budget');

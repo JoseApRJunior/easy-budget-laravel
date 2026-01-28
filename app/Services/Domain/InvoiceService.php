@@ -33,7 +33,8 @@ class InvoiceService extends AbstractBaseService
         private readonly ProductRepository $productRepository,
         private readonly ServiceItemRepository $serviceItemRepository,
         private readonly InvoiceCodeGeneratorService $codeGenerator,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly InvoiceShareService $invoiceShareService
     ) {
         parent::__construct($repository);
     }
@@ -79,14 +80,22 @@ class InvoiceService extends AbstractBaseService
                 }
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
-                $dto->code = $invoiceCode;
-                $dto->public_hash = bin2hex(random_bytes(32));
 
-                $invoice = $this->repository->createFromDTO($dto);
+                $invoiceData = $dto->toDatabaseArray();
+                $invoiceData['code'] = $invoiceCode;
+
+                $invoice = $this->repository->create($invoiceData);
 
                 if (! empty($dto->items)) {
                     $this->createInvoiceItems($invoice->id, $dto->items);
                 }
+
+                // Cria o compartilhamento inicial da fatura
+                $this->invoiceShareService->createShare([
+                    'invoice_id' => $invoice->id,
+                    'recipient_email' => $service->customer->email ?? null, // Usa do serviço pois invoice->customer pode não estar carregado
+                    'recipient_name' => $service->customer->name ?? null,
+                ], false);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });
@@ -212,13 +221,19 @@ class InvoiceService extends AbstractBaseService
                     due_date: $dto->due_date ?? now()->addDays(7),
                     code: $invoiceCode,
                     discount: $dto->discount ?? 0.0,
-                    public_hash: bin2hex(random_bytes(32)),
                     items: $preparedItems
                 );
 
                 $invoice = $this->repository->createFromDTO($invoiceDTO);
 
                 $this->createInvoiceItems($invoice->id, $preparedItems);
+
+                // Cria o compartilhamento inicial da fatura
+                $this->invoiceShareService->createShare([
+                    'invoice_id' => $invoice->id,
+                    'recipient_email' => $budget->customer->email ?? null,
+                    'recipient_name' => $budget->customer->name ?? null,
+                ], false);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });
@@ -236,9 +251,22 @@ class InvoiceService extends AbstractBaseService
 
             $invoice = $invoiceResult->getData();
 
-            $publicUrl = null;
-            if (! empty($invoice->public_hash)) {
-                $publicUrl = route('invoices.public.show', ['hash' => $invoice->public_hash]);
+            // Obtém URL pública via sistema de compartilhamento
+            $publicUrl = $invoice->getPublicUrl();
+
+            // Se não tiver link público (share), cria um novo
+            if (! $publicUrl) {
+                $shareResult = $this->invoiceShareService->createShare([
+                    'invoice_id' => $invoice->id,
+                    'recipient_email' => $invoice->customer->email ?? null,
+                    'recipient_name' => $invoice->customer->name ?? null,
+                ], false);
+
+                if ($shareResult->isSuccess()) {
+                    $share = $shareResult->getData();
+                    // Garante que usa a mesma rota definida no Model
+                    $publicUrl = route('services.public.invoices.public.show', ['hash' => $share->share_token]);
+                }
             }
 
             $qrDataUri = null;
@@ -265,8 +293,8 @@ class InvoiceService extends AbstractBaseService
             $content = $mpdf->Output('', 'S');
 
             $dir = 'invoices';
-            $filename = 'invoice_'.$invoice->code.'.pdf';
-            $path = $dir.'/'.$filename;
+            $filename = 'invoice_' . $invoice->code . '.pdf';
+            $path = $dir . '/' . $filename;
             Storage::put($path, $content);
 
             return ServiceResult::success($path, 'PDF da fatura gerado com sucesso');
@@ -289,7 +317,7 @@ class InvoiceService extends AbstractBaseService
                 'customer_id' => $service->customer_id,
                 'subtotal' => $subtotal,
                 'total' => $subtotal, // Assume no discount initially
-                'items' => $service->serviceItems->map(fn ($item) => new InvoiceItemDTO(
+                'items' => $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
                     product_id: $item->product_id,
                     quantity: $item->quantity,
                     unit_price: $item->unit_value,
@@ -316,7 +344,7 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
 
-                $items = $dto->items ?? $service->serviceItems->map(fn ($item) => new InvoiceItemDTO(
+                $items = $dto->items ?? $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
                     product_id: (int) $item->product_id,
                     quantity: (int) $item->quantity,
                     unit_price: (float) $item->unit_value,
@@ -359,7 +387,7 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($query, $limit) {
             $invoices = $this->repository->search($query, $limit)
-                ->map(fn ($i) => [
+                ->map(fn($i) => [
                     'id' => $i->id,
                     'text' => "{$i->code} - {$i->customer->name}",
                 ]);

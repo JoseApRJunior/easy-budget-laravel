@@ -189,8 +189,9 @@ class InvoiceNotification extends Mailable implements ShouldQueue
             return $this->publicLink;
         }
 
-        if ($this->invoice->public_hash) {
-            return config('app.url').'/invoice/'.$this->invoice->public_hash;
+        // Tenta usar o novo sistema de compartilhamento (InvoiceShare)
+        if (method_exists($this->invoice, 'getPublicUrl') && $url = $this->invoice->getPublicUrl()) {
+            return $url;
         }
 
         return config('app.url').'/invoices/'.$this->invoice->id;

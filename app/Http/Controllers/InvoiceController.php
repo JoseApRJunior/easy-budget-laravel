@@ -32,7 +32,37 @@ class InvoiceController extends Controller
         private readonly CustomerService $customerService,
         private readonly ProductRepository $productRepository,
         private readonly BudgetService $budgetService,
+        private readonly \App\Services\Domain\InvoiceShareService $invoiceShareService,
     ) {}
+
+    public function share(string $code, Request $request): RedirectResponse
+    {
+        $result = $this->invoiceService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $invoice = $result->getData();
+        $this->authorize('update', $invoice);
+
+        $request->validate([
+            'recipient_email' => 'required|email',
+            'message' => 'nullable|string|max:1000',
+        ]);
+
+        $shareResult = $this->invoiceShareService->createShare([
+            'invoice_id' => $invoice->id,
+            'recipient_email' => $request->input('recipient_email'),
+            'recipient_name' => $invoice->customer->name ?? null,
+            'message' => $request->input('message'),
+        ], true);
+
+        if ($shareResult->isError()) {
+            return redirect()->back()->with('error', $shareResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Link de compartilhamento enviado com sucesso para ' . $request->input('recipient_email'));
+    }
 
     public function index(Request $request): View
     {

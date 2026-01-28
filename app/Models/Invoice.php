@@ -19,7 +19,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property InvoiceStatus $status
  * @property int|null $user_confirmation_token_id
  * @property string $code
- * @property string|null $public_hash
  * @property float $subtotal
  * @property float $discount
  * @property float $total
@@ -28,8 +27,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $payment_id
  * @property float|null $transaction_amount
  * @property \Illuminate\Support\Carbon|null $transaction_date
- * @property string|null $public_token
- * @property \Illuminate\Support\Carbon|null $public_expires_at
  * @property string|null $notes
  * @property bool $is_automatic
  * @property \Illuminate\Support\Carbon $created_at
@@ -68,7 +65,6 @@ class Invoice extends Model
         'status',
         'user_confirmation_token_id',
         'code',
-        'public_hash',
         'subtotal',
         'discount',
         'total',
@@ -77,8 +73,6 @@ class Invoice extends Model
         'payment_id',
         'transaction_amount',
         'transaction_date',
-        'public_token',
-        'public_expires_at',
         'notes',
         'is_automatic',
     ];
@@ -102,9 +96,6 @@ class Invoice extends Model
         'payment_method' => 'string',
         'payment_id' => 'string',
         'transaction_amount' => 'decimal:2',
-        'public_hash' => 'string',
-        'public_token' => 'string',
-        'public_expires_at' => 'datetime',
         'discount' => 'decimal:2',
         'notes' => 'string',
         'is_automatic' => 'boolean',
@@ -121,7 +112,7 @@ class Invoice extends Model
             'tenant_id' => 'required|integer|exists:tenants,id',
             'service_id' => 'required|integer|exists:services,id',
             'customer_id' => 'required|integer|exists:customers,id',
-            'status' => 'required|string|in:'.implode(',', array_column(InvoiceStatus::cases(), 'value')),
+            'status' => 'required|string|in:' . implode(',', array_column(InvoiceStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:invoices,code',
             'subtotal' => 'required|numeric|min:0|max:999999.99',
@@ -132,8 +123,6 @@ class Invoice extends Model
             'payment_id' => 'nullable|string|max:255',
             'transaction_amount' => 'nullable|numeric|min:0|max:999999.99',
             'transaction_date' => 'nullable|date',
-            'public_token' => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
-            'public_expires_at' => 'nullable|date',
             'notes' => 'nullable|string|max:65535',
             'is_automatic' => 'boolean',
         ];
@@ -193,6 +182,36 @@ class Invoice extends Model
     public function paymentMercadoPagoInvoice()
     {
         return $this->hasMany(PaymentMercadoPagoInvoice::class, 'invoice_id');
+    }
+
+    /**
+     * Get the shares for the invoice.
+     */
+    public function shares()
+    {
+        return $this->hasMany(InvoiceShare::class);
+    }
+
+    /**
+     * Get the public URL for the invoice (using the latest active share).
+     */
+    public function getPublicUrl(): ?string
+    {
+        $share = $this->shares()
+            ->where('is_active', true)
+            ->where('status', \App\Enums\InvoiceShareStatus::ACTIVE)
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->latest()
+            ->first();
+
+        if ($share) {
+            return route('services.public.invoices.public.show', ['hash' => $share->share_token]);
+        }
+
+        return null;
     }
 
     /**
