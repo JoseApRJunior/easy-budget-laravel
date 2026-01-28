@@ -7,7 +7,6 @@ namespace App\Repositories;
 use App\DTOs\Tenant\PlanSubscriptionDTO;
 use App\Models\PlanSubscription;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Support\Carbon;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Model;
 

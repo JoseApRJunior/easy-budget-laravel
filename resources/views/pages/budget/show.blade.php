@@ -19,22 +19,15 @@
         {{-- Primeira Linha: Informações Principais --}}
         <x-resource.resource-header-item
             label="Código"
-            icon="hash"
-            iconVariant="secondary"
             :value="$budget->code" />
 
         <x-resource.resource-header-item
-            label="Status Atual"
-            icon="info-circle"
-            iconVariant="secondary">
+            label="Status Atual">
             <x-ui.status-description :item="$budget" statusField="status" :useColor="false" class="text-dark fw-medium" />
         </x-resource.resource-header-item>
 
         <x-resource.resource-header-item
             label="Total Geral"
-            icon="currency-dollar"
-            iconVariant="secondary"
-            valueClass="text-success"
             :value="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)" />
 
         <x-resource.resource-header-divider />

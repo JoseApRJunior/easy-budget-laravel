@@ -58,9 +58,9 @@ class ServiceObserver
         if ($service->isDirty('status') && ! $service->suppressStatusNotification) {
             $oldStatus = $service->getOriginal('status');
             $newStatus = $service->status;
-            
-            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string)$oldStatus;
-            
+
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
+
             event(new StatusUpdated(
                 $service,
                 $oldStatusValue,
@@ -92,7 +92,7 @@ class ServiceObserver
 
             Log::info('Budget total synchronized via ServiceObserver', [
                 'budget_id' => $budgetId,
-                'new_total' => $total
+                'new_total' => $total,
             ]);
         }
     }

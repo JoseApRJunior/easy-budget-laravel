@@ -7,7 +7,6 @@ namespace App\Services\Domain;
 use App\DTOs\Budget\BudgetDTO;
 use App\Enums\BudgetStatus;
 use App\Enums\ServiceStatus;
-use App\Events\BudgetStatusChanged;
 use App\Models\Budget;
 use App\Repositories\BudgetRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
@@ -99,11 +98,11 @@ class BudgetService extends AbstractBaseService
                     $statusBreakdownDetailed[$statusValue] = [
                         'count' => $count,
                         'color' => $status->getColor(),
-                        'label' => $status->label()
+                        'label' => $status->label(),
                     ];
                 }
             }
-            
+
             $stats['status_breakdown_detailed'] = $statusBreakdownDetailed;
 
             return ServiceResult::success($stats);

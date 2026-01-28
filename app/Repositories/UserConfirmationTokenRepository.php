@@ -7,7 +7,6 @@ namespace App\Repositories;
 use App\Models\UserConfirmationToken;
 use App\Repositories\Abstracts\AbstractGlobalRepository;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * Repositório para tokens de confirmação de usuário.

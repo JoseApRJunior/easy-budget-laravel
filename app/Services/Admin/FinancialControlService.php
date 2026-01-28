@@ -302,6 +302,7 @@ class FinancialControlService
     {
         // Implement budget limit logic based on plan or custom settings
         $subscription = $tenant->planSubscriptions->first();
+
         return $subscription && $subscription->plan
             ? $subscription->plan->max_monthly_spend ?? 1000
             : 1000;

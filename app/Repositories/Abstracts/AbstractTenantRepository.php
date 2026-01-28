@@ -241,8 +241,8 @@ abstract class AbstractTenantRepository implements TenantRepositoryInterface
     /**
      * Busca um único registro por um campo específico, opcionalmente incluindo deletados.
      *
-     * @param  string|array<string, mixed>  $field Ou critérios de busca.
-     * @param  mixed|null  $value Valor do campo se $field for string.
+     * @param  string|array<string, mixed>  $field  Ou critérios de busca.
+     * @param  mixed|null  $value  Valor do campo se $field for string.
      * @param  array  $with  Relacionamentos para carregar.
      * @param  bool  $withTrashed  Se deve incluir registros deletados.
      */

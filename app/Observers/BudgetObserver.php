@@ -24,13 +24,13 @@ class BudgetObserver
 
         if (isset($changes['status'])) {
             $action = 'budget_status_changed';
-            
+
             $newStatus = $changes['status'];
             $oldStatus = $budget->getOriginal('status');
-            
-            $newStatusValue = $newStatus instanceof \UnitEnum ? $newStatus->value : (string)$newStatus;
-            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string)$oldStatus;
-            
+
+            $newStatusValue = $newStatus instanceof \UnitEnum ? $newStatus->value : (string) $newStatus;
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
+
             $statusLabel = $newStatus instanceof \App\Enums\BudgetStatus ? $newStatus->label() : $newStatusValue;
             $description = "Status alterado para: {$statusLabel}";
 

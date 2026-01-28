@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Application;
 
+use App\Enums\OperationStatus;
 use App\Models\EmailTemplate;
 use App\Services\Infrastructure\VariableProcessor;
 use App\Support\ServiceResult;
-use App\Enums\OperationStatus;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;

@@ -120,8 +120,8 @@ class AppServiceProvider extends ServiceProvider
         // Register policies
         $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);
 
-        Blade::if('role', fn($role) => auth()->check() && auth()->user()->hasRole($role));
-        Blade::if('anyrole', fn($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
+        Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));
+        Blade::if('anyrole', fn ($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
 
         Paginator::useBootstrapFive();
 

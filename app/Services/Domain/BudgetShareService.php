@@ -111,7 +111,7 @@ class BudgetShareService extends AbstractBaseService
                             ? \App\Enums\BudgetShareStatus::APPROVED->value
                             : \App\Enums\BudgetShareStatus::REJECTED->value,
                         'is_active' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? true : false,
-                        'expires_at' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? now()->addDays(30) : null
+                        'expires_at' => $newStatus === \App\Enums\BudgetStatus::APPROVED ? now()->addDays(30) : null,
                     ]);
 
                 // Marca o compartilhamento atual com os dados específicos (redundante mas garante o objeto atual)
@@ -210,11 +210,17 @@ class BudgetShareService extends AbstractBaseService
 
                 // Opcional: Atualizar a mensagem ou expiração se foram enviadas novas
                 $updateData = [];
-                if (isset($data['expires_at'])) $updateData['expires_at'] = $data['expires_at'];
-                if (isset($data['message'])) $updateData['message'] = $data['message'];
-                if (isset($data['permissions'])) $updateData['permissions'] = $data['permissions'];
+                if (isset($data['expires_at'])) {
+                    $updateData['expires_at'] = $data['expires_at'];
+                }
+                if (isset($data['message'])) {
+                    $updateData['message'] = $data['message'];
+                }
+                if (isset($data['permissions'])) {
+                    $updateData['permissions'] = $data['permissions'];
+                }
 
-                if (!empty($updateData)) {
+                if (! empty($updateData)) {
                     $existingShare->update($updateData);
                 }
 
@@ -513,7 +519,7 @@ class BudgetShareService extends AbstractBaseService
     private function sendShareNotification(BudgetShare $share, Budget $budget): void
     {
         try {
-            $shareUrl = config('app.url') . "/budgets/shared/{$share->share_token}";
+            $shareUrl = config('app.url')."/budgets/shared/{$share->share_token}";
 
             $emailData = [
                 'recipient_name' => $share->recipient_name,
@@ -601,7 +607,7 @@ class BudgetShareService extends AbstractBaseService
 
             return $this->success($stats);
         } catch (\Exception $e) {
-            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: ' . $e->getMessage());
+            return $this->error(OperationStatus::ERROR, 'Erro ao obter estatísticas: '.$e->getMessage());
         }
     }
 }

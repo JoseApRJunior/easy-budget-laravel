@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Models\ServiceItem;
 use App\Models\Service;
+use App\Models\ServiceItem;
 use Illuminate\Support\Facades\Log;
 
 class ServiceItemObserver
@@ -35,10 +35,10 @@ class ServiceItemObserver
         if ($service) {
             $total = $service->serviceItems()->sum('total');
             $service->update(['total' => $total]);
-            
+
             Log::info('Service total synchronized via ServiceItemObserver', [
                 'service_id' => $serviceId,
-                'new_total' => $total
+                'new_total' => $total,
             ]);
         }
     }

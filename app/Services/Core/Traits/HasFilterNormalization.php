@@ -38,7 +38,7 @@ trait HasFilterNormalization
 
         // Filtro 'deleted' (Soft Deletes) - Padronizado conforme match solicitado
         if (isset($filters['deleted'])) {
-            $normalized['deleted'] = match ((string)$filters['deleted']) {
+            $normalized['deleted'] = match ((string) $filters['deleted']) {
                 'only' => 'only',
                 'current' => 'current',
                 'all' => 'all',

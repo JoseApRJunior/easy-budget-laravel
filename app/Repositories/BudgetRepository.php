@@ -7,7 +7,6 @@ namespace App\Repositories;
 use App\DTOs\Budget\BudgetDTO;
 use App\Models\Budget;
 use App\Repositories\Abstracts\AbstractTenantRepository;
-use Illuminate\Support\Carbon;
 use App\Repositories\Traits\RepositoryFiltersTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

@@ -119,7 +119,7 @@ class ProductService extends AbstractBaseService
                     $product->refresh();
                 } catch (Exception $e) {
                     Log::error('Erro ao fazer upload de imagem do produto: '.$e->getMessage());
-                    // Não falha a criação do produto se apenas o upload falhar, 
+                    // Não falha a criação do produto se apenas o upload falhar,
                     // mas poderíamos lançar exceção se fosse crítico.
                 }
             }
@@ -274,7 +274,7 @@ class ProductService extends AbstractBaseService
                 $result = $this->repository->getAllByTenant(
                     $normalizedFilters,
                 );
-                if (!empty($with)) {
+                if (! empty($with)) {
                     $result->load($with);
                 }
                 Log::info('Produtos carregados (coleção)', ['total' => $result->count()]);

@@ -8,16 +8,18 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Schedule;
 use App\Models\Service;
+use App\Services\AI\CustomerSegmentationService;
+use App\Services\AI\LinearRegressionService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\AI\LinearRegressionService;
-use App\Services\AI\CustomerSegmentationService;
 
 class AIAnalyticsService
 {
     private $tenantId;
+
     private $linearRegressionService;
+
     private $customerSegmentationService;
 
     public function __construct(
@@ -468,7 +470,7 @@ class AIAnalyticsService
             'method' => 'linear_regression',
             'trend' => $trend,
             'slope' => $regression['slope'],
-            'intercept' => $regression['intercept']
+            'intercept' => $regression['intercept'],
         ];
     }
 
@@ -587,10 +589,10 @@ class AIAnalyticsService
         // Perform RFM Segmentation
         // Get raw data for RFM
         $customersData = Customer::where('tenant_id', $this->tenantId)
-            ->withCount(['invoices as total_purchases' => function($q) {
+            ->withCount(['invoices as total_purchases' => function ($q) {
                 $q->where('status', \App\Enums\InvoiceStatus::PAID);
             }])
-            ->withSum(['invoices' => function($q) {
+            ->withSum(['invoices' => function ($q) {
                 $q->where('status', \App\Enums\InvoiceStatus::PAID);
             }], 'total')
             ->get()
@@ -603,7 +605,7 @@ class AIAnalyticsService
                     'id' => $customer->id,
                     'last_purchase_date' => $lastDate,
                     'total_purchases' => $customer->total_purchases,
-                    'total_spent' => $customer->invoices_sum_total ?? 0
+                    'total_spent' => $customer->invoices_sum_total ?? 0,
                 ];
             })->toArray();
 
@@ -615,7 +617,7 @@ class AIAnalyticsService
         return [
             'churn_rate' => round($churnRate, 2),
             'segments' => $segmentCounts,
-            'total_segmented' => count($segments)
+            'total_segmented' => count($segments),
         ];
     }
 

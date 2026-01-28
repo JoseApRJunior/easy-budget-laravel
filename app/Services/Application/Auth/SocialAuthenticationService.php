@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Application\Auth;
 
-use App\Enums\OperationStatus;
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
 use App\DTOs\Provider\ProviderRegistrationDTO;
+use App\Enums\OperationStatus;
 use App\Events\SocialAccountLinked;
 use App\Events\SocialLoginWelcome;
 use App\Models\User;

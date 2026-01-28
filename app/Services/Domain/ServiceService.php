@@ -97,6 +97,7 @@ class ServiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () {
             $code = $this->repository->generateUniqueCode();
+
             return ServiceResult::success($code);
         }, 'Erro ao gerar código de serviço.');
     }
@@ -290,7 +291,7 @@ class ServiceService extends AbstractBaseService
                 ->update([
                     'status' => ScheduleStatus::CANCELLED->value,
                     'cancelled_at' => now(),
-                    'cancellation_reason' => 'Serviço ' . $newStatus->label() . ' pelo cliente.',
+                    'cancellation_reason' => 'Serviço '.$newStatus->label().' pelo cliente.',
                 ]);
         }
     }

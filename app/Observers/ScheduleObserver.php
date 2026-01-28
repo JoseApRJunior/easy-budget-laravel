@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
-use App\Enums\ScheduleStatus;
 use App\Events\StatusUpdated;
 use App\Models\Schedule;
 use Illuminate\Support\Facades\Log;
@@ -27,9 +26,9 @@ class ScheduleObserver
         if ($schedule->isDirty('status')) {
             $oldStatus = $schedule->getOriginal('status');
             $newStatus = $schedule->status;
-            
-            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string)$oldStatus;
-            
+
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
+
             event(new StatusUpdated(
                 $schedule,
                 $oldStatusValue,
