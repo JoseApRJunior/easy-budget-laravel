@@ -11,6 +11,8 @@
                 📝 Seu orçamento foi atualizado com novas informações.
             @elseif($notificationType === 'approved')
                 ✅ Seu orçamento foi aprovado!
+            @elseif($notificationType === 'sent')
+                📧 Aqui está o seu orçamento!
             @elseif($notificationType === 'rejected')
                 ❌ Seu orçamento foi rejeitado.
             @else
@@ -39,7 +41,7 @@
         @if($customMessage)
             <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }};">
                 <p><strong>{{ $notificationType === 'rejected' ? 'Motivo da Rejeição' : 'Mensagem do Profissional' }}:</strong></p>
-                <p>{{ $customMessage }}</p>
+                <p>{!! nl2br(e($customMessage)) !!}</p>
             </div>
         @endif
 

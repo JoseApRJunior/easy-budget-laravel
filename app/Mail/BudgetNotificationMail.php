@@ -90,6 +90,12 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $this->publicUrl = $publicUrl;
         $this->customMessage = $customMessage;
 
+        \Illuminate\Support\Facades\Log::info('[BudgetNotificationMail] Construindo email', [
+            'customMessage' => $customMessage,
+            'notificationType' => $notificationType,
+            'budget_code' => $budget->code
+        ]);
+
         if ($locale) {
             $this->locale($locale);
         }

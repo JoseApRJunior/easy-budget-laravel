@@ -118,10 +118,11 @@ class SendBudgetToCustomerAction
             });
 
             // 5. Enviar E-mail (FORA DA TRANSAÇÃO para evitar timeout de banco)
+            \Illuminate\Support\Facades\Log::info('[SendBudgetToCustomerAction] Enviando email', ['customMessage' => $customMessage]);
             Mail::to($customer->email)->send(new BudgetNotificationMail(
                 budget: $budget,
                 customer: $customer,
-                notificationType: 'sent_to_customer',
+                notificationType: 'sent',
                 tenant: $budget->tenant,
                 company: $companyData,
                 publicUrl: $publicUrl,

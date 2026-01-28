@@ -308,18 +308,18 @@ class BudgetController extends Controller
                 'margin_footer' => $margins['footer'],
             ]);
 
-            $mpdf->SetHeader('Orçamento #'.$budget->code.'||Gerado em: '.now()->format('d/m/Y'));
+            $mpdf->SetHeader('Orçamento #' . $budget->code . '||Gerado em: ' . now()->format('d/m/Y'));
 
             if (Auth::check()) {
                 $userName = Auth::user()->name;
             } else {
                 $commonData = $provider->commonData ?? null;
                 $userName = $commonData
-                    ? ($commonData->company_name ?: ($commonData->first_name.' '.$commonData->last_name))
+                    ? ($commonData->company_name ?: ($commonData->first_name . ' ' . $commonData->last_name))
                     : 'Sistema';
             }
 
-            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: '.$userName.'|'.config('app.url'));
+            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: ' . $userName . '|' . config('app.url'));
 
             $mpdf->WriteHTML($html);
 
@@ -328,7 +328,7 @@ class BudgetController extends Controller
 
             return response($content, 200, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => ($download ? 'attachment' : 'inline').'; filename="'.$filename.'"',
+                'Content-Disposition' => ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"',
             ]);
         }
 
@@ -340,7 +340,11 @@ class BudgetController extends Controller
      */
     public function sendToCustomer(Request $request, string $code): RedirectResponse
     {
-        $message = $request->input('message');
+        $message = trim($request->input('message') ?? '');
+        $message = $message === '' ? null : $message;
+
+        \Illuminate\Support\Facades\Log::info('[BudgetController@sendToCustomer] Mensagem capturada:', ['message' => $message, 'code' => $code]);
+
         $result = $this->budgetService->sendToCustomer($code, $message);
 
         if ($result->isError()) {
