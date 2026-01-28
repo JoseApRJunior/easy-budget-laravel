@@ -14,12 +14,12 @@ use App\Models\User;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\BudgetShareService;
 use App\Services\Domain\CustomerService;
+use App\Services\Infrastructure\BudgetPDFService;
 use App\Services\Infrastructure\MailerService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\Infrastructure\BudgetPDFService;
 
 /**
  * Controller para Budgets
@@ -297,7 +297,7 @@ class BudgetController extends Controller
 
             return response()->download($path, $filename, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"',
+                'Content-Disposition' => ($download ? 'attachment' : 'inline').'; filename="'.$filename.'"',
             ]);
         }
 
@@ -309,6 +309,12 @@ class BudgetController extends Controller
      */
     public function sendToCustomer(Request $request, string $code): RedirectResponse
     {
+        $request->validate([
+            'message' => ['nullable', 'string', 'max:500'],
+        ], [
+            'message.max' => 'A mensagem personalizada não pode ter mais de 500 caracteres.',
+        ]);
+
         $message = trim($request->input('message') ?? '');
         $message = $message === '' ? null : $message;
 
@@ -349,6 +355,14 @@ class BudgetController extends Controller
      */
     public function chooseBudgetStatusStore(Request $request): RedirectResponse
     {
+        $request->validate([
+            'token' => ['required', 'string'],
+            'action' => ['required', 'string', 'in:approve,reject'],
+            'comment' => ['nullable', 'string', 'max:500'],
+        ], [
+            'comment.max' => 'O comentário não pode ter mais de 500 caracteres.',
+        ]);
+
         $token = $request->input('token');
         $action = $request->input('action'); // 'approve' ou 'reject'
         $comment = $request->input('comment');

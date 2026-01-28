@@ -77,8 +77,10 @@ class SendBudgetToCustomerAction
             $publicUrl = null;
             $pdfPath = null;
 
+            $oldStatus = $budget->status->value;
+
             // Executar operações de banco dentro da transação
-            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, $provider) {
+            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, $provider, $oldStatus, $customMessage) {
                 // 1. Gerar ou recuperar Token Público via BudgetShareService
                 $shareResult = $this->shareService->createShare([
                     'budget_id' => $budget->id,
@@ -112,9 +114,18 @@ class SendBudgetToCustomerAction
                 if (method_exists($budget, 'actionHistory')) {
                     $budget->actionHistory()->create([
                         'tenant_id' => $budget->tenant_id,
-                        'action' => 'sent',
-                        'description' => 'Orçamento processado para envio.',
+                        'budget_id' => $budget->id,
                         'user_id' => auth()->id(),
+                        'action' => 'sent',
+                        'old_status' => $oldStatus,
+                        'new_status' => \App\Enums\BudgetStatus::PENDING->value,
+                        'description' => 'Orçamento processado para envio.',
+                        'metadata' => [
+                            'custom_message' => $customMessage,
+                            'via' => 'email',
+                        ],
+                        'ip_address' => request()->ip(),
+                        'user_agent' => request()->userAgent(),
                     ]);
                 }
             });

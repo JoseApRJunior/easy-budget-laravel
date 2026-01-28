@@ -65,6 +65,7 @@ class SendBudgetNotification implements ShouldQueue
             $notificationType = match ($event->newStatus) {
                 'approved' => 'approved',
                 'rejected' => 'rejected',
+                'cancelled' => 'cancelled',
                 'sent' => 'sent',
                 'expired' => 'expired',
                 default => 'updated'

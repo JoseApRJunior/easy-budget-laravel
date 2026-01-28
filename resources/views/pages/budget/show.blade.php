@@ -236,7 +236,6 @@
             <x-slot:mobile>
                 @foreach ($budget->services as $service)
                 <x-resource.resource-mobile-item
-                    icon="tools"
                     :href="route('provider.services.show', $service->code)">
                     <x-resource.resource-mobile-header
                         :title="$service->code"
@@ -317,6 +316,11 @@
                                     <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
                                 </div>
                                 @endif
+                                @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
+                                <div class="mt-1 small text-primary fst-italic">
+                                    <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
+                                </div>
+                                @endif
                             </td>
                             <td class="small text-muted">
                                 @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
@@ -344,6 +348,11 @@
                     @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
                     <div class="mt-1 small text-muted fst-italic p-2 bg-light rounded">
                         <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
+                    </div>
+                    @endif
+                    @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
+                    <div class="mt-1 small text-primary fst-italic p-2 bg-light rounded">
+                        <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
                     </div>
                     @endif
                     <div class="mt-2 text-end">
@@ -431,7 +440,10 @@
 
                     <div class="mb-3">
                         <label for="message" class="form-label fw-bold">Mensagem Personalizada (Opcional)</label>
-                        <textarea class="form-control" id="message" name="message" rows="4" placeholder="Olá, segue o orçamento solicitado..."></textarea>
+                        <textarea class="form-control" id="message" name="message" rows="4"
+                            maxlength="500" placeholder="Olá, segue o orçamento solicitado..."
+                            oninput="updateCharCount(this, 'charCount')"></textarea>
+                        <div class="form-text text-end small" id="charCount">0 / 500 caracteres</div>
                     </div>
 
                     <div class="alert alert-info small">
@@ -462,6 +474,19 @@
 
 @push('scripts')
 <script>
+    function updateCharCount(textarea, counterId) {
+        const count = textarea.value.length;
+        const counter = document.getElementById(counterId);
+        if (counter) {
+            counter.textContent = `${count} / 500 caracteres`;
+            if (count >= 500) {
+                counter.classList.add('text-danger');
+            } else {
+                counter.classList.remove('text-danger');
+            }
+        }
+    }
+
     // Inicialização manual caso o data-bs-toggle falhe por causa do defer
     document.addEventListener('DOMContentLoaded', function() {
         const modalBtn = document.querySelector('[data-bs-target="#sendToCustomerModal"]');
