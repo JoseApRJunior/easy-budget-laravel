@@ -32,19 +32,19 @@
 
         <x-resource.resource-header-divider />
 
-        {{-- Segunda Linha: Cliente --}}
+        {{-- Segunda Linha: Dados do Cliente --}}
         <x-resource.resource-header-section title="Dados do Cliente" icon="people">
             @if ($budget->customer)
-            <x-layout.grid-col size="col-md-4">
+            <x-layout.grid-col size="col-md-3">
                 <x-resource.resource-info
-                    title="Cliente"
+                    title="Nome/Razão Social"
                     :subtitle="$budget->customer->name"
-                    icon="person-fill"
-                    iconClass="text-secondary fs-5"
-                    titleClass="text-muted small fw-bold text-uppercase"
-                    :href="route('provider.customers.show', $budget->customer->id)" />
+                    icon="person-badge"
+                    :href="route('provider.customers.show', $budget->customer->id)"
+                    class="small" />
             </x-layout.grid-col>
-            <x-layout.grid-col size="col-md-4">
+
+            <x-layout.grid-col size="col-md-3">
                 @php
                 $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
                 $docValue = $budget->customer->commonData->cnpj
@@ -55,27 +55,63 @@
                     :title="$docLabel"
                     :subtitle="$docValue"
                     icon="card-text"
-                    iconClass="text-secondary fs-5"
-                    titleClass="text-muted small fw-bold text-uppercase" />
+                    class="small" />
             </x-layout.grid-col>
-            <x-layout.grid-col size="col-md-4">
+
+            <x-layout.grid-col size="col-md-3">
                 <x-resource.resource-info
-                    title="E-mail/Contato"
+                    title="Contato Principal"
                     :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
-                    icon="envelope-fill"
-                    iconClass="text-secondary fs-5"
-                    titleClass="text-muted small fw-bold text-uppercase" />
+                    icon="envelope"
+                    class="small" />
+            </x-layout.grid-col>
+
+            <x-layout.grid-col size="col-md-3">
+                @php
+                $address = $budget->customer?->address;
+                $addressText = $address
+                ? "{$address->address}, {$address->address_number} - {$address->neighborhood}, {$address->city}/{$address->state}"
+                : 'Não informado';
+                @endphp
+                <x-resource.resource-info
+                    title="Endereço"
+                    :subtitle="$addressText"
+                    icon="geo-alt"
+                    class="small" />
             </x-layout.grid-col>
             @else
             <x-layout.grid-col size="col-12">
-                <p class="text-muted mb-0 italic">Dados do cliente não vinculados corretamente.</p>
+                <p class="text-muted mb-0 italic">Dados do cliente não vinculados a este orçamento.</p>
             </x-layout.grid-col>
             @endif
         </x-resource.resource-header-section>
 
         <x-resource.resource-header-divider />
 
-        {{-- Terceira Linha: Resumo Financeiro e Datas --}}
+        {{-- Terceira Linha: Vínculos e Detalhes --}}
+        <x-resource.resource-header-section title="Vínculos e Detalhes" icon="link-45deg">
+            @if ($budget->due_date)
+            <div class="col-md-4">
+                <x-resource.resource-info
+                    title="Validade da Proposta"
+                    :subtitle="$budget->due_date->format('d/m/Y')"
+                    icon="calendar-event"
+                    class="small" />
+            </div>
+            @endif
+
+            <div class="col-md-4">
+                <x-resource.resource-info
+                    title="Serviços Vinculados"
+                    :subtitle="$budget->services->count() . ' item(s)'"
+                    icon="tools"
+                    class="small" />
+            </div>
+        </x-resource.resource-header-section>
+
+        <x-resource.resource-header-divider />
+
+        {{-- Quarta Linha: Resumo Financeiro e Datas --}}
         <div class="col-md-8 mt-2">
             <div class="row g-3">
                 <div class="col-md-4">
@@ -83,26 +119,14 @@
                         title="Criado em"
                         :subtitle="$budget->created_at->format('d/m/Y H:i')"
                         icon="calendar-plus"
-                        iconClass="text-secondary"
-                        titleClass="text-muted small fw-bold text-uppercase" />
+                        class="small" />
                 </div>
-                @if ($budget->due_date)
-                <div class="col-md-4">
-                    <x-resource.resource-info
-                        title="Vencimento"
-                        :subtitle="$budget->due_date->format('d/m/Y')"
-                        icon="calendar-event"
-                        iconClass="text-secondary"
-                        titleClass="text-muted small fw-bold text-uppercase" />
-                </div>
-                @endif
                 <div class="col-md-4">
                     <x-resource.resource-info
                         title="Atualizado"
                         :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
                         icon="clock-history"
-                        iconClass="text-secondary"
-                        titleClass="text-muted small fw-bold text-uppercase" />
+                        class="small" />
                 </div>
             </div>
         </div>

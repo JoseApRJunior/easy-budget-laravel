@@ -58,6 +58,40 @@ class QuickUpdateStatus extends Command
         switch (strtolower($type)) {
             case 'budget':
                 $model = Budget::where('id', $identifier)->orWhere('code', $identifier)->first();
+                if ($model) {
+                    // Limpar histórico
+                    $model->actionHistory()->delete();
+                    $this->info('Histórico de ações limpo.');
+
+                    // Atualizar serviços vinculados
+                    $services = $model->services;
+                    foreach ($services as $service) {
+                        // Tenta encontrar um status correspondente no ServiceStatus
+                        // Se o status do budget for 'approved', o serviço também vai para 'approved' (ou pending se preferir, mas vou seguir o status)
+                        // Se o status não existir no ServiceStatus, mantemos o atual ou logamos aviso.
+                        // Dado que é DEV tool, vou tentar alinhar.
+                        try {
+                            $serviceStatus = \App\Enums\ServiceStatus::tryFrom($status);
+                            if ($serviceStatus) {
+                                $service->update(['status' => $serviceStatus]);
+                                $this->info("Serviço {$service->code} atualizado para: {$status}");
+                                
+                                // Se tiver agendamento e o status for cancelled/draft/pending, talvez devêssemos resetar agendamento também?
+                                // O usuário pediu "restaurar estado de service e scheduled".
+                                // Vou assumir que se o status for resetado, o agendamento deve seguir.
+                                if (in_array($status, ['draft', 'pending', 'cancelled'])) {
+                                     $schedule = Schedule::where('service_id', $service->id)->latest()->first();
+                                     if ($schedule) {
+                                         $schedule->update(['status' => $status === 'draft' ? 'pending' : $status]); // Schedule não tem draft geralmente
+                                         $this->info("Agendamento do serviço {$service->code} atualizado.");
+                                     }
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            $this->warn("Não foi possível atualizar status do serviço {$service->code}: " . $e->getMessage());
+                        }
+                    }
+                }
                 break;
             case 'service':
                 $model = Service::where('id', $identifier)->orWhere('code', $identifier)->first();

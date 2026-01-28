@@ -1,9 +1,9 @@
 
      * Exemplos de uso:
      *
-     * ┌── Orçamento (por ID ou Código)
+     * ┌── Orçamento (por ID ou Código) - [!] Limpa histórico e sincroniza status dos serviços
      * │   php artisan dev:update-status budget 1 approved
-     * │   php artisan dev:update-status budget BUD-2026-01-000001 approved
+     * │   php artisan dev:update-status budget ORC-2025-12-000001 draft
      * │
      * ├── Serviço
      * │   php artisan dev:update-status service SERV-2026-01-000001 on_hold
