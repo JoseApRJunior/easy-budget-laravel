@@ -60,18 +60,10 @@ class BudgetShareService extends AbstractBaseService
                 $share = $this->budgetShareRepository->findByToken($token);
                 $budget = null;
 
-                if (! $share) {
-                    // Fallback para public_token na tabela budgets
-                    $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
-                    if (! $budget) {
-                        return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
-                    }
-                } else {
-                    if (! $share->is_active) {
-                        return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
-                    }
-                    $budget = Budget::withoutGlobalScopes()->find($share->budget_id);
+                if (! $share || ! $share->is_active) {
+                    return $this->error(OperationStatus::NOT_FOUND, 'Compartilhamento inválido ou inativo.');
                 }
+                $budget = Budget::withoutGlobalScopes()->find($share->budget_id);
 
                 if (! $budget) {
                     return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
@@ -259,30 +251,6 @@ class BudgetShareService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($token) {
             $share = $this->budgetShareRepository->findByToken($token);
-
-            // Fallback: Se não encontrar em budget_shares, procura no public_token da tabela budgets
-            if (! $share) {
-                $budget = Budget::withoutGlobalScopes()->where('public_token', $token)->first();
-
-                if ($budget) {
-                    // Verifica expiração do public_token
-                    if ($budget->public_expires_at && now()->gt($budget->public_expires_at)) {
-                        return $this->error(OperationStatus::EXPIRED, 'Este link de orçamento expirou.');
-                    }
-
-                    // Cria um objeto genérico de compartilhamento para manter a compatibilidade com a view
-                    $share = new BudgetShare([
-                        'budget_id' => $budget->id,
-                        'share_token' => $token,
-                        'permissions' => ['view', 'print', 'comment', 'approve'],
-                        'is_active' => true,
-                        'status' => \App\Enums\BudgetShareStatus::ACTIVE,
-                        'tenant_id' => $budget->tenant_id,
-                    ]);
-
-                    // Importante: Não salvar no banco aqui, apenas retornar o objeto em memória
-                }
-            }
 
             if (! $share) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Link de compartilhamento inválido ou expirado.');

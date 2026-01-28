@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\BudgetStatus;
-use App\Models\Traits\HasPublicToken;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +30,6 @@ use Illuminate\Support\Carbon;
 class Budget extends Model
 {
     use HasFactory;
-    use HasPublicToken;
     use TenantScoped;
 
     /**
@@ -53,7 +51,6 @@ class Budget extends Model
     {
         parent::boot();
         static::bootTenantScoped();
-        static::bootHasPublicToken();
     }
 
     /**
@@ -83,8 +80,6 @@ class Budget extends Model
         'attachment',
         'history',
         'pdf_verification_hash',
-        'public_token',
-        'public_expires_at',
         'status_updated_at',
         'status_updated_by',
     ];
@@ -155,7 +150,7 @@ class Budget extends Model
         return [
             'tenant_id' => 'required|integer|exists:tenants,id',
             'customer_id' => 'required|integer|exists:customers,id',
-            'status' => 'required|string|in:'.implode(',', array_column(\App\Enums\BudgetStatus::cases(), 'value')),
+            'status' => 'required|string|in:' . implode(',', array_column(\App\Enums\BudgetStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:budgets,code',
             'due_date' => 'nullable|date|after:today',
@@ -187,8 +182,8 @@ class Budget extends Model
     public static function updateRules(int $budgetId): array
     {
         $rules = self::businessRules();
-        $rules['code'] = 'required|string|max:50|unique:budgets,code,'.$budgetId;
-        $rules['pdf_verification_hash'] = 'nullable|string|max:64|unique:budgets,pdf_verification_hash,'.$budgetId;
+        $rules['code'] = 'required|string|max:50|unique:budgets,code,' . $budgetId;
+        $rules['pdf_verification_hash'] = 'nullable|string|max:64|unique:budgets,pdf_verification_hash,' . $budgetId;
 
         return $rules;
     }
@@ -347,7 +342,7 @@ class Budget extends Model
     {
         $activeStatuses = array_filter(
             array_column(\App\Enums\BudgetStatus::cases(), 'value'),
-            fn ($status) => \App\Enums\BudgetStatus::tryFrom($status)?->isActive() ?? false
+            fn($status) => \App\Enums\BudgetStatus::tryFrom($status)?->isActive() ?? false
         );
 
         return $query->whereIn('status', $activeStatuses);
@@ -509,7 +504,7 @@ class Budget extends Model
             'version_number' => $this->getNextVersionNumber(),
             'changes_description' => $changeDescription,
             'budget_data' => $this->toArray(),
-            'services_data' => $this->services->map(fn ($s) => [
+            'services_data' => $this->services->map(fn($s) => [
                 'id' => $s->id,
                 'category_id' => $s->category_id,
                 'description' => $s->description,
@@ -545,7 +540,7 @@ class Budget extends Model
         $major = (int) $parts[0];
         $minor = (int) $parts[1];
 
-        return ($minor + 1) >= 10 ? ($major + 1).'.0' : $major.'.'.($minor + 1);
+        return ($minor + 1) >= 10 ? ($major + 1) . '.0' : $major . '.' . ($minor + 1);
     }
 
     /**
@@ -585,7 +580,7 @@ class Budget extends Model
                     'category_id' => $serviceData['category_id'],
                     'description' => $serviceData['description'],
                     'status' => $this->status,
-                    'code' => $serviceData['code'] ?? 'SRV-'.uniqid(),
+                    'code' => $serviceData['code'] ?? 'SRV-' . uniqid(),
                     'total' => $serviceData['total'],
                 ]);
 
@@ -635,14 +630,18 @@ class Budget extends Model
      */
     public function getPublicUrl(): ?string
     {
-        if (! $this->public_token || ! $this->code) {
-            return null;
+        // Obter o compartilhamento mais recente ativo ou criar um novo
+        $share = \App\Models\BudgetShare::where('budget_id', $this->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if ($share) {
+            return route('budgets.public.shared.view', ['token' => $share->share_token]);
         }
 
-        return route('budgets.public.choose-status', [
-            'code' => $this->code,
-            'token' => $this->public_token,
-        ], true);
+        return null;
     }
 
     /**
@@ -650,13 +649,19 @@ class Budget extends Model
      */
     public function getPrintUrl(): ?string
     {
-        if (! $this->public_token || ! $this->code) {
+        $share = \App\Models\BudgetShare::where('budget_id', $this->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if (! $share || ! $this->code) {
             return null;
         }
 
         return route('budgets.public.print', [
             'code' => $this->code,
-            'token' => $this->public_token,
+            'token' => $share->share_token,
         ], true);
     }
 

@@ -51,12 +51,6 @@ class SendBudgetNotification implements ShouldQueue
 
             $customer = $budget->customer;
 
-            // Garantir que o token público exista
-            if (empty($budget->public_token)) {
-                $budget->public_token = \App\Models\Budget::generateUniquePublicToken();
-                $budget->saveQuietly();
-            }
-
             // Verificar se o cliente tem email
             if (! $customer || ! $customer->contact?->email_personal) {
                 Log::info('Cliente sem email para notificação', [

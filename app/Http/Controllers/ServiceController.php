@@ -322,9 +322,15 @@ class ServiceController extends Controller
 
         $service = $result->getData();
 
-        // Validar o token
-        if ($service->public_token !== $token) {
-            abort(403, 'Acesso negado. Token inválido.');
+        // Validar o token via BudgetShare
+        $budget = $service->budget;
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
+            abort(403, 'Acesso negado. Token inválido ou expirado.');
         }
 
         return view('pages.service.public.view-status', [
@@ -361,8 +367,14 @@ class ServiceController extends Controller
 
         $service = $result->getData();
 
-        // Validar o token
-        if ($service->public_token !== $token) {
+        // Validar o token via BudgetShare
+        $budget = $service->budget;
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
             abort(403, 'Acesso negado.');
         }
 
@@ -392,7 +404,14 @@ class ServiceController extends Controller
 
         $service = $result->getData();
 
-        if ($service->public_token !== $token) {
+        // Validar o token via BudgetShare
+        $budget = $service->budget;
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
             abort(403, 'Acesso negado.');
         }
 

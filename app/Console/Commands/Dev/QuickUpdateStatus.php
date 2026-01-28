@@ -143,15 +143,12 @@ class QuickUpdateStatus extends Command
 
         $model->update(['status' => $status]);
 
-        // Se o status for draft, garantimos a remoção do token APÓS o update
-        // Isso evita que Observers/Listeners recriem o token durante a transição
+        // Se o status for draft, garantimos a invalidação dos compartilhamentos
         if (strtolower($type) === 'budget' && $status === 'draft') {
             $model->refresh(); // Garante que temos a instância atualizada
-            $model->public_token = null;
-            $model->public_expires_at = null;
-            $model->saveQuietly();
+            // $model->public_token e $model->public_expires_at foram removidos
 
-            // Também invalidamos quaisquer tokens de compartilhamento ativos na tabela budget_shares
+            // Invalidamos quaisquer tokens de compartilhamento ativos na tabela budget_shares
             try {
                 \App\Models\BudgetShare::where('budget_id', $model->id)
                     ->update([
@@ -164,7 +161,7 @@ class QuickUpdateStatus extends Command
                 $this->warn('Não foi possível invalidar budget_shares: ' . $e->getMessage());
             }
 
-            $this->info('Token público invalidado e removido com sucesso.');
+            $this->info('Compartilhamentos (budget_shares) invalidados com sucesso.');
         }
 
         $this->info("{$type} atualizado com sucesso para: {$status}");

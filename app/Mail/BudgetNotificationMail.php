@@ -206,8 +206,10 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             return $this->publicUrl;
         }
 
-        if ($this->budget->public_token) {
-            return route('budgets.public.shared.view', ['token' => $this->budget->public_token]);
+        // Tentar obter a URL pública através do método do modelo que busca em BudgetShare
+        $publicUrl = $this->budget->getPublicUrl();
+        if ($publicUrl) {
+            return $publicUrl;
         }
 
         if ($this->budget->pdf_verification_hash) {

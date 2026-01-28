@@ -14,13 +14,12 @@ use App\Models\User;
 use App\Services\Domain\BudgetService;
 use App\Services\Domain\BudgetShareService;
 use App\Services\Domain\CustomerService;
-use App\Services\Infrastructure\BudgetTokenService;
 use App\Services\Infrastructure\MailerService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Mpdf\Mpdf;
+use App\Services\Infrastructure\BudgetPDFService;
 
 /**
  * Controller para Budgets
@@ -31,7 +30,7 @@ class BudgetController extends Controller
         private readonly BudgetService $budgetService,
         private readonly CustomerService $customerService,
         private readonly BudgetShareService $budgetShareService,
-        private readonly BudgetTokenService $budgetTokenService,
+        private readonly BudgetPDFService $pdfService,
         private readonly MailerService $mailerService,
     ) {}
 
@@ -293,40 +292,10 @@ class BudgetController extends Controller
         $download = $request->has('download');
 
         if ($isPdf) {
-            $html = view('pages.budget.pdf_budget', compact('budget', 'provider'))->render();
-
-            $margins = config('theme.pdf.margins');
-
-            $mpdf = new Mpdf([
-                'mode' => 'utf-8',
-                'format' => 'A4',
-                'margin_left' => $margins['left'],
-                'margin_right' => $margins['right'],
-                'margin_top' => $margins['top'],
-                'margin_bottom' => $margins['bottom'],
-                'margin_header' => $margins['header'],
-                'margin_footer' => $margins['footer'],
-            ]);
-
-            $mpdf->SetHeader('Orçamento #' . $budget->code . '||Gerado em: ' . now()->format('d/m/Y'));
-
-            if (Auth::check()) {
-                $userName = Auth::user()->name;
-            } else {
-                $commonData = $provider->commonData ?? null;
-                $userName = $commonData
-                    ? ($commonData->company_name ?: ($commonData->first_name . ' ' . $commonData->last_name))
-                    : 'Sistema';
-            }
-
-            $mpdf->SetFooter('Página {PAGENO} de {nb}|Usuário: ' . $userName . '|' . config('app.url'));
-
-            $mpdf->WriteHTML($html);
-
+            $path = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
             $filename = "orcamento_{$budget->code}.pdf";
-            $content = $mpdf->Output('', 'S');
 
-            return response($content, 200, [
+            return response()->download($path, $filename, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => ($download ? 'attachment' : 'inline') . '; filename="' . $filename . '"',
             ]);
@@ -362,46 +331,6 @@ class BudgetController extends Controller
         $result = $this->budgetShareService->validateAccess($token);
 
         if ($result->isError()) {
-            // Se o erro for de expiração, tentamos regenerar e reenviar se for o public_token direto
-            if ($result->getStatusCode() === \App\Enums\OperationStatus::EXPIRED) {
-                $budgetResult = $this->budgetService->findByCode($code, ['customer.contact', 'tenant.provider']);
-
-                if ($budgetResult->isSuccess()) {
-                    $budget = $budgetResult->getData();
-
-                    // Apenas regeneramos se o token fornecido for o public_token atual (evita loop)
-                    if ($budget->public_token === $token) {
-                        $newToken = $this->budgetTokenService->regenerateToken($budget);
-
-                        // Verifica se o cliente tem um e-mail válido para reenvio
-                        $customerEmail = $budget->customer->contact?->email ?? $budget->customer->contact?->email_business;
-
-                        if ($customerEmail) {
-                            // Envia o novo link por e-mail
-                            $this->mailerService->sendBudgetNotificationMail(
-                                $budget,
-                                $budget->customer,
-                                'sent', // Usamos 'sent' para indicar reenvio
-                                $budget->tenant,
-                                null,
-                                route('budgets.choose-status', ['code' => $budget->code, 'token' => $newToken])
-                            );
-
-                            $info = 'Este link expirou. Um novo link de acesso foi enviado para o seu e-mail.';
-                        } else {
-                            $info = 'Este link expirou. Um novo token foi gerado, mas não foi possível enviar por e-mail (e-mail do cliente não encontrado).';
-                        }
-
-                        return view('pages.budget.choose_budget_status', [
-                            'budget' => $budget,
-                            'share' => null,
-                            'token' => $newToken,
-                            'info' => $info,
-                        ]);
-                    }
-                }
-            }
-
             abort(403, $result->getMessage());
         }
 

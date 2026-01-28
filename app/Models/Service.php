@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use HasFactory, HasPublicToken, TenantScoped;
+    use HasFactory, TenantScoped;
 
     /**
      * Propriedade temporária para suprimir notificações de status.
@@ -27,7 +27,6 @@ class Service extends Model
     {
         parent::boot();
         static::bootTenantScoped();
-        static::bootHasPublicToken();
     }
 
     /**
@@ -51,8 +50,6 @@ class Service extends Model
         'code',
         'description',
         'pdf_verification_hash',
-        'public_token',
-        'public_expires_at',
         'discount',
         'total',
         'due_date',
@@ -87,8 +84,6 @@ class Service extends Model
         'due_date' => 'date',
         'reason' => 'string',
         'pdf_verification_hash' => 'string',
-        'public_token' => 'string',
-        'public_expires_at' => 'datetime',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
@@ -116,7 +111,7 @@ class Service extends Model
             'tenant_id' => 'required|integer|exists:tenants,id',
             'budget_id' => 'required|integer|exists:budgets,id',
             'category_id' => 'required|integer|exists:categories,id',
-            'status' => 'required|string|in:'.implode(',', array_column(ServiceStatus::cases(), 'value')),
+            'status' => 'required|string|in:' . implode(',', array_column(ServiceStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:services,code',
             'description' => 'nullable|string',
@@ -125,8 +120,6 @@ class Service extends Model
             'due_date' => 'nullable|date',
             'reason' => 'nullable|string|max:500',
             'pdf_verification_hash' => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
-            'public_token' => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
-            'public_expires_at' => 'nullable|date',
         ];
     }
 
@@ -268,14 +261,7 @@ class Service extends Model
      */
     public function getPublicUrl(): ?string
     {
-        if (! $this->public_token || ! $this->code) {
-            return null;
-        }
-
-        return route('services.public.view-status', [
-            'code' => $this->code,
-            'token' => $this->public_token,
-        ], true);
+        return $this->budget?->getPublicUrl();
     }
 
     /**

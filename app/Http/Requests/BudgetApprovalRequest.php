@@ -90,9 +90,20 @@ class BudgetApprovalRequest extends FormRequest
             return false;
         }
 
-        // Verifica se o token é válido e não expirou
-        return $budget->public_token === $token &&
-            $budget->public_expires_at &&
-            now()->lt($budget->public_expires_at);
+        // Verifica se existe um compartilhamento válido com este token para este orçamento
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share) {
+            return false;
+        }
+
+        if ($share->expires_at && now()->gt($share->expires_at)) {
+            return false;
+        }
+
+        return true;
     }
 }
