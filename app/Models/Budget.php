@@ -69,7 +69,6 @@ class Budget extends Model
         'tenant_id',
         'customer_id',
         'status',
-        'status_comment',
         'user_confirmation_token_id',
         'code',
         'due_date',

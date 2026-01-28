@@ -39,7 +39,7 @@ class BudgetObserver
                 $budget,
                 $oldStatusValue,
                 $newStatusValue,
-                $budget->transient_customer_comment ?? $budget->status_comment ?? $budget->customer_comment,
+                $budget->transient_customer_comment ?? $budget->customer_comment,
                 $budget->suppressStatusNotification ?? false
             ));
         }

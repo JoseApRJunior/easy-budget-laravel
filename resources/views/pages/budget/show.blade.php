@@ -178,20 +178,6 @@
             </div>
         </div>
         @endif
-
-        {{-- Comentário de Status (Interno/Prestador) --}}
-        @if ($budget->status_comment)
-        <x-resource.resource-header-divider />
-        <div class="col-12 mt-2">
-            <div class="alert alert-info mb-0 border-0 shadow-sm" style="background-color: #cff4fc;">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-info-circle-fill fs-5 me-2 text-info"></i>
-                    <label class="small fw-bold text-uppercase mb-0 text-dark">Observação do Status</label>
-                </div>
-                <p class="mb-0 text-dark small fst-italic">"{{ $budget->status_comment }}"</p>
-            </div>
-        </div>
-        @endif
     </x-resource.resource-header-card>
 
     {{-- Serviços Vinculados --}}
