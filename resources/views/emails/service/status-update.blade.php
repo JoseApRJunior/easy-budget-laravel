@@ -3,7 +3,6 @@
 @section('title', 'Atualização de Serviço - #' . $emailData['service_code'])
 
 @section('content')
-<div class="content">
     <h1>
         @switch($emailData['new_status'])
             @case('in_progress')
@@ -28,7 +27,7 @@
         @endswitch
     </h1>
 
-    <p>Olá, <strong>{{ $emailData['first_name'] }}</strong>.</p>
+    <p>Olá, <strong>{{ $emailData['customer_name'] }}</strong>.</p>
 
     <p>Houve uma atualização no status do seu serviço <strong>#{{ $emailData['service_code'] }}</strong>:</p>
 

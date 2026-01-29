@@ -3,13 +3,9 @@
 @section('title', $emailData['entity_type'] . ' #' . $emailData['service_code'])
 
 @section('content')
-<div class="content">
     <h1>{{ $emailData['entity_type'] }} #{{ $emailData['service_code'] }}</h1>
-
     <p>Olá, <strong>{{ $emailData['first_name'] }}</strong>.</p>
-
     <p>Houve uma atualização no status do seu {{ strtolower($emailData['entity_type']) }}:</p>
-
     <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }}; background: #f8fafc; padding: 15px; margin-bottom: 20px;">
         <p style="margin: 0; font-size: 16px;">
             Status atual: <strong style="color: {{ $statusColor ?? '#0d6efd' }};">{{ $emailData['service_status_name'] }}</strong>
