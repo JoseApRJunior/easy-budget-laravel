@@ -59,6 +59,14 @@ class ServiceObserver
             $oldStatus = $service->getOriginal('status');
             $newStatus = $service->status;
 
+            // Não notificar se o novo status for DRAFT (rascunho)
+            if ($newStatus === ServiceStatus::DRAFT) {
+                Log::info('Service notification suppressed: Status changed to DRAFT', [
+                    'service_id' => $service->id
+                ]);
+                return;
+            }
+
             $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
 
             event(new StatusUpdated(

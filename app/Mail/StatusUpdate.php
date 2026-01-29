@@ -120,6 +120,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
             with: [
                 'emailData' => [
                     'first_name' => $this->getUserFirstName(),
+                    'customer_name' => $this->getUserName(),
                     'service_code' => $this->getEntityCode(),
                     'service_status_name' => $this->statusName,
                     'service_status_description' => $statusDescription,
@@ -325,6 +326,24 @@ class StatusUpdate extends Mailable implements ShouldQueue
             'schedule' => config('app.url').'/schedules/'.$this->entity->id,
             default => config('app.url'),
         };
+    }
+
+    /**
+     * Obtém o nome completo do usuário/cliente.
+     *
+     * @return string Nome completo
+     */
+    private function getUserName(): string
+    {
+        if (isset($this->entity->customer)) {
+            return $this->entity->customer->name ?? $this->entity->customer->first_name ?? 'Cliente';
+        }
+
+        if (isset($this->entity->service->customer)) {
+            return $this->entity->service->customer->name ?? $this->entity->service->customer->first_name ?? 'Cliente';
+        }
+
+        return 'Cliente';
     }
 
     /**

@@ -444,3 +444,41 @@ MAIL_STATUS_UPDATE_DEDUPE_TTL=1800
 ```php
 // EmailPersonalizationService
 // Personalizar conteúdo baseado no perfil do cliente
+// Usar dados de comportamento para mensagens relevantes
+// Suporte a múltiplos idiomas
+```
+
+### **3. Automação de Campaigns**
+
+```php
+// EmailAutomationService
+// Workflows baseados em eventos
+// Triggers automáticos (ex: lembrete de vencimento)
+// Segmentação de clientes
+```
+
+---
+
+## 🔗 Arquivos Relevantes
+
+| Arquivo | Descrição |
+|---------|-----------|
+| [`app/Events/StatusUpdated.php`](app/Events/StatusUpdated.php) | Evento disparado na mudança de status |
+| [`app/Listeners/SendStatusUpdateNotification.php`](app/Listeners/SendStatusUpdateNotification.php) | Listener para envio de notificações |
+| [`app/Mail/StatusUpdate.php`](app/Mail/StatusUpdate.php) | Mailable para emails de status |
+| [`app/Services/Infrastructure/MailerService.php`](app/Services/Infrastructure/MailerService.php) | Serviço de email principal |
+| [`resources/views/emails/notification-status.blade.php`](resources/views/emails/notification-status.blade.php) | Template padrão |
+| [`resources/views/emails/budget/budget-notification.blade.php`](resources/views/emails/budget/budget-notification.blade.php) | Template de orçamento |
+| [`resources/views/emails/schedule/status-update.blade.php`](resources/views/emails/schedule/status-update.blade.php) | Template de agendamento |
+| [`resources/views/emails/invoice/status-update.blade.php`](resources/views/emails/invoice/status-update.blade.php) | Template de fatura |
+| [`resources/views/emails/service/status-update.blade.php`](resources/views/emails/service/status-update.blade.php) | Template de serviço |
+
+---
+
+## 📝 Conclusão
+
+O sistema de email de mudanças de status do Easy Budget é uma implementação sólida e bem arquitetada, seguindo os melhores padrões do Laravel. A separação entre eventos, listeners e mailables garante desacoplamento e escalabilidade, enquanto o processamento assíncrono via filas melhora a performance da aplicação.
+
+A principal área de melhoria é a consistência dos templates, que atualmente têm estruturas diferentes. A implementação de notificações proativas para administradores e métricas de engajamento também trariam benefícios significativos.
+
+Em geral, o sistema está bem preparado para o crescimento e atende às necessidades básicas de notificação de status, proporcionando uma experiência de usuário consistente e confiável.

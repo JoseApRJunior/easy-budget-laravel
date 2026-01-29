@@ -16,138 +16,124 @@
         <p class="text-muted mb-0">Atualize as informações do orçamento <strong>{{ $budget->code }}</strong></p>
     </x-layout.page-header>
 
-    <form id="edit-budget-form" action="{{ route('provider.budgets.update', $budget->code) }}" method="POST">
-        @csrf
-        @method('PUT')
+    <x-layout.grid-row>
+        <x-layout.grid-col size="col-12">
+            <x-resource.resource-list-card
+                title="Dados do Orçamento"
+                icon="file-earmark-text"
+                padding="p-4">
+                <x-ui.alert type="info">
+                    <strong>Código do Orçamento:</strong> {{ $budget->code }}
+                    <span class="ms-3"><strong>Status:</strong>
+                        <x-ui.status-badge :item="$budget" />
+                    </span>
+                </x-ui.alert>
 
-        <x-layout.grid-row class="g-4">
-            <!-- Informações Básicas -->
-            <div class="col-12">
-                <x-ui.card>
-                    <x-slot:header>
-                        <h5 class="mb-0 d-flex align-items-center text-primary fw-bold">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <span>Informações Básicas</span>
-                        </h5>
-                    </x-slot:header>
-                    
-                    <div class="p-2">
-                        <div class="row g-3">
-                            <!-- Cliente (readonly) -->
-                            <div class="col-md-6">
-                                <x-ui.form.input 
-                                    name="customer_display" 
-                                    label="Cliente" 
-                                    :value="$budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' . ' (' . ($budget->customer->commonData ? ($budget->customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf)) : 'Sem documento') . ')'"
-                                    disabled 
-                                    readonly 
-                                />
-                                <input type="hidden" name="customer_id" value="{{ $budget->customer_id }}">
-                            </div>
+                <x-ui.form.form id="edit-budget-form" action="{{ route('provider.budgets.update', $budget->code) }}" method="PUT">
 
-                            <!-- Data de Vencimento -->
-                            <div class="col-md-3">
-                                <x-ui.form.input 
-                                    type="date" 
-                                    name="due_date" 
-                                    label="Data de Vencimento" 
-                                    :min="date('Y-m-d')" 
-                                    :value="\App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : ''), 'Y-m-d', $budget->due_date ? $budget->due_date->format('Y-m-d') : '')" 
-                                    required 
-                                    help="A data de vencimento deve ser igual ou posterior a hoje."
-                                />
-                            </div>
+                    <x-layout.grid-row>
+                        <!-- Cliente (readonly) -->
+                        <x-layout.grid-col size="col-md-6">
+                            <x-ui.form.input
+                                name="customer_display"
+                                label="Cliente"
+                                :value="$budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' . ' (' . ($budget->customer->commonData ? ($budget->customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf)) : 'Sem documento') . ')'"
+                                disabled
+                                readonly
+                                wrapper-class="mb-3" />
+                            <input type="hidden" name="customer_id" value="{{ $budget->customer_id }}">
+                        </x-layout.grid-col>
 
-                            <!-- Status Atual (readonly) -->
-                            <div class="col-md-3">
-                                <x-ui.form.input 
-                                    name="status_display" 
-                                    label="Status Atual" 
-                                    :value="$budget->status->label()" 
-                                    readonly 
-                                    disabled 
-                                    help="O status será alterado para 'Pendente' após salvar"
-                                />
-                                <input type="hidden" name="status" value="{{ $budget->status->value }}">
-                            </div>
+                        <!-- Data de Vencimento -->
+                        <x-layout.grid-col size="col-md-3">
+                            <x-ui.form.input
+                                type="date"
+                                name="due_date"
+                                label="Data de Vencimento"
+                                :min="date('Y-m-d')"
+                                :value="\App\Helpers\DateHelper::formatDateOrDefault(old('due_date', $budget->due_date ? $budget->due_date->format('Y-m-d') : ''), 'Y-m-d', $budget->due_date ? $budget->due_date->format('Y-m-d') : '')"
+                                required
+                                help="A data de vencimento deve ser igual ou posterior a hoje."
+                                wrapper-class="mb-3" />
+                        </x-layout.grid-col>
 
-                            <!-- Descrição -->
-                            <div class="col-12">
-                                <x-ui.form.textarea 
-                                    name="description" 
-                                    label="Descrição" 
-                                    rows="4" 
-                                    maxlength="255" 
-                                    placeholder="Ex: Projeto de reforma da cozinha, incluindo instalação de armários e pintura."
-                                    help="{{ 255 - strlen($budget->description) }} caracteres restantes"
-                                    id="description"
-                                >{{ old('description', $budget->description) }}</x-ui.form.textarea>
-                            </div>
+                        <!-- Status Atual (readonly) -->
+                        <x-layout.grid-col size="col-md-3">
+                            <x-ui.form.input
+                                name="status_display"
+                                label="Status Atual"
+                                :value="$budget->status->label()"
+                                readonly
+                                disabled
+                                help="O status será alterado para 'Pendente' após salvar"
+                                wrapper-class="mb-3" />
+                            <input type="hidden" name="status" value="{{ $budget->status->value }}">
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
-                            <!-- Condições de Pagamento -->
-                            <div class="col-12">
-                                <x-ui.form.textarea 
-                                    name="payment_terms" 
-                                    label="Condições de Pagamento (Opcional)" 
-                                    rows="2" 
-                                    maxlength="255" 
-                                    placeholder="Ex: 50% de entrada e 50% na conclusão."
-                                >{{ old('payment_terms', $budget->payment_terms) }}</x-ui.form.textarea>
-                            </div>
-                        </div>
-                    </div>
-                </x-ui.card>
-            </div>
+                    <!-- Descrição e Detalhes -->
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-12">
+                            <x-ui.form.textarea
+                                name="description"
+                                label="Descrição"
+                                rows="4"
+                                maxlength="255"
+                                placeholder="Ex: Projeto de reforma da cozinha, incluindo instalação de armários e pintura."
+                                help="{{ 255 - strlen($budget->description) }} caracteres restantes"
+                                id="description"
+                                :value="old('description', $budget->description)"
+                                wrapper-class="mb-3" />
+                        </x-layout.grid-col>
 
-            <!-- Valores -->
-            <div class="col-12">
-                <x-ui.card>
-                    <x-slot:header>
-                        <h5 class="mb-0 d-flex align-items-center text-success fw-bold">
-                            <i class="bi bi-cash-stack me-2"></i>
-                            <span>Valores</span>
-                        </h5>
-                    </x-slot:header>
-                    
-                    <div class="p-2">
-                        <div class="row g-3">
-                            <!-- Valor Total -->
-                            <div class="col-md-6">
-                                <x-ui.form.input 
-                                    name="total_display" 
-                                    label="Valor Total" 
-                                    :value="\App\Helpers\CurrencyHelper::format(old('total', $budget->total))" 
-                                    class="bg-light currency-brl" 
-                                    readonly 
-                                    tabindex="-1" 
-                                />
-                                <input type="hidden" id="total" name="total" value="{{ old('total', $budget->total) }}">
-                            </div>
+                        <x-layout.grid-col size="col-12">
+                            <x-ui.form.textarea
+                                name="payment_terms"
+                                label="Condições de Pagamento (Opcional)"
+                                rows="2"
+                                maxlength="255"
+                                placeholder="Ex: 50% de entrada e 50% na conclusão."
+                                :value="old('payment_terms', $budget->payment_terms)"
+                                wrapper-class="mb-3" />
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
 
-                            <!-- Desconto -->
-                            <div class="col-md-6">
-                                <x-ui.form.input 
-                                    name="discount_display" 
-                                    label="Desconto" 
-                                    :value="\App\Helpers\CurrencyHelper::format(old('discount', $budget->discount))" 
-                                    class="bg-light currency-brl" 
-                                    readonly 
-                                    tabindex="-1" 
-                                />
-                                <input type="hidden" id="discount" name="discount" value="{{ old('discount', $budget->discount) }}">
-                            </div>
-                        </div>
-                    </div>
-                </x-ui.card>
-            </div>
-        </x-layout.grid-row>
+                    <!-- Valores -->
+                    <x-layout.grid-row>
+                        <x-layout.grid-col size="col-md-6">
+                            <x-ui.form.input
+                                name="total_display"
+                                label="Valor Total"
+                                :value="\App\Helpers\CurrencyHelper::format(old('total', $budget->total))"
+                                class="bg-light currency-brl"
+                                readonly
+                                tabindex="-1"
+                                wrapper-class="mb-3" />
+                            <input type="hidden" id="total" name="total" value="{{ old('total', $budget->total) }}">
+                        </x-layout.grid-col>
 
-        <!-- Botões -->
-        <div class="d-flex justify-content-between align-items-center mt-5">
-            <x-ui.back-button index-route="provider.budgets.show" :route-params="[$budget->code]" label="Cancelar" />
-            <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
-        </div>
-    </form>
+                        <x-layout.grid-col size="col-md-6">
+                            <x-ui.form.input
+                                name="discount_display"
+                                label="Desconto"
+                                :value="\App\Helpers\CurrencyHelper::format(old('discount', $budget->discount))"
+                                class="bg-light currency-brl"
+                                readonly
+                                tabindex="-1"
+                                wrapper-class="mb-3" />
+                            <input type="hidden" id="discount" name="discount" value="{{ old('discount', $budget->discount) }}">
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
+
+                    <!-- Botões -->
+                    <x-layout.actions-bar alignment="between" class="align-items-center mt-4 pt-3 border-top" mb="0">
+                        <x-ui.back-button index-route="provider.budgets.show" :route-params="[$budget->code]" label="Cancelar" />
+                        <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
+                    </x-layout.actions-bar>
+                </x-ui.form.form>
+            </x-resource.resource-list-card>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 </x-layout.page-container>
 @endsection
 

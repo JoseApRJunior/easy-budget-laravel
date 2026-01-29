@@ -39,11 +39,17 @@ class SendBudgetNotification implements ShouldQueue
 
             // 1. Deduplicação para evitar envios duplicados
             $dedupeKey = "email:budget_status:{$budget->id}:{$event->newStatus}";
-            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+
+            // Em ambiente local/teste, reduz o tempo de cache para facilitar testes (10 segundos)
+            // Em produção, mantém 30 minutos para evitar spam
+            $ttlMinutes = app()->environment(['local', 'testing']) ? 0.16 : 30; // 0.16 min ~= 10 seconds
+
+            if (! Cache::add($dedupeKey, true, now()->addMinutes($ttlMinutes))) {
                 Log::warning('Notificação de orçamento ignorada por deduplicação', [
                     'budget_id' => $budget->id,
                     'new_status' => $event->newStatus,
                     'dedupe_key' => $dedupeKey,
+                    'environment' => app()->environment(),
                 ]);
 
                 return;
@@ -98,12 +104,12 @@ class SendBudgetNotification implements ShouldQueue
                 }
 
                 $companyData = [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $budget->tenant->name),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : $budget->tenant->name),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
                     'address_line2' => $addressLine2,
-                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
+                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
                 ];
             } else {
                 $companyData = [
