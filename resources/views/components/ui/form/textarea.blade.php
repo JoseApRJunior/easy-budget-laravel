@@ -32,7 +32,7 @@ $id = $id ?? $name;
         id="{{ $id }}"
         rows="{{ $rows }}"
         placeholder="{{ $placeholder }}"
-        {{ $attributes->merge(['class' => 'form-control ' . ($errors->has($name) ? 'is-invalid' : ''), 'style' => 'background-color: var(--contrast-overlay);']) }}
+        {{ $attributes->merge(['class' => 'form-control ' . ($errors->has($name) ? 'is-invalid' : ''), 'style' => 'background-color: var(--form-input-bg);']) }}
         @if($required) required @endif
         @if($disabled) disabled @endif
         @if($readonly) readonly @endif>{{ old($name, $value ?? $slot) }}</textarea>

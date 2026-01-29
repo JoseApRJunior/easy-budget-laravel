@@ -31,7 +31,7 @@ $id = $id ?? $name;
     <select 
         name="{{ $name }}" 
         id="{{ $id }}" 
-        {{ $attributes->merge(['class' => 'form-select ' . ($errors->has($name) ? 'is-invalid' : '') . ' ' . $class, 'style' => 'background-color: var(--contrast-overlay);']) }}
+        {{ $attributes->merge(['class' => 'form-select ' . ($errors->has($name) ? 'is-invalid' : '') . ' ' . $class, 'style' => 'background-color: var(--form-input-bg);']) }}
         @if($required) required @endif
         @if($disabled) disabled @endif
         @if($readonly) readonly @endif>
