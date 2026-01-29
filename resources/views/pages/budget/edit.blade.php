@@ -22,13 +22,6 @@
                 title="Dados do Orçamento"
                 icon="file-earmark-text"
                 padding="p-4">
-                <x-ui.alert type="info">
-                    <strong>Código do Orçamento:</strong> {{ $budget->code }}
-                    <span class="ms-3"><strong>Status:</strong>
-                        <x-ui.status-badge :item="$budget" />
-                    </span>
-                </x-ui.alert>
-
                 <x-ui.form.form id="edit-budget-form" action="{{ route('provider.budgets.update', $budget->code) }}" method="PUT">
 
                     <x-layout.grid-row>
@@ -37,8 +30,9 @@
                             <x-ui.form.input
                                 name="customer_display"
                                 label="Cliente"
-                                :value="$budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado' . ' (' . ($budget->customer->commonData ? ($budget->customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf)) : 'Sem documento') . ')'"
+                                :value="($budget->customer->commonData ? ($budget->customer->commonData->company_name ?: ($budget->customer->commonData->first_name . ' ' . $budget->customer->commonData->last_name)) : 'Nome não informado') . ' (' . ($budget->customer->commonData ? ($budget->customer->commonData->cnpj ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj) : \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf)) : 'Sem documento') . ')'"
                                 disabled
+                                help="O cliente não pode ser alterado."
                                 readonly
                                 wrapper-class="mb-3" />
                             <input type="hidden" name="customer_id" value="{{ $budget->customer_id }}">
@@ -103,9 +97,10 @@
                         <x-layout.grid-col size="col-md-6">
                             <x-ui.form.input
                                 name="total_display"
-                                label="Valor Total"
+                                label="Total (R$)"
                                 :value="\App\Helpers\CurrencyHelper::format(old('total', $budget->total))"
                                 class="bg-light currency-brl"
+                                help="O valor total é calculado com base nos itens do orçamento."
                                 readonly
                                 tabindex="-1"
                                 wrapper-class="mb-3" />
@@ -115,9 +110,10 @@
                         <x-layout.grid-col size="col-md-6">
                             <x-ui.form.input
                                 name="discount_display"
-                                label="Desconto"
+                                label="Desconto (R$)"
                                 :value="\App\Helpers\CurrencyHelper::format(old('discount', $budget->discount))"
                                 class="bg-light currency-brl"
+                                help="O desconto e somado apartir dos descontos aplicados aos serviços."
                                 readonly
                                 tabindex="-1"
                                 wrapper-class="mb-3" />

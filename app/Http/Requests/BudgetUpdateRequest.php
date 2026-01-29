@@ -46,7 +46,7 @@ class BudgetUpdateRequest extends FormRequest
             }
 
             // Block edits on non-DRAFT budgets
-            if ($budget->status !== \App\Enums\BudgetStatus::DRAFT->value) {
+            if ($budget->status !== \App\Enums\BudgetStatus::DRAFT) {
                 $validator->errors()->add('status', 'Orçamentos enviados (pendentes), aprovados ou concluídos não podem ser editados. Para alterar, crie um novo orçamento ou rejeite o atual.');
             }
         });

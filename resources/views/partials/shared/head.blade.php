@@ -13,7 +13,24 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}" />
 
-    <!-- Variáveis de Tema Dinâmicas (Sincronizadas com config/theme.php) -->
+
+
+    <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/layout.css') }}?v={{ filemtime(public_path('assets/css/layout.css')) }}" />
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/components/alerts.css') }}?v={{ filemtime(public_path('assets/css/components/alerts.css')) }}">
+
+    <!-- Tom Select -->
+    <link rel="stylesheet" href="{{ asset('assets/css/tom-select/bootstrap5.min.css') }}?v={{ filemtime(public_path('assets/css/tom-select/bootstrap5.min.css')) }}">
+
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="preload" href="{{ asset('assets/img/logo.png') }}" as="image" type="image/png">
+ <!-- Variáveis de Tema Dinâmicas (Sincronizadas com config/theme.php) -->
     <style>
         :root {
             /* Cores Base */
@@ -46,22 +63,5 @@
             --contrast-overlay: {{ config('theme.colors.contrast_overlay') }};
         }
     </style>
-
-    <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('assets/css/bootstrap-icons.css') }}" rel="stylesheet">
-    <link rel="stylesheet"
-        href="{{ asset('assets/css/layout.css') }}?v={{ filemtime(public_path('assets/css/layout.css')) }}" />
-    <link rel="stylesheet"
-        href="{{ asset('assets/css/components/alerts.css') }}?v={{ filemtime(public_path('assets/css/components/alerts.css')) }}">
-
-    <!-- Tom Select -->
-    <link rel="stylesheet" href="{{ asset('assets/css/tom-select/bootstrap5.min.css') }}?v={{ filemtime(public_path('assets/css/tom-select/bootstrap5.min.css')) }}">
-
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <link rel="preload" href="{{ asset('assets/img/logo.png') }}" as="image" type="image/png">
-
     @stack('styles')
 </head>
