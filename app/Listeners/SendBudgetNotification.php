@@ -111,6 +111,12 @@ class SendBudgetNotification implements ShouldQueue
                 ];
             }
 
+            Log::info('Enviando notificação de orçamento', [
+                'budget_id' => $budget->id,
+                'customer_email' => $customer->contact->email_personal,
+                'notification_type' => $notificationType,
+            ]);
+
             // Enviar email
             Mail::to($customer->contact->email_personal)
                 ->send(new BudgetNotificationMail(
@@ -127,10 +133,11 @@ class SendBudgetNotification implements ShouldQueue
                 'customer_email' => $customer->contact->email_personal,
                 'notification_type' => $notificationType,
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Erro ao enviar notificação de orçamento', [
                 'budget_id' => $event->budget->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

@@ -32,21 +32,21 @@ $textColor = config('theme.colors.text', '#1e293b');
 
     <p style="margin: 0 0 16px;">Olá, {{ $budgetData['customer_name'] ?? ($emailData['first_name'] ?? 'Cliente') }}.</p>
 
-    <div class="panel" style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-top: 24px; border: 1px solid #e2e8f0;">
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Código:</strong> {{ $budgetData['code'] ?? ($emailData['service_code'] ?? 'N/A') }}</p>
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Valor Total:</strong> R$ {{ $budgetData['total'] ?? ($emailData['service_total'] ?? '0,00') }}</p>
+    <div class="panel" style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin-top: 24px; border: 1px solid #cbd5e1;">
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Código:</strong> {{ $budgetData['code'] ?? ($emailData['service_code'] ?? 'N/A') }}</p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Valor Total:</strong> R$ {{ $budgetData['total'] ?? ($emailData['service_total'] ?? '0,00') }}</p>
         @if(isset($budgetData['discount']) && $budgetData['discount'] !== '0,00')
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Desconto:</strong> R$ {{ $budgetData['discount'] }}</p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Desconto:</strong> R$ {{ $budgetData['discount'] }}</p>
         @endif
         @if(isset($budgetData['due_date']) && $budgetData['due_date'])
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Validade:</strong> {{ $budgetData['due_date'] }}</p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Validade:</strong> {{ $budgetData['due_date'] }}</p>
         @endif
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Status:</strong> {{ $budgetData['status'] ?? ($emailData['service_status_name'] ?? 'N/A') }}</p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Status:</strong> {{ $budgetData['status'] ?? ($emailData['service_status_name'] ?? 'N/A') }}</p>
 
         @if(isset($budgetData['description']) && $budgetData['description'])
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Descrição:</strong><br>{{ $budgetData['description'] }}</p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Descrição:</strong><br>{{ $budgetData['description'] }}</p>
         @elseif(isset($emailData['service_description']) && $emailData['service_description'])
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">Descrição:</strong><br>{{ $emailData['service_description'] }}</p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">Descrição:</strong><br>{{ $emailData['service_description'] }}</p>
         @endif
     </div>
 
@@ -62,15 +62,15 @@ $textColor = config('theme.colors.text', '#1e293b');
     $messageLabel = 'Observação do Cliente';
     }
     @endphp
-    <div class="panel" style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin-top: 24px; border: 1px solid #e2e8f0; border-left: 4px solid {{ $statusColor ?? '#0d6efd' }};">
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;"><strong style="color: {{ $textColor }};">{{ $messageLabel }}:</strong></p>
-        <p style="margin: 8px 0; font-size: 15px; color: #475569;">{!! nl2br(e($customMessage)) !!}</p>
+    <div class="panel" style="background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin-top: 24px; border: 1px solid #cbd5e1; border-left: 4px solid {{ $statusColor ?? '#0d6efd' }};">
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;"><strong style="color: #1e293b;">{{ $messageLabel }}:</strong></p>
+        <p style="margin: 8px 0; font-size: 15px; color: #334155;">{!! nl2br(e($customMessage)) !!}</p>
     </div>
     @endif
 
     @if(in_array($notificationType, ['rejected', 'cancelled']))
     <div style="text-align: center; margin: 30px 0;">
-        <p style="margin: 0; color: #475569;">Este orçamento foi marcado como {{ $notificationType === 'rejected' ? 'rejeitado' : 'cancelado' }}.</p>
+        <p style="margin: 0; color: #334155;">Este orçamento foi marcado como {{ $notificationType === 'rejected' ? 'rejeitado' : 'cancelado' }}.</p>
     </div>
     @else
     @php
@@ -82,8 +82,8 @@ $textColor = config('theme.colors.text', '#1e293b');
 
     @if($budgetUrl !== '#')
     <div style="margin-top: 20px;">
-        <p style="margin-bottom: 10px; font-size: 14px; color: #475569;">Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
-        <p class="subcopy" style="word-break: break-all; font-family: Consolas, monospace; background-color: #f1f5f9; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; display: block; font-size: 12px; color: #94a3b8; margin-top: 12px;">{{ $budgetUrl }}</p>
+        <p style="margin-bottom: 10px; font-size: 14px; color: #334155;">Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
+        <p class="subcopy" style="word-break: break-all; font-family: Consolas, monospace; background-color: #e5eaf0; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; display: block; font-size: 12px; color: #475569; margin-top: 12px;">{{ $budgetUrl }}</p>
     </div>
     @endif
     @endif

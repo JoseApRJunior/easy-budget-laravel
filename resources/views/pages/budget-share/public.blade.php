@@ -380,6 +380,61 @@
             margin-top: 1rem;
         }
     }
+
+    /* Estilização para SweetAlert2 ficar mais elegante e menos exagerado */
+    .swal2-popup {
+        padding: 1.25rem !important;
+        border-radius: 16px !important;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+    }
+
+    .swal2-title {
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        padding-top: 0.5rem !important;
+    }
+
+    .swal2-html-container {
+        font-size: 0.95rem !important;
+        color: #475569 !important;
+        margin: 0.5rem 0 1rem !important;
+    }
+
+    .swal2-actions {
+        margin-top: 1.25rem !important;
+        gap: 8px !important;
+    }
+
+    .swal2-confirm,
+    .swal2-cancel {
+        padding: 8px 20px !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        margin: 0 !important;
+    }
+
+    .swal2-textarea {
+        font-size: 0.9rem !important;
+        border-radius: 10px !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        margin: 1rem auto 0 !important;
+        width: 90% !important;
+        height: 100px !important; /* Altura fixa para não crescer demais */
+        resize: none !important; /* Evita que o usuário mude o tamanho e quebre o layout */
+    }
+
+    .swal2-textarea:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1) !important;
+    }
+
+    .swal2-icon {
+        margin: 1rem auto 0.5rem !important;
+        transform: scale(0.8);
+    }
 </style>
 @endpush
 
@@ -398,22 +453,22 @@
     function approveBudget() {
         Swal.fire({
             title: 'Aprovar Orçamento?',
-            text: "Esta ação não pode ser desfeita e confirmará seu pedido.",
+            text: "Esta ação confirmará seu pedido.",
             icon: 'question',
+            width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Observações (opcional)',
             showCancelButton: true,
             confirmButtonColor: '#198754',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Sim, Aprovar!',
-            cancelButtonText: 'Cancelar',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sim, Aprovar',
+            cancelButtonText: 'Voltar',
             reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                // Feedback visual de processamento
                 Swal.fire({
                     title: 'Processando...',
-                    text: 'Aguarde enquanto confirmamos sua aprovação.',
+                    width: '350px',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -436,8 +491,9 @@
                         if (result.success) {
                             Swal.fire({
                                 title: 'Sucesso!',
-                                text: 'Orçamento aprovado com sucesso!',
+                                text: 'Orçamento aprovado!',
                                 icon: 'success',
+                                width: '350px',
                                 confirmButtonColor: '#198754'
                             }).then(() => {
                                 location.reload();
@@ -445,8 +501,9 @@
                         } else {
                             Swal.fire({
                                 title: 'Erro!',
-                                text: result.message || 'Erro ao aprovar orçamento.',
+                                text: result.message || 'Erro ao aprovar.',
                                 icon: 'error',
+                                width: '350px',
                                 confirmButtonColor: '#dc3545'
                             });
                         }
@@ -455,8 +512,9 @@
                         console.error('Error:', error);
                         Swal.fire({
                             title: 'Erro!',
-                            text: 'Erro ao processar sua solicitação. Tente novamente.',
+                            text: 'Erro ao processar sua solicitação.',
                             icon: 'error',
+                            width: '350px',
                             confirmButtonColor: '#dc3545'
                         });
                     });
@@ -467,25 +525,27 @@
     function rejectBudget() {
         Swal.fire({
             title: 'Rejeitar Orçamento?',
-            text: "Por favor, informe o motivo da rejeição para nos ajudar a melhorar.",
+            text: "Informe o motivo da rejeição:",
             icon: 'warning',
+            width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Motivo da rejeição (obrigatório)',
             inputValidator: (value) => {
                 if (!value) {
-                    return 'Você precisa informar o motivo da rejeição!'
+                    return 'Você precisa informar o motivo!'
                 }
             },
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
+            cancelButtonColor: '#64748b',
             confirmButtonText: 'Sim, Rejeitar',
-            cancelButtonText: 'Cancelar',
+            cancelButtonText: 'Voltar',
             reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
                     title: 'Processando...',
+                    width: '350px',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -508,8 +568,9 @@
                         if (result.success) {
                             Swal.fire({
                                 title: 'Rejeitado',
-                                text: 'Orçamento rejeitado com sucesso.',
+                                text: 'Orçamento rejeitado.',
                                 icon: 'info',
+                                width: '350px',
                                 confirmButtonColor: '#0d6efd'
                             }).then(() => {
                                 location.reload();
@@ -517,8 +578,9 @@
                         } else {
                             Swal.fire({
                                 title: 'Erro!',
-                                text: result.message || 'Erro ao rejeitar orçamento.',
-                                icon: 'error'
+                                text: result.message || 'Erro ao rejeitar.',
+                                icon: 'error',
+                                width: '350px'
                             });
                         }
                     })
@@ -526,8 +588,9 @@
                         console.error('Error:', error);
                         Swal.fire({
                             title: 'Erro!',
-                            text: 'Erro ao processar sua solicitação.',
-                            icon: 'error'
+                            text: 'Erro ao processar.',
+                            icon: 'error',
+                            width: '350px'
                         });
                     });
             }
@@ -537,20 +600,25 @@
     function cancelBudget() {
         Swal.fire({
             title: 'Cancelar Orçamento?',
-            text: "Deseja realmente cancelar este orçamento?",
+            text: "Deseja realmente cancelar?",
             icon: 'warning',
+            width: '400px',
             input: 'textarea',
-            inputPlaceholder: 'Motivo do cancelamento (opcional)',
+            inputPlaceholder: 'Motivo (opcional)',
             showCancelButton: true,
-            confirmButtonColor: '#6c757d',
-            cancelButtonColor: '#f8f9fa',
+            confirmButtonColor: '#64748b',
+            cancelButtonColor: '#f1f5f9',
             confirmButtonText: 'Sim, Cancelar',
             cancelButtonText: 'Voltar',
-            reverseButtons: true
+            reverseButtons: true,
+            customClass: {
+                cancelButton: 'text-dark border'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
                     title: 'Cancelando...',
+                    width: '350px',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -574,15 +642,17 @@
                             Swal.fire({
                                 title: 'Cancelado',
                                 text: 'Orçamento cancelado com sucesso.',
-                                icon: 'success'
+                                icon: 'success',
+                                width: '350px'
                             }).then(() => {
                                 location.reload();
                             });
                         } else {
                             Swal.fire({
                                 title: 'Erro!',
-                                text: result.message || 'Erro ao cancelar orçamento.',
-                                icon: 'error'
+                                text: result.message || 'Erro ao cancelar.',
+                                icon: 'error',
+                                width: '350px'
                             });
                         }
                     })
@@ -590,8 +660,9 @@
                         console.error('Error:', error);
                         Swal.fire({
                             title: 'Erro!',
-                            text: 'Erro ao processar sua solicitação.',
-                            icon: 'error'
+                            text: 'Erro ao processar.',
+                            icon: 'error',
+                            width: '350px'
                         });
                     });
             }
@@ -600,26 +671,28 @@
 
     function cancelApprovedBudget() {
         Swal.fire({
-            title: 'Cancelar Orçamento Aprovado?',
-            text: "Este orçamento já foi aprovado. Deseja realmente cancelá-lo?",
+            title: 'Cancelar Aprovado?',
+            text: "Deseja realmente cancelar este orçamento aprovado?",
             icon: 'warning',
+            width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Motivo do cancelamento (obrigatório)',
             inputValidator: (value) => {
                 if (!value) {
-                    return 'Você precisa informar o motivo do cancelamento!'
+                    return 'Informe o motivo!'
                 }
             },
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sim, Cancelar Aprovado',
-            cancelButtonText: 'Manter Aprovado',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sim, Cancelar',
+            cancelButtonText: 'Voltar',
             reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
                     title: 'Processando...',
+                    width: '350px',
                     allowOutsideClick: false,
                     didOpen: () => {
                         Swal.showLoading();
@@ -642,16 +715,18 @@
                         if (result.success) {
                             Swal.fire({
                                 title: 'Sucesso!',
-                                text: 'Orçamento aprovado foi cancelado.',
-                                icon: 'success'
+                                text: 'Orçamento cancelado.',
+                                icon: 'success',
+                                width: '350px'
                             }).then(() => {
                                 location.reload();
                             });
                         } else {
                             Swal.fire({
                                 title: 'Erro!',
-                                text: result.message || 'Erro ao cancelar orçamento.',
-                                icon: 'error'
+                                text: result.message || 'Erro ao cancelar.',
+                                icon: 'error',
+                                width: '350px'
                             });
                         }
                     })
@@ -659,8 +734,9 @@
                         console.error('Error:', error);
                         Swal.fire({
                             title: 'Erro!',
-                            text: 'Erro ao processar sua solicitação.',
-                            icon: 'error'
+                            text: 'Erro ao processar.',
+                            icon: 'error',
+                            width: '350px'
                         });
                     });
             }

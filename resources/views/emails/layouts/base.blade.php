@@ -1,13 +1,13 @@
 @php
-$bgColor = '#f1f5f9';
-$textColor = config('theme.colors.text', '#1e293b');
+$bgColor = '#e5eaf0'; // Fundo levemente mais escuro para destacar o card branco
+$textColor = '#1e293b';
 $whiteColor = '#ffffff';
-$borderColor = config('theme.colors.border', '#e2e8f0');
+$borderColor = '#cbd5e1'; // Borda mais definida
 $primaryColor = config('theme.colors.primary', '#093172');
-$contrastColor = config('theme.colors.contrast_text', '#ffffff');
-$inputBgColor = '#f8fafc';
-$smallTextColor = config('theme.colors.small_text', '#475569');
-$secondaryColor = config('theme.colors.secondary', '#94a3b8');
+$contrastColor = '#ffffff';
+$inputBgColor = '#f1f5f9'; // Painéis internos um pouco mais contrastados que o branco puro
+$smallTextColor = '#334155'; // Texto secundário mais escuro para melhor leitura
+$secondaryColor = '#64748b';
 $headerBg = $statusColor ?? $primaryColor;
 @endphp
 <!doctype html>
@@ -20,11 +20,39 @@ $headerBg = $statusColor ?? $primaryColor;
     <title>@yield('title', $title ?? config('app.name', 'Easy Budget'))</title>
     <style>
         /* Reset de estilos para e-mail */
-        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
-        table { border-collapse: collapse !important; }
-        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        body,
+        table,
+        td,
+        a {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        table,
+        td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        table {
+            border-collapse: collapse !important;
+        }
+
+        body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+        }
 
         /* Estilos base */
         body {
