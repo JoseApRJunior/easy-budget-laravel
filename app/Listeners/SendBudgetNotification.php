@@ -137,6 +137,8 @@ class SendBudgetNotification implements ShouldQueue
             Log::error('Erro ao enviar notificação de orçamento', [
                 'budget_id' => $event->budget->id,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
         }
