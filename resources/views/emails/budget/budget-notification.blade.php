@@ -6,7 +6,7 @@ $customMessage = $customMessage ?? ($emailData['service_status_description'] ?? 
 $statusColor = $statusColor ?? ($emailData['status_color'] ?? '#0d6efd');
 @endphp
 
-@section('title', $notificationType === 'created' ? 'Novo Orçamento Criado' : ($notificationType === 'updated' ? 'Orçamento Atualizado' : ($notificationType === 'approved' ? 'Orçamento Aprovado' : ($notificationType === 'rejected' ? 'Orçamento Rejeitado' : ($notificationType === 'cancelled' ? 'Orçamento Cancelado' : 'Notificação de Orçamento'))))))
+@section('title', $notificationType === 'created' ? 'Novo Orçamento Criado' : ($notificationType === 'updated' ? 'Orçamento Atualizado' : ($notificationType === 'approved' ? 'Orçamento Aprovado' : ($notificationType === 'rejected' ? 'Orçamento Rejeitado' : ($notificationType === 'cancelled' ? 'Orçamento Cancelado' : 'Notificação de Orçamento')))))
 
 @section('content')
 <div class="content">

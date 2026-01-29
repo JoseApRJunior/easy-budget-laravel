@@ -89,9 +89,16 @@ class BudgetShareService extends AbstractBaseService
                 };
 
                 if ($serviceStatus) {
-                    $budget->services()->withoutGlobalScopes()->update([
-                        'status' => $serviceStatus->value,
-                    ]);
+                    // Buscar serviços para atualizar individualmente através do model
+                    // Isso garante que os Observers sejam disparados corretamente
+                    $services = $budget->services()->withoutGlobalScopes()->get();
+                    foreach ($services as $service) {
+                        // Suprimir notificações individuais para evitar flood
+                        $service->suppressStatusNotification = true;
+                        $service->update([
+                            'status' => $serviceStatus->value,
+                        ]);
+                    }
                 }
 
                 // Se o orçamento foi aprovado, desativamos TODOS os outros links ativos deste orçamento

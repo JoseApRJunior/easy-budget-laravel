@@ -677,7 +677,7 @@ class MailerService
             // Tentar encontrar o e-mail do destinatário
             $to = null;
             if (method_exists($entity, 'customer') && $entity->customer) {
-                $to = $entity->customer->email;
+                $to = $entity->customer->contact?->email_personal ?? $entity->customer->email;
             } elseif (method_exists($entity, 'user') && $entity->user) {
                 $to = $entity->user->email;
             }
@@ -689,6 +689,7 @@ class MailerService
                     'entity_type' => class_basename($entity),
                     'entity_id' => $entity->id,
                 ]);
+
                 return ServiceResult::error(OperationStatus::ERROR, 'Destinatário não encontrado.');
             }
 
@@ -878,6 +879,7 @@ class MailerService
                 Log::warning('Não foi possível encontrar um destinatário para a resposta de suporte', [
                     'ticket_id' => $ticket['id'] ?? 'N/A',
                 ]);
+
                 return ServiceResult::error(OperationStatus::ERROR, 'Destinatário não encontrado.');
             }
 
