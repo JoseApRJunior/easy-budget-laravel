@@ -107,32 +107,32 @@
                                     <div class="card p-3 bg-light border-0">
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="checkbox" 
-                                                   id="can_view" name="permissions[can_view]" 
-                                                   value="1" {{ old('permissions.can_view', true) ? 'checked' : '' }}>
+                                                   id="can_view" name="permissions[]" 
+                                                   value="view" {{ in_array('view', old('permissions', ['view', 'print'])) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="can_view">
                                                 Pode visualizar o orçamento
                                             </label>
                                         </div>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="checkbox" 
-                                                   id="can_approve" name="permissions[can_approve]" 
-                                                   value="1" {{ old('permissions.can_approve') ? 'checked' : '' }}>
+                                                   id="can_approve" name="permissions[]" 
+                                                   value="approve" {{ in_array('approve', old('permissions', [])) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="can_approve">
                                                 Pode aprovar o orçamento
                                             </label>
                                         </div>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="checkbox" 
-                                                   id="can_comment" name="permissions[can_comment]" 
-                                                   value="1" {{ old('permissions.can_comment') ? 'checked' : '' }}>
+                                                   id="can_comment" name="permissions[]" 
+                                                   value="comment" {{ in_array('comment', old('permissions', [])) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="can_comment">
                                                 Pode adicionar comentários
                                             </label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" 
-                                                   id="can_print" name="permissions[can_print]" 
-                                                   value="1" {{ old('permissions.can_print', true) ? 'checked' : '' }}>
+                                                   id="can_print" name="permissions[]" 
+                                                   value="print" {{ in_array('print', old('permissions', ['view', 'print'])) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="can_print">
                                                 Pode imprimir o orçamento
                                             </label>
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validação do formulário
     document.getElementById('createShareForm').addEventListener('submit', function(e) {
         const budgetId = document.getElementById('budget_id').value;
-        const permissions = document.querySelectorAll('input[name^="permissions["]:checked');
+        const permissions = document.querySelectorAll('input[name="permissions[]"]:checked');
         
         if (!budgetId) {
             e.preventDefault();

@@ -323,12 +323,12 @@ class BudgetShareService extends AbstractBaseService
 
             $rawPermissions = $share->permissions ?? ['view', 'print', 'comment', 'approve'];
             $formattedPermissions = [
-                'can_view' => in_array('view', $rawPermissions),
-                'can_download' => in_array('print', $rawPermissions),
-                'can_print' => in_array('print', $rawPermissions),
-                'can_comment' => in_array('comment', $rawPermissions),
-                'can_approve' => in_array('approve', $rawPermissions),
-                'can_reject' => in_array('reject', $rawPermissions),
+                'can_view' => in_array('view', $rawPermissions) || !empty($rawPermissions['can_view']),
+                'can_download' => in_array('print', $rawPermissions) || in_array('download', $rawPermissions) || !empty($rawPermissions['can_print']) || !empty($rawPermissions['can_download']),
+                'can_print' => in_array('print', $rawPermissions) || in_array('download', $rawPermissions) || !empty($rawPermissions['can_print']) || !empty($rawPermissions['can_download']),
+                'can_comment' => in_array('comment', $rawPermissions) || !empty($rawPermissions['can_comment']),
+                'can_approve' => in_array('approve', $rawPermissions) || !empty($rawPermissions['can_approve']),
+                'can_reject' => in_array('reject', $rawPermissions) || !empty($rawPermissions['can_reject']),
             ];
 
             return $this->success([
