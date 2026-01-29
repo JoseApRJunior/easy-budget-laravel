@@ -441,9 +441,9 @@
                     <div class="mb-3">
                         <label for="message" class="form-label fw-bold">Mensagem Personalizada (Opcional)</label>
                         <textarea class="form-control" id="message" name="message" rows="4"
-                            maxlength="500" placeholder="Olá, segue o orçamento solicitado..."
+                            maxlength="255" placeholder="Olá, segue o orçamento solicitado..."
                             oninput="updateCharCount(this, 'charCount')"></textarea>
-                        <div class="form-text text-end small" id="charCount">0 / 500 caracteres</div>
+                        <div class="form-text text-end small" id="charCount">0 / 255 caracteres</div>
                     </div>
 
                     <div class="alert alert-info small">
@@ -478,8 +478,8 @@
         const count = textarea.value.length;
         const counter = document.getElementById(counterId);
         if (counter) {
-            counter.textContent = `${count} / 500 caracteres`;
-            if (count >= 500) {
+            counter.textContent = `${count} / 255 caracteres`;
+            if (count >= 255) {
                 counter.classList.add('text-danger');
             } else {
                 counter.classList.remove('text-danger');

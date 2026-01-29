@@ -422,8 +422,10 @@
         box-shadow: none !important;
         margin: 1rem auto 0 !important;
         width: 90% !important;
-        height: 100px !important; /* Altura fixa para não crescer demais */
-        resize: none !important; /* Evita que o usuário mude o tamanho e quebre o layout */
+        height: 100px !important;
+        /* Altura fixa para não crescer demais */
+        resize: none !important;
+        /* Evita que o usuário mude o tamanho e quebre o layout */
     }
 
     .swal2-textarea:focus {
@@ -458,12 +460,35 @@
             width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Observações (opcional)',
+            inputAttributes: {
+                maxlength: 255
+            },
             showCancelButton: true,
             confirmButtonColor: '#198754',
             cancelButtonColor: '#64748b',
             confirmButtonText: 'Sim, Aprovar',
             cancelButtonText: 'Voltar',
-            reverseButtons: true
+            reverseButtons: true,
+            didOpen: () => {
+                const input = Swal.getInput();
+                const counter = document.createElement('div');
+                counter.className = 'text-end small text-muted mt-1';
+                counter.style.paddingRight = '1.5rem';
+                counter.textContent = '0/255';
+                input.after(counter);
+
+                input.addEventListener('input', () => {
+                    const currentLength = input.value.length;
+                    counter.textContent = `${currentLength}/255`;
+                    if (currentLength >= 255) {
+                        counter.classList.remove('text-muted');
+                        counter.classList.add('text-danger');
+                    } else {
+                        counter.classList.remove('text-danger');
+                        counter.classList.add('text-muted');
+                    }
+                });
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
@@ -530,6 +555,9 @@
             width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Motivo da rejeição (obrigatório)',
+            inputAttributes: {
+                maxlength: 255
+            },
             inputValidator: (value) => {
                 if (!value) {
                     return 'Você precisa informar o motivo!'
@@ -540,7 +568,27 @@
             cancelButtonColor: '#64748b',
             confirmButtonText: 'Sim, Rejeitar',
             cancelButtonText: 'Voltar',
-            reverseButtons: true
+            reverseButtons: true,
+            didOpen: () => {
+                const input = Swal.getInput();
+                const counter = document.createElement('div');
+                counter.className = 'text-end small text-muted mt-1';
+                counter.style.paddingRight = '1.5rem';
+                counter.textContent = '0/255';
+                input.after(counter);
+
+                input.addEventListener('input', () => {
+                    const currentLength = input.value.length;
+                    counter.textContent = `${currentLength}/255`;
+                    if (currentLength >= 255) {
+                        counter.classList.remove('text-muted');
+                        counter.classList.add('text-danger');
+                    } else {
+                        counter.classList.remove('text-danger');
+                        counter.classList.add('text-muted');
+                    }
+                });
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
@@ -605,6 +653,9 @@
             width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Motivo (opcional)',
+            inputAttributes: {
+                maxlength: 255
+            },
             showCancelButton: true,
             confirmButtonColor: '#64748b',
             cancelButtonColor: '#f1f5f9',
@@ -613,6 +664,27 @@
             reverseButtons: true,
             customClass: {
                 cancelButton: 'text-dark border'
+            },
+            didOpen: () => {
+                const input = Swal.getInput();
+                const counter = document.createElement('div');
+                counter.id = 'char-counter';
+                counter.className = 'text-end small text-muted mt-1';
+                counter.style.paddingRight = '1.5rem';
+                counter.textContent = '0/255';
+                input.after(counter);
+
+                input.addEventListener('input', () => {
+                    const currentLength = input.value.length;
+                    counter.textContent = `${currentLength}/255`;
+                    if (currentLength >= 255) {
+                        counter.classList.remove('text-muted');
+                        counter.classList.add('text-danger');
+                    } else {
+                        counter.classList.remove('text-danger');
+                        counter.classList.add('text-muted');
+                    }
+                });
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -677,6 +749,9 @@
             width: '400px',
             input: 'textarea',
             inputPlaceholder: 'Motivo do cancelamento (obrigatório)',
+            inputAttributes: {
+                maxlength: 255
+            },
             inputValidator: (value) => {
                 if (!value) {
                     return 'Informe o motivo!'
@@ -687,7 +762,29 @@
             cancelButtonColor: '#64748b',
             confirmButtonText: 'Sim, Cancelar',
             cancelButtonText: 'Voltar',
-            reverseButtons: true
+            reverseButtons: true,
+            didOpen: () => {
+                const input = Swal.getInput();
+                const container = Swal.getHtmlContainer();
+                const counter = document.createElement('div');
+                counter.id = 'char-counter';
+                counter.className = 'text-end small text-muted mt-1';
+                counter.style.paddingRight = '1.5rem';
+                counter.textContent = '0/255';
+                input.after(counter);
+
+                input.addEventListener('input', () => {
+                    const currentLength = input.value.length;
+                    counter.textContent = `${currentLength}/255`;
+                    if (currentLength >= 255) {
+                        counter.classList.remove('text-muted');
+                        counter.classList.add('text-danger');
+                    } else {
+                        counter.classList.remove('text-danger');
+                        counter.classList.add('text-muted');
+                    }
+                });
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({
