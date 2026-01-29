@@ -110,10 +110,8 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         Provider::observe(ProviderObserver::class);
         Customer::observe(CustomerObserver::class);
-        Budget::observe(BudgetObserver::class);
         Invoice::observe(InvoiceObserver::class);
         Product::observe(ProductObserver::class);
-        Service::observe(ServiceObserver::class);
         Tenant::observe(TenantObserver::class);
         Category::observe(CategoryObserver::class);
 
