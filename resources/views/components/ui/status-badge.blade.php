@@ -53,7 +53,7 @@ $label = $isDeleted ? $deletedLabel : ($isActive ? $activeLabel : $inactiveLabel
 
 <span {{ $attributes->merge(['class' => 'modern-badge ' . $badgeClass, 'style' => $badgeStyle]) }}>
     @if($icon)
-    <i class="bi bi-{{ $icon }} me-1"></i>
+        <i class="bi bi-{{ $icon }} me-1"></i>
     @endif
     {{ $label }}
 </span>
