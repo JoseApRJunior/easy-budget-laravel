@@ -20,6 +20,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Controller para Budgets
@@ -293,9 +294,15 @@ class BudgetController extends Controller
 
         if ($isPdf) {
             $path = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
+
+            if (! Storage::exists($path)) {
+                abort(404, 'O arquivo PDF não foi gerado corretamente.');
+            }
+
+            $fullPath = Storage::path($path);
             $filename = "orcamento_{$budget->code}.pdf";
 
-            return response()->download($path, $filename, [
+            return response()->download($fullPath, $filename, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => ($download ? 'attachment' : 'inline').'; filename="'.$filename.'"',
             ]);

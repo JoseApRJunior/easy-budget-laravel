@@ -190,7 +190,7 @@ class BudgetShare extends Model
      */
     public static function getDefaultViewPermissions(): array
     {
-        return ['view', 'print'];
+        return ['view', 'download'];
     }
 
     /**
@@ -198,6 +198,6 @@ class BudgetShare extends Model
      */
     public static function getFullPermissions(): array
     {
-        return ['view', 'print', 'approve', 'reject'];
+        return ['view', 'download', 'approve', 'reject'];
     }
 }

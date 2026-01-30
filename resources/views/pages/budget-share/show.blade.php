@@ -148,8 +148,7 @@
                                     'view_values' => 'Visualizar Valores',
                                     'approve' => 'Aprovar Orçamento',
                                     'reject' => 'Rejeitar Orçamento',
-                                    'download' => 'Baixar PDF',
-                                    'print' => 'Baixar PDF'
+                                    'download' => 'Baixar PDF'
                                 ];
                             @endphp
                             <div class="d-flex flex-wrap gap-2">
