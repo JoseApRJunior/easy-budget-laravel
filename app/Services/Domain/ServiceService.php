@@ -125,9 +125,17 @@ class ServiceService extends AbstractBaseService
                 $service = $this->repository->create($serviceData);
 
                 if (! empty($dto->items)) {
+                    $tenantId = $service->tenant_id;
                     foreach ($dto->items as $itemDto) {
                         /** @var ServiceItemDTO $itemDto */
-                        $this->itemRepository->createFromDTO($itemDto, $service->id);
+                        $itemData = array_merge(
+                            $itemDto->toArrayWithoutNulls(),
+                            [
+                                'service_id' => $service->id,
+                                'tenant_id' => $tenantId,
+                            ]
+                        );
+                        $this->itemRepository->create($itemData);
                     }
                 }
 
@@ -158,10 +166,18 @@ class ServiceService extends AbstractBaseService
                 $this->repository->updateFromDTO($service->id, $dto);
 
                 if (isset($dto->items)) {
+                    $tenantId = $service->tenant_id;
                     $service->serviceItems()->delete();
                     foreach ($dto->items as $itemDto) {
                         /** @var ServiceItemDTO $itemDto */
-                        $service->serviceItems()->create($itemDto->toDatabaseArray());
+                        $itemData = array_merge(
+                            $itemDto->toArrayWithoutNulls(),
+                            [
+                                'service_id' => $service->id,
+                                'tenant_id' => $tenantId,
+                            ]
+                        );
+                        $this->itemRepository->create($itemData);
                     }
                 }
 

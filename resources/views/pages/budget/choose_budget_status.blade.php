@@ -142,7 +142,7 @@
                                 <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token]) }}" class="btn btn-outline-secondary" target="_blank">
                                     <i class="bi bi-printer me-2"></i>Imprimir Orçamento
                                 </a>
-                                <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger">
+                                <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger" target="_blank">
                                     <i class="bi bi-file-earmark-pdf me-2"></i>Baixar em PDF
                                 </a>
                             </div>

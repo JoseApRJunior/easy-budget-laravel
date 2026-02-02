@@ -29,45 +29,44 @@
     @endif
 
     {{-- Cabeçalho da Visualização Pública --}}
-    <div class="row align-items-center mb-4 g-3">
+    <div class="row align-items-center mb-4 g-4">
         <div class="col-12 col-md">
-            <div class="d-flex flex-column">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-file-earmark-text  fs-4"></i>
-                    <h4 class="mb-0 fw-semibold text-dark">Orçamento Compartilhado</h4>
+            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-3">
+                <div class="p-0 rounded-3 text-primary">
+                    <i class="bi bi-file-earmark-text fs-2"></i>
                 </div>
-                <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
-                    <span class="text-muted small ms-md-2  ps-md-3">
-                        <i class="bi bi-shield-check me-1 text-success"></i>
-                        Acesso seguro via link oficial • {{ $budget->code }}
-                    </span>
-                    <x-ui.status-description :item="$budget" class="ms-md-2" />
+                <div class="text-center text-md-start">
+                    <h3 class="mb-1 fw-bold text-dark">Orçamento Compartilhado</h3>
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start align-items-center gap-2">
+                        <span class="badge bg-light text-dark border fw-medium px-2 py-1">
+                            <i class="bi bi-hash me-1"></i>{{ $budget->code }}
+                        </span>
+                        <x-ui.status-description :item="$budget" />
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-12 col-md-auto">
-            <div class="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+            <div class="d-grid d-md-flex flex-wrap gap-2">
                 @if($permissions['can_print'] ?? true)
                 <a href="{{ route('budgets.public.shared.download-pdf', ['token' => $budgetShare->share_token]) }}"
-                    class="btn btn-sm btn-outline-danger shadow-sm">
+                    class="btn btn-outline-danger shadow-sm py-2 px-3" target="_blank">
                     <i class="bi bi-file-pdf me-1"></i>Baixar Orçamento (PDF)
                 </a>
                 @endif
 
-
-
                 @if(($permissions['can_approve'] ?? false) && $budget->status->value === 'pending')
-                <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm px-3" onclick="cancelBudget()">
+                <button type="button" class="btn btn-outline-secondary shadow-sm py-2 px-3" onclick="cancelBudget()">
                     <i class="bi bi-slash-circle me-1"></i>CANCELAR
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" onclick="rejectBudget()">
+                <button type="button" class="btn btn-outline-danger shadow-sm py-2 px-3" onclick="rejectBudget()">
                     <i class="bi bi-x-circle me-1"></i>REJEITAR
                 </button>
-                <button type="button" class="btn btn-sm btn-success fw-semibold px-3 shadow-sm" onclick="approveBudget()">
+                <button type="button" class="btn btn-success fw-bold shadow-sm py-2 px-4" onclick="approveBudget()">
                     <i class="bi bi-check-all me-1"></i>APROVAR
                 </button>
                 @elseif($budget->status->value === 'approved')
-                <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" onclick="cancelApprovedBudget()">
+                <button type="button" class="btn btn-outline-danger shadow-sm py-2 px-3" onclick="cancelApprovedBudget()">
                     <i class="bi bi-slash-circle me-1"></i>CANCELAR ORÇAMENTO APROVADO
                 </button>
                 @endif
