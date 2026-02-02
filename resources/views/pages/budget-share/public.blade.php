@@ -5,339 +5,316 @@
 @section('content')
 <x-layout.page-container :fluid="false" padding="py-4">
     @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-check-circle-fill me-2 fs-4"></i>
-            <div>
-                <strong>Sucesso!</strong> {{ session('success') }}
-            </div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+        <x-ui.alert variant="success" dismissible>
+            {{ session('success') }}
+        </x-ui.alert>
     @endif
 
     @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
-            <div>
-                <strong>Erro!</strong> {{ session('error') }}
-            </div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+        <x-ui.alert variant="danger" dismissible>
+            {{ session('error') }}
+        </x-ui.alert>
     @endif
 
-    {{-- Cabeçalho da Visualização Pública --}}
-    <div class="row align-items-center mb-4 g-4">
-        <div class="col-12 col-md">
-            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-3">
-                <div class="p-0 rounded-3 text-primary">
-                    <i class="bi bi-file-earmark-text fs-2"></i>
-                </div>
-                <div class="text-center text-md-start">
-                    <h3 class="mb-1 fw-bold text-dark">Orçamento Compartilhado</h3>
-                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start align-items-center gap-2">
-                        <span class="badge bg-light text-dark border fw-medium px-2 py-1">
+    <x-layout.grid-row class="mb-4 align-items-center">
+        <x-layout.grid-col lg="5" md="12">
+            <x-layout.h-stack gap="3" class="align-items-start mb-3 mb-lg-0">
+                <i class="bi bi-file-earmark-text text-muted fs-3 mt-1"></i>
+                <x-layout.v-stack gap="0">
+                    <h3 class="mb-1 fw-bold text-dark text-nowrap">Orçamento Compartilhado</h3>
+                    <x-layout.h-stack gap="2" class="flex-wrap align-items-center">
+                        <x-ui.badge variant="light" class="border">
                             <i class="bi bi-hash me-1"></i>{{ $budget->code }}
-                        </span>
+                        </x-ui.badge>
                         <x-ui.status-description :item="$budget" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-auto">
-            <div class="d-grid d-md-flex flex-wrap gap-2">
+                    </x-layout.h-stack>
+                </x-layout.v-stack>
+            </x-layout.h-stack>
+        </x-layout.grid-col>
+        <x-layout.grid-col lg="7" md="12">
+            <x-layout.h-stack gap="2" class="d-grid d-md-flex flex-wrap align-items-center justify-content-lg-end">
                 @if($permissions['can_print'] ?? true)
-                <a href="{{ route('budgets.public.shared.download-pdf', ['token' => $budgetShare->share_token]) }}"
-                    class="btn btn-outline-danger shadow-sm py-2 px-3" target="_blank">
-                    <i class="bi bi-file-pdf me-1"></i>Baixar Orçamento (PDF)
-                </a>
+                    <x-ui.button
+                        type="link"
+                        :href="route('budgets.public.shared.download-pdf', ['token' => $budgetShare->share_token])"
+                        variant="danger"
+                        outline
+                        size="sm"
+                        icon="file-pdf"
+                        label="Baixar Orçamento (PDF)"
+                        target="_blank"
+                        class="shadow-sm"
+                    />
                 @endif
 
                 @if(($permissions['can_approve'] ?? false) && $budget->status->value === 'pending')
-                <button type="button" class="btn btn-outline-secondary shadow-sm py-2 px-3" onclick="cancelBudget()">
-                    <i class="bi bi-slash-circle me-1"></i>CANCELAR
-                </button>
-                <button type="button" class="btn btn-outline-danger shadow-sm py-2 px-3" onclick="rejectBudget()">
-                    <i class="bi bi-x-circle me-1"></i>REJEITAR
-                </button>
-                <button type="button" class="btn btn-success fw-bold shadow-sm py-2 px-4" onclick="approveBudget()">
-                    <i class="bi bi-check-all me-1"></i>APROVAR
-                </button>
+                    <x-ui.button
+                        variant="secondary"
+                        outline
+                        size="sm"
+                        icon="slash-circle"
+                        label="CANCELAR"
+                        onclick="cancelBudget()"
+                        class="shadow-sm"
+                    />
+                    <x-ui.button
+                        variant="danger"
+                        outline
+                        size="sm"
+                        icon="x-circle"
+                        label="REJEITAR"
+                        onclick="rejectBudget()"
+                        class="shadow-sm"
+                    />
+                    <x-ui.button
+                        variant="success"
+                        size="sm"
+                        icon="check-all"
+                        label="APROVAR"
+                        onclick="approveBudget()"
+                        class="shadow-sm fw-bold"
+                    />
                 @elseif($budget->status->value === 'approved')
-                <button type="button" class="btn btn-outline-danger shadow-sm py-2 px-3" onclick="cancelApprovedBudget()">
-                    <i class="bi bi-slash-circle me-1"></i>CANCELAR ORÇAMENTO APROVADO
-                </button>
+                    <x-ui.button
+                        variant="danger"
+                        outline
+                        size="sm"
+                        icon="slash-circle"
+                        label="CANCELAR ORÇAMENTO"
+                        onclick="cancelApprovedBudget()"
+                        class="shadow-sm"
+                    />
                 @endif
-            </div>
-        </div>
-    </div>
+            </x-layout.h-stack>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 
-    {{-- Card Principal de Informações --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <div class="row g-4">
-                {{-- Informações do Cliente --}}
-                <div class="col-md-7">
-                    <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Dados do Cliente</h6>
-                    <div class="row g-3">
-                        <div class="col-12">
+    <x-ui.card class="mb-4">
+        <x-layout.grid-row class="g-0">
+            {{-- Informações do Cliente --}}
+            <x-layout.grid-col md="7" class="p-4">
+                <x-layout.v-stack gap="3">
+                    <h6 class="text-uppercase text-muted fw-semibold small mb-0" style="letter-spacing: 1px;">Dados do Cliente</h6>
+                    <x-layout.grid-row class="g-3 mb-0">
+                        <x-layout.grid-col cols="12">
                             <x-resource.resource-info
                                 :title="$budget->customer?->company_name ?? $budget->customer?->name ?? 'Cliente não identificado'"
                                 :subtitle="$budget->customer?->email ?? 'E-mail não informado'"
                                 icon="person-circle"
                                 titleClass="fw-semibold fs-5 text-dark" />
-                        </div>
-                        <div class="col-sm-6">
+                        </x-layout.grid-col>
+                        <x-layout.grid-col md="6">
                             <x-resource.resource-info
                                 :title="$budget->customer?->phone ? \App\Helpers\MaskHelper::formatPhone($budget->customer->phone) : 'Não informado'"
                                 subtitle="Telefone de Contato"
                                 icon="telephone" />
-                        </div>
+                        </x-layout.grid-col>
                         @if($budget->customer?->address)
-                        <div class="col-12">
+                        <x-layout.grid-col cols="12">
                             <x-resource.resource-info
                                 :title="\App\Helpers\AddressHelper::format($budget->customer->address)"
                                 subtitle="Endereço de Entrega/Serviço"
                                 icon="geo-alt" />
-                        </div>
+                        </x-layout.grid-col>
                         @endif
-                    </div>
-                </div>
+                    </x-layout.grid-row>
+                </x-layout.v-stack>
+            </x-layout.grid-col>
 
-                {{-- Detalhes do Orçamento --}}
-                <div class="col-md-5 border-start-md ps-md-4">
-                    <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Datas e Prazos</h6>
-                    <div class="row g-3">
-                        <div class="col-6">
+            {{-- Detalhes do Orçamento --}}
+            <x-layout.grid-col md="5" class="p-4 border-start-md">
+                <x-layout.v-stack gap="3">
+                    <h6 class="text-uppercase text-muted fw-semibold small mb-0" style="letter-spacing: 1px;">Datas e Prazos</h6>
+                    <x-layout.grid-row class="g-3 mb-0">
+                        <x-layout.grid-col cols="6">
                             <x-resource.resource-info
                                 :title="\Carbon\Carbon::parse($budget->budget_date)->format('d/m/Y')"
                                 subtitle="Data de Emissão"
                                 icon="calendar-check" />
-                        </div>
-                        <div class="col-6">
+                        </x-layout.grid-col>
+                        <x-layout.grid-col cols="6">
                             <x-resource.resource-info
                                 :title="\Carbon\Carbon::parse($budget->validity_date)->format('d/m/Y')"
                                 subtitle="Validade"
                                 icon="calendar-x"
                                 titleClass="text-danger" />
-                        </div>
+                        </x-layout.grid-col>
                         @if($budgetShare->created_at)
-                        <div class="col-12">
+                        <x-layout.grid-col cols="12">
                             <x-resource.resource-info
                                 :title="$budgetShare->created_at->diffForHumans()"
                                 subtitle="Compartilhado em"
                                 icon="share" />
-                        </div>
+                        </x-layout.grid-col>
                         @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    </x-layout.grid-row>
+                </x-layout.v-stack>
+            </x-layout.grid-col>
+        </x-layout.grid-row>
+    </x-ui.card>
 
     {{-- Listagem de Serviços --}}
-    <div class="mb-4">
-        <x-resource.resource-list-card
-            title="Serviços e Itens"
-            mobileTitle="Serviços"
-            icon="tools"
-            :total="$budget->services?->count() ?? 0">
-            @forelse($budget->services as $service)
-            <div class="border-bottom p-4 {{ $loop->last ? 'border-bottom-0' : '' }}">
-                <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center mb-3 gap-2">
-                    <div class="flex-grow-1">
-                        <h5 class="fw-semibold mb-1 text-dark">{{ $service->category?->name ?? 'Serviço' }}</h5>
-                        @if(!empty($service->description))
-                        <div class="text-muted small mb-0">{!! nl2br(e($service->description)) !!}</div>
-                        @endif
-                    </div>
-                    <div class="d-flex flex-wrap align-items-center justify-content-start justify-content-md-end gap-2 gap-md-1">
-                        <span class="text-muted small fw-semibold">#{{ $service->code }}</span>
-                        <x-ui.status-description :item="$service" />
-                    </div>
-                </div>
+    <x-layout.grid-row class="mb-4">
+        <x-layout.grid-col>
+            <x-resource.resource-list-card
+                title="Serviços e Itens"
+                mobileTitle="Serviços"
+                icon="tools"
+                :total="$budget->services?->count() ?? 0">
+                @forelse($budget->services as $service)
+                    <x-layout.v-stack gap="0" class="border-bottom p-4 {{ $loop->last ? 'border-bottom-0' : '' }}">
+                        <x-layout.h-stack gap="2" class="flex-column flex-md-row justify-content-md-between align-items-start align-items-md-center mb-3">
+                            <x-layout.v-stack gap="1" class="flex-grow-1">
+                                <h5 class="fw-semibold mb-1 text-dark">{{ $service->category?->name ?? 'Serviço' }}</h5>
+                                @if(!empty($service->description))
+                                    <x-layout.v-stack gap="0" class="mt-2 text-muted small leading-relaxed">
+                                        {!! nl2br(e($service->description)) !!}
+                                    </x-layout.v-stack>
+                                @endif
+                            </x-layout.v-stack>
+                            <x-layout.h-stack gap="2" class="flex-wrap align-items-center justify-content-start justify-content-md-end gap-md-1">
+                                <span class="text-muted small fw-semibold">#{{ $service->code }}</span>
+                                <x-ui.status-description :item="$service" />
+                            </x-layout.h-stack>
+                        </x-layout.h-stack>
 
-                {{-- Desktop Table --}}
-                <div class="table-responsive rounded-3 border d-none d-md-block">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr class="border-bottom">
-                                <th class="ps-3 py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Item / Descrição</th>
-                                <th class="text-center py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Qtd</th>
-                                <th class="text-end py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Valor Unit.</th>
-                                <th class="text-end pe-3 py-3 text-muted small text-uppercase" style="letter-spacing: 0.5px;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($service->serviceItems as $item)
-                            <tr>
-                                <td class="ps-3">
-                                    <div class="fw-semibold text-dark">{{ $item->product?->name ?? 'Item' }}</div>
-                                    @if($item->product?->description)
-                                    <div class="small text-muted">{{ Str::limit($item->product->description, 60) }}</div>
-                                    @endif
-                                </td>
-                                <td class="text-center fw-medium">{{ $item->quantity }}</td>
-                                <td class="text-end text-muted">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
-                                <td class="text-end fw-semibold text-dark pe-3">R$ {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted italic">Nenhum item neste serviço</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                        <tfoot class="fw-semibold border-top">
-                            <tr>
-                                <td colspan="3" class="text-end ps-3 py-3">Total do Serviço:</td>
-                                <td class="text-end pe-3 py-3 text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                        {{-- Tabela de Itens --}}
+                        <x-resource.resource-table class="rounded-3 border overflow-hidden">
+                            <x-slot name="thead">
+                                <x-resource.table-row class="bg-primary border-bottom">
+                                    <x-resource.table-cell header class="ps-3 py-3 text-white small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Item / Descrição</x-resource.table-cell>
+                                    <x-resource.table-cell header align="center" class="py-3 text-white small text-uppercase fw-bold d-none d-md-table-cell" style="letter-spacing: 0.5px;">Qtd</x-resource.table-cell>
+                                    <x-resource.table-cell header align="right" class="py-3 text-white small text-uppercase fw-bold d-none d-md-table-cell" style="letter-spacing: 0.5px;">Valor Unit.</x-resource.table-cell>
+                                    <x-resource.table-cell header align="right" class="pe-3 py-3 text-white small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Subtotal</x-resource.table-cell>
+                                </x-resource.table-row>
+                            </x-slot>
 
-                {{-- Mobile List View --}}
-                <div class="d-md-none">
-                    @forelse($service->serviceItems as $item)
-                    <div class="py-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="fw-semibold text-dark">{{ $item->product?->name ?? 'Item' }}</div>
-                            <span class="text-muted small fw-semibold">x{{ $item->quantity }}</span>
-                        </div>
+                            <x-slot name="tbody">
+                                @forelse($service->serviceItems as $item)
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell class="ps-3">
+                                            <x-layout.v-stack gap="0">
+                                                <span class="fw-semibold text-dark">{{ $item->product?->name ?? 'Item' }}</span>
+                                                @if($item->product?->description)
+                                                    <span class="small text-muted d-none d-md-block">{{ Str::limit($item->product->description, 100) }}</span>
+                                                @endif
+                                                <x-layout.v-stack gap="0" class="d-md-none small text-muted">
+                                                    {{ $item->quantity }}x R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}
+                                                </x-layout.v-stack>
+                                            </x-layout.v-stack>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell align="center" class="fw-medium d-none d-md-table-cell">{{ $item->quantity }}</x-resource.table-cell>
+                                        <x-resource.table-cell align="right" class="text-muted d-none d-md-table-cell">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</x-resource.table-cell>
+                                        <x-resource.table-cell align="right" class="fw-semibold text-dark pe-3">R$ {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</x-resource.table-cell>
+                                    </x-resource.table-row>
+                                @empty
+                                    <x-resource.table-row>
+                                        <x-resource.table-cell colspan="4" align="center" class="py-4 text-muted italic">Nenhum item neste serviço</x-resource.table-cell>
+                                    </x-resource.table-row>
+                                @endforelse
+                            </x-slot>
 
-                        @if($item->product?->description)
-                        <div class="small text-muted mb-2 lh-sm">{{ Str::limit($item->product->description, 80) }}</div>
-                        @endif
+                            <x-slot name="tfoot">
+                                <x-resource.table-row class="bg-light fw-semibold border-top">
+                                    <x-resource.table-cell colspan="3" align="right" class="ps-3 py-3 d-none d-md-table-cell">Total do Serviço:</x-resource.table-cell>
+                                    <x-resource.table-cell align="left" class="ps-3 py-3 d-md-none text-muted small">Total:</x-resource.table-cell>
+                                    <x-resource.table-cell align="right" class="pe-3 py-3 text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</x-resource.table-cell>
+                                </x-resource.table-row>
+                            </x-slot>
+                        </x-resource.resource-table>
+                    </x-layout.v-stack>
+                @empty
+                    <x-layout.v-stack align="center" class="py-5">
+                        <x-resource.empty-state
+                            resource="serviços"
+                            icon="tools"
+                            message="Nenhum serviço encontrado neste orçamento" />
+                    </x-layout.v-stack>
+                @endforelse
+            </x-resource.resource-list-card>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 
-                        <div class="d-flex justify-content-between align-items-center pt-1">
-                            <span class="small text-muted">R$ {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }} /un</span>
-                            <span class="fw-semibold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($item->quantity * $item->unit_value) }}</span>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center py-3 text-muted italic small">Nenhum item cadastrado</div>
-                    @endforelse
-
-                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 rounded-3">
-                        <span class="fw-semibold small text-muted text-uppercase">Total do Serviço</span>
-                        <span class="fw-semibold text-primary fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                    </div>
-                </div>
-            </div>
-            @empty
-            <div class="py-5 text-center">
-                <x-resource.empty-state
-                    resource="serviços"
-                    icon="tools"
-                    message="Nenhum serviço encontrado neste orçamento" />
-            </div>
-            @endforelse
-        </x-resource.resource-list-card>
-    </div>
-
-    <div class="row g-4 mb-5">
+    <x-layout.grid-row class="g-4 mb-5">
         {{-- Observações --}}
-        <div class="col-lg-7">
+        <x-layout.grid-col md="7">
             @if($budget->notes)
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <h6 class="text-uppercase text-muted fw-semibold mb-3 small" style="letter-spacing: 1px;">Observações</h6>
-                    <p class="mb-0 text-dark small leading-relaxed">{{ $budget->notes }}</p>
-                </div>
-            </div>
+            <x-ui.card class="h-100">
+                <x-layout.v-stack gap="3">
+                    <h6 class="text-uppercase text-muted fw-semibold small mb-0" style="letter-spacing: 1px;">Observações</h6>
+                    <x-layout.v-stack class="bg-light p-3 rounded-3 border">
+                        <p class="mb-0 text-dark small leading-relaxed">{{ $budget->notes }}</p>
+                    </x-layout.v-stack>
+                </x-layout.v-stack>
+            </x-ui.card>
             @endif
-        </div>
+        </x-layout.grid-col>
 
         {{-- Resumo Financeiro --}}
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4 d-flex flex-column justify-content-center">
-                    <h6 class="text-uppercase text-muted fw-semibold mb-4 small" style="letter-spacing: 1px;">Resumo Financeiro</h6>
+        <x-layout.grid-col md="5">
+            <x-ui.card class="h-100 d-flex flex-column justify-content-center">
+                <x-layout.v-stack gap="4">
+                    <h6 class="text-uppercase text-muted fw-semibold small mb-0" style="letter-spacing: 1px;">Resumo Financeiro</h6>
 
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal:</span>
-                        <span class="fw-medium text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
-                    </div>
+                    <x-layout.v-stack gap="2">
+                        <x-layout.h-stack justify="between">
+                            <span class="text-muted">Subtotal:</span>
+                            <span class="fw-medium text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
+                        </x-layout.h-stack>
 
-                    @if($budget->discount > 0)
-                    <div class="d-flex justify-content-between mb-2 text-danger">
-                        <span>Desconto:</span>
-                        <span class="fw-medium">- {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
-                    </div>
-                    @endif
+                        @if($budget->discount > 0)
+                        <x-layout.h-stack justify="between" class="text-danger">
+                            <span>Desconto:</span>
+                            <span class="fw-medium">- {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
+                        </x-layout.h-stack>
+                        @endif
+                    </x-layout.v-stack>
 
-                    <hr class="my-3 opacity-25">
+                    <hr class="my-0 opacity-25">
 
-                    <div class="d-flex justify-content-between align-items-center">
+                    <x-layout.h-stack justify="between" align="center">
                         <span class="h5 mb-0 fw-semibold text-dark">VALOR TOTAL:</span>
                         <span class="h3 mb-0 fw-semibold text-primary">{{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    </x-layout.h-stack>
+                </x-layout.v-stack>
+            </x-ui.card>
+        </x-layout.grid-col>
+    </x-layout.grid-row>
 
-    <div class="mt-4 text-center">
-        <div class="d-flex align-items-center justify-content-center gap-2">
-            <div class="status-indicator bg-success"></div>
-            <small class="text-muted fw-medium">
-                Conexão Segura • <span id="accessTime"></span>
-            </small>
-        </div>
-    </div>
+    <x-layout.h-stack gap="2" justify="center" class="mt-4">
+        <span class="status-indicator bg-success"></span>
+        <small class="text-muted fw-medium">
+            Conexão Segura • <span id="accessTime"></span>
+        </small>
+    </x-layout.h-stack>
 </x-layout.page-container>
 
 <!-- Modal de Detalhes do Item -->
-<div class="modal fade" id="itemDetailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detalhes do Item</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="itemDetailsContent">
-                <!-- Conteúdo será preenchido via JavaScript -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-            </div>
-        </div>
-    </div>
-</div>
+<x-ui.modal id="itemDetailsModal" title="Detalhes do Item" size="modal-lg">
+    <x-layout.v-stack id="itemDetailsContent">
+        <!-- Conteúdo será preenchido via JavaScript -->
+    </x-layout.v-stack>
+    <x-slot name="footer">
+        <x-ui.button variant="secondary" label="Fechar" data-bs-dismiss="modal" />
+    </x-slot>
+</x-ui.modal>
 
 <!-- Modal de Comentário -->
-<div class="modal fade" id="commentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Adicionar Comentário</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="commentForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="comment" class="form-label">Seu comentário</label>
-                        <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Seu nome</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Seu email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Enviar Comentário</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<x-ui.modal id="commentModal" title="Adicionar Comentário">
+        <x-layout.v-stack gap="3">
+            <x-ui.alert variant="info" class="py-2 small mb-0">
+                <i class="bi bi-info-circle me-2"></i>Seu comentário será enviado junto com a sua decisão.
+            </x-ui.alert>
+            <x-layout.v-stack gap="1">
+                <label for="comment" class="form-label small fw-semibold text-muted">Comentário (opcional):</label>
+                <textarea class="form-control" id="comment" rows="4" placeholder="Escreva aqui seu comentário..."></textarea>
+            </x-layout.v-stack>
+        </x-layout.v-stack>
+    <x-slot name="footer">
+        <x-ui.button variant="secondary" label="Voltar" data-bs-dismiss="modal" />
+        <x-ui.button variant="primary" id="confirmActionBtn" label="Confirmar" onclick="submitDecision()" />
+    </x-slot>
+</x-ui.modal>
 @endsection
 
 @push('styles')
