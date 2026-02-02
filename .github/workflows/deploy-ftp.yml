@@ -42,7 +42,7 @@ jobs:
           rm -f *.config.js *.md
 
       - name: FTP Deploy
-        uses: locaweb/ftp-deploy@2.0.2
+        uses: locaweb/ftp-deploy@1.0.0
         with:
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
