@@ -310,6 +310,7 @@ class UserConfirmationTokenService extends AbstractBaseService
             ]);
 
             return ServiceResult::success([
+                'id' => $savedToken->id,
                 'token' => $token,
                 'expires_at' => $expiresAt,
                 'type' => $type,

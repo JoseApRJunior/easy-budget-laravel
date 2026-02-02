@@ -75,8 +75,17 @@ class Customer extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'user_id',
         'status',
     ];
+
+    /**
+     * Get the user associated with the customer.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * The model's default values for attributes.

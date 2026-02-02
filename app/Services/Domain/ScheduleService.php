@@ -62,20 +62,20 @@ class ScheduleService extends AbstractBaseService
                 );
 
                 if ($tokenResult->isSuccess()) {
-                    $tokenId = $tokenResult->getData()->id;
+                    $tokenId = $tokenResult->getData()['id'];
                 }
             }
 
-            // Cria o agendamento
-            $schedule = $this->scheduleRepository->createFromDTO($dto);
+            // Prepara os dados para criação
+            $data = $dto->toArrayWithoutNulls();
 
             // Vincula o token se gerado
             if ($tokenId) {
-                $this->scheduleRepository->update($schedule->id, [
-                    'user_confirmation_token_id' => $tokenId,
-                ]);
-                $schedule = $schedule->fresh();
+                $data['user_confirmation_token_id'] = $tokenId;
             }
+
+            // Cria o agendamento já com o token (importante para Observers dispararem notificações com link correto)
+            $schedule = $this->scheduleRepository->create($data);
 
             // Atualiza o status do serviço apenas se não estiver em processo de agendamento (SCHEDULING) ou agendado (SCHEDULED)
             if (! in_array($service->status, [ServiceStatus::SCHEDULING, ServiceStatus::SCHEDULED])) {
