@@ -515,9 +515,13 @@ class BudgetApiController extends Controller
             ], 403);
         }
 
-        // Alterar status
-        $code->status = BudgetStatus::PENDING;
-        $code->save();
+        $oldStatus = $code->status;
+
+        // Alterar status (apenas se não estiver aprovado)
+        if ($code->status->value !== BudgetStatus::APPROVED->value) {
+            $code->status = BudgetStatus::PENDING;
+            $code->save();
+        }
 
         // Criar nova versão
         $code->createVersion('Orçamento enviado via API', Auth::id());
@@ -527,8 +531,8 @@ class BudgetApiController extends Controller
             $code->id,
             Auth::id(),
             'sent',
-            'rascunho',
-            'enviado',
+            $oldStatus->value,
+            $code->status->value,
             'Orçamento enviado para cliente via API',
         );
 

@@ -103,10 +103,16 @@ class SendBudgetToCustomerAction
                 $pdfPath = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
 
                 // 3. Atualizar orçamento: status para pendente e anexo
+                // Bugfix: Se o orçamento já estiver aprovado, não voltamos para pendente ao reenviar
+                $newStatus = $budget->status;
+                if ($budget->status->value !== \App\Enums\BudgetStatus::APPROVED->value) {
+                    $newStatus = \App\Enums\BudgetStatus::PENDING;
+                }
+
                 // Suprimir notificação de status pois enviaremos e-mail dedicado abaixo
                 $budget->suppressStatusNotification = true;
                 $budget->update([
-                    'status' => \App\Enums\BudgetStatus::PENDING,
+                    'status' => $newStatus,
                     'attachment' => $pdfPath,
                 ]);
 
@@ -118,8 +124,8 @@ class SendBudgetToCustomerAction
                         'user_id' => auth()->id(),
                         'action' => 'sent',
                         'old_status' => $oldStatus,
-                        'new_status' => \App\Enums\BudgetStatus::PENDING->value,
-                        'description' => 'Orçamento processado para envio.',
+                        'new_status' => $newStatus->value,
+                        'description' => $newStatus->value === $oldStatus ? 'Link de compartilhamento reenviado.' : 'Orçamento processado para envio.',
                         'metadata' => [
                             'custom_message' => $customMessage,
                             'via' => 'email',

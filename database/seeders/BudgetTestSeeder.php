@@ -92,10 +92,10 @@ class BudgetTestSeeder extends Seeder
 
             $totalBudget = 0;
 
-            // Criar 2 services: um COMPLETED e um APPROVED
+            // Criar 2 services: um COMPLETED e um PENDING
             $serviceStatuses = [
                 ServiceStatus::COMPLETED,
-                ServiceStatus::APPROVED,
+                ServiceStatus::PENDING,
             ];
 
             $categories = Category::all(); // Categorias são globais
@@ -114,16 +114,15 @@ class BudgetTestSeeder extends Seeder
                 $totalBudget += $serviceTotal;
             }
 
-            $serviceCompleted = $budget->services()->where('status', ServiceStatus::COMPLETED->value)->first();
-            $serviceApproved = $budget->services()->where('status', ServiceStatus::APPROVED->value)->first();
+            $servicePending = $budget->services()->where('status', ServiceStatus::PENDING->value)->first();
 
             if ($serviceCompleted) {
                 $this->createInvoiceForService($budget, $tenant, $customer, $serviceCompleted, $budgetDate, $globalInvoiceCounter, true);
                 $globalInvoiceCounter++;
             }
 
-            if ($serviceApproved) {
-                $this->createInvoiceForService($budget, $tenant, $customer, $serviceApproved, $budgetDate, $globalInvoiceCounter, false);
+            if ($servicePending) {
+                $this->createInvoiceForService($budget, $tenant, $customer, $servicePending, $budgetDate, $globalInvoiceCounter, false);
                 $globalInvoiceCounter++;
             }
 

@@ -44,12 +44,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     /** Serviço expirado */
     case EXPIRED = 'expired';
 
-    /** Status de aprovação para clientes */
-    case APPROVED = 'approved';
-
-    /** Status de rejeição para clientes */
-    case REJECTED = 'rejected';
-
     /**
      * Retorna o label do status
      */
@@ -57,8 +51,8 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     {
         return match ($this) {
             self::DRAFT => 'Rascunho',
-            self::PENDING => 'Pendente',
-            self::SCHEDULING => 'Agendando',
+            self::PENDING => 'Aguardando',
+            self::SCHEDULING => 'Em Agendamento',
             self::PREPARING => 'Preparando',
             self::IN_PROGRESS => 'Em Andamento',
             self::ON_HOLD => 'Em Espera',
@@ -68,8 +62,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::CANCELLED => 'Cancelado',
             self::NOT_PERFORMED => 'Não Realizado',
             self::EXPIRED => 'Expirado',
-            self::APPROVED => 'Aprovado',
-            self::REJECTED => 'Rejeitado',
         };
     }
 
@@ -91,8 +83,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::CANCELLED => 'Serviço cancelado',
             self::NOT_PERFORMED => 'Serviço não realizado',
             self::EXPIRED => 'Serviço expirado',
-            self::APPROVED => 'Aprovado pelo cliente',
-            self::REJECTED => 'Rejeitado pelo cliente',
         };
     }
 
@@ -114,8 +104,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::CANCELLED => 'danger',
             self::NOT_PERFORMED => 'danger',
             self::EXPIRED => 'danger',
-            self::APPROVED => 'success',
-            self::REJECTED => 'danger',
         };
     }
 
@@ -137,8 +125,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::CANCELLED => config('theme.colors.error'),
             self::NOT_PERFORMED => config('theme.colors.error'),
             self::EXPIRED => config('theme.colors.error'),
-            self::APPROVED => config('theme.colors.success'),
-            self::REJECTED => config('theme.colors.error'),
         };
     }
 
@@ -174,7 +160,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::DRAFT, self::PENDING, self::SCHEDULING, self::PREPARING,
             self::IN_PROGRESS, self::ON_HOLD, self::SCHEDULED => true,
             self::COMPLETED, self::PARTIAL, self::CANCELLED,
-            self::NOT_PERFORMED, self::EXPIRED, self::APPROVED, self::REJECTED => false,
+            self::NOT_PERFORMED, self::EXPIRED => false,
         };
     }
 
@@ -185,7 +171,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     {
         return match ($this) {
             self::COMPLETED, self::PARTIAL, self::CANCELLED,
-            self::NOT_PERFORMED, self::EXPIRED, self::APPROVED, self::REJECTED => true,
+            self::NOT_PERFORMED, self::EXPIRED => true,
             self::DRAFT, self::PENDING, self::SCHEDULING, self::PREPARING,
             self::IN_PROGRESS, self::ON_HOLD, self::SCHEDULED => false,
         };
@@ -200,7 +186,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::SCHEDULED, self::IN_PROGRESS => true,
             self::DRAFT, self::PENDING, self::SCHEDULING, self::PREPARING,
             self::ON_HOLD, self::COMPLETED, self::PARTIAL, self::CANCELLED,
-            self::NOT_PERFORMED, self::EXPIRED, self::APPROVED, self::REJECTED => false,
+            self::NOT_PERFORMED, self::EXPIRED => false,
         };
     }
 
@@ -231,11 +217,9 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::ON_HOLD => 7,
             self::PARTIAL => 8,
             self::COMPLETED => 9,
-            self::APPROVED => 10,
-            self::REJECTED => 11,
-            self::CANCELLED => 12,
-            self::NOT_PERFORMED => 13,
-            self::EXPIRED => 14,
+            self::CANCELLED => 10,
+            self::NOT_PERFORMED => 11,
+            self::EXPIRED => 12,
         };
     }
 

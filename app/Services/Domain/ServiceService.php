@@ -66,8 +66,6 @@ class ServiceService extends AbstractBaseService
                 'pending_services' => $stats[ServiceStatus::PENDING->value] ?? 0,
                 'cancelled_services' => $stats[ServiceStatus::CANCELLED->value] ?? 0,
                 'total_service_value' => $totalValue,
-                'approved_services' => $stats[ServiceStatus::APPROVED->value] ?? 0,
-                'rejected_services' => $stats[ServiceStatus::REJECTED->value] ?? 0,
             ];
 
             return ServiceResult::success($dashboardData);
@@ -290,8 +288,8 @@ class ServiceService extends AbstractBaseService
      */
     private function syncScheduleStatus($service, ServiceStatus $newStatus): void
     {
-        // Se o serviço foi aprovado pelo cliente ou o agendamento foi confirmado
-        if (in_array($newStatus, [ServiceStatus::APPROVED, ServiceStatus::SCHEDULED])) {
+        // Se o agendamento foi confirmado
+        if ($newStatus === ServiceStatus::SCHEDULED) {
             $service->schedules()
                 ->where('status', ScheduleStatus::PENDING->value)
                 ->update([
@@ -300,8 +298,8 @@ class ServiceService extends AbstractBaseService
                 ]);
         }
 
-        // Se o serviço foi rejeitado ou cancelado, cancelamos os agendamentos pendentes ou confirmados
-        if (in_array($newStatus, [ServiceStatus::REJECTED, ServiceStatus::CANCELLED])) {
+        // Se o serviço foi cancelado, cancelamos os agendamentos pendentes ou confirmados
+        if ($newStatus === ServiceStatus::CANCELLED) {
             $service->schedules()
                 ->whereIn('status', [ScheduleStatus::PENDING->value, ScheduleStatus::CONFIRMED->value])
                 ->update([
