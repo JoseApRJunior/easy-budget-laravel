@@ -30,11 +30,6 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --optimize-autoloader --no-progress
 
-      - name: Build frontend assets
-        run: |
-          npm ci
-          npm run build
-
       - name: Create .env file
         run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
 
@@ -47,7 +42,7 @@ jobs:
           rm -f *.config.js *.md
 
       - name: FTP Deploy
-        uses: locaweb/ftp-deploy@1.0.0
+        uses: locaweb/ftp-deploy@2.0.2
         with:
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
