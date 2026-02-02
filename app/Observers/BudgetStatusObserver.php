@@ -61,8 +61,8 @@ class BudgetStatusObserver
                     break;
 
                 case BudgetStatus::REJECTED:
-                    if ($service->status === ServiceStatus::PENDING) {
-                        $newServiceStatus = ServiceStatus::DRAFT;
+                    if (in_array($service->status, [ServiceStatus::PENDING, ServiceStatus::SCHEDULING])) {
+                        $newServiceStatus = ServiceStatus::CANCELLED;
                     }
                     break;
 
