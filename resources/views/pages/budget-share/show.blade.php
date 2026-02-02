@@ -53,6 +53,12 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Destinatário</label>
+                                <div><strong>{{ $share->recipient_name }}</strong></div>
+                                <div class="text-muted small">{{ $share->recipient_email }}</div>
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Status</label>
                                 <div>
                                     @if($share->expires_at && \Carbon\Carbon::parse($share->expires_at)->isPast())
@@ -124,7 +130,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Valor Total</label>
                                 <p class="form-control-plaintext text-success fw-bold fs-5">
-                                    R$ {{ number_format($share->budget->total, 2, ',', '.') }}
+                                    R$ {{ number_format($share->budget->total_value, 2, ',', '.') }}
                                 </p>
                             </div>
 
@@ -143,12 +149,13 @@
                         <div class="col-12">
                             <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">Permissões de Acesso</h5>
                             @php
-                                $permissions = json_decode($share->permissions, true) ?? [];
+                                $permissions = is_array($share->permissions) ? $share->permissions : json_decode($share->permissions, true) ?? [];
                                 $permissionLabels = [
-                                    'view_values' => 'Visualizar Valores',
+                                    'view' => 'Visualizar Orçamento',
                                     'approve' => 'Aprovar Orçamento',
                                     'reject' => 'Rejeitar Orçamento',
-                                    'download' => 'Baixar PDF'
+                                    'comment' => 'Comentar',
+                                    'print' => 'Imprimir/PDF'
                                 ];
                             @endphp
                             <div class="d-flex flex-wrap gap-2">

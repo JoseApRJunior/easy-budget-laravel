@@ -24,7 +24,7 @@
                     icon="list-ul"
                     :total="$shares->total()"
                 >
-                    <x-resource.resource-table :headers="['ID', 'Orçamento', 'Cliente', 'Token', 'Expiração', 'Status', 'Criado em', 'Ações']">
+                    <x-resource.resource-table :headers="['ID', 'Orçamento', 'Destinatário', 'Token', 'Expiração', 'Status', 'Criado em', 'Ações']">
                         @forelse($shares as $share)
                             <x-resource.table-row>
                                 <x-resource.table-cell>{{ $share->id }}</x-resource.table-cell>
@@ -33,7 +33,10 @@
                                         #{{ $share->budget->code }}
                                     </a>
                                 </x-resource.table-cell>
-                                <x-resource.table-cell>{{ $share->budget->customer->name ?? 'N/A' }}</x-resource.table-cell>
+                                <x-resource.table-cell>
+                                    <div>{{ $share->recipient_name }}</div>
+                                    <small class="text-muted">{{ $share->recipient_email }}</small>
+                                </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <div class="d-flex align-items-center gap-2">
                                         <code class="bg-light px-2 py-1 rounded">{{ substr($share->token, 0, 8) }}...</code>

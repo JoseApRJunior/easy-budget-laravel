@@ -137,14 +137,16 @@
                                 {{ strtolower( $budget->status->getDescription() ) }}.</div>
                         @endif
 
-                        <div class="d-grid gap-2 mt-3">
-                            <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token]) }}" class="btn btn-outline-secondary" target="_blank">
-                                <i class="bi bi-printer me-2"></i>Imprimir Orçamento
-                            </a>
-                            <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger">
-                                <i class="bi bi-file-earmark-pdf me-2"></i>Baixar em PDF
-                            </a>
-                        </div>
+                        @if(isset($permissions['can_print']) && $permissions['can_print'])
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token]) }}" class="btn btn-outline-secondary" target="_blank">
+                                    <i class="bi bi-printer me-2"></i>Imprimir Orçamento
+                                </a>
+                                <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i>Baixar em PDF
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

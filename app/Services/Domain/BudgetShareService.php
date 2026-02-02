@@ -113,7 +113,7 @@ class BudgetShareService extends AbstractBaseService
                             'is_active' => false,
                             // Mantemos o status original ou mudamos para EXPIRED se preferir,
                             // mas nunca para APPROVED/REJECTED pois eles não realizaram a ação.
-                            // 'status' => \App\Enums\BudgetShareStatus::EXPIRED->value 
+                            // 'status' => \App\Enums\BudgetShareStatus::EXPIRED->value
                         ]);
                 }
 
@@ -321,7 +321,7 @@ class BudgetShareService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Orçamento não encontrado.');
             }
 
-            $rawPermissions = $share->permissions ?? ['view', 'print', 'comment', 'approve'];
+            $rawPermissions = $share->permissions ?? ['view', 'print', 'comment', 'approve', 'reject'];
             $formattedPermissions = [
                 'can_view' => in_array('view', $rawPermissions),
                 'can_download' => in_array('print', $rawPermissions),

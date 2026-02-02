@@ -29,31 +29,57 @@
 
                     <form action="{{ route('provider.budgets.shares.store') }}" method="POST" id="createShareForm">
                         @csrf
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <h5 class="text-primary mb-3 border-bottom pb-2">Selecionar Orçamento</h5>
-                                
+
                                 <div class="mb-3">
                                     <label for="budget_id" class="form-label fw-bold text-muted text-uppercase small">
                                         Orçamento <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select @error('budget_id') is-invalid @enderror" 
+                                    <select class="form-select @error('budget_id') is-invalid @enderror"
                                             id="budget_id" name="budget_id" required>
                                         <option value="">Selecione um orçamento...</option>
                                         @foreach($budgets as $budget)
-                                            <option value="{{ $budget->id }}" 
+                                            <option value="{{ $budget->id }}"
                                                     data-customer="{{ $budget->customer->name }}"
                                                     data-value="{{ $budget->total_value }}"
                                                     data-status="{{ $budget->status }}"
                                                     {{ (old('budget_id', $selectedBudgetId) == $budget->id) ? 'selected' : '' }}>
-                                                #{{ str_pad($budget->id, 6, '0', STR_PAD_LEFT) }} - 
-                                                {{ $budget->customer->name }} - 
+                                                #{{ str_pad($budget->id, 6, '0', STR_PAD_LEFT) }} -
+                                                {{ $budget->customer->name }} -
                                                 R$ {{ number_format($budget->total_value, 2, ',', '.') }}
                                             </option>
                                         @endforeach
                                     </select>
                                     @error('budget_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="recipient_name" class="form-label fw-bold text-muted text-uppercase small">
+                                        Nome do Destinatário <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control @error('recipient_name') is-invalid @enderror"
+                                           id="recipient_name" name="recipient_name"
+                                           value="{{ old('recipient_name') }}" required
+                                           placeholder="Nome de quem receberá o link">
+                                    @error('recipient_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-bold text-muted text-uppercase small">
+                                        E-mail do Destinatário <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                           id="email" name="email"
+                                           value="{{ old('email') }}" required
+                                           placeholder="email@exemplo.com">
+                                    @error('email')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -87,12 +113,12 @@
 
                             <div class="col-md-6">
                                 <h5 class="text-primary mb-3 border-bottom pb-2">Configurações de Acesso</h5>
-                                
+
                                 <div class="mb-3">
                                     <label for="expires_at" class="form-label fw-bold text-muted text-uppercase small">Data de Expiração</label>
-                                    <input type="datetime-local" 
-                                           class="form-control @error('expires_at') is-invalid @enderror" 
-                                           id="expires_at" name="expires_at" 
+                                    <input type="datetime-local"
+                                           class="form-control @error('expires_at') is-invalid @enderror"
+                                           id="expires_at" name="expires_at"
                                            value="{{ old('expires_at') }}">
                                     @error('expires_at')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -106,33 +132,41 @@
                                     <label class="form-label fw-bold text-muted text-uppercase small">Permissões de Acesso</label>
                                     <div class="card p-3 bg-light border-0">
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_view" name="permissions[can_view]" 
-                                                   value="1" {{ old('permissions.can_view', true) ? 'checked' : '' }}>
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="can_view" name="permissions[can_view]"
+                                                   value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_view']) ? 'checked' : '') : 'checked' }}>
                                             <label class="form-check-label" for="can_view">
                                                 Pode visualizar o orçamento
                                             </label>
                                         </div>
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_approve" name="permissions[can_approve]" 
-                                                   value="1" {{ old('permissions.can_approve') ? 'checked' : '' }}>
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="can_approve" name="permissions[can_approve]"
+                                                   value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_approve']) ? 'checked' : '') : 'checked' }}>
                                             <label class="form-check-label" for="can_approve">
                                                 Pode aprovar o orçamento
                                             </label>
                                         </div>
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_comment" name="permissions[can_comment]" 
-                                                   value="1" {{ old('permissions.can_comment') ? 'checked' : '' }}>
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="can_reject" name="permissions[can_reject]"
+                                                   value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_reject']) ? 'checked' : '') : 'checked' }}>
+                                            <label class="form-check-label" for="can_reject">
+                                                Pode rejeitar o orçamento
+                                            </label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="can_comment" name="permissions[can_comment]"
+                                                   value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_comment']) ? 'checked' : '') : 'checked' }}>
                                             <label class="form-check-label" for="can_comment">
                                                 Pode adicionar comentários
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   id="can_print" name="permissions[can_print]" 
-                                                   value="1" {{ old('permissions.can_print', true) ? 'checked' : '' }}>
+                                            <input class="form-check-input" type="checkbox"
+                                                   id="can_print" name="permissions[can_print]"
+                                                   value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_print']) ? 'checked' : '') : 'checked' }}>
                                             <label class="form-check-label" for="can_print">
                                                 Pode imprimir o orçamento
                                             </label>
@@ -146,8 +180,8 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label for="notes" class="form-label fw-bold text-muted text-uppercase small">Observações</label>
-                                    <textarea class="form-control @error('notes') is-invalid @enderror" 
-                                              id="notes" name="notes" rows="3" 
+                                    <textarea class="form-control @error('notes') is-invalid @enderror"
+                                              id="notes" name="notes" rows="3"
                                               placeholder="Informações adicionais sobre este compartilhamento...">{{ old('notes') }}</textarea>
                                     @error('notes')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -186,30 +220,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateBudgetPreview() {
         const selectedOption = budgetSelect.options[budgetSelect.selectedIndex];
-        
+
         if (selectedOption.value) {
             const customer = selectedOption.getAttribute('data-customer');
             const value = selectedOption.getAttribute('data-value');
             const status = selectedOption.getAttribute('data-status');
-            
+
             previewCustomer.textContent = customer;
             previewValue.textContent = 'R$ ' + parseFloat(value).toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-            
+
             const statusBadge = document.createElement('span');
-            statusBadge.className = 'badge bg-' + (status === 'approved' ? 'success' : 
+            statusBadge.className = 'badge bg-' + (status === 'approved' ? 'success' :
                                                    (status === 'pending' ? 'warning' : 'secondary'));
             statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-            
+
             previewStatus.innerHTML = '';
             previewStatus.appendChild(statusBadge);
-            
+
             const today = new Date();
-            previewDate.textContent = today.toLocaleDateString('pt-BR') + ' ' + 
+            previewDate.textContent = today.toLocaleDateString('pt-BR') + ' ' +
                                     today.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
-            
+
             budgetPreview.style.display = 'block';
         } else {
             budgetPreview.style.display = 'none';
@@ -217,23 +251,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     budgetSelect.addEventListener('change', updateBudgetPreview);
-    
+
     // Trigger preview if already selected
     if (budgetSelect.value) {
         updateBudgetPreview();
     }
-    
+
     // Validação do formulário
     document.getElementById('createShareForm').addEventListener('submit', function(e) {
         const budgetId = document.getElementById('budget_id').value;
         const permissions = document.querySelectorAll('input[name^="permissions["]:checked');
-        
+
         if (!budgetId) {
             e.preventDefault();
             alert('Por favor, selecione um orçamento.');
             return;
         }
-        
+
         if (permissions.length === 0) {
             e.preventDefault();
             alert('Por favor, selecione pelo menos uma permissão.');
@@ -248,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Adjust to local ISO string for datetime-local input
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     const minDateTime = now.toISOString().slice(0, 16);
-    
+
     const expiresInput = document.getElementById('expires_at');
     if(expiresInput) {
         expiresInput.min = minDateTime;

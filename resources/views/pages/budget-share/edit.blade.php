@@ -105,6 +105,32 @@
                                     </small>
                                 </div>
 
+                                <div class="mb-3">
+                                    <label for="recipient_name" class="form-label fw-bold text-muted text-uppercase small">
+                                        Nome do Destinatário <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control @error('recipient_name') is-invalid @enderror" 
+                                           id="recipient_name" name="recipient_name" 
+                                           value="{{ old('recipient_name', $share->recipient_name) }}" required
+                                           placeholder="Nome de quem receberá o link">
+                                    @error('recipient_name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-bold text-muted text-uppercase small">
+                                        E-mail do Destinatário <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                           id="email" name="email" 
+                                           value="{{ old('email', $share->recipient_email) }}" required
+                                           placeholder="email@exemplo.com">
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
                                 <div id="budgetPreview" class="mb-3" style="display: none;">
                                     <label class="form-label fw-bold text-muted text-uppercase small">Prévia do Novo Orçamento</label>
                                     <div class="card bg-light border-0">
@@ -167,48 +193,58 @@
                                 <h5 class="text-primary mb-3 border-bottom pb-2">Permissões de Acesso</h5>
                                 
                                 @php
-                                    $currentPermissions = json_decode($share->permissions, true);
+                                    $currentPermissions = is_array($share->permissions) ? $share->permissions : json_decode($share->permissions, true) ?? [];
                                 @endphp
                                 
                                 <div class="card p-3 bg-light border-0">
                                     <div class="row">
-                                        <div class="col-md-3">
+                                        <div class="col-md-4 mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="can_view" name="permissions[can_view]" 
-                                                       value="1" {{ old('permissions.can_view', $currentPermissions['can_view'] ?? false) ? 'checked' : '' }}>
+                                                       value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_view']) ? 'checked' : '') : (in_array('view', $currentPermissions) || (isset($currentPermissions['can_view']) && $currentPermissions['can_view']) ? 'checked' : '') }}>
                                                 <label class="form-check-label" for="can_view">
                                                     Pode visualizar
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4 mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="can_approve" name="permissions[can_approve]" 
-                                                       value="1" {{ old('permissions.can_approve', $currentPermissions['can_approve'] ?? false) ? 'checked' : '' }}>
+                                                       value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_approve']) ? 'checked' : '') : (in_array('approve', $currentPermissions) || (isset($currentPermissions['can_approve']) && $currentPermissions['can_approve']) ? 'checked' : '') }}>
                                                 <label class="form-check-label" for="can_approve">
                                                     Pode aprovar
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="can_reject" name="permissions[can_reject]" 
+                                                       value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_reject']) ? 'checked' : '') : (in_array('reject', $currentPermissions) || (isset($currentPermissions['can_reject']) && $currentPermissions['can_reject']) ? 'checked' : '') }}>
+                                                <label class="form-check-label" for="can_reject">
+                                                    Pode rejeitar
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="can_comment" name="permissions[can_comment]" 
-                                                       value="1" {{ old('permissions.can_comment', $currentPermissions['can_comment'] ?? false) ? 'checked' : '' }}>
+                                                       value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_comment']) ? 'checked' : '') : (in_array('comment', $currentPermissions) || (isset($currentPermissions['can_comment']) && $currentPermissions['can_comment']) ? 'checked' : '') }}>
                                                 <label class="form-check-label" for="can_comment">
                                                     Pode comentar
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4 mb-2">
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="can_print" name="permissions[can_print]" 
-                                                       value="1" {{ old('permissions.can_print', $currentPermissions['can_print'] ?? true) ? 'checked' : '' }}>
+                                                       value="1" {{ is_array(old('permissions')) ? (isset(old('permissions')['can_print']) ? 'checked' : '') : (in_array('print', $currentPermissions) || (isset($currentPermissions['can_print']) && $currentPermissions['can_print']) ? 'checked' : '') }}>
                                                 <label class="form-check-label" for="can_print">
-                                                    Pode imprimir
+                                                    Pode imprimir/PDF
                                                 </label>
                                             </div>
                                         </div>

@@ -87,7 +87,7 @@ class SendBudgetToCustomerAction
                     'tenant_id' => $budget->tenant_id,
                     'recipient_email' => $customer->email,
                     'recipient_name' => $recipientName,
-                    'permissions' => ['view', 'comment', 'approve'],
+                    'permissions' => ['view', 'comment', 'approve', 'reject', 'print'],
                     'expires_at' => now()->addDays(7)->toDateTimeString(),
                     'message' => 'Orçamento enviado para aprovação.',
                 ], false); // Não envia notificação duplicada
