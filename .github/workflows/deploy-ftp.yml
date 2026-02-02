@@ -1,0 +1,68 @@
+name: Deploy to FTP
+
+on:
+  push:
+    branches: ["master", "main"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Prepare .env file
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+        env:
+          APP_NAME: "Easy Budget"
+          APP_ENV: production
+          APP_DEBUG: false
+
+      - name: Clear development files
+        run: |
+          rm -rf .git
+          rm -rf node_modules
+          rm -rf tests
+          rm -f .env.testing
+          rm -f .gitignore
+          rm -f .gitattributes
+
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.easybudget1.hospedagemdesites.ws
+          username: easybudget1
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /
+          protocol: ftp
+          port: 21
+          exclude: |
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/.github/**
+            **/.env.local
+            **/.env.testing

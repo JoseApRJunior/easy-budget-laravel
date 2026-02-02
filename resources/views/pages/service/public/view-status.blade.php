@@ -351,7 +351,6 @@
                                         // Como o orçamento já foi aprovado, focamos apenas no agendamento
                                         $options = [
                                         \App\Enums\ServiceStatus::SCHEDULED,
-                                        \App\Enums\ServiceStatus::REJECTED,
                                         \App\Enums\ServiceStatus::CANCELLED
                                         ];
                                         @endphp
@@ -360,8 +359,6 @@
                                             {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
                                             @if ($status === \App\Enums\ServiceStatus::SCHEDULED)
                                             Confirmar Agendamento Proposto
-                                            @elseif ($status === \App\Enums\ServiceStatus::REJECTED)
-                                            Solicitar Alteração de Data/Horário
                                             @else
                                             Cancelar Agendamento / Serviço
                                             @endif

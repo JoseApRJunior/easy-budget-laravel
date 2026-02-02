@@ -349,8 +349,7 @@ class ServiceController extends Controller
             'service_code' => ['required', 'string'],
             'token' => ['required', 'string'],
             'service_status_id' => ['required', 'string', Rule::in([
-                ServiceStatus::APPROVED->value,
-                ServiceStatus::REJECTED->value,
+                ServiceStatus::PENDING->value,
                 ServiceStatus::CANCELLED->value,
                 ServiceStatus::SCHEDULED->value,
             ])],

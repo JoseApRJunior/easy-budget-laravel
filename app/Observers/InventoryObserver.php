@@ -101,7 +101,7 @@ class InventoryObserver
         // Se serviço foi para preparação, reservar produtos do estoque
         if (
             $newStatus->value === ServiceStatus::PREPARING->value &&
-            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value, ServiceStatus::APPROVED->value])
+            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value])
         ) {
             $this->reserveServiceItemsFromInventory($service);
         }
@@ -110,7 +110,7 @@ class InventoryObserver
         // Isso confirma a reserva (se existir) ou faz a baixa direta
         if (
             $newStatus->value === ServiceStatus::IN_PROGRESS->value &&
-            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value, ServiceStatus::PREPARING->value, ServiceStatus::APPROVED->value])
+            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value, ServiceStatus::PREPARING->value])
         ) {
             $this->consumeServiceItemsFromInventory($service);
         }

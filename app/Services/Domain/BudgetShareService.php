@@ -82,8 +82,8 @@ class BudgetShareService extends AbstractBaseService
 
                 // Sincroniza o status dos serviços vinculados
                 $serviceStatus = match ($newStatus) {
-                    \App\Enums\BudgetStatus::APPROVED => \App\Enums\ServiceStatus::APPROVED,
-                    \App\Enums\BudgetStatus::REJECTED => \App\Enums\ServiceStatus::REJECTED,
+                    \App\Enums\BudgetStatus::APPROVED => \App\Enums\ServiceStatus::PENDING,
+                    \App\Enums\BudgetStatus::REJECTED => \App\Enums\ServiceStatus::CANCELLED,
                     \App\Enums\BudgetStatus::CANCELLED => \App\Enums\ServiceStatus::CANCELLED,
                     default => null,
                 };
