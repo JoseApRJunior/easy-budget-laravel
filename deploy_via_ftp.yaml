@@ -1,9 +1,8 @@
-name: Deploy to Hosting
+name: Deploy to Locaweb
 
 on:
   push:
-    branches: [main, master]
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
   deploy:
@@ -30,23 +29,15 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --optimize-autoloader --no-progress
 
-      - name: Build frontend assets
-        run: |
-          npm ci
-          npm run build
-
       - name: Create .env file
         run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
 
       - name: Clean unnecessary files
         run: |
-          rm -rf .git .github/ docs/ tests/ node_modules/
-          rm -f .env.example .env.local .env.testing .env.staging
-          rm -f README.md phpstan.neon phpunit.xml.dist phpunit.dusk.xml
-          rm -f CHECKLIST_REFATORACAO.md legacy_analysis.md.md
-          rm -f *.config.js *.md
+          rm -rf .git .github/ docs/ tests/ node_modules/ backup_cron.php
+          rm -f .env.example .env.local .env.staging README.md composer.json composer.lock phpstan.neon phpdoc.dist.xml *.md
 
-      - name: FTP Deploy
+      - name: FTP Deploy Locaweb
         uses: locaweb/ftp-deploy@2.0.2
         with:
           host: ${{ secrets.HOST }}
