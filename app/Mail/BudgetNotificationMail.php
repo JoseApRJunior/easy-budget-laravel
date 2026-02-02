@@ -89,6 +89,13 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $this->company = $company ?? [];
         $this->publicUrl = $publicUrl;
         $this->customMessage = $customMessage;
+        $this->locale = $locale;
+
+        \Illuminate\Support\Facades\Log::info('[BudgetNotificationMail] Construindo email', [
+            'customMessage' => $customMessage,
+            'notificationType' => $notificationType,
+            'budget_code' => $budget->code,
+        ]);
 
         if ($locale) {
             $this->locale($locale);
@@ -107,12 +114,12 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             subject: $this->generateSubject(),
             tags: ['budget-notification', $this->notificationType],
             metadata: [
-                'budget_id' => $this->budget->id,
-                'budget_code' => $this->budget->code,
-                'customer_id' => $this->customer->id,
-                'tenant_id' => $this->tenant?->id,
-                'locale' => $this->locale,
-                'notification_type' => $this->notificationType,
+                'budget_id' => (string) $this->budget->id,
+                'budget_code' => (string) $this->budget->code,
+                'customer_id' => (string) $this->customer->id,
+                'tenant_id' => (string) ($this->tenant?->id ?? ''),
+                'locale' => (string) $this->locale,
+                'notification_type' => (string) $this->notificationType,
             ],
         );
     }
@@ -123,7 +130,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.budget-notification',
+            view: 'emails.budget.budget-notification',
             with: [
                 'budget' => $this->budget,
                 'customer' => $this->customer,
@@ -200,6 +207,12 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             return $this->publicUrl;
         }
 
+        // Tentar obter a URL pública através do método do modelo que busca em BudgetShare
+        $publicUrl = $this->budget->getPublicUrl();
+        if ($publicUrl) {
+            return $publicUrl;
+        }
+
         if ($this->budget->pdf_verification_hash) {
             return config('app.url').'/budget/'.$this->budget->pdf_verification_hash;
         }
@@ -223,9 +236,9 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
             $provider = $this->budget->provider()
                 ->withoutGlobalScopes()
                 ->with([
-                    'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                    'contact' => fn($q) => $q->withoutGlobalScopes(),
-                    'address' => fn($q) => $q->withoutGlobalScopes(),
+                    'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                    'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                    'address' => fn ($q) => $q->withoutGlobalScopes(),
                 ])
                 ->first();
 
@@ -233,9 +246,9 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                 $provider = $this->tenant->provider()
                     ->withoutGlobalScopes()
                     ->with([
-                        'commonData' => fn($q) => $q->withoutGlobalScopes(),
-                        'contact' => fn($q) => $q->withoutGlobalScopes(),
-                        'address' => fn($q) => $q->withoutGlobalScopes(),
+                        'commonData' => fn ($q) => $q->withoutGlobalScopes(),
+                        'contact' => fn ($q) => $q->withoutGlobalScopes(),
+                        'address' => fn ($q) => $q->withoutGlobalScopes(),
                     ])
                     ->first();
             }
@@ -252,7 +265,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";
@@ -261,9 +274,9 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
 
                 $document = null;
                 if ($commonData) {
-                    $document = $commonData->cnpj 
-                        ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) 
-                        : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
+                    $document = $commonData->cnpj
+                        ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj)
+                        : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null);
                 }
 
                 return [
@@ -281,7 +294,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
 
         // Fallback para o nome do tenant se não houver provider
         $tenantName = $this->tenant?->name ?? $this->budget->tenant?->name;
-        
+
         if ($tenantName) {
             return [
                 'company_name' => $tenantName,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ServiceStatus;
+use App\Models\Traits\HasPublicToken;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,12 @@ use Illuminate\Database\Eloquent\Model;
 class Service extends Model
 {
     use HasFactory, TenantScoped;
+
+    /**
+     * Propriedade temporária para suprimir notificações de status.
+     * Útil para atualizações em lote via Budget.
+     */
+    public bool $suppressStatusNotification = false;
 
     /**
      * Boot the model.
@@ -43,8 +50,6 @@ class Service extends Model
         'code',
         'description',
         'pdf_verification_hash',
-        'public_token',
-        'public_expires_at',
         'discount',
         'total',
         'due_date',
@@ -79,11 +84,23 @@ class Service extends Model
         'due_date' => 'date',
         'reason' => 'string',
         'pdf_verification_hash' => 'string',
-        'public_token' => 'string',
-        'public_expires_at' => 'datetime',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Verifica se o serviço já foi finalizado (sucesso, falha ou cancelamento).
+     */
+    public function isFinished(): bool
+    {
+        return in_array($this->status, [
+            ServiceStatus::COMPLETED,
+            ServiceStatus::PARTIAL,
+            ServiceStatus::CANCELLED,
+            ServiceStatus::NOT_PERFORMED,
+            ServiceStatus::EXPIRED,
+        ], true);
+    }
 
     /**
      * Regras de validação para o modelo Service.
@@ -94,7 +111,7 @@ class Service extends Model
             'tenant_id' => 'required|integer|exists:tenants,id',
             'budget_id' => 'required|integer|exists:budgets,id',
             'category_id' => 'required|integer|exists:categories,id',
-            'status' => 'required|string|in:'.implode(',', array_column(ServiceStatus::cases(), 'value')),
+            'status' => 'required|string|in:' . implode(',', array_column(ServiceStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:services,code',
             'description' => 'nullable|string',
@@ -103,8 +120,6 @@ class Service extends Model
             'due_date' => 'nullable|date',
             'reason' => 'nullable|string|max:500',
             'pdf_verification_hash' => 'nullable|string|max:64', // SHA256 hash, not a confirmation token
-            'public_token' => 'nullable|string|size:43', // base64url format: 32 bytes = 43 caracteres
-            'public_expires_at' => 'nullable|date',
         ];
     }
 
@@ -239,5 +254,21 @@ class Service extends Model
     public function getUpdatedAtAttribute($value)
     {
         return ($value === '0000-00-00 00:00:00' || empty($value)) ? null : \DateTime::createFromFormat('Y-m-d H:i:s', $value);
+    }
+
+    /**
+     * Gera a URL pública para visualização/interação com o serviço.
+     */
+    public function getPublicUrl(): ?string
+    {
+        return $this->budget?->getPublicUrl();
+    }
+
+    /**
+     * Gera a URL interna para visualização do serviço.
+     */
+    public function getUrl(): string
+    {
+        return route('provider.services.show', $this->id, true);
     }
 }

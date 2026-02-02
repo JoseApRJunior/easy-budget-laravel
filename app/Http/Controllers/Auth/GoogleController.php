@@ -44,7 +44,7 @@ class GoogleController extends Controller
                 'user_agent' => request()->userAgent(),
             ]);
 
-            return redirect()->route('home')->with('error', 'Serviço de autenticação Google não está configurado.');
+            return redirect()->route('home')->withErrors(['error' => 'Serviço de autenticação Google não está configurado.']);
         }
 
         Log::info('Iniciando autenticação Google OAuth', [
@@ -68,7 +68,7 @@ class GoogleController extends Controller
                 'ip' => $request->ip(),
             ]);
 
-            return redirect()->route('home')->with('error', 'Autenticação cancelada pelo usuário.');
+            return redirect()->route('home')->withErrors(['error' => 'Autenticação cancelada pelo usuário.']);
         }
 
         // Verifica se o cliente OAuth está configurado
@@ -77,7 +77,7 @@ class GoogleController extends Controller
                 'ip' => $request->ip(),
             ]);
 
-            return redirect()->route('home')->with('error', 'Serviço de autenticação não configurado.');
+            return redirect()->route('home')->withErrors(['error' => 'Serviço de autenticação não configurado.']);
         }
 
         // Processa dados do usuário do Google
@@ -87,7 +87,7 @@ class GoogleController extends Controller
         $authResult = $this->socialAuthService->authenticateWithSocialProvider('google', $googleUserData);
 
         if (! $authResult->isSuccess()) {
-            return redirect()->route('login')->with('error', $authResult->getMessage());
+            return redirect()->route('login')->withErrors(['email' => $authResult->getMessage()]);
         }
 
         // Loga o usuário

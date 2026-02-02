@@ -163,7 +163,14 @@ class ServiceController extends Controller
      */
     public function show(string $code): View
     {
-        $result = $this->serviceService->findByCode($code, ['budget.customer', 'category', 'serviceItems.product']);
+        $result = $this->serviceService->findByCode($code, [
+            'customer.commonData',
+            'customer.contact',
+            'customer.address',
+            'budget',
+            'category',
+            'serviceItems.product',
+        ]);
 
         if ($result->isError()) {
             abort(404, $result->getMessage());
@@ -288,6 +295,129 @@ class ServiceController extends Controller
         $result = $this->serviceService->list($filters);
 
         return response()->json($result->getData());
+    }
+
+    /**
+     * Visualiza o status de um serviço publicamente.
+     */
+    public function viewServiceStatus(string $code, string $token): View
+    {
+        $result = $this->serviceService->findByCode($code, [
+            'budget.customer.commonData',
+            'budget.customer.contact',
+            'budget.customer.address',
+            'budget.services.category',
+            'category',
+            'serviceItems.product',
+            'schedules',
+            'tenant.provider.businessData',
+            'tenant.provider.commonData',
+            'tenant.provider.contact',
+            'tenant.provider.address',
+        ]);
+
+        if ($result->isError()) {
+            abort(404, 'Serviço não encontrado.');
+        }
+
+        $service = $result->getData();
+
+        // Validar o token via BudgetShare
+        $budget = $service->budget;
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
+            abort(403, 'Acesso negado. Token inválido ou expirado.');
+        }
+
+        return view('pages.service.public.view-status', [
+            'service' => $service,
+            'token' => $token,
+            'title' => "Status do Serviço - {$service->code}",
+        ]);
+    }
+
+    /**
+     * Atualiza o status de um serviço via link público (ação do cliente).
+     */
+    public function chooseServiceStatus(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'service_code' => ['required', 'string'],
+            'token' => ['required', 'string'],
+            'service_status_id' => ['required', 'string', Rule::in([
+                ServiceStatus::APPROVED->value,
+                ServiceStatus::REJECTED->value,
+                ServiceStatus::CANCELLED->value,
+                ServiceStatus::SCHEDULED->value,
+            ])],
+        ]);
+
+        $code = $request->input('service_code');
+        $token = $request->input('token');
+        $newStatus = $request->input('service_status_id');
+
+        $result = $this->serviceService->findByCode($code);
+        if ($result->isError()) {
+            abort(404, 'Serviço não encontrado.');
+        }
+
+        $service = $result->getData();
+
+        // Validar o token via BudgetShare
+        $budget = $service->budget;
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
+            abort(403, 'Acesso negado.');
+        }
+
+        $updateResult = $this->serviceService->changeStatusByCode($code, $newStatus);
+
+        if ($updateResult->isError()) {
+            return redirect()->back()->with('error', $updateResult->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Status do serviço atualizado com sucesso!');
+    }
+
+    /**
+     * Versão para impressão do status do serviço.
+     */
+    public function print(string $code, string $token): View
+    {
+        $result = $this->serviceService->findByCode($code, [
+            'budget.customer',
+            'category',
+            'serviceItems.product',
+        ]);
+
+        if ($result->isError()) {
+            abort(404, 'Serviço não encontrado.');
+        }
+
+        $service = $result->getData();
+
+        // Validar o token via BudgetShare
+        $budget = $service->budget;
+        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+            ->where('share_token', $token)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
+            abort(403, 'Acesso negado.');
+        }
+
+        return view('pages.service.public.print', [
+            'service' => $service,
+        ]);
     }
 
     /**

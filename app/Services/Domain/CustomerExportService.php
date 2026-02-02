@@ -35,7 +35,7 @@ class CustomerExportService extends AbstractExportService
         $email = $contact->email_personal ?: ($contact->email_business ?? '-');
         $phone = $contact->phone_personal ?: ($contact->phone_business ?? '-');
         $location = ($address->city ?? '').'/'.($address->state ?? '');
-        
+
         // Determina a situação: Deletado > Inativo > Ativo
         $situacao = ! is_null($customer->deleted_at) ? 'Deletado' : ($customer->status === 'active' ? 'Ativo' : 'Inativo');
 
@@ -62,6 +62,7 @@ class CustomerExportService extends AbstractExportService
     public function exportToPdf(Collection $customers, string $fileName = 'clientes', string $orientation = 'A4-L', array $filters = []): StreamedResponse
     {
         $this->filters = $filters;
+
         return parent::exportToPdf($customers, $fileName, $orientation);
     }
 
@@ -92,7 +93,7 @@ class CustomerExportService extends AbstractExportService
         $sheet->getStyle('B1:B'.($rowCount - 1))
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        
+
         $sheet->getStyle('H1:H'.($rowCount - 1))
             ->getAlignment()
             ->setHorizontal(Alignment::HORIZONTAL_CENTER);

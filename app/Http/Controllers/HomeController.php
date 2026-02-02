@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Domain\PlanService;
-use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 

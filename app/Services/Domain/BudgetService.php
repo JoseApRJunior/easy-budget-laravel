@@ -7,7 +7,6 @@ namespace App\Services\Domain;
 use App\DTOs\Budget\BudgetDTO;
 use App\Enums\BudgetStatus;
 use App\Enums\ServiceStatus;
-use App\Events\BudgetStatusChanged;
 use App\Models\Budget;
 use App\Repositories\BudgetRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
@@ -99,11 +98,11 @@ class BudgetService extends AbstractBaseService
                     $statusBreakdownDetailed[$statusValue] = [
                         'count' => $count,
                         'color' => $status->getColor(),
-                        'label' => $status->label()
+                        'label' => $status->label(),
                     ];
                 }
             }
-            
+
             $stats['status_breakdown_detailed'] = $statusBreakdownDetailed;
 
             return ServiceResult::success($stats);
@@ -306,9 +305,6 @@ class BudgetService extends AbstractBaseService
                 }
 
                 $updatedBudget = $budget->fresh();
-
-                // Disparar evento para notificação
-                event(new BudgetStatusChanged($updatedBudget, $oldStatus, $status, $comment));
 
                 // NOTA: A atualização de serviços em cascata agora é gerenciada pelo BudgetStatusObserver
                 // para garantir consistência em todas as formas de atualização do modelo.

@@ -100,6 +100,46 @@ abstract class AbstractBaseRepository implements BaseRepositoryInterface
     /**
      * {@inheritdoc}
      */
+    public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?Model
+    {
+        $query = $this->getModel()->newQuery();
+
+        if (is_array($field)) {
+            $query->where($field);
+        } else {
+            $query->where($field, $value);
+        }
+
+        if ($withTrashed && method_exists($query, 'withTrashed')) {
+            $query->withTrashed();
+        }
+
+        if (! empty($with)) {
+            $query->with($with);
+        }
+
+        return $query->first();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function findBy(string|array $field, mixed $value = null): Collection
+    {
+        $query = $this->getModel()->newQuery();
+
+        if (is_array($field)) {
+            $query->where($field);
+        } else {
+            $query->where($field, $value);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function delete(int $id): bool
     {
         $model = $this->find($id);

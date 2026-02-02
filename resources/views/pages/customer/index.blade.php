@@ -136,7 +136,7 @@
             title="Lista de Clientes"
             mobileTitle="Clientes"
             icon="people"
-            :total="$customers->total()"
+            :total="$customers instanceof \Illuminate\Pagination\LengthAwarePaginator ? $customers->total() : $customers->count()"
             padding="p-0"
         >
             <x-slot:headerActions>
@@ -310,50 +310,27 @@
                 </div>
             </div>
             <!-- Modal de Confirmação -->
-            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                        </div>
-                        <div class="modal-body">
-                            Tem certeza de que deseja excluir o cliente <strong id="deleteCustomerName"></strong>?
-                            <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <form id="deleteForm" action="#" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger">Excluir</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-ui.confirm-modal
+                id="deleteModal"
+                title="Confirmar Exclusão"
+                message="Tem certeza de que deseja excluir o cliente <strong id='deleteCustomerName'></strong>?"
+                submessage="Esta ação não pode ser desfeita."
+                confirmLabel="Excluir"
+                variant="danger"
+                type="delete"
+                resource="cliente"
+            />
 
             <!-- Modal de Restauração -->
-            <div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="restoreModalLabel">Confirmar Restauração</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                        </div>
-                        <div class="modal-body">
-                            Tem certeza de que deseja restaurar o cliente <strong id="restoreCustomerName"></strong>?
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <form id="restoreForm" action="#" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-success">Restaurar</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-ui.confirm-modal
+                id="restoreModal"
+                title="Confirmar Restauração"
+                message="Tem certeza de que deseja restaurar o cliente <strong id='restoreCustomerName'></strong>?"
+                confirmLabel="Restaurar"
+                variant="success"
+                type="restore"
+                resource="cliente"
+            />
 
             <div class="modal fade" id="confirmAllCustomersModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog">

@@ -1,9 +1,9 @@
-@props(['indexRoute' => null, 'defaultIndexRoute' => null, 'label' => 'Voltar'])
+@props(['indexRoute' => null, 'defaultIndexRoute' => null, 'label' => 'Voltar', 'routeParams' => []])
 
 @php
 $previousUrl = url()->previous();
-$indexUrl = $indexRoute ? route($indexRoute) : $previousUrl;
-$defaultUrl = $defaultIndexRoute ? route($defaultIndexRoute) : $indexUrl;
+$indexUrl = $indexRoute ? route($indexRoute, $routeParams) : $previousUrl;
+$defaultUrl = $defaultIndexRoute ? route($defaultIndexRoute, $routeParams) : $indexUrl;
 
 // Se o URL anterior for outra página de detalhes (show), voltamos para o index para quebrar o loop
 // Verificamos se o URL anterior começa com o index e se não é exatamente o index (o que indicaria um show ou sub-página)

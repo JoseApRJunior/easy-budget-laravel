@@ -35,7 +35,7 @@ class CreateCategoryAction
         $i = 1;
 
         while ($this->repository->existsBySlug($slug)) {
-            $slug = $base . '-' . $i;
+            $slug = $base.'-'.$i;
             $i++;
         }
 

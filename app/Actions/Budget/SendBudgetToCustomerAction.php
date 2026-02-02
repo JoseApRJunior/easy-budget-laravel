@@ -39,7 +39,7 @@ class SendBudgetToCustomerAction
             // Preparar dados da empresa (Tenant/Provider) para o e-mail
             $provider = $budget->tenant->provider;
             $companyData = [];
-            
+
             if ($provider) {
                 $commonData = $provider->commonData;
                 $address = $provider->address;
@@ -52,7 +52,7 @@ class SendBudgetToCustomerAction
                     if ($address->neighborhood) {
                         $addressLine1 .= " | {$address->neighborhood}";
                     }
-                    
+
                     $addressLine2 = "{$address->city}/{$address->state}";
                     if ($address->cep) {
                         $addressLine2 .= " - CEP: {$address->cep}";
@@ -77,15 +77,17 @@ class SendBudgetToCustomerAction
             $publicUrl = null;
             $pdfPath = null;
 
+            $oldStatus = $budget->status->value;
+
             // Executar operações de banco dentro da transação
-            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, $provider) {
+            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, $provider, $oldStatus, $customMessage) {
                 // 1. Gerar ou recuperar Token Público via BudgetShareService
                 $shareResult = $this->shareService->createShare([
                     'budget_id' => $budget->id,
                     'tenant_id' => $budget->tenant_id,
                     'recipient_email' => $customer->email,
                     'recipient_name' => $recipientName,
-                    'permissions' => ['view', 'comment', 'approve'],
+                    'permissions' => ['view', 'comment', 'approve', 'reject', 'print'],
                     'expires_at' => now()->addDays(7)->toDateTimeString(),
                     'message' => 'Orçamento enviado para aprovação.',
                 ], false); // Não envia notificação duplicada
@@ -101,6 +103,8 @@ class SendBudgetToCustomerAction
                 $pdfPath = $this->pdfService->generatePdf($budget, ['provider' => $provider]);
 
                 // 3. Atualizar orçamento: status para pendente e anexo
+                // Suprimir notificação de status pois enviaremos e-mail dedicado abaixo
+                $budget->suppressStatusNotification = true;
                 $budget->update([
                     'status' => \App\Enums\BudgetStatus::PENDING,
                     'attachment' => $pdfPath,
@@ -110,18 +114,28 @@ class SendBudgetToCustomerAction
                 if (method_exists($budget, 'actionHistory')) {
                     $budget->actionHistory()->create([
                         'tenant_id' => $budget->tenant_id,
-                        'action' => 'sent',
-                        'description' => 'Orçamento processado para envio.',
+                        'budget_id' => $budget->id,
                         'user_id' => auth()->id(),
+                        'action' => 'sent',
+                        'old_status' => $oldStatus,
+                        'new_status' => \App\Enums\BudgetStatus::PENDING->value,
+                        'description' => 'Orçamento processado para envio.',
+                        'metadata' => [
+                            'custom_message' => $customMessage,
+                            'via' => 'email',
+                        ],
+                        'ip_address' => request()->ip(),
+                        'user_agent' => request()->userAgent(),
                     ]);
                 }
             });
 
             // 5. Enviar E-mail (FORA DA TRANSAÇÃO para evitar timeout de banco)
+            \Illuminate\Support\Facades\Log::info('[SendBudgetToCustomerAction] Enviando email', ['customMessage' => $customMessage]);
             Mail::to($customer->email)->send(new BudgetNotificationMail(
                 budget: $budget,
                 customer: $customer,
-                notificationType: 'sent_to_customer',
+                notificationType: 'sent',
                 tenant: $budget->tenant,
                 company: $companyData,
                 publicUrl: $publicUrl,

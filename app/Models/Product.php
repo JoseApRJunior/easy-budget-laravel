@@ -294,6 +294,24 @@ class Product extends Model
     }
 
     /**
+     * Retorna a variante de cor baseada na margem de lucro.
+     */
+    public function getMarginVariantAttribute(): string
+    {
+        $percentage = $this->profit_margin_percentage;
+
+        if ($percentage >= 30) {
+            return 'success';
+        }
+
+        if ($percentage >= 15) {
+            return 'warning';
+        }
+
+        return 'danger';
+    }
+
+    /**
      * Retorna a URL completa da imagem do produto.
      */
     public function getImageUrlAttribute(): string

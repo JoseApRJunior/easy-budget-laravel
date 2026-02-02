@@ -8,7 +8,6 @@ use App\DTOs\Support\SupportDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\SupportContactRequest;
 use App\Services\Domain\SupportService;
-use Exception;
 use Illuminate\Contracts\View\View;
 
 /**

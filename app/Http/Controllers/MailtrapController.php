@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Infrastructure\EmailProviderService;
 use App\Services\Infrastructure\EmailTestService;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;

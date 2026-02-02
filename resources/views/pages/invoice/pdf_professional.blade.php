@@ -539,10 +539,13 @@
             <p style="font-size: 10px; margin-bottom: 10px;"><strong>Cartão de Crédito/Débito:</strong></p>
             <p style="font-size: 9px;">Pagamento online através do nosso sistema seguro.</p>
             
-            @if($invoice->public_hash)
+            @php
+                $publicUrl = $invoice->getPublicUrl();
+            @endphp
+            @if($publicUrl)
             <p style="font-size: 9px; margin-top: 15px; padding: 8px; background: #f8f9fa; border-radius: 3px;">
                 <strong>Link de Pagamento:</strong><br>
-                {{ config('app.url') }}/invoice/{{ $invoice->public_hash }}
+                {{ $publicUrl }}
             </p>
             @endif
         </div>

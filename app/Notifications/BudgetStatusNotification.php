@@ -76,6 +76,7 @@ class BudgetStatusNotification extends Notification implements ShouldQueue
 
     /**
      * Locale para internacionalização (pt-BR, en, etc).
+     *
      * @var string
      */
     public $locale;

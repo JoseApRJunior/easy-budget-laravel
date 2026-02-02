@@ -137,14 +137,16 @@
                                 {{ strtolower( $budget->status->getDescription() ) }}.</div>
                         @endif
 
-                        <div class="d-grid gap-2 mt-3">
-                            <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token]) }}" class="btn btn-outline-secondary" target="_blank">
-                                <i class="bi bi-printer me-2"></i>Imprimir Orçamento
-                            </a>
-                            <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger">
-                                <i class="bi bi-file-earmark-pdf me-2"></i>Baixar em PDF
-                            </a>
-                        </div>
+                        @if(isset($permissions['can_print']) && $permissions['can_print'])
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token]) }}" class="btn btn-outline-secondary" target="_blank">
+                                    <i class="bi bi-printer me-2"></i>Imprimir Orçamento
+                                </a>
+                                <a href="{{ route('budgets.public.print', ['code' => $budget->code, 'token' => $token, 'pdf' => true, 'download' => true]) }}" class="btn btn-outline-danger" target="_blank">
+                                    <i class="bi bi-file-earmark-pdf me-2"></i>Baixar em PDF
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -213,7 +215,10 @@
                             <p class="text-muted small">Ao aprovar, o prestador será notificado para iniciar o trabalho.</p>
                             <div class="form-group mt-3">
                                 <label for="approve_comment">Observações (opcional):</label>
-                                <textarea name="comment" id="approve_comment" class="form-control" rows="3" placeholder="Algum detalhe ou instrução adicional?"></textarea>
+                                <textarea name="comment" id="approve_comment" class="form-control" rows="3" 
+                                    maxlength="500" placeholder="Algum detalhe ou instrução adicional?"
+                                    oninput="updateCharCount(this, 'approveCharCount')"></textarea>
+                                <div class="form-text text-end small" id="approveCharCount">0 / 500 caracteres</div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -242,7 +247,9 @@
                             <div class="form-group">
                                 <label for="rejection_reason">Motivo da Rejeição (opcional):</label>
                                 <textarea name="comment" id="rejection_reason" class="form-control"
-                                    rows="3" placeholder="Poderia nos informar o motivo da rejeição para que possamos melhorar?"></textarea>
+                                    maxlength="500" rows="3" placeholder="Poderia nos informar o motivo da rejeição para que possamos melhorar?"
+                                    oninput="updateCharCount(this, 'rejectCharCount')"></textarea>
+                                <div class="form-text text-end small" id="rejectCharCount">0 / 500 caracteres</div>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -254,3 +261,20 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    function updateCharCount(textarea, counterId) {
+        const count = textarea.value.length;
+        const counter = document.getElementById(counterId);
+        if (counter) {
+            counter.textContent = `${count} / 500 caracteres`;
+            if (count >= 500) {
+                counter.classList.add('text-danger');
+            } else {
+                counter.classList.remove('text-danger');
+            }
+        }
+    }
+</script>
+@endpush

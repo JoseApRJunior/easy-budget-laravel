@@ -16,7 +16,6 @@ use App\Support\ServiceResult;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 /**
  * Serviço para gerenciamento de categorias com arquitetura refinada.
@@ -87,7 +86,7 @@ class CategoryService extends AbstractBaseService
                 );
                 // getAllByTenant doesn't load relations by default in AbstractTenantRepository
                 // but we can load them if needed.
-                if (!empty($with)) {
+                if (! empty($with)) {
                     $result->load($with);
                 }
                 Log::info('Categorias carregadas (coleção)', ['total' => $result->count()]);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Observers;
 
+use App\Events\BudgetStatusChanged;
 use App\Models\AuditLog;
 use App\Models\Budget;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,24 @@ class BudgetObserver
 
         if (isset($changes['status'])) {
             $action = 'budget_status_changed';
-            $description = "Status alterado para: {$changes['status']}";
+
+            $newStatus = $changes['status'];
+            $oldStatus = $budget->getOriginal('status');
+
+            $newStatusValue = $newStatus instanceof \UnitEnum ? $newStatus->value : (string) $newStatus;
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
+
+            $statusLabel = $newStatus instanceof \App\Enums\BudgetStatus ? $newStatus->label() : $newStatusValue;
+            $description = "Status alterado para: {$statusLabel}";
+
+            // Disparar evento de notificação
+            event(new BudgetStatusChanged(
+                $budget,
+                $oldStatusValue,
+                $newStatusValue,
+                $budget->transient_customer_comment ?? $budget->customer_comment,
+                $budget->suppressStatusNotification ?? false
+            ));
         }
 
         // Debug: verificar se observer está sendo chamado

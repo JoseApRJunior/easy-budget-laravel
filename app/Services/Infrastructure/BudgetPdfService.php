@@ -34,6 +34,8 @@ class BudgetPdfService
 
         $filename = "budget_{$budget->code}.pdf";
         $path = "budgets/{$filename}";
+
+        Storage::makeDirectory('budgets');
         Storage::put($path, $pdfContent);
 
         return $path;

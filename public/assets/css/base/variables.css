@@ -76,7 +76,7 @@
    --primary-hover: var(--primary-color);
    --secondary-hover: var(--text-secondary);
 
-   /* Tema Light - Gerenciado pelo PHP */
+     /* Tema Light - Gerenciado pelo PHP */
    --form-bg: var(--form-bg);
    --form-text: var(--form-text);
    --form-border: var(--form-border);

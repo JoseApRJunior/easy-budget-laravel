@@ -65,7 +65,7 @@ class SupportConfirmationEmail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.support_confirmation',
+            view: 'emails.system.support_confirmation',
             with: [
                 'confirmationData' => $this->confirmationData,
                 'tenant' => $this->tenant,

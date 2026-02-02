@@ -45,12 +45,22 @@
                                             <i class="bi bi-person-circle me-2"></i>
                                             Cliente
                                         </h6>
-                                        <h5 class="mb-1">{{ $invoice->customer->common_data->first_name }}
-                                            {{ $invoice->customer->common_data->last_name }}
-                                        </h5>
-                                        <p class="text-muted mb-0">{{ $invoice->customer->contact->email }}</p>
-                                        @if ($invoice->customer->contact->phone)
-                                            <p class="text-muted mb-0">{{ $invoice->customer->contact->phone }}</p>
+                                        @if($invoice->customer?->commonData)
+                                            <h5 class="mb-1">{{ $invoice->customer->commonData->first_name }}
+                                                {{ $invoice->customer->commonData->last_name }}
+                                            </h5>
+                                        @else
+                                            <h5 class="mb-1 text-muted">Cliente não identificado</h5>
+                                        @endif
+
+                                        @if($invoice->customer?->contact)
+                                            <p class="text-muted mb-0">{{ $invoice->customer->contact->email_personal ?? $invoice->customer->contact->email_business }}</p>
+                                            @php
+                                                $phone = $invoice->customer->contact->phone_personal ?? $invoice->customer->contact->phone_business;
+                                            @endphp
+                                            @if ($phone)
+                                                <p class="text-muted mb-0">{{ \App\Helpers\MaskHelper::formatPhone($phone) }}</p>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>

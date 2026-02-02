@@ -37,7 +37,7 @@ class LinearRegressionService
 
         return [
             'slope' => $slope,
-            'intercept' => $intercept
+            'intercept' => $intercept,
         ];
     }
 

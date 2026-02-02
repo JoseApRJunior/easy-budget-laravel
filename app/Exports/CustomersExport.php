@@ -64,7 +64,7 @@ class CustomersExport implements FromCollection, ShouldAutoSize, WithHeadings, W
 
         return [
             $customer->id,
-            $commonData ? ($commonData->first_name . ' ' . $commonData->last_name) : '-',
+            $commonData ? ($commonData->first_name.' '.$commonData->last_name) : '-',
             $contact ? ($contact->email_personal ?: $contact->email_business) : '-',
             $contact ? ($contact->phone_personal ?: $contact->phone_business) : '-',
             $commonData ? ($commonData->cpf ?: $commonData->cnpj) : '-',

@@ -81,8 +81,6 @@ return new class extends Migration
             $table->json('features')->nullable();
             $table->timestamps();
             $table->softDeletes();
-
-            $table->unique(['tenant_id', 'code'], 'services_tenant_code_unique');
         });
 
         Schema::create('categories', function (Blueprint $table) {

@@ -33,6 +33,18 @@ class Budget extends Model
     use TenantScoped;
 
     /**
+     * Propriedade temporária para armazenar comentário do cliente durante o ciclo de vida do request.
+     * Não é persistida no banco de dados.
+     */
+    public ?string $transient_customer_comment = null;
+
+    /**
+     * Propriedade temporária para suprimir notificações de status durante o ciclo de vida do request.
+     * Não é persistida no banco de dados.
+     */
+    public bool $suppressStatusNotification = false;
+
+    /**
      * Boot the model.
      */
     protected static function boot()
@@ -67,12 +79,33 @@ class Budget extends Model
         'attachment',
         'history',
         'pdf_verification_hash',
-        'public_token',
-        'public_expires_at',
-        'customer_comment',
         'status_updated_at',
         'status_updated_by',
     ];
+
+    /**
+     * Get the customer comment (from history or temporary attribute).
+     */
+    public function getCustomerCommentAttribute(?string $value): ?string
+    {
+        // Se o valor foi definido manualmente na propriedade transiente, retorna ele.
+        if (! empty($this->transient_customer_comment)) {
+            return $this->transient_customer_comment;
+        }
+
+        // Se o valor veio do banco (caso existisse a coluna, ou cache), usa ele.
+        if (! empty($value)) {
+            return $value;
+        }
+
+        // Caso contrário, busca do histórico (última ação relevante)
+        $lastAction = $this->actionHistory()
+            ->whereNotNull('metadata->customer_comment')
+            ->latest()
+            ->first();
+
+        return $lastAction?->metadata['customer_comment'] ?? null;
+    }
 
     /**
      * The attributes that should be cast.
@@ -116,7 +149,7 @@ class Budget extends Model
         return [
             'tenant_id' => 'required|integer|exists:tenants,id',
             'customer_id' => 'required|integer|exists:customers,id',
-            'status' => 'required|string|in:'.implode(',', array_column(\App\Enums\BudgetStatus::cases(), 'value')),
+            'status' => 'required|string|in:' . implode(',', array_column(\App\Enums\BudgetStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:budgets,code',
             'due_date' => 'nullable|date|after:today',
@@ -148,8 +181,8 @@ class Budget extends Model
     public static function updateRules(int $budgetId): array
     {
         $rules = self::businessRules();
-        $rules['code'] = 'required|string|max:50|unique:budgets,code,'.$budgetId;
-        $rules['pdf_verification_hash'] = 'nullable|string|max:64|unique:budgets,pdf_verification_hash,'.$budgetId;
+        $rules['code'] = 'required|string|max:50|unique:budgets,code,' . $budgetId;
+        $rules['pdf_verification_hash'] = 'nullable|string|max:64|unique:budgets,pdf_verification_hash,' . $budgetId;
 
         return $rules;
     }
@@ -197,6 +230,18 @@ class Budget extends Model
             'tenant_id', // Local key on budgets table...
             'id' // Local key on tenants table...
         );
+    }
+
+    /**
+     * Verifica se o orçamento já foi finalizado (aprovado, rejeitado, cancelado ou concluído).
+     */
+    public function isFinished(): bool
+    {
+        return in_array($this->status, [
+            BudgetStatus::COMPLETED,
+            BudgetStatus::CANCELLED,
+            BudgetStatus::REJECTED,
+        ], true);
     }
 
     /**
@@ -296,7 +341,7 @@ class Budget extends Model
     {
         $activeStatuses = array_filter(
             array_column(\App\Enums\BudgetStatus::cases(), 'value'),
-            fn ($status) => \App\Enums\BudgetStatus::tryFrom($status)?->isActive() ?? false
+            fn($status) => \App\Enums\BudgetStatus::tryFrom($status)?->isActive() ?? false
         );
 
         return $query->whereIn('status', $activeStatuses);
@@ -494,7 +539,7 @@ class Budget extends Model
         $major = (int) $parts[0];
         $minor = (int) $parts[1];
 
-        return ($minor + 1) >= 10 ? ($major + 1).'.0' : $major.'.'.($minor + 1);
+        return ($minor + 1) >= 10 ? ($major + 1) . '.0' : $major . '.' . ($minor + 1);
     }
 
     /**
@@ -534,7 +579,7 @@ class Budget extends Model
                     'category_id' => $serviceData['category_id'],
                     'description' => $serviceData['description'],
                     'status' => $this->status,
-                    'code' => $serviceData['code'] ?? 'SRV-'.uniqid(),
+                    'code' => $serviceData['code'] ?? 'SRV-' . uniqid(),
                     'total' => $serviceData['total'],
                 ]);
 
@@ -548,7 +593,6 @@ class Budget extends Model
 
         return true;
     }
-
 
     /**
      * Duplica o orçamento.
@@ -581,17 +625,50 @@ class Budget extends Model
     }
 
     /**
-     * Gera código para orçamento duplicado.
+     * Gera a URL pública para visualização/interação com o orçamento.
      */
-    private function generateDuplicateCode(): string
+    public function getPublicUrl(): ?string
     {
-        $baseCode = $this->code.'-COPY';
-        $counter = 1;
+        // Obter o compartilhamento mais recente ativo ou criar um novo
+        $share = \App\Models\BudgetShare::where('budget_id', $this->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
 
-        while (static::where('code', $baseCode.'-'.$counter)->exists()) {
-            $counter++;
+        if ($share) {
+            return route('budgets.public.shared.view', ['token' => $share->share_token]);
         }
 
-        return $baseCode.'-'.$counter;
+        return null;
+    }
+
+    /**
+     * Gera a URL para impressão do orçamento.
+     */
+    public function getPrintUrl(): ?string
+    {
+        $share = \App\Models\BudgetShare::where('budget_id', $this->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if (! $share || ! $this->code) {
+            return null;
+        }
+
+        return route('budgets.public.print', [
+            'code' => $this->code,
+            'token' => $share->share_token,
+        ], true);
+    }
+
+    /**
+     * Gera a URL interna para visualização do orçamento.
+     */
+    public function getUrl(): string
+    {
+        return route('provider.budgets.show', $this->id, true);
     }
 }

@@ -18,14 +18,14 @@ return [
         'text' => '#1e293b',
         'secondary' => '#94a3b8',
         'background' => '#c3d0dd',
-        'surface' => '#9facb9',
+        'surface' => '#b2bac2ff',
         'border' => '#e2e8f0',
         'white' => '#ffffff',
 
         // Cores vindas do variables.css
-        'form_bg' => '#9facb9', // --form-bg (mesmo que surface)
+        'form_bg' => '#b2bac2ff', // --form-bg (mesmo que surface)
         'form_text' => '#1e293b', // --form-text
-        'form_border' => '#b4c2d3', // --form-border
+        'form_border' => 'rgba(109, 118, 128, 1)', // --form-border
         'form_input_bg' => '#e2e8f0', // --form-input-bg
         'form_input_border' => '#9fb3c8', // --form-input-border
         'small_text' => '#475569', // --small-text

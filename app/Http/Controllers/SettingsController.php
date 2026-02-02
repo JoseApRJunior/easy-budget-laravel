@@ -10,7 +10,6 @@ use App\Services\Application\AuditLogService;
 use App\Services\Application\FileUploadService;
 use App\Services\Application\SettingsBackupService;
 use App\Services\Domain\SettingsService;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -375,31 +374,33 @@ class SettingsController extends Controller
     }
 
     /**
-     * Obtém integrações ativas (mock para demonstração)
+     * Obtém integrações ativas
      */
     private function getIntegrations(): array
     {
+        $cred = ProviderCredential::where('tenant_id', auth()->user()->tenant_id)
+            ->where('payment_gateway', 'mercadopago')
+            ->first();
+
+        $isConnected = (bool) $cred;
+        $status = 'disconnected';
+
+        if ($isConnected) {
+            $status = 'connected';
+            // Verifica se expirou (exemplo simples)
+            if ($cred->expires_in > 0 && $cred->updated_at->addSeconds($cred->expires_in)->isPast()) {
+                $status = 'expired';
+            }
+        }
+
         return [
             [
-                'id' => 'google',
-                'name' => 'Google Calendar',
-                'status' => 'connected',
-                'icon' => 'google',
-                'last_sync' => now()->subDays(1)->toDateTimeString(),
-            ],
-            [
-                'id' => 'whatsapp',
-                'name' => 'WhatsApp Business',
-                'status' => 'disconnected',
-                'icon' => 'whatsapp',
-                'last_sync' => null,
-            ],
-            [
-                'id' => 'stripe',
-                'name' => 'Stripe Payments',
-                'status' => 'connected',
+                'id' => 'mercadopago',
+                'name' => 'Mercado Pago',
+                'description' => 'Receba pagamentos de seus clientes via Mercado Pago (Cartão, PIX, Boleto).',
+                'status' => $status,
                 'icon' => 'credit-card',
-                'last_sync' => now()->subHours(5)->toDateTimeString(),
+                'last_sync' => $cred?->updated_at?->toDateTimeString(),
             ],
         ];
     }

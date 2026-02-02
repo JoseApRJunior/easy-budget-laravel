@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class BudgetActionHistory extends Model
 {
@@ -117,6 +118,7 @@ class BudgetActionHistory extends Model
             'sent' => 'Enviado',
             'approved' => 'Aprovado',
             'rejected' => 'Rejeitado',
+            'cancelled' => 'Cancelado',
             'expired' => 'Expirado',
             'viewed' => 'Visualizado',
             'downloaded' => 'Baixado',
@@ -124,7 +126,19 @@ class BudgetActionHistory extends Model
             'duplicated' => 'Duplicado',
             'version_created' => 'Versão Criada',
             'restored' => 'Restaurado',
+            'products_reserved' => 'Produtos Reservados',
+            'sent_and_reserved' => 'Enviado e Reservado',
         ];
+    }
+
+    /**
+     * Accessor para o label da ação.
+     */
+    public function getActionLabelAttribute(): string
+    {
+        $actions = self::getAvailableActions();
+
+        return $actions[$this->action] ?? ucfirst($this->action);
     }
 
     /**

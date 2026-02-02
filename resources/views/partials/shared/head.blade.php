@@ -13,7 +13,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.ico') }}" />
 
-    <!-- Variáveis de Tema Dinâmicas (Sincronizadas com config/theme.php) -->
+     <!-- Variáveis de Tema Dinâmicas (Sincronizadas com config/theme.php) -->
     <style>
         :root {
             /* Cores Base */
@@ -46,6 +46,7 @@
             --contrast-overlay: {{ config('theme.colors.contrast_overlay') }};
         }
     </style>
+
 
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/bootstrap-icons.css') }}" rel="stylesheet">

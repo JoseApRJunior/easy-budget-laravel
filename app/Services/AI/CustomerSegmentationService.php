@@ -9,7 +9,7 @@ class CustomerSegmentationService
     /**
      * Segment customers based on RFM scores
      *
-     * @param array $customers Array of customer data with 'last_purchase_date', 'total_purchases', 'total_spent'
+     * @param  array  $customers  Array of customer data with 'last_purchase_date', 'total_purchases', 'total_spent'
      */
     public function segment(array $customers): array
     {
@@ -45,14 +45,20 @@ class CustomerSegmentationService
             $frequency = $customer['total_purchases'] ?? 0;
             $monetary = $customer['total_spent'] ?? 0;
 
-            if ($recency > $maxRecency) $maxRecency = $recency;
-            if ($frequency > $maxFrequency) $maxFrequency = $frequency;
-            if ($monetary > $maxMonetary) $maxMonetary = $monetary;
+            if ($recency > $maxRecency) {
+                $maxRecency = $recency;
+            }
+            if ($frequency > $maxFrequency) {
+                $maxFrequency = $frequency;
+            }
+            if ($monetary > $maxMonetary) {
+                $maxMonetary = $monetary;
+            }
 
             $processedCustomers[$customer['id']] = [
                 'recency' => $recency,
                 'frequency' => $frequency,
-                'monetary' => $monetary
+                'monetary' => $monetary,
             ];
         }
 
@@ -72,7 +78,7 @@ class CustomerSegmentationService
             $rfmScores[$id] = [
                 'r_score' => $r_score,
                 'f_score' => $f_score,
-                'm_score' => $m_score
+                'm_score' => $m_score,
             ];
         }
 

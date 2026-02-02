@@ -42,7 +42,7 @@
             type="password"
             autocomplete="{{ $autocomplete }}" 
             @if($required) required @endif
-            {{ $attributes->merge(['class' => 'form-control ' . ($errors->has($name) ? 'is-invalid' : '')]) }}
+            {{ $attributes->merge(['class' => 'form-control ' . ($errors->has($name) ? 'is-invalid' : ''), 'style' => 'background-color: var(--form-input-bg);']) }}
             placeholder="{{ $placeholder }}"
             @if($showStrength) data-password-strength="true" @endif
             @if($confirmId) data-confirm-with="{{ $confirmId }}" @endif

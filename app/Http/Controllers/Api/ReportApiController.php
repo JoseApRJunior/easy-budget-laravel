@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Api;
 use App\DTOs\Report\ReportDTO;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Services\Domain\ReportService;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

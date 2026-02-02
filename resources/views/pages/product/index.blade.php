@@ -205,10 +205,7 @@
                             <td class="text-end fw-bold text-dark">{{ $product->formatted_price }}</td>
                             <td class="text-center">
                                 @if($product->cost_price > 0)
-                                    @php
-                                        $variant = $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger');
-                                    @endphp
-                                    <span class="badge bg-{{ $variant }}-api-subtle text-{{ $variant }} border border-{{ $variant }}-subtle px-2">
+                                    <span class="badge bg-{{ $product->margin_variant }}-api-subtle text-{{ $product->margin_variant }} border border-{{ $product->margin_variant }}-subtle px-2">
                                         {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
                                     </span>
                                 @else
@@ -271,10 +268,7 @@
                             <code class="text-primary small bg-light px-1 border rounded">{{ $product->sku }}</code>
                             <x-ui.status-badge :item="$product" statusField="active" activeLabel="Ativo" inactiveLabel="Inativo" />
                             @if($product->cost_price > 0)
-                                @php
-                                    $variant = $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger');
-                                @endphp
-                                <span class="badge bg-{{ $variant }}-api-subtle text-{{ $variant }} border border-{{ $variant }}-subtle px-1">
+                                <span class="badge bg-{{ $product->margin_variant }}-api-subtle text-{{ $product->margin_variant }} border border-{{ $product->margin_variant }}-subtle px-1">
                                     {{ number_format($product->profit_margin_percentage, 1, ',', '.') }}%
                                 </span>
                             @endif

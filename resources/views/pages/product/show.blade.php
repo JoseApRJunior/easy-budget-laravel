@@ -280,7 +280,6 @@
         </x-layout.grid-row>
     </div>
 </x-layout.page-container>
-@endsection
 
 <!-- Modal de Confirmação de Ativação/Desativação -->
 <div class="modal fade" id="toggleModal" tabindex="-1" aria-labelledby="toggleModalLabel" aria-hidden="true">

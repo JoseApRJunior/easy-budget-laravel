@@ -78,7 +78,7 @@ class SupportResponse extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.support',
+            view: 'emails.system.support',
             with: [
                 'ticket' => [
                     'id' => $this->ticket['id'] ?? null,
@@ -111,7 +111,7 @@ class SupportResponse extends Mailable implements ShouldQueue
     private function getStatusColor(): string
     {
         $status = $this->ticket['status'] ?? 'open';
-        
+
         return match ($status) {
             'open' => '#ffc107', // Amarelo/Avisando
             'in_progress' => '#0dcaf0', // Azul claro/Info

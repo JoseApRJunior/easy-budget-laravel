@@ -234,10 +234,10 @@
                         title="Atalhos da Agenda"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.schedules.index')" variant="outline-primary" icon="list-ul" label="Listar Todos" />
-                        <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="outline-primary" icon="calendar-week" label="Ver Calendário" />
-                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="outline-warning" icon="hourglass-split" label="Ver Pendentes" />
-                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="outline-info" icon="check-circle" label="Ver Confirmados" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index')" variant="primary" icon="list-ul" label="Listar Todos" />
+                        <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="primary" icon="calendar-week" label="Ver Calendário" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="warning" icon="hourglass-split" label="Ver Pendentes" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="info" icon="check-circle" label="Ver Confirmados" />
                     </x-resource.quick-actions>
 
                     <!-- Ações de Lote -->

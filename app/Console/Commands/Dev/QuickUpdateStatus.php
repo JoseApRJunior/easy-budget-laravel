@@ -1,0 +1,171 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Console\Commands\Dev;
+
+use App\Models\Budget;
+use App\Models\Schedule;
+use App\Models\Service;
+use Illuminate\Console\Command;
+
+class QuickUpdateStatus extends Command
+{
+    /**
+     * Exemplos de uso:
+     *
+     * 1. Atualizar Orçamento por ID ou Código:
+     * php artisan dev:update-status budget 1 approved
+     * php artisan dev:update-status budget BUD-2026-01-000001 approved
+     *
+     * 2. Atualizar Serviço:
+     * php artisan dev:update-status service SERV-2026-01-000001 on_hold
+     *
+     * 3. Atualizar Agendamento (usando código do serviço ou ID do agendamento):
+     * php artisan dev:update-status schedule SERV-2026-01-000001 confirmed
+     * php artisan dev:update-status schedule 1 finished
+     *
+     * 4. Atualizar Serviço e Agendamento vinculado simultaneamente:
+     * php artisan dev:update-status service SERV-2026-01-000001 in_progress --sch=confirmed
+     */
+
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'dev:update-status {type} {id_or_code} {status} {--sch= : Status para o agendamento vinculado (apenas para service)}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Altera rapidamente o status de um Budget, Service ou Schedule (use --sch para ambos)';
+
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
+    {
+        $type = $this->argument('type');
+        $identifier = $this->argument('id_or_code');
+        $status = $this->argument('status');
+        $scheduleStatus = $this->option('sch');
+
+        $this->info("Tentando atualizar {$type} ({$identifier}) para status: {$status}");
+
+        switch (strtolower($type)) {
+            case 'budget':
+                $model = Budget::where('id', $identifier)->orWhere('code', $identifier)->first();
+                if ($model) {
+                    // Limpar histórico
+                    $model->actionHistory()->delete();
+                    $this->info('Histórico de ações limpo.');
+
+                    // Preparar supressão de notificações
+                    $model->suppressStatusNotification = true;
+
+                    // Atualizar serviços vinculados
+                    $services = $model->services;
+                    foreach ($services as $service) {
+                        // Tenta encontrar um status correspondente no ServiceStatus
+                        // Se o status do budget for 'approved', o serviço também vai para 'approved' (ou pending se preferir, mas vou seguir o status)
+                        // Se o status não existir no ServiceStatus, mantemos o atual ou logamos aviso.
+                        // Dado que é DEV tool, vou tentar alinhar.
+                        try {
+                            $serviceStatus = \App\Enums\ServiceStatus::tryFrom($status);
+                            if ($serviceStatus) {
+                                $service->update(['status' => $serviceStatus]);
+                                $this->info("Serviço {$service->code} atualizado para: {$status}");
+
+                                // Se tiver agendamento e o status for cancelled/draft/pending, talvez devêssemos resetar agendamento também?
+                                // O usuário pediu "restaurar estado de service e scheduled".
+                                // Vou assumir que se o status for resetado, o agendamento deve seguir.
+                                if (in_array($status, ['draft', 'pending', 'cancelled'])) {
+                                    $schedule = Schedule::where('service_id', $service->id)->latest()->first();
+                                    if ($schedule) {
+                                        $schedule->update(['status' => $status === 'draft' ? 'pending' : $status]); // Schedule não tem draft geralmente
+                                        $this->info("Agendamento do serviço {$service->code} atualizado.");
+                                    }
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            $this->warn("Não foi possível atualizar status do serviço {$service->code}: " . $e->getMessage());
+                        }
+                    }
+                }
+                break;
+            case 'service':
+                $model = Service::where('id', $identifier)->orWhere('code', $identifier)->first();
+
+                // Se passou --sch, tenta atualizar o agendamento vinculado
+                if ($model && $scheduleStatus) {
+                    $schedule = Schedule::where('service_id', $model->id)->latest()->first();
+                    if ($schedule) {
+                        $schedule->update(['status' => $scheduleStatus]);
+                        $this->info("Agendamento vinculado (ID: {$schedule->id}) atualizado para: {$scheduleStatus}");
+                    } else {
+                        $this->warn('Nenhum agendamento encontrado para este serviço.');
+                    }
+                }
+                break;
+            case 'schedule':
+                // Se o identificador começar com SERV-, busca pelo código do serviço
+                if (str_starts_with((string) $identifier, 'SERV-')) {
+                    $service = Service::where('code', $identifier)->first();
+                    if ($service) {
+                        // Busca o agendamento mais recente vinculado a este serviço
+                        $model = Schedule::where('service_id', $service->id)->latest()->first();
+                        if ($model) {
+                            $this->info("Encontrado agendamento ID: {$model->id} para o serviço {$identifier}");
+                        }
+                    } else {
+                        $this->error("Serviço {$identifier} não encontrado.");
+
+                        return 1;
+                    }
+                } else {
+                    $model = Schedule::find($identifier);
+                }
+                break;
+            default:
+                $this->error('Tipo inválido. Use: budget, service ou schedule.');
+
+                return 1;
+        }
+
+        if (! $model) {
+            $this->error('Registro não encontrado.');
+
+            return 1;
+        }
+
+        $model->update(['status' => $status]);
+
+        // Se o status for draft, garantimos a invalidação dos compartilhamentos
+        if (strtolower($type) === 'budget' && $status === 'draft') {
+            $model->refresh(); // Garante que temos a instância atualizada
+            // $model->public_token e $model->public_expires_at foram removidos
+
+            // Invalidamos quaisquer tokens de compartilhamento ativos na tabela budget_shares
+            try {
+                \App\Models\BudgetShare::where('budget_id', $model->id)
+                    ->update([
+                        'is_active' => false,
+                        'status' => 'expired',
+                        'expires_at' => now()
+                    ]);
+                $this->info('Tokens de compartilhamento (budget_shares) invalidados.');
+            } catch (\Exception $e) {
+                $this->warn('Não foi possível invalidar budget_shares: ' . $e->getMessage());
+            }
+
+            $this->info('Compartilhamentos (budget_shares) invalidados com sucesso.');
+        }
+
+        $this->info("{$type} atualizado com sucesso para: {$status}");
+
+        return 0;
+    }
+}

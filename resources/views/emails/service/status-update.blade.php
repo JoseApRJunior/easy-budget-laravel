@@ -1,0 +1,76 @@
+@extends('emails.layouts.base')
+
+@section('title', 'Atualização de Serviço - #' . $emailData['service_code'])
+
+@section('content')
+    <h1>
+        @switch($emailData['new_status'])
+            @case('in_progress')
+                🚀 Seu serviço está em andamento!
+                @break
+            @case('completed')
+            @case('finished')
+                ✅ Seu serviço foi concluído!
+                @break
+            @case('cancelled')
+            @case('rejected')
+                ❌ Atualização no status do serviço
+                @break
+            @case('on_hold')
+                ⏳ Seu serviço está em espera
+                @break
+            @case('partial')
+                📦 Entrega parcial realizada
+                @break
+            @default
+                📋 Atualização no seu serviço
+        @endswitch
+    </h1>
+
+    <p>Olá, <strong>{{ $emailData['customer_name'] }}</strong>.</p>
+
+    <p>Houve uma atualização no status do seu serviço <strong>#{{ $emailData['service_code'] }}</strong>:</p>
+
+    <div class="panel" style="border-left: 4px solid {{ $statusColor ?? '#0d6efd' }}; background: #f8fafc; padding: 15px; margin-bottom: 20px;">
+        <p style="margin: 0; font-size: 16px;">
+            Status atual: <strong style="color: {{ $statusColor ?? '#0d6efd' }};">{{ $emailData['service_status_name'] }}</strong>
+        </p>
+        @if(!empty($emailData['service_status_description']))
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #6b7280; font-style: italic;">
+                "{{ $emailData['service_status_description'] }}"
+            </p>
+        @endif
+    </div>
+
+    <div class="panel">
+        <p><strong>Descrição do Serviço:</strong><br>
+            <span style="color: #475569; display: block; margin-top: 4px;">{{ $emailData['service_description'] }}</span>
+        </p>
+
+        @if(!empty($emailData['service_total']) && $emailData['service_total'] !== '0,00')
+            <p><strong>Valor Total:</strong><br>
+                <span style="color: #475569; display: block; margin-top: 4px;">R$ {{ $emailData['service_total'] }}</span>
+            </p>
+        @endif
+
+        <p><strong>Atualizado em:</strong><br>
+            <span style="color: #475569; display: block; margin-top: 4px;">{{ $emailData['status_changed_at'] }}</span>
+        </p>
+    </div>
+
+    <div style="text-align: center; margin: 40px 0;">
+        <a href="{{ $emailData['link'] }}" class="btn">Visualizar Detalhes do Serviço</a>
+    </div>
+
+    <p style="font-size: 13px; color: #94a3b8; text-align: center;">
+        Se o botão acima não funcionar, copie e cole o URL abaixo:<br>
+        <span class="subcopy">{{ $emailData['link'] }}</span>
+    </p>
+
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;">
+
+    <p style="font-size: 14px; color: #64748b; text-align: center;">
+        Você pode acompanhar o progresso, visualizar faturas e entrar em contato conosco diretamente pela plataforma.
+    </p>
+</div>
+@endsection

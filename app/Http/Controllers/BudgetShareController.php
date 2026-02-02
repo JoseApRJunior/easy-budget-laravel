@@ -114,8 +114,10 @@ class BudgetShareController extends Controller
 
         $result = $this->budgetShareService->createShare([
             'budget_id' => $request->input('budget_id'),
+            'recipient_name' => $request->input('recipient_name'),
+            'recipient_email' => $request->input('email'),
             'expires_at' => $request->input('expires_at'),
-            'permissions' => $request->input('permissions', ['view']),
+            'permissions' => $request->input('permissions', ['view', 'print', 'approve', 'reject', 'comment']),
             'notes' => $request->input('notes'),
             'created_by' => $user->id,
         ]);
@@ -147,7 +149,7 @@ class BudgetShareController extends Controller
         }
 
         return view('pages.budget-share.show', [
-            'budgetShare' => $result->getData(),
+            'share' => $result->getData(),
         ]);
     }
 
@@ -174,7 +176,7 @@ class BudgetShareController extends Controller
             ->get();
 
         return view('pages.budget-share.edit', [
-            'budgetShare' => $result->getData(),
+            'share' => $result->getData(),
             'budgets' => $budgets,
         ]);
     }
@@ -187,10 +189,12 @@ class BudgetShareController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $result = $this->budgetShareService->update($id, [
+        $result = $this->budgetShareService->update((int) $id, [
             'budget_id' => $request->input('budget_id'),
+            'recipient_name' => $request->input('recipient_name'),
+            'recipient_email' => $request->input('email'),
             'expires_at' => $request->input('expires_at'),
-            'permissions' => $request->input('permissions', ['view']),
+            'permissions' => $request->input('permissions', ['view', 'print', 'approve', 'reject', 'comment']),
             'notes' => $request->input('notes'),
             'status' => $request->input('status', 'active'),
             'updated_by' => $user->id,
@@ -260,7 +264,8 @@ class BudgetShareController extends Controller
      */
     public function approve(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        $result = $this->budgetShareService->approveBudget($token);
+        $comment = $request->input('comment');
+        $result = $this->budgetShareService->approveBudget($token, $comment);
 
         if ($request->expectsJson()) {
             return $this->jsonResponse($result);
@@ -280,7 +285,8 @@ class BudgetShareController extends Controller
      */
     public function reject(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        $result = $this->budgetShareService->rejectBudget($token);
+        $comment = $request->input('comment');
+        $result = $this->budgetShareService->rejectBudget($token, $comment);
 
         if ($request->expectsJson()) {
             return $this->jsonResponse($result);
@@ -300,7 +306,8 @@ class BudgetShareController extends Controller
      */
     public function cancel(string $token, Request $request): JsonResponse|RedirectResponse
     {
-        $result = $this->budgetShareService->cancelBudget($token);
+        $comment = $request->input('comment');
+        $result = $this->budgetShareService->cancelBudget($token, $comment);
 
         if ($request->expectsJson()) {
             return $this->jsonResponse($result);

@@ -7,8 +7,12 @@ namespace App\Services\Domain;
 use App\DTOs\Schedule\ScheduleDTO;
 use App\DTOs\Schedule\ScheduleUpdateDTO;
 use App\Enums\OperationStatus;
+use App\Enums\ScheduleStatus;
+use App\Enums\ServiceStatus;
+use App\Enums\TokenType;
 use App\Repositories\ScheduleRepository;
 use App\Repositories\ServiceRepository;
+use App\Services\Application\UserConfirmationTokenService;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Services\Core\Traits\HasSafeExecution;
 use App\Services\Core\Traits\HasTenantIsolation;
@@ -22,6 +26,7 @@ class ScheduleService extends AbstractBaseService
     public function __construct(
         private ScheduleRepository $scheduleRepository,
         private ServiceRepository $serviceRepository,
+        private UserConfirmationTokenService $tokenService,
     ) {
         parent::__construct($scheduleRepository);
     }
@@ -39,19 +44,82 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Serviço não encontrado.');
             }
 
-            // Verifica conflitos de horário
-            if ($this->scheduleRepository->hasConflict($dto->start_date_time, $dto->end_date_time, $dto->service_id)) {
+            // Verifica conflitos de horário (global por tenant)
+            if ($this->scheduleRepository->hasConflict($dto->start_date_time, $dto->end_date_time)) {
                 return $this->error(OperationStatus::CONFLICT, 'Conflito de horário detectado.');
+            }
+
+            // Gera token de confirmação para o agendamento
+            // Nota: O agendamento é vinculado ao cliente do serviço
+            $customerUser = $service->customer?->user;
+            $tokenId = null;
+
+            if ($customerUser) {
+                $tokenResult = $this->tokenService->createTokenWithGeneration(
+                    $customerUser,
+                    TokenType::SCHEDULE_CONFIRMATION,
+                    60 * 24 * 7 // 1 semana de expiração
+                );
+
+                if ($tokenResult->isSuccess()) {
+                    $tokenId = $tokenResult->getData()->id;
+                }
             }
 
             // Cria o agendamento
             $schedule = $this->scheduleRepository->createFromDTO($dto);
 
-            // Atualiza o status do serviço para agendado
-            $this->serviceRepository->update($service->id, ['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
+            // Vincula o token se gerado
+            if ($tokenId) {
+                $this->scheduleRepository->update($schedule->id, [
+                    'user_confirmation_token_id' => $tokenId,
+                ]);
+                $schedule = $schedule->fresh();
+            }
+
+            // Atualiza o status do serviço apenas se não estiver em processo de agendamento (SCHEDULING) ou agendado (SCHEDULED)
+            if (! in_array($service->status, [ServiceStatus::SCHEDULING, ServiceStatus::SCHEDULED])) {
+                $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULING->value]);
+            }
 
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
+    }
+
+    /**
+     * Confirma um agendamento via token
+     */
+    public function confirmScheduleByToken(string $token): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token) {
+            // Valida o token
+            $tokenResult = $this->tokenService->validateToken($token, TokenType::SCHEDULE_CONFIRMATION);
+
+            if ($tokenResult->isError()) {
+                return $tokenResult;
+            }
+
+            $tokenRecord = $tokenResult->getData();
+
+            // Busca o agendamento vinculado ao token
+            $schedule = $this->scheduleRepository->findOneBy(['user_confirmation_token_id' => $tokenRecord->id]);
+
+            if (! $schedule) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado para este token.');
+            }
+
+            // Se já estiver confirmado, apenas retorna sucesso
+            if ($schedule->status === ScheduleStatus::CONFIRMED) {
+                return $this->success($schedule, 'Agendamento já estava confirmado.');
+            }
+
+            // Atualiza o status do agendamento
+            $this->scheduleRepository->update($schedule->id, [
+                'status' => ScheduleStatus::CONFIRMED->value,
+            ]);
+
+            return $this->success($schedule->fresh(), 'Agendamento confirmado com sucesso.');
+        }, 'Erro ao confirmar agendamento.');
     }
 
     /**
@@ -72,7 +140,7 @@ class ScheduleService extends AbstractBaseService
                 $startTime = $dto->start_date_time ?? $schedule->start_date_time->format('Y-m-d H:i:s');
                 $endTime = $dto->end_date_time ?? $schedule->end_date_time->format('Y-m-d H:i:s');
 
-                if ($this->scheduleRepository->hasConflict($startTime, $endTime, $schedule->service_id, $scheduleId)) {
+                if ($this->scheduleRepository->hasConflict($startTime, $endTime, $scheduleId)) {
                     return $this->error('Conflito de horário detectado.');
                 }
             }
@@ -212,12 +280,12 @@ class ScheduleService extends AbstractBaseService
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 
-            if ($schedule->status !== 'pending') {
-                return $this->error(OperationStatus::CONFLICT, 'Apenas agendamentos pendentes podem ser confirmados.');
+            if ($schedule->status === ScheduleStatus::CONFIRMED) {
+                return $this->success($schedule, 'Agendamento já estava confirmado.');
             }
 
             $success = $this->scheduleRepository->update($scheduleId, [
-                'status' => 'confirmed',
+                'status' => ScheduleStatus::CONFIRMED->value,
                 'confirmed_at' => now(),
             ]);
 

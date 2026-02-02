@@ -94,10 +94,13 @@ Route::group([], function () {
         Route::get('/view-service-status/code/{code}/token/{token}', [ServiceController::class, 'viewServiceStatus'])->name('view-status');
         Route::post('/choose-service-status', [ServiceController::class, 'chooseServiceStatus'])->name('choose-status');
         Route::get('/print/code/{code}/token/{token}', [ServiceController::class, 'print'])->name('print');
-    });
+        Route::prefix('invoices')->name('invoices.public.')->group(function () {
+            Route::get('/view/{hash}', [PublicInvoiceController::class, 'show'])->name('show');
+        });
 
-    Route::prefix('invoices')->name('invoices.public.')->group(function () {
-        Route::get('/view/{hash}', [PublicInvoiceController::class, 'show'])->name('show');
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/confirm/{token}', [ScheduleController::class, 'publicConfirm'])->name('confirm');
+        });
         Route::get('/pay/{hash}', [PublicInvoiceController::class, 'redirectToPayment'])->name('pay');
         Route::get('/status', [PublicInvoiceController::class, 'paymentStatus'])->name('status');
         Route::get('/error', [PublicInvoiceController::class, 'error'])->name('error');
@@ -277,6 +280,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/{schedule}', [ScheduleController::class, 'show'])->name('show');
         Route::get('/{schedule}/edit', [ScheduleController::class, 'edit'])->name('edit');
         Route::put('/{schedule}', [ScheduleController::class, 'update'])->name('update');
+        Route::post('/{schedule}/cancel', [ScheduleController::class, 'cancel'])->name('cancel');
         Route::delete('/{schedule}', [ScheduleController::class, 'destroy'])->name('destroy');
         Route::get('/calendar/data', [ScheduleController::class, 'getCalendarData'])->name('calendar.data');
         Route::get('/check-conflicts', [ScheduleController::class, 'checkConflicts'])->name('check-conflicts');
@@ -333,7 +337,8 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::delete('/{code}', [InvoiceController::class, 'destroy'])->name('destroy');
         Route::get('/search/ajax', [InvoiceController::class, 'search'])->name('search');
         Route::get('/{code}/print', [InvoiceController::class, 'print'])->name('print');
-        Route::get('/export', [InvoiceController::class, 'export'])->name('export');
+            Route::post('/{code}/share', [InvoiceController::class, 'share'])->name('share');
+            Route::get('/export', [InvoiceController::class, 'export'])->name('export');
 
         Route::get('/budgets/{budget}/create', [InvoiceController::class, 'createFromBudget'])->name('create.from-budget');
         Route::post('/budgets/{budget}', [InvoiceController::class, 'storeFromBudget'])->name('store.from-budget');
@@ -769,7 +774,7 @@ Route::middleware(['auth', 'verified', 'provider'])->group(function () {
     Route::put('/p/business', [ProviderBusinessController::class, 'update'])->name('provider.business.update');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // Upload routes (require provider authentication)
 Route::middleware(['auth', 'verified', 'provider'])->group(function () {
@@ -780,10 +785,12 @@ Route::middleware(['auth', 'verified', 'provider'])->group(function () {
     });
 });
 
-Route::prefix('integrations')->name('integrations.')->group(function () {
-    Route::get('/mercadopago', [MercadoPagoController::class, 'index'])->name('mercadopago.index');
-    Route::get('/mercadopago/callback', [MercadoPagoController::class, 'callback'])->name('mercadopago.callback');
-    Route::post('/mercadopago/disconnect', [MercadoPagoController::class, 'disconnect'])->name('mercadopago.disconnect');
-    Route::post('/mercadopago/refresh', [MercadoPagoController::class, 'refresh'])->name('mercadopago.refresh');
-    Route::get('/mercadopago/test', [MercadoPagoController::class, 'testConnection'])->name('mercadopago.test');
+Route::middleware(['auth', 'verified', 'provider'])->group(function () {
+    Route::prefix('integrations')->name('integrations.')->group(function () {
+        Route::get('/mercadopago', [MercadoPagoController::class, 'index'])->name('mercadopago.index');
+        Route::get('/mercadopago/callback', [MercadoPagoController::class, 'callback'])->name('mercadopago.callback');
+        Route::post('/mercadopago/disconnect', [MercadoPagoController::class, 'disconnect'])->name('mercadopago.disconnect');
+        Route::post('/mercadopago/refresh', [MercadoPagoController::class, 'refresh'])->name('mercadopago.refresh');
+        Route::get('/mercadopago/test', [MercadoPagoController::class, 'testConnection'])->name('mercadopago.test');
+    });
 });

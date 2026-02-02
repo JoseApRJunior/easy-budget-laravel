@@ -6,6 +6,7 @@ namespace App\Observers;
 
 use App\DTOs\Invoice\InvoiceFromServiceDTO;
 use App\Enums\ServiceStatus;
+use App\Events\StatusUpdated;
 use App\Models\Service;
 use App\Services\Domain\InvoiceService;
 use Illuminate\Support\Facades\Log;
@@ -53,6 +54,30 @@ class ServiceObserver
             'original_status' => $service->getOriginal('status'),
         ]);
 
+        // Disparar evento de notificação se o status mudou
+        if ($service->isDirty('status') && ! $service->suppressStatusNotification) {
+            $oldStatus = $service->getOriginal('status');
+            $newStatus = $service->status;
+
+            // Não notificar se o novo status for DRAFT (rascunho)
+            if ($newStatus === ServiceStatus::DRAFT) {
+                Log::info('Service notification suppressed: Status changed to DRAFT', [
+                    'service_id' => $service->id
+                ]);
+                return;
+            }
+
+            $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
+
+            event(new StatusUpdated(
+                $service,
+                $oldStatusValue,
+                $newStatus->value,
+                $newStatus->label(),
+                $service->tenant
+            ));
+        }
+
         // Verificar se o status mudou para "completed"
         if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {
             Log::info('Service status changed to completed, generating automatic invoice', [
@@ -75,7 +100,7 @@ class ServiceObserver
 
             Log::info('Budget total synchronized via ServiceObserver', [
                 'budget_id' => $budgetId,
-                'new_total' => $total
+                'new_total' => $total,
             ]);
         }
     }

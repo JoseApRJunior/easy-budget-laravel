@@ -80,6 +80,16 @@ class AppServiceProvider extends ServiceProvider
                 {
                     throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
                 }
+
+                public function findOneBy(string|array $field, mixed $value = null, array $with = [], bool $withTrashed = false): ?\Illuminate\Database\Eloquent\Model
+                {
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
+                }
+
+                public function findBy(string|array $field, mixed $value = null): \Illuminate\Database\Eloquent\Collection
+                {
+                    throw new \RuntimeException('BaseRepositoryInterface usado sem implementação específica. Use uma implementação concreta de repositório.');
+                }
             };
         });
 
@@ -100,10 +110,8 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
         Provider::observe(ProviderObserver::class);
         Customer::observe(CustomerObserver::class);
-        Budget::observe(BudgetObserver::class);
         Invoice::observe(InvoiceObserver::class);
         Product::observe(ProductObserver::class);
-        Service::observe(ServiceObserver::class);
         Tenant::observe(TenantObserver::class);
         Category::observe(CategoryObserver::class);
 

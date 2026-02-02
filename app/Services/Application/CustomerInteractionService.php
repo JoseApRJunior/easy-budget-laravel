@@ -11,8 +11,6 @@ use App\Models\User;
 use App\Repositories\CustomerInteractionRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -77,7 +75,7 @@ class CustomerInteractionService extends AbstractBaseService
             return DB::transaction(function () use ($id, $dto, $user) {
                 $interaction = $this->interactionRepository->find($id);
 
-                if (!$interaction) {
+                if (! $interaction) {
                     return $this->error('Interação não encontrada.');
                 }
 
@@ -148,7 +146,7 @@ class CustomerInteractionService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $user) {
             $interaction = $this->interactionRepository->find($id);
 
-            if (!$interaction) {
+            if (! $interaction) {
                 return $this->error('Interação não encontrada.');
             }
 
@@ -171,7 +169,7 @@ class CustomerInteractionService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $user) {
             $interaction = $this->interactionRepository->find($id);
 
-            if (!$interaction) {
+            if (! $interaction) {
                 return $this->error('Interação não encontrada.');
             }
 
@@ -201,7 +199,7 @@ class CustomerInteractionService extends AbstractBaseService
         return $this->safeExecute(function () use ($id, $nextAction, $nextActionDate, $user) {
             $interaction = $this->interactionRepository->find($id);
 
-            if (!$interaction) {
+            if (! $interaction) {
                 return $this->error('Interação não encontrada.');
             }
 
@@ -305,7 +303,7 @@ class CustomerInteractionService extends AbstractBaseService
             // Buscar email principal do cliente
             $primaryEmail = $customer->primary_email;
 
-            if (!$primaryEmail) {
+            if (! $primaryEmail) {
                 Log::warning('Cliente sem email para notificação', [
                     'interaction_id' => $interaction->id,
                     'customer_id' => $customer->id,
@@ -381,7 +379,7 @@ class CustomerInteractionService extends AbstractBaseService
                 ->with(['customer']);
 
             // Aplicar filtros de período
-            if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            if (! empty($filters['start_date']) && ! empty($filters['end_date'])) {
                 $query->inDateRange($filters['start_date'], $filters['end_date']);
             }
 
@@ -447,7 +445,7 @@ class CustomerInteractionService extends AbstractBaseService
             return DB::transaction(function () use ($id, $user) {
                 $interaction = $this->interactionRepository->find($id);
 
-                if (!$interaction) {
+                if (! $interaction) {
                     return $this->error('Interação não encontrada.');
                 }
 
@@ -479,7 +477,7 @@ class CustomerInteractionService extends AbstractBaseService
             return DB::transaction(function () use ($id, $user) {
                 $interaction = $this->interactionRepository->find($id);
 
-                if (!$interaction) {
+                if (! $interaction) {
                     return $this->error('Interação não encontrada.');
                 }
 

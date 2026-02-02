@@ -21,7 +21,8 @@ enum CustomerStatus: string implements StatusEnumInterface
     case DELETED = 'deleted';
 
     public function label(): string
-    {        return match ($this) {
+    {
+        return match ($this) {
             self::ACTIVE => 'Ativo',
             self::INACTIVE => 'Inativo',
             self::DELETED => 'Excluído',
@@ -29,7 +30,8 @@ enum CustomerStatus: string implements StatusEnumInterface
     }
 
     public function getDescription(): string
-    {        return match ($this) {
+    {
+        return match ($this) {
             self::ACTIVE => 'Cliente ativo no sistema',
             self::INACTIVE => 'Cliente inativo temporariamente',
             self::DELETED => 'Cliente removido do sistema',
@@ -37,7 +39,8 @@ enum CustomerStatus: string implements StatusEnumInterface
     }
 
     public function color(): string
-    {        return match ($this) {
+    {
+        return match ($this) {
             self::ACTIVE => 'success',
             self::INACTIVE => 'warning',
             self::DELETED => 'danger',
@@ -45,7 +48,8 @@ enum CustomerStatus: string implements StatusEnumInterface
     }
 
     public function getColor(): string
-    {        return match ($this) {
+    {
+        return match ($this) {
             self::ACTIVE => '#28a745',
             self::INACTIVE => '#ffc107',
             self::DELETED => '#dc3545',
@@ -53,7 +57,8 @@ enum CustomerStatus: string implements StatusEnumInterface
     }
 
     public function icon(): string
-    {        return match ($this) {
+    {
+        return match ($this) {
             self::ACTIVE => 'check-circle-fill',
             self::INACTIVE => 'pause-circle',
             self::DELETED => 'trash',
@@ -61,23 +66,28 @@ enum CustomerStatus: string implements StatusEnumInterface
     }
 
     public function isActive(): bool
-    {        return $this === self::ACTIVE;
+    {
+        return $this === self::ACTIVE;
     }
 
     public function isFinished(): bool
-    {        return $this === self::DELETED;
+    {
+        return $this === self::DELETED;
     }
 
     public function canBeEdited(): bool
-    {        return $this !== self::DELETED;
+    {
+        return $this !== self::DELETED;
     }
 
     public function canReceiveServices(): bool
-    {        return $this === self::ACTIVE;
+    {
+        return $this === self::ACTIVE;
     }
 
     public static function getOrdered(bool $includeFinished = true): array
-    {        $ordered = [
+    {
+        $ordered = [
             self::ACTIVE,
             self::INACTIVE,
         ];

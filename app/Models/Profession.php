@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -119,7 +118,7 @@ class Profession extends Model
         // Esta relação é indireta e complexa para definir como relação Eloquent padrão
         // Retornando providers para evitar erro fatal, mas logicamente incorreto se esperar User model
         // Ideal seria HasManyThrough se a estrutura permitisse
-        return $this->providers(); 
+        return $this->providers();
     }
 
     /**

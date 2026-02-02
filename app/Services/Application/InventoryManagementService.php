@@ -178,11 +178,11 @@ class InventoryManagementService extends AbstractBaseService
             }
 
             if (! empty($filters['start_date'])) {
-                $query->where('created_at', '>=', $filters['start_date'] . ' 00:00:00');
+                $query->where('created_at', '>=', $filters['start_date'].' 00:00:00');
             }
 
             if (! empty($filters['end_date'])) {
-                $query->where('created_at', '<=', $filters['end_date'] . ' 23:59:59');
+                $query->where('created_at', '<=', $filters['end_date'].' 23:59:59');
             }
 
             $movements = $query->latest()->paginate($filters['per_page'] ?? 10);
@@ -391,7 +391,6 @@ class InventoryManagementService extends AbstractBaseService
             ];
         });
     }
-
 
     /**
      * Obtém dados de produtos mais utilizados com estado inicial vazio.
@@ -647,10 +646,10 @@ class InventoryManagementService extends AbstractBaseService
                 case 'movements':
                     $query = \App\Models\InventoryMovement::with(['product', 'user']);
                     if ($startDate) {
-                        $query->where('created_at', '>=', $startDate . ' 00:00:00');
+                        $query->where('created_at', '>=', $startDate.' 00:00:00');
                     }
                     if ($endDate) {
-                        $query->where('created_at', '<=', $endDate . ' 23:59:59');
+                        $query->where('created_at', '<=', $endDate.' 23:59:59');
                     }
 
                     // Aplicar filtros de busca e categoria

@@ -16,9 +16,6 @@ class AlertNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * @var array|null
-     */
     private ?array $companyData = null;
 
     public function __construct(
@@ -36,7 +33,7 @@ class AlertNotificationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.alert-notification',
+            view: 'emails.system.alert-notification',
             with: [
                 'alert' => $this->alert,
                 'severityColor' => $this->alert->getSeverityColor(),

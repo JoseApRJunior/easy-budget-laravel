@@ -26,22 +26,12 @@ class ScheduleRequest extends FormRequest
     {
         $rules = [
             'service_id' => 'required|exists:services,id',
-            'provider_id' => 'required|exists:users,id',
-            'service_date' => 'required|date|after_or_equal:today',
-            'service_time' => 'required|date_format:H:i',
-            'service_duration' => 'required|integer|min:30|max:480', // 30 min a 8 horas
-            'service_type' => 'required|string|max:100',
+            'start_date_time' => 'required|date',
+            'end_date_time' => 'required|date|after:start_date_time',
+            'location' => 'nullable|string|max:500',
             'notes' => 'nullable|string|max:1000',
-            'price' => 'nullable|numeric|min:0|max:999999.99',
-            'location' => 'nullable|string|max:255',
-            'start_date_time' => 'required|date_format:Y-m-d H:i:s',
-            'end_date_time' => 'required|date_format:Y-m-d H:i:s',
+            'customer_id' => 'required|exists:customers,id',
         ];
-
-        // Se o usuário for admin ou prestador, pode especificar o cliente
-        if (auth()->user()->isAdmin() || auth()->user()->isProvider()) {
-            $rules['customer_id'] = 'required|exists:users,id';
-        }
 
         return $rules;
     }
@@ -120,7 +110,7 @@ class ScheduleRequest extends FormRequest
 
         // Calcula start_date_time e end_date_time
         if ($this->service_date && $this->service_time) {
-            $start = \Carbon\Carbon::parse($this->service_date . ' ' . $this->service_time);
+            $start = \Carbon\Carbon::parse($this->service_date.' '.$this->service_time);
             $duration = (int) ($this->service_duration ?? 60);
             $end = $start->copy()->addMinutes($duration);
 

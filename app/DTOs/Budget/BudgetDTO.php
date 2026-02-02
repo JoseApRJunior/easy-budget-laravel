@@ -27,7 +27,7 @@ readonly class BudgetDTO extends AbstractDTO
     public static function fromRequest(array $data): self
     {
         $servicesData = $data['services'] ?? $data['items'] ?? null;
-        $services = is_array($servicesData) 
+        $services = is_array($servicesData)
             ? array_map(fn ($service) => \App\DTOs\Service\ServiceDTO::fromRequest($service), $servicesData)
             : null;
 

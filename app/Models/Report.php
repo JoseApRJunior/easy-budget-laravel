@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\Traits\TenantScoped;
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * Modelo para relatórios gerados - Compatibilidade com sistema legado

@@ -45,5 +45,4 @@
 
         <p>Se o botão acima não funcionar, copie e cole o seguinte URL em seu navegador:</p>
         <p class="subcopy">{{ $publicLink }}</p>
-    </div>
 @endsection

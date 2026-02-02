@@ -6,9 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Abstracts\Controller;
 use App\Models\Invoice;
+use App\Services\Domain\InvoiceShareService;
 use App\Services\Infrastructure\PaymentMercadoPagoInvoiceService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 /**
@@ -18,17 +18,28 @@ use Illuminate\View\View;
  */
 class PublicInvoiceController extends Controller
 {
+    public function __construct(
+        private InvoiceShareService $invoiceShareService
+    ) {}
+
     public function show(string $hash): View|RedirectResponse
     {
-        $invoice = Invoice::where('public_hash', $hash)
-            ->with(['customer.commonData', 'customer.contact', 'service', 'userConfirmationToken'])
-            ->first();
+        // 1. Tenta buscar pelo novo sistema de compartilhamento (InvoiceShare)
+        $result = $this->invoiceShareService->getInvoiceByToken($hash);
+
+        if ($result->isSuccess()) {
+            $invoice = $result->getData();
+        } else {
+            $invoice = null;
+        }
 
         if (! $invoice) {
             return redirect()->route('error.not-found');
         }
 
-        return view('invoices.public.view-status', [
+        $invoice->load(['customer.commonData', 'customer.contact', 'service', 'userConfirmationToken', 'invoiceItems.product']);
+
+        return view('pages.public.invoice.show', [
             'invoice' => $invoice,
             'invoiceStatus' => $invoice->status,
             'token' => $invoice->userConfirmationToken?->token ?? '',
@@ -37,7 +48,10 @@ class PublicInvoiceController extends Controller
 
     public function redirectToPayment(string $hash): RedirectResponse
     {
-        $invoice = Invoice::where('public_hash', $hash)->first();
+        // 1. Tenta buscar pelo novo sistema de compartilhamento (InvoiceShare)
+        $result = $this->invoiceShareService->getInvoiceByToken($hash);
+        $invoice = $result->isSuccess() ? $result->getData() : null;
+
         if (! $invoice) {
             return redirect()->route('error.not-found');
         }
@@ -59,9 +73,7 @@ class PublicInvoiceController extends Controller
 
     public function paymentStatus(): View
     {
-        $status = request('status');
-
-        return view('invoices.public.view-status', [
+        return view('pages.public.invoice.show', [
             'invoice' => null,
             'invoiceStatus' => null,
             'token' => '',

@@ -233,7 +233,6 @@ class InventoryObserver
         }
     }
 
-
     /**
      * Devolve itens do orçamento ao estoque
      */
@@ -253,6 +252,7 @@ class InventoryObserver
 
     /**
      * Reserva itens do orçamento no estoque
+     *
      * @deprecated Usar reserveServiceItemsFromInventory quando o serviço entrar em preparação
      */
     protected function reserveBudgetItemsFromInventory(Budget $budget): void
@@ -287,14 +287,14 @@ class InventoryObserver
     {
         try {
             $service->loadMissing('serviceItems');
-            
+
             foreach ($service->serviceItems as $item) {
                 if ($item->product_id) {
                     // Se o status anterior era de quem já consumiu estoque físico
                     $wasConsumed = in_array($service->getOriginal('status'), [
                         ServiceStatus::PREPARING->value,
                         ServiceStatus::IN_PROGRESS->value,
-                        ServiceStatus::COMPLETED->value
+                        ServiceStatus::COMPLETED->value,
                     ]);
 
                     if ($wasConsumed) {

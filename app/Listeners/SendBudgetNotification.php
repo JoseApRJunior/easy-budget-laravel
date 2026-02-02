@@ -25,23 +25,40 @@ class SendBudgetNotification implements ShouldQueue
     public function handle(BudgetStatusChanged $event): void
     {
         try {
+            // Verificar se a notificação deve ser suprimida
+            if ($event->suppressNotification) {
+                Log::info('Notificação de orçamento suprimida', [
+                    'budget_id' => $event->budget->id,
+                    'new_status' => $event->newStatus,
+                ]);
+
+                return;
+            }
+
             $budget = $event->budget;
 
             // 1. Deduplicação para evitar envios duplicados
             $dedupeKey = "email:budget_status:{$budget->id}:{$event->newStatus}";
-            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
+
+            // Em ambiente local/teste, reduz o tempo de cache para facilitar testes (10 segundos)
+            // Em produção, mantém 30 minutos para evitar spam
+            $ttlMinutes = app()->environment(['local', 'testing']) ? 0.16 : 30; // 0.16 min ~= 10 seconds
+
+            if (! Cache::add($dedupeKey, true, now()->addMinutes($ttlMinutes))) {
                 Log::warning('Notificação de orçamento ignorada por deduplicação', [
                     'budget_id' => $budget->id,
                     'new_status' => $event->newStatus,
-                    'dedupe_key' => $dedupeKey
+                    'dedupe_key' => $dedupeKey,
+                    'environment' => app()->environment(),
                 ]);
+
                 return;
             }
 
             $customer = $budget->customer;
 
             // Verificar se o cliente tem email
-            if (! $customer->contact || ! $customer->contact->email_personal) {
+            if (! $customer || ! $customer->contact?->email_personal) {
                 Log::info('Cliente sem email para notificação', [
                     'budget_id' => $budget->id,
                     'customer_id' => $customer->id,
@@ -54,6 +71,7 @@ class SendBudgetNotification implements ShouldQueue
             $notificationType = match ($event->newStatus) {
                 'approved' => 'approved',
                 'rejected' => 'rejected',
+                'cancelled' => 'cancelled',
                 'sent' => 'sent',
                 'expired' => 'expired',
                 default => 'updated'
@@ -86,18 +104,24 @@ class SendBudgetNotification implements ShouldQueue
                 }
 
                 $companyData = [
-                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name.' '.$commonData->last_name) : $budget->tenant->name),
+                    'company_name' => $commonData?->company_name ?: ($commonData ? trim($commonData->first_name . ' ' . $commonData->last_name) : $budget->tenant->name),
                     'email' => $contact?->email_personal ?: $contact?->email_business,
                     'phone' => $contact?->phone_personal ?: $contact?->phone_business,
                     'address_line1' => $addressLine1,
                     'address_line2' => $addressLine2,
-                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: '.\App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: '.\App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
+                    'document' => $commonData ? ($commonData->cnpj ? 'CNPJ: ' . \App\Helpers\DocumentHelper::formatCnpj($commonData->cnpj) : ($commonData->cpf ? 'CPF: ' . \App\Helpers\DocumentHelper::formatCpf($commonData->cpf) : null)) : null,
                 ];
             } else {
                 $companyData = [
                     'company_name' => $budget->tenant->name,
                 ];
             }
+
+            Log::info('Enviando notificação de orçamento', [
+                'budget_id' => $budget->id,
+                'customer_email' => $customer->contact->email_personal,
+                'notification_type' => $notificationType,
+            ]);
 
             // Enviar email
             Mail::to($customer->contact->email_personal)
@@ -115,11 +139,13 @@ class SendBudgetNotification implements ShouldQueue
                 'customer_email' => $customer->contact->email_personal,
                 'notification_type' => $notificationType,
             ]);
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Erro ao enviar notificação de orçamento', [
                 'budget_id' => $event->budget->id,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

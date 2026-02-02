@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Domain;
 
 use App\DTOs\Common\AddressDTO;
-use App\Models\Address;
 use App\Repositories\AddressRepository;
 use App\Services\Core\Abstracts\AbstractBaseService;
 use App\Support\ServiceResult;
@@ -24,6 +23,7 @@ class AddressService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             $address = $this->addressRepository->createFromDTO($dto);
+
             return $this->success($address, 'Endereço criado com sucesso');
         }, 'Erro ao criar endereço.');
     }
@@ -32,9 +32,10 @@ class AddressService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($id, $dto) {
             $address = $this->addressRepository->updateFromDTO($id, $dto);
-            if (!$address) {
+            if (! $address) {
                 return $this->error(\App\Enums\OperationStatus::NOT_FOUND, 'Endereço não encontrado');
             }
+
             return $this->success($address, 'Endereço atualizado com sucesso');
         }, 'Erro ao atualizar endereço.');
     }
@@ -43,9 +44,10 @@ class AddressService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($id) {
             $deleted = $this->addressRepository->delete($id);
-            if (!$deleted) {
+            if (! $deleted) {
                 return $this->error(\App\Enums\OperationStatus::NOT_FOUND, 'Endereço não encontrado');
             }
+
             return $this->success(null, 'Endereço removido com sucesso');
         }, 'Erro ao remover endereço.');
     }

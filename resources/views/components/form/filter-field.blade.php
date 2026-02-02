@@ -42,6 +42,7 @@
                         {{ $optionLabel }}
                     </option>
                 @endforeach
+                {{ $slot }}
             </select>
 
         @elseif($type === 'textarea')

@@ -51,6 +51,8 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
                 return ServiceResult::error(OperationStatus::ERROR, 'Access token vazio');
             }
 
+            $publicUrl = $invoice->getPublicUrl() ?? route('services.public.invoices.public.show', ['hash' => 'unknown']);
+
             // Construir dados da preferência
             $preferenceData = [
                 'items' => [
@@ -69,9 +71,9 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
                 ],
                 'notification_url' => route('webhooks.mercadopago.invoices'),
                 'back_urls' => [
-                    'success' => route('invoices.public.show', $invoice->public_hash),
-                    'failure' => route('invoices.public.show', $invoice->public_hash),
-                    'pending' => route('invoices.public.show', $invoice->public_hash),
+                    'success' => $publicUrl,
+                    'failure' => $publicUrl,
+                    'pending' => $publicUrl,
                 ],
                 'auto_return' => 'approved',
             ];

@@ -87,6 +87,7 @@ class DateHelper
     public static function parseDate(?string $date): ?string
     {
         $carbon = self::toCarbon($date);
+
         return $carbon ? $carbon->format('Y-m-d') : null;
     }
 

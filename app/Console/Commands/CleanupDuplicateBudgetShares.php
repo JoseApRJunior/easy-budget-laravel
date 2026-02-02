@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\BudgetShare;
 use App\Enums\BudgetShareStatus;
+use App\Models\BudgetShare;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +40,7 @@ class CleanupDuplicateBudgetShares extends Command
 
         if ($duplicates->isEmpty()) {
             $this->info('Nenhum compartilhamento duplicado encontrado.');
+
             return 0;
         }
 
@@ -61,14 +62,14 @@ class CleanupDuplicateBudgetShares extends Command
             foreach ($toDeactivate as $share) {
                 $share->update([
                     'is_active' => false,
-                    'status' => BudgetShareStatus::EXPIRED->value
+                    'status' => BudgetShareStatus::EXPIRED->value,
                 ]);
                 $totalCleaned++;
             }
         }
 
         $this->info("Limpeza concluída! {$totalCleaned} compartilhamentos antigos foram desativados.");
-        
+
         return 0;
     }
 }

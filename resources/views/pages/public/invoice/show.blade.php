@@ -122,14 +122,14 @@
                         <!-- Ações -->
                         <div class="d-grid gap-2 mt-4">
                             @if ($invoice->status_slug == 'PENDING')
-                                <a href="{{ url('/invoices/pay/' . $invoice->public_hash) }}"
+                                <a href="{{ route('services.public.invoices.public.pay', ['hash' => request()->route('hash')]) }}"
                                     class="btn btn-primary btn-lg">
                                     <i class="bi bi-credit-card me-2"></i> Pagar com Mercado Pago
                                 </a>
                                 <p class="text-muted mt-2 small text-center">Você será redirecionado para um ambiente seguro
                                     para concluir o pagamento.</p>
                             @elseif ($invoice->status_slug == 'OVERDUE')
-                                <a href="{{ url('/invoices/pay/' . $invoice->public_hash) }}"
+                                <a href="{{ route('services.public.invoices.public.pay', ['hash' => request()->route('hash')]) }}"
                                     class="btn btn-danger btn-lg">
                                     <i class="bi bi-exclamation-triangle me-2"></i> Pagar Fatura Vencida
                                 </a>

@@ -14,7 +14,7 @@
 
 <div class="container my-4">
     {{-- Exibição de Erros de Validação do Laravel --}}
-    @if ($errors->any())
+    @if (isset($errors) && $errors->any())
         <div class="alert alert-danger alert-dismissible fade show py-2 px-3 mb-4 shadow-sm border-start border-danger border-4" role="alert">
             <div class="d-flex align-items-center">
                 <i class="bi bi-exclamation-octagon-fill me-2 fs-5"></i>

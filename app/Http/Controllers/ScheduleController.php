@@ -10,7 +10,6 @@ use App\Http\Requests\ScheduleRequest;
 use App\Models\User;
 use App\Repositories\ServiceRepository;
 use App\Services\Domain\ScheduleService;
-use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +29,24 @@ class ScheduleController extends Controller
         private readonly ScheduleService $scheduleService,
         private readonly ServiceRepository $serviceRepository,
     ) {}
+
+    /**
+     * Confirma um agendamento publicamente via token
+     */
+    public function publicConfirm(string $token): View
+    {
+        $result = $this->scheduleService->confirmScheduleByToken($token);
+
+        if ($result->isError()) {
+            return view('pages.schedule.confirmation-error', [
+                'error' => $result->getMessage(),
+            ]);
+        }
+
+        return view('pages.schedule.confirmation-success', [
+            'schedule' => $result->getData(),
+        ]);
+    }
 
     /**
      * Lista os agendamentos do usuário logado
@@ -127,8 +144,21 @@ class ScheduleController extends Controller
         $result = $this->scheduleService->createSchedule($dto);
 
         if ($result->isSuccess()) {
+            // Se houver um referer que contenha 'services', redireciona de volta para ele
+            // Caso contrário, usa o padrão show service se possível
+            $referer = $request->header('referer');
+            if ($referer && str_contains($referer, '/services/')) {
+                return redirect()->to($referer)->with('success', 'Agendamento criado com sucesso!');
+            }
+
+            // Fallback para show service se o service_id estiver disponível
+            if ($dto->service_id) {
+                return redirect()->route('provider.services.show', $dto->service_id)
+                    ->with('success', 'Agendamento criado com sucesso!');
+            }
+
             return $this->redirectSuccess(
-                'schedules.index',
+                'provider.schedules.index',
                 'Agendamento criado com sucesso!',
             );
         }
@@ -199,7 +229,7 @@ class ScheduleController extends Controller
             return redirect()->back()->with('error', $result->getMessage());
         }
 
-        return redirect()->route('provider.schedules.index')
+        return redirect()->back()
             ->with('success', 'Agendamento cancelado com sucesso!');
     }
 

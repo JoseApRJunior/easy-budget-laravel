@@ -6,10 +6,10 @@ namespace App\Actions\Product;
 
 use App\DTOs\Product\ProductDTO;
 use App\Models\Product;
-use App\Repositories\ProductRepository;
 use App\Repositories\ProductInventoryRepository;
-use Illuminate\Support\Facades\DB;
+use App\Repositories\ProductRepository;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 
 class CreateProductAction
 {
@@ -20,14 +20,10 @@ class CreateProductAction
 
     /**
      * Executa a criação do produto.
-     * 
-     * @param ProductDTO $dto
-     * @param UploadedFile|null $image
-     * @return Product
      */
     public function execute(ProductDTO $dto, ?UploadedFile $image = null): Product
     {
-        return DB::transaction(function () use ($dto, $image) {
+        return DB::transaction(function () use ($dto) {
             // 1. Criar produto base via DTO
             $product = $this->repository->createFromDTO($dto);
 

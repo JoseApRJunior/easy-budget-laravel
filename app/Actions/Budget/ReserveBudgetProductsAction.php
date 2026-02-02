@@ -7,8 +7,8 @@ namespace App\Actions\Budget;
 use App\Actions\Inventory\ReserveProductStockAction;
 use App\Models\Budget;
 use App\Support\ServiceResult;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class ReserveBudgetProductsAction
 {
@@ -29,7 +29,7 @@ class ReserveBudgetProductsAction
                 ->exists();
 
             if ($alreadyReserved) {
-                return ServiceResult::success(null, "Produtos já estão reservados para este orçamento.");
+                return ServiceResult::success(null, 'Produtos já estão reservados para este orçamento.');
             }
 
             // Carregar relações necessárias para evitar N+1
