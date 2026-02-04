@@ -40,21 +40,17 @@ jobs:
 
       - name: Prepare Locaweb structure
         run: |
-          # Criar pasta temporária para o deploy
-          mkdir -p deploy_out
-          cp -r . deploy_out/
+          # Garantir que a pasta public_html exista e contenha o conteúdo de public/
+          mkdir -p public_html
+          cp -r public/* public_html/
+          [ -f public/.htaccess ] && cp public/.htaccess public_html/
 
-          # Remover pastas desnecessárias
-          rm -rf deploy_out/.git deploy_out/.github deploy_out/tests deploy_out/node_modules deploy_out/deploy_out
+          # Criar pastas de storage necessárias para o Laravel
+          mkdir -p storage/framework/{sessions,views,cache}
+          mkdir -p storage/logs
 
-          # Garantir que a pasta public_html exista no deploy e contenha o conteúdo de public/
-          mkdir -p deploy_out/public_html
-          cp -r public/* deploy_out/public_html/
-          [ -f public/.htaccess ] && cp public/.htaccess deploy_out/public_html/
-
-          # Criar pastas de storage necessárias
-          mkdir -p deploy_out/storage/framework/{sessions,views,cache}
-          mkdir -p deploy_out/storage/logs
+          # Remover arquivos e pastas desnecessários para produção
+          rm -rf .git .github tests node_modules
 
       - name: FTP Deploy to Locaweb
         uses: locaweb/ftp-deploy@1.0.0
@@ -62,7 +58,7 @@ jobs:
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
           password: ${{ secrets.PASS }}
-          localDir: "./deploy_out"
+          localDir: "."
           remoteDir: "/"
           forceSsl: false
           args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
