@@ -47,18 +47,20 @@ jobs:
           php artisan route:cache
           php artisan event:cache
 
-      - name: Prepare deploy folder structure
+      - name: Prepare public_html content
         run: |
-          mkdir -p public_html
-          cp public/index.php public_html/index.php
-          printf '%s\n' '<IfModule mod_rewrite.c>' '  <IfModule mod_negotiation.c>' '    Options -MultiViews -Indexes' '  </IfModule>' '  RewriteEngine On' '  RewriteCond %{HTTP:Authorization} .' '  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]' '  RewriteCond %{REQUEST_FILENAME} !-f' '  RewriteCond %{REQUEST_FILENAME} !-d' '  RewriteRule ^ public/index.php [L]' '</IfModule>' > public_html/.htaccess
-
-      - name: Clean unnecessary files before FTP
-        run: |
-          rm -rf .git .github docs tests node_modules
-          rm -rf storage/pail storage/logs/*.log
-          rm -f .env
-          rm -f .ftpignore
+          mkdir -p deploy_temp/public_html
+          cp -r . deploy_temp/
+          # Ensure storage directories exist
+          mkdir -p deploy_temp/storage/framework/{sessions,views,cache}
+          mkdir -p deploy_temp/storage/logs
+          # Remove files from deploy_temp that shouldn't be on production root
+          rm -rf deploy_temp/deploy_temp
+          rm -rf deploy_temp/.git deploy_temp/.github deploy_temp/tests deploy_temp/node_modules
+          # Move public content to public_html in deploy_temp
+          cp -r public/* deploy_temp/public_html/
+          cp public/.htaccess deploy_temp/public_html/ 2>/dev/null || true
+          # Fix public_html/.htaccess if needed (usually Locaweb needs specific rules)
 
       - name: FTP Deploy to Locaweb
         uses: locaweb/ftp-deploy@1.0.0
@@ -66,6 +68,6 @@ jobs:
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
           password: ${{ secrets.PASS }}
-          localDir: "./public_html"
-          remoteDir: "public_html"
-          args: "--exclude-glob='.git*' --exclude-glob='.env*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
+          localDir: "./deploy_temp"
+          remoteDir: "."
+          args: "--exclude-glob='.git*' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
