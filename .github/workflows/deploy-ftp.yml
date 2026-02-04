@@ -17,15 +17,18 @@ jobs:
           php-version: "8.3"
           extensions: curl gd pdo pdo_mysql intl zip
 
-      - name: Install zip
+      - name: Install zip and rsync
         run: sudo apt-get install -y zip unzip rsync
 
       # ===========================================
-      # CONFIGURAÇÃO: Copiar .env.production para .env
+      # CONFIGURAÇÃO: Preparar ambiente
       # ===========================================
       - name: Setup environment
         run: cp .env.production .env
 
+      # ===========================================
+      # DEPENDÊNCIAS: Instalar composer e npm
+      # ===========================================
       - name: Cache Composer packages
         id: composer-cache
         uses: actions/cache@v4
@@ -53,7 +56,7 @@ jobs:
         run: npm run build
 
       # ===========================================
-      # OTIMIZAÇÃO: Gerar arquivos de cache do Laravel
+      # OTIMIZAÇÃO: Cache do Laravel
       # ===========================================
       - name: Generate Laravel config cache
         run: php artisan config:cache
@@ -65,71 +68,57 @@ jobs:
         run: php artisan event:cache
 
       # ===========================================
-      # DEPLOY: Compactar e enviar via FTP
+      # PREPARAÇÃO: Criar public_html/
       # ===========================================
-      - name: Create deployment package
+      - name: Prepare public_html folder
         run: |
-          # Criar diretório temporário para o build
-          mkdir -p deploy-build
+          # Copiar public/index.php para public_html/index.php
+          cp public/index.php public_html/index.php
 
-          # Copiar arquivos necessários (exceto arquivos desnecessários)
-          rsync -av \
-            --exclude='.git' \
-            --exclude='.gitignore' \
-            --exclude='.ftpignore' \
-            --exclude='node_modules' \
-            --exclude='vendor' \
-            --exclude='tests' \
-            --exclude='.github' \
-            --exclude='.editorconfig' \
-            --exclude='*.yml' \
-            --exclude='*.yaml' \
-            --exclude='phpunit.xml*' \
-            --exclude='phpstan*' \
-            --exclude='docker-compose*' \
-            --exclude='Homestead*' \
-            --exclude='README.md' \
-            --exclude='TODO*.MD' \
-            --exclude='CHECKLIST*' \
-            --exclude='legacy_analysis*' \
-            --exclude='Teste*' \
-            --exclude='GEMINI.md' \
-            --exclude='boost*' \
-            --exclude='everything*' \
-            --exclude='*.code-workspace' \
-            --exclude='prompt.md' \
-            --exclude='cookies.txt' \
-            --exclude='.env.production' \
-            --exclude='.env.example' \
-            --exclude='.env.testing' \
-            --exclude='auth.json' \
-            --exclude='google-*' \
-            --exclude='.DS_Store' \
-            --exclude='Thumbs.db' \
-            --exclude='coverage' \
-            --exclude='.phpunit*' \
-            --exclude='.idea' \
-            --exclude='.vscode' \
-            --exclude='.zed' \
-            --exclude='.fleet' \
-            --exclude='old-system*' \
-            . deploy-build/
+          # Criar .htaccess para public_html (web root do Locaweb)
+          cat > public_html/.htaccess << 'HTACCESS'
+          <IfModule mod_rewrite.c>
+              <IfModule mod_negotiation.c>
+                  Options -MultiViews -Indexes
+              </IfModule>
 
-          # Compactar
-          cd deploy-build
-          zip -r ../deploy.zip .
-          cd ..
+              RewriteEngine On
 
-          ls -lh deploy.zip
+              # Handle Authorization Header
+              RewriteCond %{HTTP:Authorization} .
+              RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+              # Redirect all requests to public/ folder (Laravel structure)
+              RewriteCond %{REQUEST_FILENAME} !-f
+              RewriteCond %{REQUEST_FILENAME} !-d
+              RewriteRule ^ public/index.php [L]
+          </IfModule>
+          HTACCESS
+
+          # Verificar criação
+          ls -la public_html/
+
+      # ===========================================
+      # DEPLOY: FTP para Locaweb
+      # ===========================================
       - name: FTP Deploy to Locaweb
-        uses: locaweb/ftp-deploy@v1.0.0
+        uses: mntndev/ftp-deploy-action@v0.1.0
         with:
-          host: ${{ secrets.FTP_HOST }}
-          user: ${{ secrets.FTP_USER }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASS }}
-          localDir: "deploy.zip"
-          serverMode: true
-
-      - name: Cleanup
-        run: rm -rf deploy-build deploy.zip
+          local-dir: ./
+          server-dir: /
+          exclude: |
+            **/.git/**
+            **/.gitignore
+            **/Thumbs.db
+            **/*.log
+            **/node_modules/**
+            **/vendor/**
+            **/tests/**
+            **/.github/**
+            **/coverage/**
+          arg-overrides: |
+            --verbose
+            --ignore-existing
