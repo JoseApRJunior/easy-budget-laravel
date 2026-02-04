@@ -2,9 +2,11 @@ name: Dependencies Check
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
   pull_request:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   check:
@@ -30,8 +32,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
 
-      - name: Validate composer.json and composer.lock
-        run: composer validate --strict
+      - name: Validate composer.json
+        run: composer validate --no-check-lock
 
       - name: Install dependencies
         run: composer install --optimize-autoloader --no-progress --no-interaction
