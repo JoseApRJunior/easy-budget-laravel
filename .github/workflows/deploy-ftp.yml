@@ -1,4 +1,4 @@
-name: Deploy to Locaweb
+name: Deploy via ftp
 
 on:
   push:
@@ -18,7 +18,6 @@ jobs:
           extensions: mbstring, intl, pdo, pdo_mysql
 
       - name: Cache Composer packages
-        id: composer-cache
         uses: actions/cache@v4
         with:
           path: vendor
@@ -33,13 +32,10 @@ jobs:
         run: |
           echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
 
-      - name: Install NPM dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
+      - name: Install NPM dependencies and build assets
+        run: |
+          npm install
+          npm run build
 
       - name: Generate Laravel cache
         run: |
@@ -47,20 +43,23 @@ jobs:
           php artisan route:cache
           php artisan event:cache
 
-      - name: Prepare public_html content
+      - name: Prepare Locaweb structure
         run: |
-          mkdir -p deploy_temp/public_html
-          cp -r . deploy_temp/
-          # Ensure storage directories exist
-          mkdir -p deploy_temp/storage/framework/{sessions,views,cache}
-          mkdir -p deploy_temp/storage/logs
-          # Remove files from deploy_temp that shouldn't be on production root
-          rm -rf deploy_temp/deploy_temp
-          rm -rf deploy_temp/.git deploy_temp/.github deploy_temp/tests deploy_temp/node_modules
-          # Move public content to public_html in deploy_temp
-          cp -r public/* deploy_temp/public_html/
-          cp public/.htaccess deploy_temp/public_html/ 2>/dev/null || true
-          # Fix public_html/.htaccess if needed (usually Locaweb needs specific rules)
+          # Criar pasta temporária para o deploy
+          mkdir -p deploy_out
+          cp -r . deploy_out/
+
+          # Remover pastas desnecessárias
+          rm -rf deploy_out/.git deploy_out/.github deploy_out/tests deploy_out/node_modules deploy_out/deploy_out
+
+          # Garantir que a pasta public_html exista no deploy e contenha o conteúdo de public/
+          mkdir -p deploy_out/public_html
+          cp -r public/* deploy_out/public_html/
+          [ -f public/.htaccess ] && cp public/.htaccess deploy_out/public_html/
+
+          # Criar pastas de storage necessárias
+          mkdir -p deploy_out/storage/framework/{sessions,views,cache}
+          mkdir -p deploy_out/storage/logs
 
       - name: FTP Deploy to Locaweb
         uses: locaweb/ftp-deploy@1.0.0
@@ -68,6 +67,7 @@ jobs:
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
           password: ${{ secrets.PASS }}
-          localDir: "./deploy_temp"
-          remoteDir: "."
-          args: "--exclude-glob='.git*' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
+          localDir: "./deploy_out"
+          remoteDir: "/"
+          forceSsl: false
+          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
