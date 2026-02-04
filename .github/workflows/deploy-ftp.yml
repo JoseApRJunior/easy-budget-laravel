@@ -89,4 +89,4 @@ jobs:
           localDir: "."
           remoteDir: "/"
           forceSsl: false
-          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --delete --parallel=10"
+          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --exclude-glob='.docs/*' --exclude-glob='.trae/*' --exclude-glob='.kilocode/*' --exclude-glob='.memory-bank/*' --exclude-glob='*.js' --exclude-glob='*.json' --exclude-glob='*.neon' --exclude-glob='*.bat' --exclude-glob='*.cjs' --exclude-glob='*.yml' --exclude-glob='*.yaml' --exclude-glob='*.txt' --exclude-glob='*.code-workspace' --delete --parallel=10"
