@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\ServiceStatus;
-use App\Models\Traits\HasPublicToken;
 use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -111,7 +110,7 @@ class Service extends Model
             'tenant_id' => 'required|integer|exists:tenants,id',
             'budget_id' => 'required|integer|exists:budgets,id',
             'category_id' => 'required|integer|exists:categories,id',
-            'status' => 'required|string|in:' . implode(',', array_column(ServiceStatus::cases(), 'value')),
+            'status' => 'required|string|in:'.implode(',', array_column(ServiceStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:services,code',
             'description' => 'nullable|string',
@@ -261,6 +260,18 @@ class Service extends Model
      */
     public function getPublicUrl(): ?string
     {
+        // Se o serviço estiver em fase de agendamento, retornamos a URL de confirmação do agendamento
+        if ($this->status === ServiceStatus::SCHEDULING) {
+            $latestSchedule = $this->schedules()
+                ->where('status', \App\Enums\ScheduleStatus::PENDING)
+                ->latest()
+                ->first();
+
+            if ($latestSchedule && $latestSchedule->getConfirmationUrl()) {
+                return $latestSchedule->getConfirmationUrl();
+            }
+        }
+
         return $this->budget?->getPublicUrl();
     }
 

@@ -1,13 +1,12 @@
-name: Deploy to Hosting
+name: Deploy via FTP
 
 on:
   push:
-    branches: [main, master]
-  workflow_dispatch:
+    branches: [main]
 
 jobs:
   deploy:
-    name: Deploy
+    name: Build & Deploy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,7 +15,16 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          extensions: mbstring, intl, pdo, pdo_mysql
+          extensions: curl gd pdo pdo_mysql intl zip
+
+      - name: Install zip
+        run: sudo apt-get install -y zip unzip rsync
+
+      # ===========================================
+      # CONFIGURAÇÃO: Copiar .env.production para .env
+      # ===========================================
+      - name: Setup environment
+        run: cp .env.production .env
 
       - name: Cache Composer packages
         id: composer-cache
@@ -27,25 +35,101 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
 
-      - name: Install dependencies
-        run: composer install --no-dev --optimize-autoloader --no-progress
-
-      - name: Create .env file
-        run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
-
-      - name: Clean unnecessary files
-        run: |
-          rm -rf .git .github/ docs/ tests/ node_modules/
-          rm -f .env.example .env.local .env.testing .env.staging
-          rm -f README.md phpstan.neon phpunit.xml.dist phpunit.dusk.xml
-          rm -f CHECKLIST_REFATORACAO.md legacy_analysis.md.md
-          rm -f *.config.js *.md
-
-      - name: FTP Deploy
-        uses: locaweb/ftp-deploy@1.0.0
+      - name: Cache NPM packages
+        uses: actions/cache@v4
         with:
-          host: ${{ secrets.HOST }}
-          user: ${{ secrets.USER }}
-          password: ${{ secrets.PASS }}
-          localDir: "."
-          remoteDir: /
+          path: node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      # ===========================================
+      # OTIMIZAÇÃO: Gerar arquivos de cache do Laravel
+      # ===========================================
+      - name: Generate Laravel config cache
+        run: php artisan config:cache
+
+      - name: Generate Laravel route cache
+        run: php artisan route:cache
+
+      - name: Generate Laravel events cache
+        run: php artisan event:cache
+
+      # ===========================================
+      # DEPLOY: Compactar e enviar via FTP
+      # ===========================================
+      - name: Create deployment package
+        run: |
+          # Criar diretório temporário para o build
+          mkdir -p deploy-build
+
+          # Copiar arquivos necessários (exceto arquivos desnecessários)
+          rsync -av \
+            --exclude='.git' \
+            --exclude='.gitignore' \
+            --exclude='.ftpignore' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='tests' \
+            --exclude='.github' \
+            --exclude='.editorconfig' \
+            --exclude='*.yml' \
+            --exclude='*.yaml' \
+            --exclude='phpunit.xml*' \
+            --exclude='phpstan*' \
+            --exclude='docker-compose*' \
+            --exclude='Homestead*' \
+            --exclude='README.md' \
+            --exclude='TODO*.MD' \
+            --exclude='CHECKLIST*' \
+            --exclude='legacy_analysis*' \
+            --exclude='Teste*' \
+            --exclude='GEMINI.md' \
+            --exclude='boost*' \
+            --exclude='everything*' \
+            --exclude='*.code-workspace' \
+            --exclude='prompt.md' \
+            --exclude='cookies.txt' \
+            --exclude='.env.production' \
+            --exclude='.env.example' \
+            --exclude='.env.testing' \
+            --exclude='auth.json' \
+            --exclude='google-*' \
+            --exclude='.DS_Store' \
+            --exclude='Thumbs.db' \
+            --exclude='coverage' \
+            --exclude='.phpunit*' \
+            --exclude='.idea' \
+            --exclude='.vscode' \
+            --exclude='.zed' \
+            --exclude='.fleet' \
+            --exclude='old-system*' \
+            . deploy-build/
+
+          # Compactar
+          cd deploy-build
+          zip -r ../deploy.zip .
+          cd ..
+
+          ls -lh deploy.zip
+
+      - name: FTP Deploy to Locaweb
+        uses: locaweb/ftp-deploy@v1.0.0
+        with:
+          host: ${{ secrets.FTP_HOST }}
+          user: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          localDir: "deploy.zip"
+          serverMode: true
+
+      - name: Cleanup
+        run: rm -rf deploy-build deploy.zip

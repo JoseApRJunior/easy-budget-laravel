@@ -21,6 +21,7 @@ class CustomerFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
+            'user_id' => null,
             'status' => 'active',
         ];
     }

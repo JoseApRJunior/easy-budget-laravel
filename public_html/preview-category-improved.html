@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preview - Categorias Melhoradas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --category-primary: #0d6efd;
+            --category-success: #198754;
+            --category-danger: #dc3545;
+            --category-warning: #ffc107;
+            --category-info: #0dcaf0;
+            --category-secondary: #6c757d;
+            --category-light: #f8f9fa;
+            --category-dark: #212529;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --radius: 0.5rem;
+            --transition: all 0.3s ease;
+        }
+
+        body { background: #f5f7fa; padding: 20px; }
+
+        /* DESKTOP */
+        @media (min-width: 769px) {
+            .mobile-view { display: none !important; }
+            
+            .category-table {
+                border-collapse: separate;
+                border-spacing: 0;
+            }
+            
+            .category-table thead th {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-weight: 600;
+                font-size: 0.875rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 1rem 0.75rem;
+                border: none;
+            }
+            
+            .category-table tbody tr {
+                transition: var(--transition);
+                background: white;
+            }
+            
+            .category-table tbody tr:hover {
+                background: #f8f9ff;
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+            
+            .category-table tbody td {
+                padding: 1rem 0.75rem;
+                vertical-align: middle;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .category-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-size: 1.2rem;
+            }
+            
+            .category-name-cell {
+                font-weight: 600;
+                color: var(--category-dark);
+                font-size: 0.95rem;
+            }
+            
+            .category-badge {
+                padding: 0.35rem 0.75rem;
+                border-radius: 2rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .badge-system { background: #e3f2fd; color: #1976d2; }
+            .badge-personal { background: #f3e5f5; color: #7b1fa2; }
+            .badge-active { background: #e8f5e9; color: #2e7d32; }
+            .badge-inactive { background: #ffebee; color: #c62828; }
+            
+            .action-btn-group {
+                display: flex;
+                gap: 0.5rem;
+                justify-content: center;
+            }
+            
+            .action-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: none;
+                transition: var(--transition);
+                cursor: pointer;
+            }
+            
+            .action-btn:hover {
+                transform: scale(1.15);
+                box-shadow: var(--shadow-md);
+            }
+            
+            .action-btn-view { background: #e3f2fd; color: #1976d2; }
+            .action-btn-edit { background: #fff3e0; color: #f57c00; }
+            .action-btn-delete { background: #ffebee; color: #c62828; }
+        }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            .desktop-view { display: none !important; }
+            
+            .category-card {
+                background: white;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-sm);
+                margin-bottom: 1rem;
+                overflow: hidden;
+                transition: var(--transition);
+                border-left: 4px solid transparent;
+            }
+            
+            .category-card.system { border-left-color: #1976d2; }
+            .category-card.personal { border-left-color: #7b1fa2; }
+            
+            .category-card:active {
+                transform: scale(0.98);
+                box-shadow: var(--shadow-md);
+            }
+            
+            .card-header-mobile {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 1rem;
+                color: white;
+            }
+            
+            .card-title-mobile {
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .card-subtitle-mobile {
+                font-size: 0.85rem;
+                opacity: 0.9;
+                margin-top: 0.25rem;
+            }
+            
+            .card-body-mobile {
+                padding: 1rem;
+            }
+            
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            
+            .info-row:last-child { border-bottom: none; }
+            
+            .info-label {
+                font-size: 0.8rem;
+                color: var(--category-secondary);
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            .info-value {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--category-dark);
+            }
+            
+            .card-actions-mobile {
+                padding: 1rem;
+                background: var(--category-light);
+                display: flex;
+                gap: 0.5rem;
+                justify-content: stretch;
+            }
+            
+            .card-actions-mobile .btn {
+                flex: 1;
+                padding: 0.75rem;
+                border-radius: var(--radius);
+                font-weight: 600;
+                font-size: 0.85rem;
+                border: none;
+                transition: var(--transition);
+            }
+            
+            .card-actions-mobile .btn:active {
+                transform: scale(0.95);
+            }
+        }
+
+        .filter-card {
+            border: none;
+            box-shadow: var(--shadow-sm);
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .category-card, .category-table tbody tr {
+            animation: fadeInUp 0.4s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-3">
+        <!-- Cabeçalho -->
+        <div class="mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="h3 mb-2">
+                        <i class="bi bi-tags me-2"></i>
+                        Categorias
+                    </h1>
+                    <p class="text-muted mb-0">Gerencie as categorias do sistema</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 justify-content-md-end">
+                            <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Categorias</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card filter-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filtros de Busca</h5>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Buscar</label>
+                            <input type="text" class="form-control" placeholder="Nome, slug...">
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select">
+                                <option>Todos</option>
+                                <option>Ativo</option>
+                                <option>Inativo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <label class="form-label">Por página</label>
+                            <select class="form-select">
+                                <option>10</option>
+                                <option>20</option>
+                                <option>50</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <label class="form-label">Registros</label>
+                            <select class="form-select">
+                                <option>Atuais</option>
+                                <option>Deletados</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary filter-btn">
+                                <i class="bi bi-search me-2"></i>Filtrar
+                            </button>
+                            <a href="#" class="btn btn-secondary filter-btn">
+                                <i class="bi bi-x me-2"></i>Limpar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-ul me-2"></i>
+                            Lista de Categorias
+                            <span class="badge bg-primary ms-2">15</span>
+                        </h5>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <a href="#" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>Nova Categoria
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESKTOP VIEW -->
+            <div class="desktop-view">
+                <div class="table-responsive">
+                    <table class="category-table table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="60"></th>
+                                <th>Categoria</th>
+                                <th>Subcategoria</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Criado em</th>
+                                <th width="150" class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="category-icon">
+                                        <i class="bi bi-tag-fill"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="category-name-cell">Serviços Gerais</div>
+                                </td>
+                                <td><span class="text-muted">—</span></td>
+                                <td><span class="category-badge badge-system">Sistema</span></td>
+                                <td><span class="category-badge badge-active">Ativo</span></td>
+                                <td><small class="text-muted">01/01/2024 10:30</small></td>
+                                <td>
+                                    <div class="action-btn-group">
+                                        <button class="action-btn action-btn-view" title="Visualizar">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </button>
+                                        <button class="action-btn action-btn-edit" title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="action-btn action-btn-delete" title="Excluir">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="category-icon">
+                                        <i class="bi bi-tag-fill"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="category-name-cell">Manutenção</div>
+                                </td>
+                                <td><span class="text-muted">Elétrica</span></td>
+                                <td><span class="category-badge badge-personal">Pessoal</span></td>
+                                <td><span class="category-badge badge-active">Ativo</span></td>
+                                <td><small class="text-muted">15/02/2024 14:20</small></td>
+                                <td>
+                                    <div class="action-btn-group">
+                                        <button class="action-btn action-btn-view" title="Visualizar">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </button>
+                                        <button class="action-btn action-btn-edit" title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="action-btn action-btn-delete" title="Excluir">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="category-icon">
+                                        <i class="bi bi-tag-fill"></i>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="category-name-cell">Consultoria</div>
+                                </td>
+                                <td><span class="text-muted">—</span></td>
+                                <td><span class="category-badge badge-system">Sistema</span></td>
+                                <td><span class="category-badge badge-inactive">Inativo</span></td>
+                                <td><small class="text-muted">20/03/2024 09:15</small></td>
+                                <td>
+                                    <div class="action-btn-group">
+                                        <button class="action-btn action-btn-view" title="Visualizar">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </button>
+                                        <button class="action-btn action-btn-edit" title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button class="action-btn action-btn-delete" title="Excluir">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MOBILE VIEW -->
+            <div class="mobile-view">
+                <div class="p-3">
+                    <!-- Card 1 -->
+                    <div class="category-card system">
+                        <div class="card-header-mobile">
+                            <div class="card-title-mobile">
+                                <i class="bi bi-tag-fill"></i>
+                                Serviços Gerais
+                            </div>
+                        </div>
+                        <div class="card-body-mobile">
+                            <div class="info-row">
+                                <span class="info-label">Tipo</span>
+                                <span class="info-value">
+                                    <span class="category-badge badge-system">Sistema</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status</span>
+                                <span class="info-value">
+                                    <span class="category-badge badge-active">Ativo</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Criado em</span>
+                                <span class="info-value">01/01/2024</span>
+                            </div>
+                        </div>
+                        <div class="card-actions-mobile">
+                            <button class="btn btn-info">
+                                <i class="bi bi-eye-fill me-1"></i>Ver
+                            </button>
+                            <button class="btn btn-warning">
+                                <i class="bi bi-pencil-fill me-1"></i>Editar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="category-card personal">
+                        <div class="card-header-mobile">
+                            <div class="card-title-mobile">
+                                <i class="bi bi-tag-fill"></i>
+                                Manutenção
+                            </div>
+                            <div class="card-subtitle-mobile">
+                                Subcategoria: Elétrica
+                            </div>
+                        </div>
+                        <div class="card-body-mobile">
+                            <div class="info-row">
+                                <span class="info-label">Tipo</span>
+                                <span class="info-value">
+                                    <span class="category-badge badge-personal">Pessoal</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status</span>
+                                <span class="info-value">
+                                    <span class="category-badge badge-active">Ativo</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Criado em</span>
+                                <span class="info-value">15/02/2024</span>
+                            </div>
+                        </div>
+                        <div class="card-actions-mobile">
+                            <button class="btn btn-info">
+                                <i class="bi bi-eye-fill me-1"></i>Ver
+                            </button>
+                            <button class="btn btn-warning">
+                                <i class="bi bi-pencil-fill me-1"></i>Editar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="category-card system">
+                        <div class="card-header-mobile">
+                            <div class="card-title-mobile">
+                                <i class="bi bi-tag-fill"></i>
+                                Consultoria
+                            </div>
+                        </div>
+                        <div class="card-body-mobile">
+                            <div class="info-row">
+                                <span class="info-label">Tipo</span>
+                                <span class="info-value">
+                                    <span class="category-badge badge-system">Sistema</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status</span>
+                                <span class="info-value">
+                                    <span class="category-badge badge-inactive">Inativo</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Criado em</span>
+                                <span class="info-value">20/03/2024</span>
+                            </div>
+                        </div>
+                        <div class="card-actions-mobile">
+                            <button class="btn btn-info">
+                                <i class="bi bi-eye-fill me-1"></i>Ver
+                            </button>
+                            <button class="btn btn-warning">
+                                <i class="bi bi-pencil-fill me-1"></i>Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

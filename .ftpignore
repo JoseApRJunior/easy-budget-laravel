@@ -1,0 +1,103 @@
+# ===========================================
+# FTP Deploy Ignore Rules
+# Otimizado para Laravel 12 na Locaweb
+# ===========================================
+
+# ---------- ARQUIVOS DE CONFIGURAÇÃO (não necessários) ----------
+.env
+.env.backup
+.env.production
+.env.testing
+.env.example
+.env.backup.ftp
+phpunit.xml.dist
+phpunit.dusk.xml
+phpstan.neon
+composer.json
+composer.lock
+
+# ---------- DEPENDÊNCIAS (instalar via Composer no servidor) ----------
+vendor/
+node_modules/
+
+# ---------- ARQUIVOS DE DESENVOLVIMENTO E IDE ----------
+.idea/
+.vscode/
+.zed/
+.fleet/
+.phpunit.result.cache
+.phpunit.cache/
+.phpactor.json
+
+# ---------- DOCKER E HOMESTEAD ----------
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+
+# ---------- ARQUIVOS DE TESTE ----------
+tests/
+phpunit.xml
+coverage/
+clover.xml
+coverage.xml
+
+# ---------- BACKUPS E LOGS ----------
+*.log
+oauth-debug.log
+storage/pail/
+
+# ---------- SISTEMA LEGADO ----------
+old-system-legado/
+legacy_analysis.md.md
+
+# ---------- ARQUIVOS DE DOCUMENTAÇÃO (opcionais) ----------
+README.md
+TODO.md
+TODO-BACK.MD
+TODO-FRONT.MD
+TODO-CHECKLIST-MIGRATION-COMPONENT.MD
+CHECKLIST_REFATORACAO.md
+Teste\ mercado\ pago.md
+GEMINI.md
+
+# ---------- DIRETÓRIOS DE DOCUMENTAÇÃO ----------
+docs/
+documents/
+documentsIA/
+.trae/
+.memory-bank/
+.kilocode/
+.docs/
+
+# ---------- ARQUIVOS DE CONFIGURAÇÃO DO PROJETO ----------
+.editorconfig
+.prettierignore
+.postcssrc.js
+.tailwind.config.js
+.vite.config.js
+package.json
+package-lock.json
+npm-debug.log*
+yarn-error.log
+
+# ---------- OUTROS ----------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.google-credentials.json
+google-service-account.json
+
+# ---------- ARQUIVOS DO GIT ----------
+.git/
+.gitattributes
+.gitignore
+
+# ===========================================
+# NOTAS:
+# 1. O deploy deve ser feito para a pasta "public_html/"
+# 2. Executar "composer install --no-dev --optimize-autoloader" no servidor após deploy
+# 3. Executar "php artisan config:cache" e "php artisan route:cache" após deploy
+# 4. O storage/framework e storage/logs devem ter permissão de escrita (755)
+# ===========================================
