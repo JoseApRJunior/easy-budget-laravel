@@ -70,23 +70,24 @@ class QuickUpdateStatus extends Command
                     $services = $model->services;
                     foreach ($services as $service) {
                         // Tenta encontrar um status correspondente no ServiceStatus
-                        // Se o status do budget for 'approved', o serviço também vai para 'approved' (ou pending se preferir, mas vou seguir o status)
-                        // Se o status não existir no ServiceStatus, mantemos o atual ou logamos aviso.
-                        // Dado que é DEV tool, vou tentar alinhar.
                         try {
                             $serviceStatus = \App\Enums\ServiceStatus::tryFrom($status);
                             if ($serviceStatus) {
                                 $service->update(['status' => $serviceStatus]);
                                 $this->info("Serviço {$service->code} atualizado para: {$status}");
 
-                                // Se tiver agendamento e o status for cancelled/draft/pending, talvez devêssemos resetar agendamento também?
-                                // O usuário pediu "restaurar estado de service e scheduled".
-                                // Vou assumir que se o status for resetado, o agendamento deve seguir.
-                                if (in_array($status, ['draft', 'pending', 'cancelled'])) {
+                                // Se o status for 'draft', removemos os agendamentos vinculados
+                                if ($status === 'draft') {
+                                    $deletedCount = Schedule::where('service_id', $service->id)->delete();
+                                    if ($deletedCount > 0) {
+                                        $this->info("Agendamentos ({$deletedCount}) do serviço {$service->code} removidos.");
+                                    }
+                                } elseif (in_array($status, ['pending', 'cancelled'])) {
+                                    // Para outros status de "reset", apenas atualizamos o status do agendamento
                                     $schedule = Schedule::where('service_id', $service->id)->latest()->first();
                                     if ($schedule) {
-                                        $schedule->update(['status' => $status === 'draft' ? 'pending' : $status]); // Schedule não tem draft geralmente
-                                        $this->info("Agendamento do serviço {$service->code} atualizado.");
+                                        $schedule->update(['status' => $status]);
+                                        $this->info("Agendamento do serviço {$service->code} atualizado para {$status}.");
                                     }
                                 }
                             }
@@ -98,6 +99,13 @@ class QuickUpdateStatus extends Command
                 break;
             case 'service':
                 $model = Service::where('id', $identifier)->orWhere('code', $identifier)->first();
+
+                if ($model && $status === 'draft') {
+                    $deletedCount = Schedule::where('service_id', $model->id)->delete();
+                    if ($deletedCount > 0) {
+                        $this->info("Agendamentos ({$deletedCount}) do serviço {$model->code} removidos.");
+                    }
+                }
 
                 // Se passou --sch, tenta atualizar o agendamento vinculado
                 if ($model && $scheduleStatus) {
