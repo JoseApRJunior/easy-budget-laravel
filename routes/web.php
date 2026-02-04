@@ -88,8 +88,6 @@ Route::group([], function () {
         Route::get('/shared/{token}/download-pdf', [BudgetShareController::class, 'downloadPdf'])->name('shared.download-pdf');
     });
 
-
-
     Route::prefix('services')->name('services.public.')->group(function () {
         Route::get('/view-service-status/code/{code}/token/{token}', [ServiceController::class, 'viewServiceStatus'])->name('view-status');
         Route::post('/choose-service-status', [ServiceController::class, 'chooseServiceStatus'])->name('choose-status');
@@ -338,8 +336,8 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::delete('/{code}', [InvoiceController::class, 'destroy'])->name('destroy');
         Route::get('/search/ajax', [InvoiceController::class, 'search'])->name('search');
         Route::get('/{code}/print', [InvoiceController::class, 'print'])->name('print');
-            Route::post('/{code}/share', [InvoiceController::class, 'share'])->name('share');
-            Route::get('/export', [InvoiceController::class, 'export'])->name('export');
+        Route::post('/{code}/share', [InvoiceController::class, 'share'])->name('share');
+        Route::get('/export', [InvoiceController::class, 'export'])->name('export');
 
         Route::get('/budgets/{budget}/create', [InvoiceController::class, 'createFromBudget'])->name('create.from-budget');
         Route::post('/budgets/{budget}', [InvoiceController::class, 'storeFromBudget'])->name('store.from-budget');
@@ -543,8 +541,8 @@ Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])-
         Route::get('/{tenant}/billing', [TenantManagementController::class, 'billing'])->name('billing');
     });
 
-    // User Management
-    Route::prefix('users')->name('users.')->group(function () {
+    // User Management (renamed to admin-users to avoid conflict with provider users)
+    Route::prefix('admin-users')->name('admin-users.')->group(function () {
         Route::get('/', [UserManagementController::class, 'index'])->name('index');
         Route::get('/create', [UserManagementController::class, 'create'])->name('create');
         Route::post('/', [UserManagementController::class, 'store'])->name('store');
@@ -678,8 +676,8 @@ Route::prefix('settings')->name('settings.')->middleware(['auth', 'verified', 'p
 
     // Profile routes moved here for consistency
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update.user');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy.user');
 });
 
 // Reports routes group
@@ -775,7 +773,7 @@ Route::middleware(['auth', 'verified', 'provider'])->group(function () {
     Route::put('/p/business', [ProviderBusinessController::class, 'update'])->name('provider.business.update');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // Upload routes (require provider authentication)
 Route::middleware(['auth', 'verified', 'provider'])->group(function () {
