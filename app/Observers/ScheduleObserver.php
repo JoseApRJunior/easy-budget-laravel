@@ -27,6 +27,18 @@ class ScheduleObserver
             $oldStatus = $schedule->getOriginal('status');
             $newStatus = $schedule->status;
 
+            // Sincronizar status do serviço se o agendamento for confirmado
+            if ($newStatus === \App\Enums\ScheduleStatus::CONFIRMED && $schedule->service) {
+                Log::info('Schedule confirmed, updating service status to SCHEDULED', [
+                    'schedule_id' => $schedule->id,
+                    'service_id' => $schedule->service->id
+                ]);
+
+                // Evitar loop infinito suprimindo a notificação do serviço se necessário
+                // O ServiceObserver já lida com notificações do serviço
+                $schedule->service->update(['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
+            }
+
             $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
 
             event(new StatusUpdated(

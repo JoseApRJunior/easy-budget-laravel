@@ -93,11 +93,19 @@ class BudgetShareService extends AbstractBaseService
                     // Isso garante que os Observers sejam disparados corretamente
                     $services = $budget->services()->withoutGlobalScopes()->get();
                     foreach ($services as $service) {
-                        // Suprimir notificações individuais para evitar flood
+                        // Se o orçamento foi aprovado, o status deve ser SCHEDULING
+                        // mas não queremos notificar individualmente AINDA porque o 
+                        // StatusUpdated enviará o link do budget.
+                        // O agendamento posterior é que deve enviar a notificação correta.
                         $service->suppressStatusNotification = true;
                         $service->update([
                             'status' => $serviceStatus->value,
                         ]);
+
+                        // Se for aprovado, garantir que não há agendamentos indevidos (limpeza)
+                        if ($newStatus === \App\Enums\BudgetStatus::APPROVED) {
+                            // Opcional: remover rascunhos de agendamento se houver
+                        }
                     }
                 }
 

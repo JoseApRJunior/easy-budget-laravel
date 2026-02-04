@@ -288,25 +288,31 @@ class ServiceService extends AbstractBaseService
      */
     private function syncScheduleStatus($service, ServiceStatus $newStatus): void
     {
-        // Se o agendamento foi confirmado
+        // Se o agendamento foi confirmado (pelo prestador manualmente via service)
         if ($newStatus === ServiceStatus::SCHEDULED) {
             $service->schedules()
                 ->where('status', ScheduleStatus::PENDING->value)
-                ->update([
-                    'status' => ScheduleStatus::CONFIRMED->value,
-                    'confirmed_at' => now(),
-                ]);
+                ->get()
+                ->each(function ($schedule) {
+                    $schedule->update([
+                        'status' => ScheduleStatus::CONFIRMED->value,
+                        'confirmed_at' => now(),
+                    ]);
+                });
         }
 
         // Se o serviço foi cancelado, cancelamos os agendamentos pendentes ou confirmados
         if ($newStatus === ServiceStatus::CANCELLED) {
             $service->schedules()
                 ->whereIn('status', [ScheduleStatus::PENDING->value, ScheduleStatus::CONFIRMED->value])
-                ->update([
-                    'status' => ScheduleStatus::CANCELLED->value,
-                    'cancelled_at' => now(),
-                    'cancellation_reason' => 'Serviço '.$newStatus->label().' pelo cliente.',
-                ]);
+                ->get()
+                ->each(function ($schedule) {
+                    $schedule->update([
+                        'status' => ScheduleStatus::CANCELLED->value,
+                        'cancelled_at' => now(),
+                        'cancellation_reason' => 'Serviço cancelado pelo cliente.',
+                    ]);
+                });
         }
     }
 }

@@ -1,4 +1,4 @@
-name: Deploy via FTP
+name: Deploy to Locaweb
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    name: Build & Deploy
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,20 +15,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
-          extensions: curl gd pdo pdo_mysql intl zip
+          extensions: mbstring, intl, pdo, pdo_mysql
 
-      - name: Install zip and rsync
-        run: sudo apt-get install -y zip unzip rsync
-
-      # ===========================================
-      # CONFIGURAÇÃO: Preparar ambiente
-      # ===========================================
-      - name: Setup environment
-        run: cp .env.production .env
-
-      # ===========================================
-      # DEPENDÊNCIAS: Instalar composer e npm
-      # ===========================================
       - name: Cache Composer packages
         id: composer-cache
         uses: actions/cache@v4
@@ -38,7 +26,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-
 
-      - name: Cache NPM packages
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader --no-progress
+
+      - name: Create .env file
+        run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
+
+      - name: Install NPM dependencies
         uses: actions/cache@v4
         with:
           path: node_modules
@@ -46,36 +40,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
-
-      - name: Install NPM dependencies
-        run: npm ci
-
       - name: Build assets
-        run: npm run build
+        run: npm ci && npm run build
 
-      # ===========================================
-      # OTIMIZAÇÃO: Cache do Laravel
-      # ===========================================
-      - name: Generate Laravel config cache
-        run: php artisan config:cache
+      - name: Generate Laravel cache
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan event:cache
 
-      - name: Generate Laravel route cache
-        run: php artisan route:cache
-
-      - name: Generate Laravel events cache
-        run: php artisan event:cache
-
-      # ===========================================
-      # PREPARAÇÃO: Criar public_html/
-      # ===========================================
       - name: Prepare public_html folder
         run: |
-          # Copiar public/index.php para public_html/index.php
           cp public/index.php public_html/index.php
-
-          # Criar .htaccess para public_html (web root do Locaweb)
           cat > public_html/.htaccess << 'HTACCESS'
           <IfModule mod_rewrite.c>
               <IfModule mod_negotiation.c>
@@ -84,37 +60,29 @@ jobs:
 
               RewriteEngine On
 
-              # Handle Authorization Header
               RewriteCond %{HTTP:Authorization} .
               RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-              # Redirect all requests to public/ folder (Laravel structure)
               RewriteCond %{REQUEST_FILENAME} !-f
               RewriteCond %{REQUEST_FILENAME} !-d
               RewriteRule ^ public/index.php [L]
           </IfModule>
           HTACCESS
 
-          # Verificar criação
-          ls -la public_html/
+      - name: Clean unnecessary files
+        run: |
+          rm -rf .git .github/ docs/ tests/ node_modules/
+          rm -f .env.example .env.testing .env.production .env.local .env.staging
+          rm -f README.md composer.json composer.lock phpstan.neon phpdoc.dist.xml
+          rm -f *.md boost*.cjs everything*.cjs cookies.txt
+          rm -rf old-system* .kilocode .memory-bank .trae .docs coverage/
+          rm -rf storage/pail storage/logs/*.log
 
-      # ===========================================
-      # DEPLOY: FTP para Locaweb
-      # ===========================================
-      - name: FTP Deploy to Locaweb
+      - name: FTP Deploy Locaweb
         uses: locaweb/ftp-deploy@1.0.0
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./
-          exclude: |
-            **/.git/**
-            **/.gitignore
-            **/Thumbs.db
-            **/*.log
-            **/node_modules/**
-            **/vendor/**
-            **/tests/**
-            **/.github/**
-            **/coverage/**
+          host: ${{ secrets.HOST }}
+          user: ${{ secrets.USER }}
+          password: ${{ secrets.PASS }}
+          localDir: "."
+          remoteDir: /
