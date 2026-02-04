@@ -93,6 +93,7 @@ google-service-account.json
 .git/
 .gitattributes
 .gitignore
+.github/
 
 # ===========================================
 # NOTAS:
