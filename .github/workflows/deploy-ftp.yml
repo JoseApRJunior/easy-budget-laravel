@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: composer install --no-dev --optimize-autoloader --no-progress
 
-      - name: Create .env file
+      - name: Create .env file from GitHub Secret
         run: |
           echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
 
@@ -41,44 +41,29 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      # Build assets - skipped (project uses traditional assets, not Vite)
-
       - name: Generate Laravel cache
         run: |
           php artisan config:cache
           php artisan route:cache
           php artisan event:cache
 
-      - name: Prepare public_html folder
+      - name: Prepare deploy folder structure
         run: |
+          mkdir -p public_html
           cp public/index.php public_html/index.php
-          cat > public_html/.htaccess << 'HTACCESS'
-          <IfModule mod_rewrite.c>
-              <IfModule mod_negotiation.c>
-                  Options -MultiViews -Indexes
-              </IfModule>
-
-              RewriteEngine On
-
-              RewriteCond %{HTTP:Authorization} .
-              RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-              RewriteCond %{REQUEST_FILENAME} !-f
-              RewriteCond %{REQUEST_FILENAME} !-d
-              RewriteRule ^ public/index.php [L]
-          </IfModule>
-          HTACCESS
+          printf '%s\n' '<IfModule mod_rewrite.c>' '  <IfModule mod_negotiation.c>' '    Options -MultiViews -Indexes' '  </IfModule>' '  RewriteEngine On' '  RewriteCond %{HTTP:Authorization} .' '  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]' '  RewriteCond %{REQUEST_FILENAME} !-f' '  RewriteCond %{REQUEST_FILENAME} !-d' '  RewriteRule ^ public/index.php [L]' '</IfModule>' > public_html/.htaccess
 
       - name: Clean unnecessary files
         run: |
-          rm -rf .git .github/ docs/ tests/ node_modules/
-          rm -f .env.example .env.testing .env.production .env.local .env.staging
+          rm -rf .git .github docs tests node_modules
+          rm -f .env.example .env.testing .env.local .env.staging
           rm -f README.md composer.json composer.lock phpstan.neon phpdoc.dist.xml
           rm -f *.md boost*.cjs everything*.cjs cookies.txt
-          rm -rf old-system* .kilocode .memory-bank .trae .docs coverage/
+          rm -rf old-system* .kilocode .memory-bank .trae .docs coverage
           rm -rf storage/pail storage/logs/*.log
+          rm -f .env
 
-      - name: FTP Deploy Locaweb
+      - name: FTP Deploy to Locaweb
         uses: locaweb/ftp-deploy@1.0.0
         with:
           host: ${{ secrets.HOST }}

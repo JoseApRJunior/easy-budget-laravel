@@ -31,9 +31,43 @@ class ScheduleController extends Controller
     ) {}
 
     /**
-     * Confirma um agendamento publicamente via token
+     * Exibe a página de confirmação de agendamento
      */
     public function publicConfirm(string $token): View
+    {
+        $tokenResult = $this->scheduleService->validateToken($token);
+
+        if ($tokenResult->isError()) {
+            return view('pages.schedule.confirmation-error', [
+                'error' => $tokenResult->getMessage(),
+            ]);
+        }
+
+        $tokenRecord = $tokenResult->getData();
+        $schedule = \App\Models\Schedule::where('user_confirmation_token_id', $tokenRecord->id)->first();
+
+        if (! $schedule) {
+            return view('pages.schedule.confirmation-error', [
+                'error' => 'Agendamento não encontrado.',
+            ]);
+        }
+
+        if ($schedule->status === \App\Enums\ScheduleStatus::CONFIRMED) {
+            return view('pages.schedule.confirmation-success', [
+                'schedule' => $schedule,
+            ]);
+        }
+
+        return view('pages.schedule.confirm', [
+            'schedule' => $schedule,
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * Processa a confirmação do agendamento (via POST)
+     */
+    public function publicConfirmAction(Request $request, string $token): RedirectResponse|View
     {
         $result = $this->scheduleService->confirmScheduleByToken($token);
 

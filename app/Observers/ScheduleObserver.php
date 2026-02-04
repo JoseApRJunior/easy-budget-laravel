@@ -15,6 +15,10 @@ class ScheduleObserver
      */
     public function updated(Schedule $schedule): void
     {
+        if ($schedule->suppressStatusNotification) {
+            return;
+        }
+
         Log::info('ScheduleObserver updated method called', [
             'schedule_id' => $schedule->id,
             'status' => $schedule->status->value,
@@ -56,6 +60,10 @@ class ScheduleObserver
      */
     public function created(Schedule $schedule): void
     {
+        if ($schedule->suppressStatusNotification) {
+            return;
+        }
+
         Log::info('ScheduleObserver created method called', [
             'schedule_id' => $schedule->id,
             'status' => $schedule->status->value,

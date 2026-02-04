@@ -12,6 +12,11 @@ class Schedule extends Model
     use HasFactory, TenantScoped;
 
     /**
+     * Flag para suprimir notificações de status (usado em processos em lote ou transições automáticas)
+     */
+    public bool $suppressStatusNotification = false;
+
+    /**
      * Boot the model.
      */
     protected static function boot()
