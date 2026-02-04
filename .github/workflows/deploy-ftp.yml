@@ -30,7 +30,8 @@ jobs:
         run: composer install --no-dev --optimize-autoloader --no-progress
 
       - name: Create .env file
-        run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
+        run: |
+          echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
 
       - name: Install NPM dependencies
         uses: actions/cache@v4
