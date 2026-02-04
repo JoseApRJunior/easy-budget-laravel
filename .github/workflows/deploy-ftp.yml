@@ -59,35 +59,12 @@ jobs:
           rm -rf storage/pail storage/logs/*.log
           rm -f .env
 
-      - name: Incremental FTP Deploy
-        run: |
-          # Install lftp for timestamp-based sync
-          apt-get update && apt-get install -y lftp
-
-          # Create FTP exclude list from .ftpignore
-          if [ -f ".ftpignore" ]; then
-            mkdir -p /tmp/excludes
-            while IFS= read -r line; do
-              [[ "$line" =~ ^# ]] && continue
-              [[ -z "$line" ]] && continue
-              echo "$line" >> /tmp/excludes/exclude.txt
-            done < .ftpignore
-          fi
-
-          # Run lftp mirror with timestamp comparison
-          lftp -c "
-            set ftp:ssl-allow no;
-            set net:timeout 30;
-            set net:max-retries 3;
-            set net:reconnect-interval-base 5;
-            open -u $FTP_USER,$FTP_PASS $FTP_HOST;
-            cd public_html;
-            mirror --verbose --continue --parallel=5 \
-              --exclude-glob-from=/tmp/excludes/exclude.txt \
-              ./ ./;
-            bye;
-          " || echo "FTP sync completed with warnings"
-        env:
-          FTP_HOST: ${{ secrets.HOST }}
-          FTP_USER: ${{ secrets.USER }}
-          FTP_PASS: ${{ secrets.PASS }}
+      - name: FTP Deploy using GitHub Action
+        uses: locaweb/ftp-deploy@1.0.0
+        with:
+          host: ${{ secrets.HOST }}
+          user: ${{ secrets.USER }}
+          password: ${{ secrets.PASS }}
+          localDir: "./public_html"
+          remoteDir: "public_html"
+          excludeFile: ".ftpignore"
