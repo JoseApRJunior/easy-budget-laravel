@@ -58,8 +58,9 @@ jobs:
           rm -rf .git .github docs tests node_modules
           rm -rf storage/pail storage/logs/*.log
           rm -f .env
+          rm -f .ftpignore
 
-      - name: FTP Deploy using GitHub Action
+      - name: FTP Deploy to Locaweb
         uses: locaweb/ftp-deploy@1.0.0
         with:
           host: ${{ secrets.HOST }}
@@ -67,4 +68,4 @@ jobs:
           password: ${{ secrets.PASS }}
           localDir: "./public_html"
           remoteDir: "public_html"
-          excludeFile: ".ftpignore"
+          args: "--exclude-glob='.git*' --exclude-glob='.env*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
