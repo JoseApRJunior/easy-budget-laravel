@@ -2,23 +2,24 @@ name: Dependencies Check
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
-  schedule:
-    - cron: "0 2 * * 1" # Segunda-feira às 2h - apenas verifica
+    branches: [master]
 
 jobs:
   check:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
           extensions: mbstring, intl, pdo, pdo_mysql
+          coverage: none
 
       - name: Cache Composer packages
         id: composer-cache
@@ -33,10 +34,10 @@ jobs:
         run: composer validate --strict
 
       - name: Install dependencies
-        run: composer install --optimize-autoloader --no-progress
+        run: composer install --optimize-autoloader --no-progress --no-interaction
 
       - name: Check for security vulnerabilities
         run: composer audit
 
-      - name: Check outdated packages (info only)
-        run: composer outdated --direct
+      - name: Check outdated packages
+        run: composer outdated --direct --format=table
