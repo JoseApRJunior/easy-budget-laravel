@@ -74,16 +74,36 @@ class ScheduleService extends AbstractBaseService
                 $data['user_confirmation_token_id'] = $tokenId;
             }
 
-            // Cria o agendamento já com o token (importante para Observers dispararem notificações com link correto)
-            $schedule = $this->scheduleRepository->create($data);
+            // Cria o agendamento suprimindo a notificação direta
+            // A notificação será disparada pela mudança de status do serviço para SCHEDULING
+            $schedule = \App\Models\Schedule::withoutEvents(function () use ($data) {
+                return $this->scheduleRepository->create($data);
+            });
 
-            // Atualiza o status do serviço apenas se não estiver em processo de agendamento (SCHEDULING) ou agendado (SCHEDULED)
-            if (! in_array($service->status, [ServiceStatus::SCHEDULING, ServiceStatus::SCHEDULED])) {
+            // Atualiza o status do serviço - isso disparará a notificação correta com o link
+            if ($service->status !== ServiceStatus::SCHEDULING) {
                 $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULING->value]);
+            } else {
+                // Se já estava em SCHEDULING, forçamos o evento de atualização para garantir que o cliente receba o novo link/data
+                event(new \App\Events\StatusUpdated(
+                    $service,
+                    $service->status->value,
+                    ServiceStatus::SCHEDULING->value,
+                    ServiceStatus::SCHEDULING->label(),
+                    $service->tenant
+                ));
             }
 
             return $this->success($schedule, 'Agendamento criado com sucesso.');
         }, 'Erro ao criar agendamento.');
+    }
+
+    /**
+     * Valida um token de confirmação de agendamento
+     */
+    public function validateToken(string $token): ServiceResult
+    {
+        return $this->tokenService->validateToken($token, TokenType::SCHEDULE_CONFIRMATION);
     }
 
     /**

@@ -100,6 +100,7 @@ Route::group([], function () {
 
         Route::prefix('schedules')->name('schedules.')->group(function () {
             Route::get('/confirm/{token}', [ScheduleController::class, 'publicConfirm'])->name('confirm');
+            Route::post('/confirm/{token}', [ScheduleController::class, 'publicConfirmAction'])->name('confirm.action');
         });
         Route::get('/pay/{hash}', [PublicInvoiceController::class, 'redirectToPayment'])->name('pay');
         Route::get('/status', [PublicInvoiceController::class, 'paymentStatus'])->name('status');
