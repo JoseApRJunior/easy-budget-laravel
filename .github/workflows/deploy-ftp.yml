@@ -40,8 +40,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-
 
-      - name: Build assets
-        run: npm ci && npm run build
+      # Build assets - skipped (project uses traditional assets, not Vite)
 
       - name: Generate Laravel cache
         run: |
