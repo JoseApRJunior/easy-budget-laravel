@@ -42,7 +42,7 @@ jobs:
         run: |
           # Garantir que a pasta public_html exista
           mkdir -p public_html
-          
+
           # Copiar conteúdo de public para public_html
           cp -r public/* public_html/
           [ -f public/.htaccess ] && cp public/.htaccess public_html/
@@ -89,4 +89,4 @@ jobs:
           localDir: "."
           remoteDir: "/"
           forceSsl: false
-          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --verbose"
+          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --delete --parallel=10"
