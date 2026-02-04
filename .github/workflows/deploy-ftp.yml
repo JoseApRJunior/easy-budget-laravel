@@ -77,6 +77,17 @@ jobs:
           </IfModule>
           EOF
 
+          # Limpeza profunda na pasta vendor para acelerar o FTP (remove milhares de arquivos inúteis)
+          echo "Limpando pasta vendor para acelerar o deploy..."
+          find vendor -type d -name "tests" -exec rm -rf {} +
+          find vendor -type d -name "docs" -exec rm -rf {} +
+          find vendor -type d -name ".github" -exec rm -rf {} +
+          find vendor -type f -name "*.md" -delete
+          find vendor -type f -name "LICENSE" -delete
+          find vendor -type f -name ".gitignore" -delete
+          find vendor -type f -name ".gitattributes" -delete
+          find vendor -type f -name "phpunit.xml*" -delete
+
           # Remover arquivos e pastas desnecessários para produção
           rm -rf .git .github tests node_modules
 
@@ -89,4 +100,4 @@ jobs:
           localDir: "."
           remoteDir: "/"
           forceSsl: false
-          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --exclude-glob='.docs/*' --exclude-glob='.trae/*' --exclude-glob='.kilocode/*' --exclude-glob='.memory-bank/*' --exclude-glob='*.js' --exclude-glob='*.json' --exclude-glob='*.neon' --exclude-glob='*.bat' --exclude-glob='*.cjs' --exclude-glob='*.yml' --exclude-glob='*.yaml' --exclude-glob='*.txt' --exclude-glob='*.code-workspace' --delete --parallel=10"
+          args: "--exclude-glob='.git*' --exclude-glob='*.log' --exclude-glob='tests/*' --exclude-glob='docs/*' --exclude-glob='*.md' --exclude-glob='.docs/*' --exclude-glob='.trae/*' --exclude-glob='.kilocode/*' --exclude-glob='.memory-bank/*' --exclude-glob='*.js' --exclude-glob='*.json' --exclude-glob='*.neon' --exclude-glob='*.bat' --exclude-glob='*.cjs' --exclude-glob='*.yml' --exclude-glob='*.yaml' --exclude-glob='*.txt' --exclude-glob='*.code-workspace' --delete --parallel=20 --no-perms"
