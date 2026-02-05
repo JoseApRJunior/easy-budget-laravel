@@ -1,0 +1,47 @@
+name: Deploy Manual Locaweb (FTP)
+
+on:
+  workflow_dispatch: # Permite execução manual pelo botão no GitHub
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy via FTP
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, pdo, pdo_mysql
+
+      - name: 📦 Install Dependencies (Production)
+        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
+
+      - name: 📂 Sync files to Locaweb via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PASS }}
+          # Caminho no servidor (cuidado para não sobrescrever tudo errado)
+          # Baseado na nossa descoberta anterior, a raiz é /
+          # Mas queremos jogar em public_html ou na raiz?
+          # O usuário tem app, vendor na raiz e public_html separado.
+          # O FTP-Deploy envia tudo.
+          server-dir: /
+          # Arquivos para ignorar no upload
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            .env
+            .env.example
+            .editorconfig
+            README.md
+            TODO.md
+            TODO-BACK.MD
+            TODO-FRONT.MD

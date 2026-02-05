@@ -1,0 +1,47 @@
+name: Deploy to Locaweb
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, pdo, pdo_mysql
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader --no-progress
+
+      - name: Create .env file
+        run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
+
+      - name: Clean unnecessary files
+        run: |
+          rm -rf .git .github/ docs/ tests/ node_modules/ backup_cron.php
+          rm -f .env.example .env.local .env.staging README.md composer.json composer.lock phpstan.neon phpdoc.dist.xml *.md
+
+      - name: FTP Deploy Locaweb
+        uses: locaweb/ftp-deploy@2.0.2
+        with:
+          host: ${{ secrets.HOST }}
+          user: ${{ secrets.USER }}
+          password: ${{ secrets.PASS }}
+          localDir: "."
+          remoteDir: /
