@@ -74,24 +74,17 @@ class ScheduleService extends AbstractBaseService
                 $data['user_confirmation_token_id'] = $tokenId;
             }
 
-            // Cria o agendamento suprimindo a notificação direta
-            // A notificação será disparada pela mudança de status do serviço para SCHEDULING
-            $schedule = \App\Models\Schedule::withoutEvents(function () use ($data) {
-                return $this->scheduleRepository->create($data);
-            });
+            // Cria o agendamento permitindo eventos (para disparar ScheduleObserver -> StatusUpdated -> MailerService)
+            // Isso garante que o template 'emails.schedule.status-update' seja usado
+            $schedule = $this->scheduleRepository->create($data);
 
-            // Atualiza o status do serviço - isso disparará a notificação correta com o link
+            // Atualiza o status do serviço - mas SUPRIME a notificação do serviço para evitar duplicidade e template errado
+            // A notificação de agendamento (criada acima) já conterá o link de confirmação e detalhes
             if ($service->status !== ServiceStatus::SCHEDULING) {
-                $this->serviceRepository->update($service->id, ['status' => ServiceStatus::SCHEDULING->value]);
-            } else {
-                // Se já estava em SCHEDULING, forçamos o evento de atualização para garantir que o cliente receba o novo link/data
-                event(new \App\Events\StatusUpdated(
-                    $service,
-                    $service->status->value,
-                    ServiceStatus::SCHEDULING->value,
-                    ServiceStatus::SCHEDULING->label(),
-                    $service->tenant
-                ));
+                // Instancia o modelo para poder usar a propriedade 'suppressStatusNotification'
+                $serviceModel = \App\Models\Service::find($service->id);
+                $serviceModel->suppressStatusNotification = true;
+                $serviceModel->update(['status' => ServiceStatus::SCHEDULING->value]);
             }
 
             return $this->success($schedule, 'Agendamento criado com sucesso.');

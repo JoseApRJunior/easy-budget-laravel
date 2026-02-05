@@ -34,20 +34,28 @@ class ScheduleObserver
             // Sincronizar status do serviço se o agendamento for confirmado
             // IMPORTANTE: Só atualiza o serviço para SCHEDULED se o agendamento foi CONFIRMADO
             if ($newStatus === \App\Enums\ScheduleStatus::CONFIRMED && $schedule->service) {
-                // Verifica se o serviço já não está agendado para evitar duplicidade de eventos/emails
-                if ($schedule->service->status !== \App\Enums\ServiceStatus::SCHEDULED) {
-                    Log::info('Schedule confirmed, updating service status to SCHEDULED', [
+                // Verificar se temos data de confirmação (evita aprovações automáticas/acidentais)
+                if (! $schedule->confirmed_at) {
+                    Log::warning('Schedule status is CONFIRMED but confirmed_at is null. Skipping Service update.', [
                         'schedule_id' => $schedule->id,
                         'service_id' => $schedule->service->id,
-                        'old_status' => $oldStatus instanceof \UnitEnum ? $oldStatus->value : $oldStatus,
-                        'service_current_status' => $schedule->service->status->value
                     ]);
-                    $schedule->service->update(['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
                 } else {
-                    Log::info('Schedule confirmed but Service is already SCHEDULED. Skipping update to prevent duplicate notifications.', [
-                        'schedule_id' => $schedule->id,
-                        'service_id' => $schedule->service->id
-                    ]);
+                    // Verifica se o serviço já não está agendado para evitar duplicidade de eventos/emails
+                    if ($schedule->service->status !== \App\Enums\ServiceStatus::SCHEDULED) {
+                        Log::info('Schedule confirmed, updating service status to SCHEDULED', [
+                            'schedule_id' => $schedule->id,
+                            'service_id' => $schedule->service->id,
+                            'old_status' => $oldStatus instanceof \UnitEnum ? $oldStatus->value : $oldStatus,
+                            'service_current_status' => $schedule->service->status->value,
+                        ]);
+                        $schedule->service->update(['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
+                    } else {
+                        Log::info('Schedule confirmed but Service is already SCHEDULED. Skipping update to prevent duplicate notifications.', [
+                            'schedule_id' => $schedule->id,
+                            'service_id' => $schedule->service->id,
+                        ]);
+                    }
                 }
             }
 
