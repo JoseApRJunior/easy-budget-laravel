@@ -97,8 +97,8 @@ class SendEmailVerification
             $this->logEventStart($event);
 
             $dedupeKey = $this->buildEmailVerificationDedupKey($event);
-            if (! Cache::add($dedupeKey, true, now()->addMinutes(30))) {
-                Log::warning('Envio de e-mail de verificação ignorado por deduplicação', [
+            if (! Cache::add($dedupeKey, true, now()->addMinutes(1))) {
+                Log::warning('Envio de e-mail de verificação ignorado por deduplicação (aguarde 1 minuto)', [
                     'user_id' => $event->user->id,
                     'email' => $event->user->email,
                     'tenant_id' => $event->tenant?->id,
