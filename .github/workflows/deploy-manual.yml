@@ -20,28 +20,31 @@ jobs:
       - name: 📦 Install Dependencies (Production)
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
 
+      # Adicionamos a criação do .env que existia no seu script antigo
+      # Isso é útil se você guardar as configs de produção nos Secrets do GitHub
+      - name: 📄 Create .env file
+        run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
+        # Se você não tiver o secret PROD_ENV_FILE, pode remover este passo e manter o .env que já está no servidor
+
+      - name: 🧹 Clean and Prepare files
+        run: |
+          rm -rf .git .github/ docs/ tests/ node_modules/
+          rm -f .env.example .env.local .env.staging README.md phpstan.neon phpdoc.dist.xml *.md
+          # Renomear public para public_html para o padrão Locaweb
+          mv public public_html
+          # Não removemos o composer.lock pois é importante para garantir versões!
+
       - name: 📂 Sync files to Locaweb via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
           password: ${{ secrets.PASS }}
-          # Caminho no servidor (cuidado para não sobrescrever tudo errado)
-          # Baseado na nossa descoberta anterior, a raiz é /
-          # Mas queremos jogar em public_html ou na raiz?
-          # O usuário tem app, vendor na raiz e public_html separado.
-          # O FTP-Deploy envia tudo.
           server-dir: /
-          # Arquivos para ignorar no upload
+          # Como já limpamos os arquivos no passo "Clean unnecessary files",
+          # não precisamos de uma lista gigante de excludes aqui,
+          # mas mantemos alguns por segurança.
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
-            **/tests/**
-            .env
-            .env.example
-            .editorconfig
-            README.md
-            TODO.md
-            TODO-BACK.MD
-            TODO-FRONT.MD
