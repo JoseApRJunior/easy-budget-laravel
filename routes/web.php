@@ -123,9 +123,13 @@ Route::middleware('auth')->group(function () {
 });
 
 // Email verification routes
-// Routes for email verification process
+// Routes for email verification process are unified here
+Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', EmailVerificationPromptController::class)->name('verification.notice');
+});
+
 Route::prefix('email')->name('verification.')->group(function () {
-    Route::get('/verify', EmailVerificationPromptController::class)->name('notice');
+    // Rota legada para compatibilidade com assinaturas padrão do Laravel
     Route::get('/verify/{id}/{hash}', [CustomVerifyEmailController::class, 'confirmAccount'])->middleware(['signed:relative'])->name('verify');
 });
 

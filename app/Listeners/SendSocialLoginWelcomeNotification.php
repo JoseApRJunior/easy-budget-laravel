@@ -8,7 +8,7 @@ use App\Events\SocialLoginWelcome;
 use App\Mail\SocialLoginWelcomeMail;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
-use Illuminate\Contracts\Queue\ShouldQueue;
+// use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -28,7 +28,7 @@ use Throwable;
  * - Métricas de performance integradas
  * - Sistema de retry automático com backoff exponencial
  */
-class SendSocialLoginWelcomeNotification implements ShouldQueue
+class SendSocialLoginWelcomeNotification
 {
     /**
      * O número de vezes que o job pode ser executado novamente em caso de falha.
@@ -163,7 +163,10 @@ class SendSocialLoginWelcomeNotification implements ShouldQueue
                 'event_type' => 'social_login_welcome',
             ]);
 
-            return ServiceResult::error('Erro interno no processamento de boas-vindas social: '.$e->getMessage());
+            return ServiceResult::error(
+                statusOrMessage: 'Falha ao enviar e-mail: '.$e->getMessage(),
+                data: ['exception' => $e->getMessage()]
+            );
         }
     }
 
