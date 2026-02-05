@@ -54,7 +54,7 @@ class EmailVerificationController extends Controller
         $result = $this->emailVerificationService->resendConfirmationEmail($user);
 
         return $this->redirectSuccess(
-            'verification.prompt',
+            'verification.notice',
             'E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.',
         );
     }

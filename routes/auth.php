@@ -39,12 +39,13 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('verify-email', EmailVerificationPromptController::class)
-        ->name('verification.prompt');
+    // Rotas de verificação de e-mail unificadas (veja web.php para email/verify)
+    // Route::get('verify-email', EmailVerificationPromptController::class)
+    //     ->name('verification.prompt');
 
-    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify-email');
+    // Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+    //     ->middleware(['signed', 'throttle:6,1'])
+    //     ->name('verification.verify-email');
 
     Route::post('email/verification-notification', [EmailVerificationController::class, 'store'])
         ->middleware('throttle:6,1')
