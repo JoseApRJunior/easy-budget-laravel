@@ -100,7 +100,7 @@ class UserRegistrationService extends AbstractBaseService
                 'provider' => $results['provider'],
                 'plan' => $results['plan'],
                 'subscription' => $results['subscription'],
-                'message' => 'Registro realizado com sucesso! Bem-vindo ao Easy Budget.',
+                'message' => 'Registro realizado com sucesso! Enviamos um e-mail de confirmação para o seu endereço cadastrado.',
             ], 'Usuário registrado com sucesso.');
         }, 'Erro no registro de usuário.');
     }
