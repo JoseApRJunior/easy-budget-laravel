@@ -43,6 +43,10 @@
             <x-ui.alert variant="success" :message="session('status')" class="mb-4" />
         @endif
 
+        @if(session('success'))
+            <x-ui.alert variant="success" :message="session('success')" class="mb-4" />
+        @endif
+
         @if(session('warning'))
             <x-ui.alert variant="warning" :message="session('warning')" class="mb-4" />
         @endif

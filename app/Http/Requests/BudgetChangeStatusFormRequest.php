@@ -26,7 +26,6 @@ class BudgetChangeStatusFormRequest extends FormRequest
         return [
             'budget_id' => ['required', 'integer', 'exists:budgets,id'],
             'budget_code' => ['required', 'string', 'max:50'],
-            'current_status_id' => ['required', 'integer'],
             'current_status_name' => ['required', 'string', 'max:100'],
             'current_status_slug' => ['required', 'string', 'max:50'],
             'action' => ['required', 'string', 'max:50'],
@@ -48,8 +47,6 @@ class BudgetChangeStatusFormRequest extends FormRequest
             'budget_code.required' => 'O código do orçamento é obrigatório.',
             'budget_code.string' => 'O código do orçamento deve ser um texto.',
             'budget_code.max' => 'O código do orçamento não pode ter mais de 50 caracteres.',
-            'current_status_id.required' => 'O ID do status atual é obrigatório.',
-            'current_status_id.integer' => 'O ID do status atual deve ser um número válido.',
             'current_status_name.required' => 'O nome do status atual é obrigatório.',
             'current_status_name.string' => 'O nome do status atual deve ser um texto.',
             'current_status_name.max' => 'O nome do status atual não pode ter mais de 100 caracteres.',
@@ -73,7 +70,6 @@ class BudgetChangeStatusFormRequest extends FormRequest
         return [
             'budget_id' => 'ID do orçamento',
             'budget_code' => 'código do orçamento',
-            'current_status_id' => 'ID do status atual',
             'current_status_name' => 'nome do status atual',
             'current_status_slug' => 'slug do status atual',
             'action' => 'ação',

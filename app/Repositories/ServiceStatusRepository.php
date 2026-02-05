@@ -78,26 +78,11 @@ class ServiceStatusRepository implements GlobalRepositoryInterface
     }
 
     /**
-     * Busca status por ID (mantido para compatibilidade)
+     * Busca status por valor (slug)
      */
-    public function findById(int $id): ?ServiceStatus
+    public function findById(string $status): ?ServiceStatus
     {
-        // Mapeia IDs antigos para enum values (compatibilidade com código legado)
-        $idMapping = [
-            1 => 'scheduled',
-            2 => 'preparing',
-            3 => 'on-hold',
-            4 => 'in-progress',
-            5 => 'partially-completed',
-            6 => 'approved',    // Corrigido: era 'completed', agora 'approved'
-            7 => 'rejected',    // Corrigido: era 'cancelled', agora 'rejected'
-            8 => 'completed',   // Corrigido: era ID 6, agora ID 8
-            9 => 'cancelled',   // Corrigido: era ID 7, agora ID 9
-        ];
-
-        $slug = $idMapping[$id] ?? null;
-
-        return $slug ? ServiceStatus::tryFrom($slug) : null;
+        return ServiceStatus::tryFrom($status);
     }
 
     /**

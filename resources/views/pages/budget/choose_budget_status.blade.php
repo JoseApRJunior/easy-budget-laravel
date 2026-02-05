@@ -56,10 +56,13 @@
                                 </h5>
                             </div>
                             <div class="col-md-2">
-                                <small class="text-muted">Status</small>
-                                <span class="badge fs-6"
-                                    style="background-color: {{ $budget->status->getColor() }};">{{ $budget->status->getDescription() }}</span>
-                            </div>
+                            <small class="text-muted">Status</small>
+                            @php
+                                $statusEnum = \App\Enums\BudgetStatus::tryFrom($budget->status);
+                            @endphp
+                            <span class="badge fs-6"
+                                style="background-color: {{ $statusEnum?->getColor() ?? '#ccc' }};">{{ $statusEnum?->label() ?? $budget->status }}</span>
+                        </div>
                         </div>
 
                         <!-- Description -->
@@ -120,10 +123,10 @@
                         <div class="d-flex justify-content-between mb-3">
                             <span class="text-muted">Vencimento:</span>
                             <span
-                                class="fw-semibold @if( $budget->due_date->isPast() ) text-danger @endif">{{ $budget->due_date->format( 'd/m/Y' ) }}</span>
+                                class="fw-semibold @if( $budget->due_date && $budget->due_date->isPast() ) text-danger @endif">{{ $budget->due_date ? $budget->due_date->format( 'd/m/Y' ) : 'N/A' }}</span>
                         </div>
                         <!-- Action Buttons for PENDING status -->
-                        @if( $budget->status === \App\Enums\BudgetStatus::PENDING )
+                        @if( $budget->status === \App\Enums\BudgetStatus::PENDING->value )
                             <div class="d-grid gap-2 mt-4">
                                 <button class="btn btn-success btn-lg" data-bs-toggle="modal"
                                     data-bs-target="#approveBudgetModal"><i class="bi bi-check-circle-fill me-2"></i>Aprovar
@@ -134,7 +137,7 @@
                             </div>
                         @else
                             <div class="alert alert-info text-center">Este orçamento já foi
-                                {{ strtolower( $budget->status->getDescription() ) }}.</div>
+                                {{ strtolower( $statusEnum?->label() ?? $budget->status ) }}.</div>
                         @endif
 
                         @if(isset($permissions['can_print']) && $permissions['can_print'])
@@ -162,15 +165,18 @@
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-header p-3 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="bi bi-tag me-2"></i>{{ $service->category->name }}</h5>
+                            @php
+                                $serviceStatus = \App\Enums\ServiceStatus::tryFrom($service->status);
+                            @endphp
                             <span class="badge"
-                                style="background-color: {{ $service->status->getColor() }};">{{ $service->status->getDescription() }}</span>
+                                style="background-color: {{ $serviceStatus?->getColor() ?? '#ccc' }};">{{ $serviceStatus?->label() ?? $service->status }}</span>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-4">
                                 <div class="col-md-8">
                                     <p class="mb-1"><strong>Descrição:</strong> {{ $service->description }}</p>
                                     <p class="mb-0"><small class="text-muted">Vencimento:
-                                            {{ $service->due_date->format( 'd/m/Y' ) }}</small></p>
+                                            {{ $service->due_date ? $service->due_date->format( 'd/m/Y' ) : 'N/A' }}</small></p>
                                 </div>
                                 <div class="col-md-4">
                                     <ul class="list-group list-group-flush text-end">

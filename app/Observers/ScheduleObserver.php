@@ -49,6 +49,9 @@ class ScheduleObserver
                             'old_status' => $oldStatus instanceof \UnitEnum ? $oldStatus->value : $oldStatus,
                             'service_current_status' => $schedule->service->status->value,
                         ]);
+                        
+                        // Suprimir notificação do serviço para evitar envio duplo (já enviamos o do agendamento)
+                        $schedule->service->suppressStatusNotification = true;
                         $schedule->service->update(['status' => \App\Enums\ServiceStatus::SCHEDULED->value]);
                     } else {
                         Log::info('Schedule confirmed but Service is already SCHEDULED. Skipping update to prevent duplicate notifications.', [

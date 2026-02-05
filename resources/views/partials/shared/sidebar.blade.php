@@ -58,14 +58,7 @@
             </li>
             @endrole
 
-            {{-- Roles múltiplas --}}
-            @anyrole( [ 'manager', 'editor' ] )
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center" href="{{ route( 'manager.panel' ) }}">
-                    <i class="bi bi-kanban me-2"></i> Painel de Gestão
-                </a>
-            </li>
-            @endanyrole
+{{-- Menu item removed --}}
 
             <li class="nav-item mt-3">
                 <form action="{{ route( 'logout' ) }}" method="POST">

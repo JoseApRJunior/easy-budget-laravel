@@ -1,81 +1,88 @@
-@extends('layouts.app')
+<x-app-layout title="Agendamento Confirmado">
+    <x-auth.card
+        title="Confirmado!"
+        subtitle="Seu agendamento foi realizado com sucesso."
+        icon="check-lg"
+        maxWidth="600px">
 
-@section('title', 'Agendamento Confirmado')
+        <div class="text-center mb-4">
+            <h5 class="text-success fw-normal">Tudo pronto!</h5>
+            <p class="text-muted">Já notificamos o prestador sobre a sua confirmação.</p>
+        </div>
 
-@section('content')
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-success text-white text-center py-4">
-                    <div class="mb-3">
-                        <i class="bi bi-check-circle-fill fs-1"></i>
+        <x-ui.card class="bg-light mb-4">
+            <div class="p-2">
+                <h6 class="text-uppercase text-muted fw-bold small mb-3 border-bottom pb-2">Detalhes Confirmados</h6>
+
+                <div class="d-flex align-items-start mb-3">
+                    <div class="me-3 text-success">
+                        <i class="bi bi-tools fs-4"></i>
                     </div>
-                    <h3 class="mb-0">Agendamento Confirmado!</h3>
+                    <div>
+                        <small class="text-muted d-block">Serviço</small>
+                        <span class="fw-bold fs-5">{{ $schedule->service->title }}</span>
+                    </div>
                 </div>
-                
-                <div class="card-body py-5">
-                    <div class="text-center mb-4">
-                        <h4 class="text-success mb-3">Tudo certo para o seu serviço!</h4>
-                        <p class="text-muted">Seu agendamento foi confirmado com sucesso em nosso sistema.</p>
-                    </div>
 
-                    <div class="card bg-light border-0 mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title border-bottom pb-2 mb-3">Detalhes do Agendamento</h5>
-                            
-                            <div class="row mb-2">
-                                <div class="col-4 text-muted">Serviço:</div>
-                                <div class="col-8 fw-bold">{{ $schedule->service->title }}</div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3 text-success">
+                                <i class="bi bi-calendar-event fs-4"></i>
                             </div>
-                            
-                            <div class="row mb-2">
-                                <div class="col-4 text-muted">Data:</div>
-                                <div class="col-8 fw-bold">{{ $schedule->start_date_time->format('d/m/Y') }}</div>
-                            </div>
-                            
-                            <div class="row mb-2">
-                                <div class="col-4 text-muted">Horário:</div>
-                                <div class="col-8 fw-bold">
-                                    {{ $schedule->start_date_time->format('H:i') }} às {{ $schedule->end_date_time->format('H:i') }}
-                                </div>
-                            </div>
-                            
-                            @if($schedule->location)
-                            <div class="row mb-2">
-                                <div class="col-4 text-muted">Local:</div>
-                                <div class="col-8 fw-bold">{{ $schedule->location }}</div>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="alert alert-primary mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-calendar-event me-3 fs-3"></i>
                             <div>
-                                <strong>Adicionar ao Calendário</strong>
-                                <p class="mb-0 small">
-                                    Não se esqueça de reservar este horário em sua agenda pessoal!
-                                </p>
+                                <small class="text-muted d-block">Data</small>
+                                <span class="fw-bold">{{ $schedule->start_date_time->format('d/m/Y') }}</span>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <a href="{{ url('/') }}" class="btn btn-outline-primary">
-                            <i class="bi bi-house me-2"></i>Voltar para a Página Inicial
-                        </a>
+                    <div class="col-6">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3 text-success">
+                                <i class="bi bi-clock fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Horário</small>
+                                <span class="fw-bold">{{ $schedule->start_date_time->format('H:i') }} - {{ $schedule->end_date_time->format('H:i') }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="card-footer bg-light text-center">
-                    <small class="text-muted">
-                        Um e-mail de confirmação foi enviado com estes detalhes.
-                    </small>
+
+                @if($schedule->location)
+                <div class="d-flex align-items-start mt-3">
+                    <div class="me-3 text-success">
+                        <i class="bi bi-geo-alt fs-4"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted d-block">Local</small>
+                        <span class="fw-bold">{{ $schedule->location }}</span>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </x-ui.card>
+
+        <x-ui.alert type="info" class="mb-4 shadow-sm border-0 rounded-3">
+            <div class="d-flex align-items-center">
+                <div class="fs-1 me-3 text-primary">
+                    <i class="bi bi-calendar2-plus"></i>
+                </div>
+                <div>
+                    <strong class="d-block text-primary">Dica Útil</strong>
+                    <span class="small text-muted">Anote este compromisso na sua agenda pessoal para não esquecer!</span>
                 </div>
             </div>
+        </x-ui.alert>
+
+        <div class="d-grid gap-2">
+            <x-ui.button href="{{ url('/') }}" variant="outline-primary" label="Voltar para o Início" icon="house" class="py-3 rounded-pill fw-bold" />
         </div>
-    </div>
-</div>
-@endsection
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <small class="text-muted">
+                <i class="bi bi-envelope me-1"></i>Enviamos uma cópia para o seu e-mail.
+            </small>
+        </div>
+    </x-auth.card>
+</x-app-layout>

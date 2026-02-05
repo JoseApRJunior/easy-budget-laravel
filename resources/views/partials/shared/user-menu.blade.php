@@ -36,11 +36,7 @@
                 <i class="bi bi-shield-lock me-2"></i>Administração</a></li>
         @endrole
 
-        {{-- Acesso de gestão - para managers e editors --}}
-        @anyrole( [ 'manager', 'editor' ] )
-        <li><a class="dropdown-item" href="{{ route( 'manager.panel' ) }}">
-                <i class="bi bi-kanban me-2"></i>Painel de Gestão</a></li>
-        @endanyrole
+{{-- Menu item removed --}}
 
         {{-- Separador e logout --}}
         <li>

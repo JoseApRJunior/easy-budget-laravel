@@ -68,6 +68,9 @@ class ScheduleService extends AbstractBaseService
 
             // Prepara os dados para criação
             $data = $dto->toArrayWithoutNulls();
+            
+            // Força o status inicial como PENDING para evitar aprovação automática acidental
+            $data['status'] = ScheduleStatus::PENDING->value;
 
             // Vincula o token se gerado
             if ($tokenId) {

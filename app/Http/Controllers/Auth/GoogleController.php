@@ -91,10 +91,16 @@ class GoogleController extends Controller
         }
 
         // Loga o usuário
-        Auth::login($authResult->getData());
+        $user = $authResult->getData();
+        Auth::login($user);
+
+        // Mensagem personalizada para novos registros
+        $message = $user->wasRecentlyCreated
+            ? 'Cadastro realizado com sucesso! Bem-vindo ao Easy Budget. Configure sua conta para começar.'
+            : 'Bem-vindo de volta! Login realizado com sucesso via Google.';
 
         return redirect()->intended(route('provider.dashboard', absolute: false))
-            ->with('success', 'Bem-vindo! Login realizado com sucesso via Google.');
+            ->with('success', $message);
     }
 
     /**

@@ -348,7 +348,7 @@ class ServiceController extends Controller
         $request->validate([
             'service_code' => ['required', 'string'],
             'token' => ['required', 'string'],
-            'service_status_id' => ['required', 'string', Rule::in([
+            'service_status' => ['required', 'string', Rule::in([
                 ServiceStatus::PENDING->value,
                 ServiceStatus::CANCELLED->value,
                 ServiceStatus::SCHEDULED->value,
@@ -357,7 +357,7 @@ class ServiceController extends Controller
 
         $code = $request->input('service_code');
         $token = $request->input('token');
-        $newStatus = $request->input('service_status_id');
+        $newStatus = $request->input('service_status');
 
         $result = $this->serviceService->findByCode($code);
         if ($result->isError()) {
