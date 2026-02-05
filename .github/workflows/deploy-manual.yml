@@ -29,7 +29,7 @@ jobs:
       - name: 🧹 Clean and Prepare files
         run: |
           # Remove pastas de configuração e documentação
-          rm -rf .git .github .docs .kilocode .memory-bank .trae docs tests node_modules
+          rm -rf .git .github .docs .kilocode .memory-bank .trae docs tests node_modules documents documentsIA
 
           # Remove arquivos ocultos e de configuração desnecessários
           rm -f .env.example .env.local .env.staging .env.testing .env.backup.ftp
