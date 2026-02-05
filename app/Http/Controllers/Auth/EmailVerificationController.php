@@ -53,6 +53,13 @@ class EmailVerificationController extends Controller
 
         $result = $this->emailVerificationService->resendConfirmationEmail($user);
 
+        if (! $result->isSuccess()) {
+            return $this->redirectError(
+                'verification.notice',
+                'Não foi possível reenviar o e-mail: '.$result->getMessage(),
+            );
+        }
+
         return $this->redirectSuccess(
             'verification.notice',
             'E-mail de verificação reenviado com sucesso. Verifique sua caixa de entrada.',
