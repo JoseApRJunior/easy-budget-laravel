@@ -260,7 +260,9 @@ class Service extends Model
      */
     public function getPublicUrl(): ?string
     {
-        // Se o serviço estiver em fase de agendamento, retornamos a URL de confirmação do agendamento
+        // Se o serviço estiver em fase de agendamento, retornamos a URL do serviço mesmo
+        // O e-mail de agendamento já enviará o link de confirmação específico
+        /*
         if ($this->status === ServiceStatus::SCHEDULING) {
             $latestSchedule = $this->schedules()
                 ->where('status', \App\Enums\ScheduleStatus::PENDING)
@@ -271,6 +273,7 @@ class Service extends Model
                 return $latestSchedule->getConfirmationUrl();
             }
         }
+        */
 
         return $this->budget?->getPublicUrl();
     }
