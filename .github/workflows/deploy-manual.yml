@@ -28,8 +28,15 @@ jobs:
 
       - name: 🧹 Clean and Prepare files
         run: |
-          rm -rf .git .github/ docs/ tests/ node_modules/
-          rm -f .env.example .env.local .env.staging README.md phpstan.neon phpdoc.dist.xml *.md
+          # Remove pastas de configuração e documentação
+          rm -rf .git .github .docs .kilocode .memory-bank .trae docs tests node_modules documents documentsIA
+
+          # Remove arquivos ocultos e de configuração desnecessários
+          rm -f .env.example .env.local .env.staging .env.testing .env.backup.ftp
+          rm -f .editorconfig .gitattributes .gitignore .ftpignore .npmignore .prettierignore .kilocodemodes
+          rm -f .htaccess.*.backup
+          rm -f README.md phpstan.neon phpdoc.dist.xml *.md
+
           # Renomear public para public_html para o padrão Locaweb
           mv public public_html
           # Não removemos o composer.lock pois é importante para garantir versões!
