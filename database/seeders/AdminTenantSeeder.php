@@ -161,9 +161,83 @@ class AdminTenantSeeder extends Seeder
         );
 
         // Vincular dados relacionados ao provider
-        $commonData->update(['provider_id' => $provider->id]);
-        $contact->update(['provider_id' => $provider->id]);
-        $address->update(['provider_id' => $provider->id]);
+        // Verifica se já existe um CommonData vinculado a este provider neste tenant
+        $existingCommonData = CommonData::where('tenant_id', $tenant->id)
+            ->where('provider_id', $provider->id)
+            ->first();
+
+        if ($existingCommonData) {
+            $commonData = $existingCommonData;
+        } else {
+            // Se não existe, tenta atualizar o que acabamos de criar/recuperar
+            // Mas apenas se ele ainda não tiver provider_id (para evitar sobrescrever outro vínculo)
+            if (is_null($commonData->provider_id)) {
+                $commonData->update(['provider_id' => $provider->id]);
+            } else {
+                // Se o commonData recuperado já tem provider_id (e não é o nosso), cria um novo
+                // Isso não deve acontecer com firstOrCreate por CNPJ, a menos que o CNPJ seja reutilizado
+                // Mas por segurança, se chegarmos aqui, algo estranho ocorreu.
+                // Vamos forçar a criação de um novo se o CNPJ for diferente, mas o firstOrCreate já tratou isso.
+                // O problema real é a constraint unique.
+                
+                // Vamos tentar atualizar ignorando erro de duplicidade se já existir
+                try {
+                    $commonData->update(['provider_id' => $provider->id]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->errorInfo[1] == 1062) { // Duplicate entry
+                         // Se der duplicidade, significa que JÁ EXISTE um registro com esse tenant_id e provider_id
+                         // Então vamos buscar esse registro e usar ele
+                         $commonData = CommonData::where('tenant_id', $tenant->id)
+                            ->where('provider_id', $provider->id)
+                            ->firstOrFail();
+                    } else {
+                        throw $e;
+                    }
+                }
+            }
+        }
+
+        // Mesma lógica para Contact
+        $existingContact = Contact::where('tenant_id', $tenant->id)
+            ->where('provider_id', $provider->id)
+            ->first();
+
+        if ($existingContact) {
+            $contact = $existingContact;
+        } else {
+             try {
+                $contact->update(['provider_id' => $provider->id]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->errorInfo[1] == 1062) {
+                     $contact = Contact::where('tenant_id', $tenant->id)
+                        ->where('provider_id', $provider->id)
+                        ->firstOrFail();
+                } else {
+                    throw $e;
+                }
+            }
+        }
+
+        // Mesma lógica para Address
+        $existingAddress = Address::where('tenant_id', $tenant->id)
+            ->where('provider_id', $provider->id)
+            ->first();
+
+        if ($existingAddress) {
+            $address = $existingAddress;
+        } else {
+            try {
+                $address->update(['provider_id' => $provider->id]);
+            } catch (\Illuminate\Database\QueryException $e) {
+                if ($e->errorInfo[1] == 1062) {
+                     $address = Address::where('tenant_id', $tenant->id)
+                        ->where('provider_id', $provider->id)
+                        ->firstOrFail();
+                } else {
+                    throw $e;
+                }
+            }
+        }
 
         // 5. Criar roles necessárias
         $this->createAdminRoles($tenant, $user);

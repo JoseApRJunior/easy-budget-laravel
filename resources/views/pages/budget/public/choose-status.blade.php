@@ -115,30 +115,31 @@
                     <!-- Action Buttons for SENT status -->
                     @if ($budget->budgetStatus->slug === 'sent')
                         <div class="mt-4 pt-3 border-top">
-                            <form action="{{ route('provider.budgets.public.choose-status.store') }}" method="POST">
+                            <form action="{{ route('budgets.public.choose-status.store') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="budget_code" value="{{ $budget->code }}">
                                 <input type="hidden" name="token" value="{{ $token }}">
 
                                 <div class="mb-3">
-                                    <label for="budget_status_id" class="form-label fw-bold text-primary">Escolha uma ação:</label>
-                                    <select name="budget_status_id" class="form-select" required>
+                                    <label for="action" class="form-label fw-bold text-primary">Escolha uma ação:</label>
+                                    <select name="action" id="action" class="form-select" required>
                                         <option value="">Selecione uma opção...</option>
-                                        @foreach ($availableStatuses as $status)
-                                            <option value="{{ $status->value }}">
-                                                {{ $status->getName() }}
-                                            </option>
-                                        @endforeach
+                                        <option value="approve">Aprovar Orçamento</option>
+                                        <option value="reject">Rejeitar Orçamento</option>
                                     </select>
                                 </div>
 
-                                <x-ui.button type="submit" variant="primary" class="w-100 btn-lg" icon="check-circle-fill" label="Confirmar" />
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label fw-bold">Observações (opcional):</label>
+                                    <textarea name="comment" id="comment" class="form-control" rows="3" maxlength="500"></textarea>
+                                </div>
+
+                                <x-ui.button type="submit" variant="primary" class="w-100 btn-lg" icon="check-circle-fill" label="Confirmar Decisão" />
                             </form>
                         </div>
                     @else
                         <div class="alert alert-info text-center mt-4 mb-0">
                             <i class="bi bi-info-circle-fill me-2"></i>
-                            Este orçamento já foi <strong>{{ strtolower($budget->budgetStatus->name) }}</strong>.
+                            Este orçamento já foi <strong>{{ strtolower($budget->budgetStatus->name ?? $budget->status) }}</strong>.
                         </div>
                     @endif
                 </x-ui.card>

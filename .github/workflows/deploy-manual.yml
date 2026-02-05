@@ -23,7 +23,7 @@ jobs:
       # Adicionamos a criação do .env que existia no seu script antigo
       # Isso é útil se você guardar as configs de produção nos Secrets do GitHub
       - name: 📄 Create .env file
-        run: echo "${{ secrets.PROD_ENV_FILE }}" > .env
+        run: echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
         # Se você não tiver o secret PROD_ENV_FILE, pode remover este passo e manter o .env que já está no servidor
 
       - name: 🧹 Clean and Prepare files

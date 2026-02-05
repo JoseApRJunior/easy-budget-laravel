@@ -404,18 +404,22 @@
 
                         {{-- Status SCHEDULING ou ON_HOLD --}}
                         @if ($statusValue === 'scheduling' || $statusValue === 'on_hold')
-                        @if ($pendingSchedule)
-                        <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
-                            data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
-                        @else
-                        <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
-                            data-bs-toggle="modal" data-bs-target="#scheduleModal" />
-                        @endif
+                            @php
+                                $hasConfirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->exists();
+                            @endphp
 
-                        <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
-                            data-title="Não Realizado"
-                            data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
+                            @if ($pendingSchedule)
+                                <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
+                                    data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
+                            @elseif (!$hasConfirmedSchedule)
+                                <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
+                                    data-bs-toggle="modal" data-bs-target="#scheduleModal" />
+                            @endif
+
+                            <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
+                                data-title="Não Realizado"
+                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
                         @endif
 
                         {{-- Botão Cancelar - Sempre disponível para status não finais --}}

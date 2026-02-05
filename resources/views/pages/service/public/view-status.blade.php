@@ -343,7 +343,7 @@
                             <div class="row g-3 align-items-end">
                                 <div class="col-md-8">
                                     <x-ui.form.select
-                                        name="service_status_id"
+                                        name="service_status"
                                         label="SUA DECISÃO"
                                         labelClass="text-neutral-soft fw-bold small mb-2"
                                         required>
@@ -356,7 +356,7 @@
                                         @endphp
                                         @foreach ($options as $status)
                                         <option value="{{ $status->value }}"
-                                            {{ old('service_status_id') == $status->value ? 'selected' : '' }}>
+                                            {{ old('service_status') == $status->value ? 'selected' : '' }}>
                                             @if ($status === \App\Enums\ServiceStatus::SCHEDULED)
                                             Confirmar Agendamento Proposto
                                             @else

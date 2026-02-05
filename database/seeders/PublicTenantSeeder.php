@@ -120,12 +120,13 @@ class PublicTenantSeeder extends Seeder
         );
 
         // 3. Criar dados da empresa
-        $commonData = CommonData::firstOrCreate(
-            [
-                'tenant_id' => $tenant->id,
-                'cnpj' => DocumentGeneratorHelper::generateValidCnpj(),
-            ],
-            [
+        // Tenta encontrar pelo tenant_id primeiro para evitar duplicação por CNPJ aleatório
+        $commonData = CommonData::where('tenant_id', $tenant->id)
+            ->where('company_name', 'Easy Budget - Sistema Público')
+            ->first();
+
+        if (!$commonData) {
+            $commonData = CommonData::create([
                 'tenant_id' => $tenant->id,
                 'type' => 'company',
                 'first_name' => null,
@@ -137,8 +138,8 @@ class PublicTenantSeeder extends Seeder
                 'description' => 'Tenant público para mensagens de contato e dados não relacionados a empresas específicas',
                 'area_of_activity_id' => $this->getOrCreateAreaOfActivity(),
                 'profession_id' => null,
-            ],
-        );
+            ]);
+        }
 
         // 4. Criar role de administrador público (sem acesso de provider)
         $adminRole = Role::firstOrCreate(

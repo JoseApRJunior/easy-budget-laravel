@@ -160,26 +160,26 @@
                                             <p class="mb-3">Por favor, informe o status atual desta fatura:</p>
 
                                             <form method="POST"
-                                                action="{{ route('provider.invoices.public.choose-status') }}">
+                                                action="{{ route('provider.invoices.change-status', ['code' => $invoice->code]) }}">
                                                 @csrf
                                                 <input type="hidden" name="invoice_code" value="{{ $invoice->code }}">
                                                 <input type="hidden" name="token" value="{{ $token }}">
 
                                                 <div class="row">
                                                     <div class="col-md-6">
-                                                        <label for="invoice_status_id" class="form-label">Status da
+                                                        <label for="invoice_status" class="form-label">Status da
                                                             Fatura</label>
-                                                        <select name="invoice_status_id" id="invoice_status_id"
+                                                        <select name="status" id="invoice_status"
                                                             class="form-select" required>
                                                             <option value="">Selecione o status...</option>
-                                                            @foreach ([\App\Enums\InvoiceStatusEnum::PAID, \App\Enums\InvoiceStatusEnum::CANCELLED, \App\Enums\InvoiceStatusEnum::OVERDUE] as $status)
+                                                            @foreach ([\App\Enums\InvoiceStatus::PAID, \App\Enums\InvoiceStatus::CANCELLED, \App\Enums\InvoiceStatus::OVERDUE] as $status)
                                                                 <option value="{{ $status->value }}"
-                                                                    {{ old('invoice_status_id') == $status->value ? 'selected' : '' }}>
-                                                                    {{ $status->getName() }}
+                                                                    {{ old('status') == $status->value ? 'selected' : '' }}>
+                                                                    {{ $status->label() }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
-                                                        @error('invoice_status_id')
+                                                        @error('status')
                                                             <div class="text-danger small">{{ $message }}</div>
                                                         @enderror
                                                     </div>
