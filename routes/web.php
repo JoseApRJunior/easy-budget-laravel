@@ -67,6 +67,17 @@ Route::group([], function () {
         echo "</pre>";
     });
 
+    // Rota temporária para diagnóstico de fila em produção
+    Route::get('/check-queue-prod', function () {
+        if (request('key') !== 'easy-debug-123') {
+            abort(403, 'Acesso negado.');
+        }
+        
+        echo "<pre>";
+        require base_path('check_queue.php');
+        echo "</pre>";
+    });
+
     // Public pages - HomeController
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
