@@ -39,10 +39,10 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('EMAIL_ENCRYPTION', env('MAIL_SCHEME')),
             'url' => env('MAIL_URL'),
             'host' => env('EMAIL_HOST', env('MAIL_HOST', '127.0.0.1')),
             'port' => env('EMAIL_PORT', env('MAIL_PORT', 2525)),
+            'encryption' => env('EMAIL_ENCRYPTION', env('MAIL_ENCRYPTION', env('MAIL_SCHEME'))),
             'username' => env('EMAIL_USERNAME', env('MAIL_USERNAME')),
             'password' => env('EMAIL_PASSWORD', env('MAIL_PASSWORD')),
             'timeout' => null,

@@ -1,0 +1,22 @@
+{
+  "hosts": {
+    "easybudget1": {
+      "protocol": "ftp",
+      "host": "ftp.easybudget1.hospedagemdesites.ws",
+      "port": 21,
+      "username": "easybudget1",
+      "password": "Ra182760@#@#@#",
+      "remote_path": "/",
+      "workers": 1
+    },
+    "somesftphost": {
+      "protocol": "sftp",
+      "host": "111.245.177.28",
+      "port": 22,
+      "username": "user",
+      "password": "pwd",
+      "remote_path": "/",
+      "workers": 1
+    }
+  }
+}
