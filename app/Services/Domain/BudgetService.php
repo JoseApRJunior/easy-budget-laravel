@@ -290,26 +290,23 @@ class BudgetService extends AbstractBaseService
                 }
             }
 
-            return DB::transaction(function () use ($budget, $status, $comment) {
+            return DB::transaction(function () use ($budget, $newStatusEnum, $comment) {
                 $oldStatus = $budget->status->value;
 
-                $updated = $this->repository->update($budget->id, [
-                    'status' => $status,
-                    'status_comment' => $comment,
-                    'status_updated_at' => now(),
-                    'status_updated_by' => $this->authUser()?->id,
-                ]);
+                $budget->status = $newStatusEnum;
+                $budget->transient_customer_comment = $comment;
+                $budget->status_updated_at = now();
+                $budget->status_updated_by = $this->authUser()?->id;
+                $budget->save();
 
-                if (! $updated) {
-                    throw new \Exception('Falha ao alterar status do orçamento.');
+                // Sincroniza o status dos serviços vinculados se necessário
+                if ($newStatusEnum === BudgetStatus::APPROVED) {
+                    $this->serviceService->updateStatusByBudget($budget->id, ServiceStatus::SCHEDULING);
+                } elseif ($newStatusEnum === BudgetStatus::REJECTED || $newStatusEnum === BudgetStatus::CANCELLED) {
+                    $this->serviceService->updateStatusByBudget($budget->id, ServiceStatus::CANCELLED);
                 }
 
-                $updatedBudget = $budget->fresh();
-
-                // NOTA: A atualização de serviços em cascata agora é gerenciada pelo BudgetStatusObserver
-                // para garantir consistência em todas as formas de atualização do modelo.
-
-                return ServiceResult::success($updatedBudget, 'Status do orçamento alterado com sucesso.');
+                return ServiceResult::success($budget->fresh(), 'Status do orçamento alterado com sucesso.');
             });
         });
     }

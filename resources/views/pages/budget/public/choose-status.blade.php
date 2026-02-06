@@ -33,8 +33,8 @@
                         <div class="col-md-2">
                             <small class="text-muted text-uppercase fw-bold">Status</small>
                             <div>
-                                <span class="badge" style="background-color: {{ $budget->budgetStatus->color }}; font-size: 0.9rem;">
-                                    {{ $budget->budgetStatus->name }}
+                                <span class="badge" style="background-color: {{ $budget->status->getColor() }}; font-size: 0.9rem;">
+                                    {{ $budget->status->label() }}
                                 </span>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
                     </x-slot:header>
 
                     @php
-                        $cancelled_total = $budget->services->where('status.slug', 'CANCELLED')->sum('total');
+                        $cancelled_total = $budget->services->filter(fn($s) => $s->status === \App\Enums\ServiceStatus::CANCELLED)->sum('total');
                         $total_discount = $budget->discount + $budget->services->sum('discount');
                         $real_total = $budget->total - $cancelled_total - $total_discount;
                     @endphp
@@ -112,8 +112,8 @@
                         </span>
                     </div>
 
-                    <!-- Action Buttons for SENT status -->
-                    @if ($budget->budgetStatus->slug === 'sent')
+                    <!-- Action Buttons for PENDING status -->
+                    @if ($budget->status === \App\Enums\BudgetStatus::PENDING)
                         <div class="mt-4 pt-3 border-top">
                             <form action="{{ route('budgets.public.choose-status.store') }}" method="POST">
                                 @csrf
@@ -139,7 +139,7 @@
                     @else
                         <div class="alert alert-info text-center mt-4 mb-0">
                             <i class="bi bi-info-circle-fill me-2"></i>
-                            Este orçamento já foi <strong>{{ strtolower($budget->budgetStatus->name ?? $budget->status) }}</strong>.
+                            Este orçamento já foi <strong>{{ strtolower($budget->status->label()) }}</strong>.
                         </div>
                     @endif
                 </x-ui.card>
