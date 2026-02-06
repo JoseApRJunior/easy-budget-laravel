@@ -1,57 +1,45 @@
-name: Deploy Manual Locaweb (FTP)
+name: Deploy Production (Hostinger VPS)
 
 on:
-  workflow_dispatch: # Permite execução manual pelo botão no GitHub
+  workflow_dispatch:
 
 jobs:
-  web-deploy:
-    name: 🎉 Deploy via FTP
+  deploy:
+    name: 🚀 Deploy to VPS
     runs-on: ubuntu-latest
     steps:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: � Setup SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          php-version: "8.3"
-          extensions: mbstring, intl, pdo, pdo_mysql
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/user/htdocs/srv1340418.hstgr.cloud
 
-      - name: 📦 Install Dependencies (Production)
-        run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
+            # Garantir que estamos no diretório correto e atualizar código
+            git fetch origin main
+            git reset --hard origin/main
 
-      # Adicionamos a criação do .env que existia no seu script antigo
-      # Isso é útil se você guardar as configs de produção nos Secrets do GitHub
-      - name: 📄 Create .env file
-        run: echo "${{ secrets.PROD_ENV_FILE }}" | base64 -d > .env
-        # Se você não tiver o secret PROD_ENV_FILE, pode remover este passo e manter o .env que já está no servidor
+            # Instalar dependências PHP
+            composer install --no-dev --optimize-autoloader
 
-      - name: 🧹 Clean and Prepare files
-        run: |
-          # Remove pastas de configuração e documentação
-          rm -rf .git .github .docs .kilocode .memory-bank .trae docs tests node_modules documents documentsIA
+            # Rodar migrações
+            php artisan migrate --force
 
-          # Remove arquivos ocultos e de configuração desnecessários
-          rm -f .env.example .env.local .env.staging .env.testing .env.backup.ftp
-          rm -f .editorconfig .gitattributes .gitignore .ftpignore .npmignore .prettierignore .kilocodemodes
-          rm -f .htaccess.*.backup
-          rm -f README.md phpstan.neon phpdoc.dist.xml *.md
+            # Otimizar Laravel
+            php artisan optimize
+            php artisan view:cache
+            php artisan config:cache
+            php artisan event:cache
 
-          # Renomear public para public_html para o padrão Locaweb
-          mv public public_html
-          # Não removemos o composer.lock pois é importante para garantir versões!
+            # Reiniciar Fila (Queue)
+            php artisan queue:restart
 
-      - name: 📂 Sync files to Locaweb via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          password: ${{ secrets.PASS }}
-          server-dir: /
-          # Como já limpamos os arquivos no passo "Clean unnecessary files",
-          # não precisamos de uma lista gigante de excludes aqui,
-          # mas mantemos alguns por segurança.
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+            # Ajustar permissões (CloudPanel padrão)
+            chown -R user:user .
+            chmod -R 775 storage bootstrap/cache
