@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
-require __DIR__.'/vendor/autoload.php';
-$app = require_once __DIR__.'/bootstrap/app.php';
-$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-$kernel->bootstrap();
+// Verifica se já estamos dentro do Laravel (via rota) ou se é execução direta (CLI)
+if (!defined('LARAVEL_START')) {
+    require __DIR__.'/vendor/autoload.php';
+    $app = require_once __DIR__.'/bootstrap/app.php';
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+}
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
