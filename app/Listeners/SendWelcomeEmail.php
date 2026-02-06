@@ -8,7 +8,7 @@ use App\Events\UserRegistered;
 use App\Services\Infrastructure\LinkService;
 use App\Services\Infrastructure\MailerService;
 use App\Support\ServiceResult;
-// use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -27,7 +27,7 @@ use Throwable;
  * - Métricas de performance integradas
  * - Sistema de retry automático com backoff exponencial
  */
-class SendWelcomeEmail
+class SendWelcomeEmail implements ShouldQueue
 {
     /**
      * O número de vezes que o job pode ser executado novamente em caso de falha.
