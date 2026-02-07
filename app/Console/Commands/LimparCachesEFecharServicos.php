@@ -34,40 +34,34 @@ class LimparCachesEFecharServicos extends Command
 
         $this->info('✅ Caches do Laravel limpos.');
 
-        // Encerrar processos
-        $this->info('🛑 Encerrando processos PHP, Node.js e Python...');
+        // Encerrar processos apenas no Windows
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $this->info('🛑 Encerrando processos (Windows)...');
+            $comandos = [
+                'taskkill /F /IM php.exe',
+                'taskkill /F /IM node.exe',
+                'taskkill /F /IM python.exe',
+                'taskkill /F /IM cmd.exe',
+                'taskkill /F /IM powershell.exe',
+                'taskkill /F /IM pwsh.exe',
+                'taskkill /F /IM bash.exe',
+                'taskkill /F /IM git.exe',
+                'taskkill /F /IM notepad++.exe',
+                'taskkill /F /IM msedge.exe',
+            ];
 
-        $comandos = [
-            'taskkill /F /IM php.exe',
-            'taskkill /F /IM node.exe',
-            'taskkill /F /IM python.exe',
-            'taskkill /F /IM cmd.exe',
-            'taskkill /F /IM powershell.exe',
-            'taskkill /F /IM pwsh.exe',
-            'taskkill /F /IM bash.exe',
-            'taskkill /F /IM git.exe',
-            'taskkill /F /IM notepad++.exe',
-            'taskkill /F /IM msedge.exe',
-        ];
+            foreach ($comandos as $cmd) {
+                $output = null;
+                $result = null;
+                exec($cmd, $output, $result);
 
-        if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
-            $this->warn('⚠️ Este comando só é compatível com Windows.');
-
-            return;
-        }
-
-        foreach ($comandos as $cmd) {
-            $output = null;
-            $result = null;
-            exec($cmd, $output, $result);
-
-            if ($result === 0) {
-                $this->line("✅ Encerrado: $cmd");
-            } else {
-                $this->warn("⚠️ Falha ao encerrar: $cmd");
+                if ($result === 0) {
+                    $this->line("✅ Encerrado: $cmd");
+                }
             }
+            $this->info('✅ Processos encerrados.');
+        } else {
+            $this->info('ℹ️ No Linux, apenas caches e logs são limpos para manter a estabilidade do SSH.');
         }
-
-        $this->info('✅ Processos encerrados.');
     }
 }

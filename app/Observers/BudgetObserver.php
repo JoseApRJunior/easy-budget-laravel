@@ -34,14 +34,16 @@ class BudgetObserver
             $statusLabel = $newStatus instanceof \App\Enums\BudgetStatus ? $newStatus->label() : $newStatusValue;
             $description = "Status alterado para: {$statusLabel}";
 
-            // Disparar evento de notificação
-            event(new BudgetStatusChanged(
-                $budget,
-                $oldStatusValue,
-                $newStatusValue,
-                $budget->transient_customer_comment ?? $budget->customer_comment,
-                $budget->suppressStatusNotification ?? false
-            ));
+            // Disparar evento de notificação se não estiver suprimido
+            if (! ($budget->suppressStatusNotification ?? false)) {
+                event(new BudgetStatusChanged(
+                    $budget,
+                    $oldStatusValue,
+                    $newStatusValue,
+                    $budget->transient_customer_comment ?? $budget->customer_comment,
+                    false
+                ));
+            }
         }
 
         // Debug: verificar se observer está sendo chamado

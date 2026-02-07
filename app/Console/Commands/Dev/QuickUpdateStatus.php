@@ -73,6 +73,8 @@ class QuickUpdateStatus extends Command
                         try {
                             $serviceStatus = \App\Enums\ServiceStatus::tryFrom($status);
                             if ($serviceStatus) {
+                                // Suprimir notificações para o serviço também
+                                $service->suppressStatusNotification = true;
                                 $service->update(['status' => $serviceStatus]);
                                 $this->info("Serviço {$service->code} atualizado para: {$status}");
 
@@ -86,6 +88,7 @@ class QuickUpdateStatus extends Command
                                     // Para outros status de "reset", apenas atualizamos o status do agendamento
                                     $schedule = Schedule::where('service_id', $service->id)->latest()->first();
                                     if ($schedule) {
+                                        $schedule->suppressStatusNotification = true;
                                         $schedule->update(['status' => $status]);
                                         $this->info("Agendamento do serviço {$service->code} atualizado para {$status}.");
                                     }
@@ -111,6 +114,7 @@ class QuickUpdateStatus extends Command
                 if ($model && $scheduleStatus) {
                     $schedule = Schedule::where('service_id', $model->id)->latest()->first();
                     if ($schedule) {
+                        $schedule->suppressStatusNotification = true;
                         $schedule->update(['status' => $scheduleStatus]);
                         $this->info("Agendamento vinculado (ID: {$schedule->id}) atualizado para: {$scheduleStatus}");
                     } else {
@@ -149,6 +153,8 @@ class QuickUpdateStatus extends Command
             return 1;
         }
 
+        // Suprimir notificações para a atualização principal
+        $model->suppressStatusNotification = true;
         $model->update(['status' => $status]);
 
         // Se o status for draft, garantimos a invalidação dos compartilhamentos
