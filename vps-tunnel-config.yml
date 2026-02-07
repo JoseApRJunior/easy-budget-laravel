@@ -1,0 +1,22 @@
+tunnel: c09be62e-1aa8-4d5a-b7cd-c927b9fcf999
+credentials-file: /etc/cloudflared/c09be62e-1aa8-4d5a-b7cd-c927b9fcf999.json
+
+ingress:
+  - hostname: dev.easybudget.net.br
+    service: http://localhost:8080
+    originRequest:
+      httpHostHeader: dev.easybudget.net.br
+      customRequestHeaders:
+        X-Forwarded-Proto: https
+  - hostname: easybudget.net.br
+    service: http://localhost:8080
+    originRequest:
+      httpHostHeader: easybudget.net.br
+      customRequestHeaders:
+        X-Forwarded-Proto: https
+  - hostname: "*.easybudget.net.br"
+    service: http://localhost:8080
+    originRequest:
+      customRequestHeaders:
+        X-Forwarded-Proto: https
+  - service: http_status:404
