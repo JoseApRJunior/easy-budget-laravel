@@ -24,7 +24,31 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Google OAuth
+# Scripts de Debug e Testes Temporários
+/debug_mail.php
+/test_smtp.php
+/check_queue.php
+/test_email_resend.php
+
+# Backups e arquivos temporários de servidor
+*.backup
+*.old
+*.tmp
+.env.backup.ftp
+.htaccess.*.backup
+
+# Documentação interna de desenvolvimento e checklists
+/TODO*.md
+/CHECKLIST*.md
+/GEMINI.md
+/Teste mercado pago.md
+/ANALISE_SISTEMA_EMAIL_STATUS.md
+/.memory-bank/
+/.kilocode/
+/.kilocodemodes
+/.trae/config/
+/.trae/context/
+/old-system-legado/
 /google-credentials.json
 /google-service-account.json
 /oauth-debug.log
