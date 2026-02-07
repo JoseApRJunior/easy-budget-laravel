@@ -12,10 +12,8 @@ export default defineConfig({
    plugins: [
       laravel({
          input: [
-            "resources/css/app.css",
-            "legacy-css/assets/css/layout.css",
-            "legacy-css/assets/css/components/alerts.css",
-            "resources/js/app.js",
+            "public/assets/css/layout.css",
+            "public/assets/css/components/alerts.css",
          ],
          refresh: true,
       }),
