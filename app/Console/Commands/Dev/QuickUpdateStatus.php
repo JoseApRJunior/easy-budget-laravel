@@ -57,11 +57,22 @@ class QuickUpdateStatus extends Command
 
         switch (strtolower($type)) {
             case 'budget':
+                // Suporte a prefixos variados (BUD-, ORC-, etc.)
                 $model = Budget::where('id', $identifier)->orWhere('code', $identifier)->first();
                 if ($model) {
                     // Limpar histórico
                     $model->actionHistory()->delete();
                     $this->info('Histórico de ações limpo.');
+
+                    // Tentar limpar notificações se a relação existir
+                    try {
+                        if (method_exists($model, 'notifications')) {
+                            $model->notifications()->delete();
+                            $this->info('Notificações limpas.');
+                        }
+                    } catch (\Exception $e) {
+                        // Silenciosamente ignorar se a tabela não existir
+                    }
 
                     // Preparar supressão de notificações
                     $model->suppressStatusNotification = true;
@@ -78,12 +89,32 @@ class QuickUpdateStatus extends Command
                                 $service->update(['status' => $serviceStatus]);
                                 $this->info("Serviço {$service->code} atualizado para: {$status}");
 
-                                // Se o status for 'draft', removemos os agendamentos vinculados
+                                // Se o status for 'draft', removemos os agendamentos e faturas vinculados
                                 if ($status === 'draft') {
-                                    $deletedCount = Schedule::where('service_id', $service->id)->delete();
-                                    if ($deletedCount > 0) {
-                                        $this->info("Agendamentos ({$deletedCount}) do serviço {$service->code} removidos.");
+                                    // Remover Agendamentos
+                                    $deletedSchedules = \App\Models\Schedule::where('service_id', $service->id)->delete();
+                                    if ($deletedSchedules > 0) {
+                                        $this->info("Agendamentos ({$deletedSchedules}) do serviço {$service->code} removidos.");
                                     }
+
+                                    // Remover Faturas (Invoices) e seus itens/compartilhamentos/pagamentos
+                                    $invoices = \App\Models\Invoice::withTrashed()->where('service_id', $service->id)->get();
+                                    foreach ($invoices as $invoice) {
+                                        // Limpeza manual de relações para garantir remoção física se não houver cascade
+                                        $invoice->invoiceItems()->delete();
+                                        $invoice->shares()->delete();
+                                        if (method_exists($invoice, 'paymentMercadoPagoInvoice')) {
+                                            $invoice->paymentMercadoPagoInvoice()->delete();
+                                        }
+
+                                        $invoiceCode = $invoice->code;
+                                        // Forçar exclusão física (ignora SoftDeletes)
+                                        $invoice->forceDelete(); 
+                                        $this->info("Fatura {$invoiceCode} do serviço {$service->code} removida fisicamente.");
+                                    }
+
+                                    // Limpar movimentações de estoque e restaurar quantidades
+                                    $this->cleanupInventory($service);
                                 } elseif (in_array($status, ['pending', 'cancelled'])) {
                                     // Para outros status de "reset", apenas atualizamos o status do agendamento
                                     $schedule = Schedule::where('service_id', $service->id)->latest()->first();
@@ -108,6 +139,9 @@ class QuickUpdateStatus extends Command
                     if ($deletedCount > 0) {
                         $this->info("Agendamentos ({$deletedCount}) do serviço {$model->code} removidos.");
                     }
+
+                    // Limpar movimentações de estoque e restaurar quantidades
+                    $this->cleanupInventory($model);
                 }
 
                 // Se passou --sch, tenta atualizar o agendamento vinculado
@@ -181,5 +215,48 @@ class QuickUpdateStatus extends Command
         $this->info("{$type} atualizado com sucesso para: {$status}");
 
         return 0;
+    }
+
+    /**
+     * Limpa movimentações de estoque e restaura quantidades ao resetar um serviço.
+     */
+    protected function cleanupInventory(Service $service): void
+    {
+        $this->info("Limpando movimentações de estoque para o serviço {$service->code}...");
+
+        $service->load('serviceItems');
+        $currentStatus = $service->getOriginal('status');
+        $currentStatusValue = $currentStatus instanceof \UnitEnum ? $currentStatus->value : (string) $currentStatus;
+
+        foreach ($service->serviceItems as $item) {
+            if (!$item->product_id) continue;
+
+            $inventory = \App\Models\ProductInventory::where('product_id', $item->product_id)
+                ->where('tenant_id', $service->tenant_id)
+                ->first();
+
+            if (!$inventory) continue;
+
+            // 1. Restaurar estoque físico se houve consumo (status era IN_PROGRESS ou posterior)
+            $movements = \App\Models\InventoryMovement::where('reference_type', \App\Models\ServiceItem::class)
+                ->where('reference_id', $item->id)
+                ->where('type', 'exit')
+                ->get();
+
+            foreach ($movements as $movement) {
+                $inventory->increment('quantity', $movement->quantity);
+                $this->info("- Restaurado {$movement->quantity} unid. de '{$inventory->product->name}' (Consumo desfeito).");
+                $movement->delete();
+            }
+
+            // 2. Liberar reserva se o status atual era PREPARING
+            // Como não temos log de reserva por ID, baseamos na quantidade do item se o status era PREPARING
+            if ($currentStatusValue === \App\Enums\ServiceStatus::PREPARING->value) {
+                if ($inventory->reserved_quantity >= $item->quantity) {
+                    $inventory->decrement('reserved_quantity', (int) $item->quantity);
+                    $this->info("- Liberada reserva de {$item->quantity} unid. de '{$inventory->product->name}'.");
+                }
+            }
+        }
     }
 }
