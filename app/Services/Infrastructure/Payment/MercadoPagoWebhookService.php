@@ -12,17 +12,32 @@ use App\Models\PlanSubscription;
 use App\Models\ProviderCredential;
 use App\Services\Infrastructure\EncryptionService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use MercadoPago\Client\Payment\PaymentClient;
+use MercadoPago\MercadoPagoConfig;
 
 class MercadoPagoWebhookService
 {
     public function __construct(private EncryptionService $encryption) {}
 
-    public function processInvoicePayment(string $paymentId): array
+    public function processInvoicePayment(array $webhookData, ?int $forceTenantId = null): array
     {
+        $paymentId = (string) ($webhookData['data']['id'] ?? $webhookData['id'] ?? '');
+        if (empty($paymentId)) {
+            return ['success' => false, 'message' => 'ID do pagamento não encontrado no webhook'];
+        }
+
         try {
-            $paymentClient = new PaymentClient($this->resolveAccessTokenForInvoice($paymentId));
+            $accessToken = $this->resolveAccessTokenFromWebhook($webhookData, $forceTenantId);
+            if (empty($accessToken)) {
+                Log::error('could_not_resolve_token_for_webhook', ['webhook' => $webhookData, 'forced_tenant' => $forceTenantId]);
+                return ['success' => false, 'message' => 'Não foi possível resolver o token de acesso'];
+            }
+
+            MercadoPagoConfig::setAccessToken($accessToken);
+            $paymentClient = new PaymentClient();
             $payment = $paymentClient->get((int) $paymentId);
+            
             $status = $payment->status ?? 'pending';
             $amount = (float) ($payment->transaction_amount ?? 0);
             $date = $payment->date_approved ?? $payment->date_created ?? null;
@@ -31,7 +46,11 @@ class MercadoPagoWebhookService
 
             $invoice = $invoiceCode ? Invoice::where('code', $invoiceCode)->first() : null;
             if (! $invoice) {
-                Log::warning('invoice_not_found_for_payment', ['payment_id' => $paymentId, 'external_reference' => $externalRef]);
+                Log::warning('invoice_not_found_for_payment', [
+                    'payment_id' => $paymentId, 
+                    'external_reference' => $externalRef,
+                    'webhook_user_id' => $webhookData['user_id'] ?? 'N/A'
+                ]);
 
                 return ['success' => false, 'message' => 'Fatura não encontrada'];
             }
@@ -57,7 +76,25 @@ class MercadoPagoWebhookService
             );
 
             if ($mappedStatus === PaymentMercadoPagoInvoice::STATUS_APPROVED) {
-                $invoice->update(['status' => InvoiceStatus::PAID->value]);
+                $invoice->update([
+                    'status' => InvoiceStatus::PAID->value,
+                    'payment_id' => $paymentId,
+                    'transaction_amount' => $payment->transaction_amount,
+                    'transaction_date' => now(),
+                    'payment_method' => $payment->payment_method_id,
+                ]);
+
+                // 1. Limpa o cache para que novos cliques no sistema não gerem o link antigo
+                Cache::forget('mp_preference_'.$invoice->code);
+
+                // 2. Tenta invalidar a preferência no Mercado Pago para fechar outras abas abertas
+                $this->invalidateMercadoPagoPreference($payment->preference_id, $accessToken);
+
+                Log::info('Invoice marked as PAID and preference invalidated', [
+                    'invoice' => $invoice->code,
+                    'payment_id' => $paymentId,
+                    'preference_id' => $payment->preference_id
+                ]);
             }
 
             return ['success' => true];
@@ -68,11 +105,24 @@ class MercadoPagoWebhookService
         }
     }
 
-    public function processPlanPayment(string $paymentId): array
+    public function processPlanPayment(array $webhookData): array
     {
+        $paymentId = (string) ($webhookData['data']['id'] ?? $webhookData['id'] ?? '');
+        if (empty($paymentId)) {
+            return ['success' => false, 'message' => 'ID do pagamento não encontrado no webhook'];
+        }
+
         try {
-            $paymentClient = new PaymentClient($this->resolveAccessTokenForPlan($paymentId));
+            // Plan payments usually use the global app token
+            $accessToken = $this->resolveAccessTokenForPlan($paymentId);
+            if (empty($accessToken)) {
+                return ['success' => false, 'message' => 'Token para plano não configurado'];
+            }
+
+            MercadoPagoConfig::setAccessToken($accessToken);
+            $paymentClient = new PaymentClient();
             $payment = $paymentClient->get((int) $paymentId);
+            
             $status = $payment->status ?? 'pending';
             $amount = (float) ($payment->transaction_amount ?? 0);
             $date = $payment->date_approved ?? $payment->date_created ?? null;
@@ -123,6 +173,63 @@ class MercadoPagoWebhookService
 
             return ['success' => false, 'message' => 'Erro ao processar pagamento de plano'];
         }
+    }
+
+    private function resolveAccessTokenFromWebhook(array $webhookData, ?int $forceTenantId = null): string
+    {
+        if ($forceTenantId) {
+            $credential = ProviderCredential::withoutGlobalScopes()
+                ->where('tenant_id', $forceTenantId)
+                ->where('payment_gateway', 'mercadopago')
+                ->first();
+
+            if ($credential) {
+                $res = $this->encryption->decryptStringLaravel($credential->access_token_encrypted);
+                if ($res->isSuccess()) {
+                    return (string) ($res->getData()['decrypted'] ?? '');
+                }
+            }
+        }
+
+        $gatewayUserId = (string) ($webhookData['user_id'] ?? '');
+        
+        if (!empty($gatewayUserId)) {
+            $credential = ProviderCredential::withoutGlobalScopes()
+                ->where('user_id_gateway', $gatewayUserId)
+                ->where('payment_gateway', 'mercadopago')
+                ->first();
+
+            if ($credential) {
+                $res = $this->encryption->decryptStringLaravel($credential->access_token_encrypted);
+                if ($res->isSuccess()) {
+                    return (string) ($res->getData()['decrypted'] ?? '');
+                }
+            }
+        }
+
+        // Fallback 1: try using payment_id if we already have it in DB
+        $paymentId = (string) ($webhookData['data']['id'] ?? $webhookData['id'] ?? '');
+        if (!empty($paymentId)) {
+            $token = $this->resolveAccessTokenForInvoice($paymentId);
+            if (!empty($token)) {
+                return $token;
+            }
+        }
+
+        // Fallback 2: if there is only one provider credential, use it (common in dev/small installs)
+        $count = ProviderCredential::withoutGlobalScopes()->count();
+        if ($count === 1) {
+            $credential = ProviderCredential::withoutGlobalScopes()->first();
+            if ($credential) {
+                $res = $this->encryption->decryptStringLaravel($credential->access_token_encrypted);
+                if ($res->isSuccess()) {
+                    Log::info('using_single_provider_credential_fallback', ['tenant_id' => $credential->tenant_id]);
+                    return (string) ($res->getData()['decrypted'] ?? '');
+                }
+            }
+        }
+
+        return '';
     }
 
     private function mapMercadoPagoStatus(string $status): string
@@ -216,5 +323,35 @@ class MercadoPagoWebhookService
         }
 
         return (string) env('MERCADOPAGO_GLOBAL_ACCESS_TOKEN', '');
+    }
+
+    /**
+     * Invalida uma preferência no Mercado Pago para evitar pagamentos duplicados em abas abertas
+     */
+    private function invalidateMercadoPagoPreference(?string $preferenceId, string $token): void
+    {
+        if (!$preferenceId) return;
+
+        try {
+            MercadoPagoConfig::setAccessToken($token);
+
+            // Usamos o Guzzle ou o próprio client do MP para dar um PUT na preferência
+            // definindo que ela expira "ontem"
+            $mpClient = new \MercadoPago\Net\MPHttpClient();
+            $mpClient->send("/checkout/preferences/{$preferenceId}", "PUT", json_encode([
+                "expires" => true,
+                "expiration_date_to" => now()->subMinutes(1)->format('Y-m-d\TH:i:s.vP')
+            ]), [
+                "Authorization" => "Bearer {$token}",
+                "Content-Type" => "application/json"
+            ]);
+
+            Log::info('Mercado Pago preference invalidated successfully', ['preference_id' => $preferenceId]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to invalidate Mercado Pago preference', [
+                'preference_id' => $preferenceId,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

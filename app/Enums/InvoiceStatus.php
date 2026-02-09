@@ -6,7 +6,9 @@ namespace App\Enums;
 
 enum InvoiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterface
 {
-    use \App\Traits\Enums\HasStatusEnumMethods;
+    use \App\Traits\Enums\HasStatusEnumMethods {
+        getMetadata as defaultMetadata;
+    }
 
     /** Fatura pendente de pagamento */
     case PENDING = 'pending';

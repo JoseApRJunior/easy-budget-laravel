@@ -34,7 +34,7 @@
                         </address>
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <h4>Fatura Parcial #{{ 'FAT-' . date('Ymd') . 'XXXX' }}</h4>
+                        <h4>Fatura Parcial #{{ $serviceCode ? $serviceCode . '-INVXXX' : 'FAT-' . date('Ymd') . 'XXXX' }}</h4>
                         <p><strong>Data da Fatura:</strong> {{ now()->format('d/m/Y') }}</p>
                         <p><strong>Data de Vencimento:</strong>
                             {{ \Carbon\Carbon::parse($invoiceData['due_date'])->format('d/m/Y') }}</p>

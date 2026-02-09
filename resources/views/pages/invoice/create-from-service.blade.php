@@ -18,38 +18,51 @@
             <div class="card-body p-4">
                 <!-- Informações do Cliente e Serviço -->
                 <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h4>Para:</h4>
-                        <address>
-                            <strong>{{ $invoiceData['customer_name'] ?? 'Cliente' }}</strong><br>
-                            @if (isset($invoiceData['customer_details']->address) && $invoiceData['customer_details']->address)
-                                {{ $invoiceData['customer_details']->address }}
-                                @if (isset($invoiceData['customer_details']->address_number) && $invoiceData['customer_details']->address_number)
-                                    , {{ $invoiceData['customer_details']->address_number }}
-                                @endif
-                                <br>
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <h5 class="text-uppercase text-muted small fw-bold mb-3">Cliente</h5>
+                        <address class="mb-0">
+                            <strong class="h5 d-block mb-1">{{ $invoiceData['customer_name'] ?? 'Cliente' }}</strong>
+                            @php
+                                $customer = $invoiceData['customer_details'];
+                                $address = $customer?->address;
+                                $document = $customer?->document;
+                            @endphp
+
+                            @if ($document)
+                                <span class="d-block mb-1"><i class="bi bi-person-vcard me-2"></i>{{ $document }}</span>
                             @endif
-                            @if (isset($invoiceData['customer_details']->neighborhood) && $invoiceData['customer_details']->neighborhood)
-                                {{ $invoiceData['customer_details']->neighborhood }}<br>
-                            @endif
-                            @if (isset($invoiceData['customer_details']->city) && $invoiceData['customer_details']->city)
-                                {{ $invoiceData['customer_details']->city }}
-                                @if (isset($invoiceData['customer_details']->state) && $invoiceData['customer_details']->state)
-                                    - {{ $invoiceData['customer_details']->state }}
-                                @endif
-                                <br>
-                            @endif
-                            @if (isset($invoiceData['customer_details']->cep) && $invoiceData['customer_details']->cep)
-                                CEP: {{ $invoiceData['customer_details']->cep }}<br>
+
+                            @if ($address)
+                                <span class="d-block text-muted">
+                                    <i class="bi bi-geo-alt me-2"></i>
+                                    @if ($address->address)
+                                        {{ $address->address }}@if ($address->address_number), {{ $address->address_number }}@endif<br>
+                                    @endif
+
+                                    @if ($address->neighborhood)
+                                        <span class="ms-4">{{ $address->neighborhood }}</span><br>
+                                    @endif
+
+                                    @if ($address->city)
+                                        <span class="ms-4">{{ $address->city }}@if ($address->state) - {{ $address->state }}@endif</span><br>
+                                    @endif
+
+                                    @if ($address->cep)
+                                        <span class="ms-4">CEP: {{ \App\Helpers\MaskHelper::formatCEP($address->cep) }}</span>
+                                    @endif
+                                </span>
+                            @else
+                                <span class="text-muted italic">Endereço não informado</span>
                             @endif
                         </address>
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <h4>Fatura #{{ 'FAT-' . date('Ymd') . 'XXXX' }}</h4>
-                        <p><strong>Data da Fatura:</strong> {{ now()->format('d/m/Y') }}</p>
-                        <p><strong>Data de Vencimento:</strong>
+                        <h5 class="text-uppercase text-muted small fw-bold mb-3">Detalhes da Fatura</h5>
+                        <div class="h4 fw-bold text-primary mb-2">#{{ 'FAT-' . date('Ymd') . '-XXXX' }}</div>
+                        <p class="mb-1"><strong>Emissão:</strong> {{ now()->format('d/m/Y') }}</p>
+                        <p class="mb-1"><strong>Vencimento:</strong>
                             {{ \Carbon\Carbon::parse($invoiceData['due_date'])->format('d/m/Y') }}</p>
-                        <p><strong>Serviço Referente:</strong> #{{ $invoiceData['service_code'] }}</p>
+                        <p class="mb-0"><strong>Referente ao Serviço:</strong> #{{ $invoiceData['service_code'] }}</p>
                     </div>
                 </div>
 
@@ -62,28 +75,28 @@
                 @endif
 
                 <!-- Itens da Fatura -->
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+                <div class="table-responsive-sm">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <th>Item</th>
-                                <th class="text-center">Qtd.</th>
-                                <th class="text-end">Preço Unitário</th>
-                                <th class="text-end">Total</th>
+                                <th class="text-nowrap">Item / Descrição</th>
+                                <th class="text-center" style="width: 80px;">Qtd.</th>
+                                <th class="text-end" style="width: 120px;">Unitário</th>
+                                <th class="text-end" style="width: 120px;">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($invoiceData['items'] as $item)
                                 <tr>
                                     <td>
-                                        <strong>{{ $item->product->name ?? 'Produto' }}</strong>
+                                        <div class="fw-bold text-wrap">{{ $item->product->name ?? 'Produto' }}</div>
                                         @if ($item->product->description)
-                                            <p class="small text-muted mb-0">{{ $item->product->description }}</p>
+                                            <div class="small text-muted text-wrap">{{ $item->product->description }}</div>
                                         @endif
                                     </td>
                                     <td class="text-center">{{ $item->quantity }}</td>
-                                    <td class="text-end">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
-                                    <td class="text-end">R$ {{ number_format($item->total, 2, ',', '.') }}</td>
+                                    <td class="text-end text-nowrap">R$ {{ number_format($item->unit_value, 2, ',', '.') }}</td>
+                                    <td class="text-end text-nowrap fw-bold">R$ {{ number_format($item->total, 2, ',', '.') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -92,28 +105,28 @@
 
                 <!-- Resumo -->
                 <div class="row mt-4">
-                    <div class="col-md-6">
-                        <p class="text-muted"><strong>Notas e Termos:</strong></p>
-                        <p>Pagamento a ser realizado na data de vencimento.</p>
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <p class="text-muted mb-1"><strong>Notas e Termos:</strong></p>
+                        <p class="small">Pagamento a ser realizado na data de vencimento.</p>
                     </div>
                     <div class="col-md-6">
-                        <div class="table-responsive">
-                            <table class="table">
+                        <div class="table-responsive-sm">
+                            <table class="table table-sm table-borderless">
                                 <tbody>
                                     <tr>
-                                        <th style="width:50%">Subtotal:</th>
-                                        <td class="text-end">R$
+                                        <th class="text-end py-1" style="width:70%">Subtotal:</th>
+                                        <td class="text-end py-1">R$
                                             {{ \App\Helpers\CurrencyHelper::format($invoiceData['subtotal']) }}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Desconto:</th>
-                                        <td class="text-end text-danger">- R$
+                                        <th class="text-end py-1">Desconto:</th>
+                                        <td class="text-end py-1 text-danger">- R$
                                             {{ \App\Helpers\CurrencyHelper::format($invoiceData['discount']) }}</td>
                                     </tr>
-                                    <tr class="h5">
-                                        <th>Total:</th>
-                                        <td class="text-end text-success">R$
+                                    <tr class="border-top">
+                                        <th class="text-end pt-2 h5 mb-0">Total:</th>
+                                        <td class="text-end pt-2 h5 mb-0 text-success fw-bold">R$
                                             {{ \App\Helpers\CurrencyHelper::format($invoiceData['total']) }}</td>
                                     </tr>
                                 </tbody>

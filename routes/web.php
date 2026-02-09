@@ -94,15 +94,15 @@ Route::group([], function () {
         Route::get('/print/code/{code}/token/{token}', [ServiceController::class, 'print'])->name('print');
         Route::prefix('invoices')->name('invoices.public.')->group(function () {
             Route::get('/view/{hash}', [PublicInvoiceController::class, 'show'])->name('show');
+            Route::get('/pay/{hash}', [PublicInvoiceController::class, 'redirectToPayment'])->name('pay');
+            Route::get('/status', [PublicInvoiceController::class, 'paymentStatus'])->name('status');
+            Route::get('/error', [PublicInvoiceController::class, 'error'])->name('error');
         });
 
         Route::prefix('schedules')->name('schedules.')->group(function () {
             Route::get('/confirm/{token}', [ScheduleController::class, 'publicConfirm'])->name('confirm');
             Route::post('/confirm/{token}', [ScheduleController::class, 'publicConfirmAction'])->name('confirm.action');
         });
-        Route::get('/pay/{hash}', [PublicInvoiceController::class, 'redirectToPayment'])->name('pay');
-        Route::get('/status', [PublicInvoiceController::class, 'paymentStatus'])->name('status');
-        Route::get('/error', [PublicInvoiceController::class, 'error'])->name('error');
     });
 
     // Document verification
@@ -337,6 +337,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/{code}', [InvoiceController::class, 'show'])->name('show');
         Route::get('/{code}/edit', [InvoiceController::class, 'edit'])->name('edit');
         Route::put('/{code}', [InvoiceController::class, 'update'])->name('update');
+        Route::post('/{code}/change-status', [InvoiceController::class, 'change_status'])->name('change_status');
         Route::delete('/{code}', [InvoiceController::class, 'destroy'])->name('destroy');
         Route::get('/search/ajax', [InvoiceController::class, 'search'])->name('search');
         Route::get('/{code}/print', [InvoiceController::class, 'print'])->name('print');

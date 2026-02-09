@@ -53,7 +53,7 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
     public function handle(MercadoPagoWebhookService $webhookService): void
     {
         try {
-            $paymentId = (string) ($this->webhookData['data']['id'] ?? '');
+            $paymentId = (string) ($this->webhookData['data']['id'] ?? $this->webhookData['id'] ?? '');
 
             Log::info('Processing Mercado Pago webhook', [
                 'type' => $this->type,
@@ -62,8 +62,8 @@ class ProcessMercadoPagoWebhook implements ShouldQueue
             ]);
 
             $result = match ($this->type) {
-                'plan' => $webhookService->processPlanPayment($paymentId),
-                'invoice' => $webhookService->processInvoicePayment($paymentId),
+                'plan' => $webhookService->processPlanPayment($this->webhookData),
+                'invoice' => $webhookService->processInvoicePayment($this->webhookData),
                 default => throw new \InvalidArgumentException("Invalid payment type: {$this->type}"),
             };
 

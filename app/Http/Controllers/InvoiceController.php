@@ -159,6 +159,18 @@ class InvoiceController extends Controller
         $invoice = $result->getData();
         $this->authorize('view', $invoice);
 
+        // Garantir que existe um link público (share) para esta fatura
+        if (! $invoice->getPublicUrl()) {
+            $this->invoiceShareService->createShare([
+                'invoice_id' => $invoice->id,
+                'recipient_email' => $invoice->customer->email ?? null,
+                'recipient_name' => $invoice->customer->name ?? null,
+            ], false);
+            
+            // Recarregar a fatura para garantir que o novo share seja considerado
+            $invoice = $invoice->fresh(['customer', 'service', 'invoiceItems', 'paymentMercadoPagoInvoice']);
+        }
+
         return view('pages.invoice.show', [
             'invoice' => $invoice,
         ]);
@@ -493,10 +505,9 @@ class InvoiceController extends Controller
     /**
      * Print invoice for provider access.
      */
-    public function print(Invoice $invoice): View
+    public function print(string $code): View
     {
-        $this->authorize('view', $invoice);
-        $result = $this->invoiceService->findByCode($invoice->code, [
+        $result = $this->invoiceService->findByCode($code, [
             'customer.commonData',
             'service',
             'invoiceItems.product',
@@ -506,8 +517,11 @@ class InvoiceController extends Controller
             abort(404, $result->getMessage());
         }
 
+        $invoice = $result->getData();
+        $this->authorize('view', $invoice);
+
         return view('pages.invoice.print', [
-            'invoice' => $result->getData(),
+            'invoice' => $invoice,
         ]);
     }
 }

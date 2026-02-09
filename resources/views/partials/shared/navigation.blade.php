@@ -34,6 +34,14 @@
                 </a>
             </li>
 
+            {{-- Botão Temporário para Logs --}}
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center text-warning" href="{{ url('/log-viewer') }}" target="_blank">
+                    <i class="bi bi-terminal me-2"></i>
+                    <span>Logs (Temp)</span>
+                </a>
+            </li>
+
             {{-- Menu administrativo - apenas para admins --}}
             @role('admin')
                 <li class="nav-item dropdown">

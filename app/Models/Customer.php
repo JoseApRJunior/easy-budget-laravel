@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Helpers\MaskHelper;
 use App\Models\Traits\TenantScoped;
 use DateTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -483,30 +484,6 @@ class Customer extends Model
     }
 
     /**
-     * Get the customer's formatted CPF.
-     */
-    public function getFormattedCpfAttribute(): string
-    {
-        if ($this->commonData?->cpf) {
-            return $this->formatCpf($this->commonData->cpf);
-        }
-
-        return '';
-    }
-
-    /**
-     * Get the customer's formatted CNPJ.
-     */
-    public function getFormattedCnpjAttribute(): string
-    {
-        if ($this->commonData?->cnpj) {
-            return $this->formatCnpj($this->commonData->cnpj);
-        }
-
-        return '';
-    }
-
-    /**
      * Get the customer's age based on birth date.
      */
     public function getAgeAttribute(): ?int
@@ -516,6 +493,23 @@ class Customer extends Model
         }
 
         return $this->commonData->birth_date->age;
+    }
+
+    /**
+     * Get the customer's document (CPF or CNPJ) formatted.
+     */
+    public function getDocumentAttribute(): string
+    {
+        $commonData = $this->commonData;
+        if (! $commonData) {
+            return '';
+        }
+
+        if ($commonData->type === 'company') {
+            return MaskHelper::formatCNPJ($commonData->cnpj);
+        }
+
+        return MaskHelper::formatCPF($commonData->cpf);
     }
 
     /**
@@ -535,53 +529,63 @@ class Customer extends Model
             $address->neighborhood,
             $address->city,
             $address->state,
-            $address->cep,
-        ]);
+            MaskHelper::formatCEP($address->cep),
+        ], fn($value) => $value !== null && $value !== '' && $value !== '-');
 
         return implode(', ', $parts);
     }
 
-    // /**
-    //  * Formatar CPF (XXX.XXX.XXX-XX)
-    //  */
-    // public function formatCpf(string $cpf): string
-    // {
-    //     // Remove tudo que não é número
-    //     $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    /**
+     * Get the customer's formatted CPF.
+     */
+    public function getFormattedCpfAttribute(): string
+    {
+        return MaskHelper::formatCPF($this->commonData?->cpf);
+    }
 
-    //     // Aplica a máscara
-    //     return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $cpf);
-    // }
+    /**
+     * Get the customer's formatted CNPJ.
+     */
+    public function getFormattedCnpjAttribute(): string
+    {
+        return MaskHelper::formatCNPJ($this->commonData?->cnpj);
+    }
 
-    // /**
-    //  * Formatar CNPJ (XX.XXX.XXX/XXXX-XX)
-    //  */
-    // public function formatCnpj(string $cnpj): string
-    // {
-    //     // Remove tudo que não é número
-    //     $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
+    /**
+     * Formatar CPF (XXX.XXX.XXX-XX)
+     * @deprecated Use MaskHelper::formatCPF
+     */
+    public function formatCpf(string $cpf): string
+    {
+        return MaskHelper::formatCPF($cpf);
+    }
 
-    //     // Aplica a máscara
-    //     return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $cnpj);
-    // }
+    /**
+     * Formatar CNPJ (XX.XXX.XXX/XXXX-XX)
+     * @deprecated Use MaskHelper::formatCNPJ
+     */
+    public function formatCnpj(string $cnpj): string
+    {
+        return MaskHelper::formatCNPJ($cnpj);
+    }
 
-    // /**
-    //  * Formatar telefone ((XX) XXXXX-XXXX)
-    //  */
-    // public function formatPhone(string $phone): string
-    // {
-    //     // Remove tudo que não é número
-    //     $phone = preg_replace('/[^0-9]/', '', $phone);
+    /**
+     * Formatar CEP (XXXXX-XXX)
+     * @deprecated Use MaskHelper::formatCEP
+     */
+    public function formatCep(string $cep): string
+    {
+        return MaskHelper::formatCEP($cep);
+    }
 
-    //     // Aplica a máscara baseada no tamanho
-    //     if (strlen($phone) === 11) {
-    //         return preg_replace('/(\d{2})(\d{5})(\d{4})/', '($1) $2-$3', $phone);
-    //     } elseif (strlen($phone) === 10) {
-    //         return preg_replace('/(\d{2})(\d{4})(\d{4})/', '($1) $2-$3', $phone);
-    //     }
-
-    //     return $phone; // Retorna original se não conseguir formatar
-    // }
+    /**
+     * Formatar telefone ((XX) XXXXX-XXXX)
+     * @deprecated Use MaskHelper::formatPhone
+     */
+    public function formatPhone(string $phone): string
+    {
+        return MaskHelper::formatPhone($phone);
+    }
 
     // /**
     //  * Validar CPF usando algoritmo oficial

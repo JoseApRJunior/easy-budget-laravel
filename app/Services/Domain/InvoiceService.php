@@ -304,7 +304,11 @@ class InvoiceService extends AbstractBaseService
     public function generateInvoiceDataFromService(string $serviceCode): ServiceResult
     {
         return $this->safeExecute(function () use ($serviceCode) {
-            $service = $this->serviceRepository->findByCode($serviceCode, ['serviceItems.product', 'customer']);
+            $service = $this->serviceRepository->findByCode($serviceCode, [
+                'serviceItems.product',
+                'customer.address',
+                'customer.commonData',
+            ]);
 
             if (! $service) {
                 return ServiceResult::error('Serviço não encontrado');
@@ -314,15 +318,24 @@ class InvoiceService extends AbstractBaseService
 
             return ServiceResult::success([
                 'service_id' => $service->id,
-                'customer_id' => $service->customer_id,
-                'subtotal' => $subtotal,
-                'total' => $subtotal, // Assume no discount initially
-                'items' => $service->serviceItems->map(fn($item) => new InvoiceItemDTO(
-                    product_id: $item->product_id,
-                    quantity: $item->quantity,
-                    unit_price: $item->unit_value,
-                    total: $item->total,
-                ))->toArray(),
+                'service_code' => $service->code,
+                'customer_id' => $service->customer?->id,
+                'customer_name' => $service->customer?->name ?? 'Cliente',
+                'customer_details' => $service->customer,
+                'subtotal' => (float) $subtotal,
+                'total' => (float) $subtotal, // Assume no discount initially
+                'discount' => 0.0,
+                'due_date' => now()->addDays(7)->toDateTimeString(),
+                'status' => 'pending',
+                'notes' => '',
+                'items' => $service->serviceItems->map(fn($item) => (object) [
+                    'id' => $item->id,
+                    'product_id' => (int) $item->product_id,
+                    'product' => $item->product,
+                    'quantity' => (int) $item->quantity,
+                    'unit_value' => (float) $item->unit_value,
+                    'total' => (float) $item->total,
+                ])->toArray(),
             ]);
         }, 'Erro ao gerar dados da fatura a partir do serviço');
     }
@@ -336,10 +349,14 @@ class InvoiceService extends AbstractBaseService
     {
         return $this->safeExecute(function () use ($dto) {
             return DB::transaction(function () use ($dto) {
-                $service = $this->serviceRepository->findByCode($dto->service_code, ['serviceItems.product']);
+                $service = $this->serviceRepository->findByCode($dto->service_code, ['serviceItems.product', 'customer']);
 
                 if (! $service) {
                     return ServiceResult::error('Serviço não encontrado');
+                }
+
+                if (! $service->customer) {
+                    return ServiceResult::error('Cliente não encontrado para este serviço');
                 }
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
@@ -362,7 +379,7 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceDTO = new InvoiceDTO(
                     service_id: $service->id,
-                    customer_id: $service->customer_id,
+                    customer_id: $service->customer->id,
                     status: $dto->status ?? InvoiceStatus::PENDING,
                     subtotal: $subtotal,
                     total: $subtotal - $discount,
@@ -377,6 +394,13 @@ class InvoiceService extends AbstractBaseService
                 $invoice = $this->repository->createFromDTO($invoiceDTO);
 
                 $this->createInvoiceItems($invoice->id, $items);
+
+                // Cria o compartilhamento inicial da fatura
+                $this->invoiceShareService->createShare([
+                    'invoice_id' => $invoice->id,
+                    'recipient_email' => $service->customer->email ?? null,
+                    'recipient_name' => $service->customer->name ?? null,
+                ], false);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });
