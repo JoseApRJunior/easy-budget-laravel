@@ -436,11 +436,6 @@
                     variant="info" icon="receipt" label="Ver Orçamento" />
                 @endif
 
-                @if ($isApproved)
-                <x-ui.button type="link" href="{{ route('provider.services.edit', $service->code) }}"
-                    variant="outline-primary" icon="pencil" label="Editar Itens/Preços" />
-                @endif
-
                         {{-- Botões de Fatura --}}
                         @if ($service->status->isFinished() || $statusValue === 'completed')
                         <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"

@@ -15,6 +15,9 @@
      * └── Serviço + Agendamento (simultâneo)
      *     php artisan dev:update-status service SERV-2026-01-000001 scheduling --sch=cancelled
      *
+
+
+analise esat ideia eu ja tenho tabela de resources de uma breve logica no sistema antigo
 Essa é uma excelente estratégia. Liberar recursos gradualmente (estratégia de **Feature Flags** ou **Feature Toggles**) permite que você teste novas funcionalidades com um grupo pequeno de usuários, valide o feedback e evite que um erro derrube o sistema para todo mundo de uma vez.
 
 No ecossistema Laravel, existem três caminhos principais para você seguir, dependendo da complexidade que você precisa:

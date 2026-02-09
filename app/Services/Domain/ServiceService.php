@@ -213,16 +213,16 @@ class ServiceService extends AbstractBaseService
     /**
      * Altera o status de um serviço por código.
      */
-    public function changeStatusByCode(string $code, string $status): ServiceResult
+    public function changeStatusByCode(string $code, string $status, ?float $finalTotal = null): ServiceResult
     {
-        return $this->safeExecute(function () use ($code, $status) {
+        return $this->safeExecute(function () use ($code, $status, $finalTotal) {
             $service = $this->repository->findByCode($code);
 
             if (! $service) {
                 return ServiceResult::error('Serviço não encontrado.');
             }
 
-            return $this->changeStatus($service->id, $status);
+            return $this->changeStatus($service->id, $status, $finalTotal);
         });
     }
 
@@ -247,9 +247,9 @@ class ServiceService extends AbstractBaseService
     /**
      * Altera o status de um serviço.
      */
-    public function changeStatus(int $serviceId, string $status): ServiceResult
+    public function changeStatus(int $serviceId, string $status, ?float $finalTotal = null): ServiceResult
     {
-        return $this->safeExecute(function () use ($serviceId, $status) {
+        return $this->safeExecute(function () use ($serviceId, $status, $finalTotal) {
             $service = $this->repository->find($serviceId);
 
             if (! $service) {
@@ -274,7 +274,12 @@ class ServiceService extends AbstractBaseService
                 }
             }
 
-            $this->repository->update($service->id, ['status' => $status]);
+            $updateData = ['status' => $status];
+            if ($finalTotal !== null) {
+                $updateData['final_total'] = $finalTotal;
+            }
+
+            $this->repository->update($service->id, $updateData);
 
             // Sincronizar com agendamentos se necessário
             $this->syncScheduleStatus($service, $newStatusEnum);

@@ -212,15 +212,21 @@ class InvoiceService extends AbstractBaseService
 
                 $invoiceCode = $this->codeGenerator->generate($service->code);
 
+                $discount = (float) ($dto->discount ?? 0.0);
+
+                if ($discount > $subtotal) {
+                    return ServiceResult::error('O desconto não pode ser maior que o subtotal da fatura');
+                }
+
                 $invoiceDTO = new InvoiceDTO(
                     service_id: $service->id,
                     customer_id: $budget->customer_id,
                     status: $dto->status ?? InvoiceStatus::PENDING,
                     subtotal: $subtotal,
-                    total: $subtotal - ($dto->discount ?? 0.0),
+                    total: $subtotal - $discount,
                     due_date: $dto->due_date ?? now()->addDays(7),
                     code: $invoiceCode,
-                    discount: $dto->discount ?? 0.0,
+                    discount: $discount,
                     items: $preparedItems
                 );
 
@@ -228,12 +234,13 @@ class InvoiceService extends AbstractBaseService
 
                 $this->createInvoiceItems($invoice->id, $preparedItems);
 
-                // Cria o compartilhamento inicial da fatura
+                // Cria o compartilhamento inicial da fatura e envia notificação por e-mail
                 $this->invoiceShareService->createShare([
                     'invoice_id' => $invoice->id,
                     'recipient_email' => $budget->customer->email ?? null,
                     'recipient_name' => $budget->customer->name ?? null,
-                ], false);
+                    'message' => 'Fatura parcial gerada a partir do orçamento ' . $budget->code,
+                ], true);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });
@@ -375,7 +382,17 @@ class InvoiceService extends AbstractBaseService
 
                     return $carry + ($item['total'] ?? ($item['quantity'] * ($item['unit_price'] ?? $item['unit_value'])));
                 }, 0.0);
+
+                // Se houver um valor final acordado no serviço, usamos ele como subtotal da fatura
+                if ($service->final_total !== null && $service->final_total > 0) {
+                    $subtotal = (float) $service->final_total;
+                }
+
                 $discount = (float) ($dto->discount ?? 0.0);
+
+                if ($discount > $subtotal) {
+                    return ServiceResult::error('O desconto não pode ser maior que o subtotal da fatura');
+                }
 
                 $invoiceDTO = new InvoiceDTO(
                     service_id: $service->id,
@@ -395,12 +412,13 @@ class InvoiceService extends AbstractBaseService
 
                 $this->createInvoiceItems($invoice->id, $items);
 
-                // Cria o compartilhamento inicial da fatura
+                // Cria o compartilhamento inicial da fatura e envia notificação por e-mail
                 $this->invoiceShareService->createShare([
                     'invoice_id' => $invoice->id,
                     'recipient_email' => $service->customer->email ?? null,
                     'recipient_name' => $service->customer->name ?? null,
-                ], false);
+                    'message' => 'Fatura gerada a partir do serviço ' . $service->code,
+                ], true);
 
                 return ServiceResult::success($invoice->load(['customer', 'service', 'invoiceItems.product']));
             });

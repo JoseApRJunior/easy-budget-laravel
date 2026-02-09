@@ -51,6 +51,7 @@ class Service extends Model
         'pdf_verification_hash',
         'discount',
         'total',
+        'final_total',
         'due_date',
         'reason',
     ];
@@ -80,6 +81,7 @@ class Service extends Model
         'description' => 'string',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
+        'final_total' => 'decimal:2',
         'due_date' => 'date',
         'reason' => 'string',
         'pdf_verification_hash' => 'string',

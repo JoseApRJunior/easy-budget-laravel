@@ -242,7 +242,8 @@ class ServiceController extends Controller
         $service = $result->getData();
         $this->authorize('update', $service);
 
-        $statusResult = $this->serviceService->changeStatusByCode($code, (string) $request->input('status'));
+        $finalTotal = $request->has('final_total') ? (float) $request->input('final_total') : null;
+        $statusResult = $this->serviceService->changeStatusByCode($code, (string) $request->input('status'), $finalTotal);
 
         if ($statusResult->isError()) {
             return redirect()->back()->with('error', $statusResult->getMessage());

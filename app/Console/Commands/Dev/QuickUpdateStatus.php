@@ -140,6 +140,20 @@ class QuickUpdateStatus extends Command
                         $this->info("Agendamentos ({$deletedCount}) do serviço {$model->code} removidos.");
                     }
 
+                    // Remover Faturas (Invoices) e seus itens/compartilhamentos/pagamentos
+                    $invoices = \App\Models\Invoice::withTrashed()->where('service_id', $model->id)->get();
+                    foreach ($invoices as $invoice) {
+                        $invoice->invoiceItems()->delete();
+                        $invoice->shares()->delete();
+                        if (method_exists($invoice, 'paymentMercadoPagoInvoice')) {
+                            $invoice->paymentMercadoPagoInvoice()->delete();
+                        }
+
+                        $invoiceCode = $invoice->code;
+                        $invoice->forceDelete();
+                        $this->info("Fatura {$invoiceCode} do serviço {$model->code} removida fisicamente.");
+                    }
+
                     // Limpar movimentações de estoque e restaurar quantidades
                     $this->cleanupInventory($model);
                 }
