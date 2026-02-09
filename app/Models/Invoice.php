@@ -231,6 +231,14 @@ class Invoice extends Model
     }
 
     /**
+     * Get the name of the invoice status.
+     */
+    public function getStatusNameAttribute(): ?string
+    {
+        return $this->status?->label();
+    }
+
+    /**
      * Get the color of the invoice status for backward compatibility with views.
      */
     public function getColorAttribute(): string
@@ -239,11 +247,131 @@ class Invoice extends Model
     }
 
     /**
+     * Get the color of the invoice status.
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return $this->status?->getColor() ?? '#6c757d';
+    }
+
+    /**
+     * Get the icon of the invoice status.
+     */
+    public function getStatusIconAttribute(): string
+    {
+        return $this->status?->icon() ?? 'bi-info-circle';
+    }
+
+    /**
      * Get the slug of the invoice status for backward compatibility with views.
      */
     public function getSlugAttribute(): string
     {
         return $this->status?->value ?? '';
+    }
+
+    /**
+     * Get the slug of the invoice status in uppercase for comparison in views.
+     */
+    public function getStatusSlugAttribute(): string
+    {
+        return strtoupper($this->status?->value ?? '');
+    }
+
+    /**
+     * Get the customer name.
+     */
+    public function getCustomerNameAttribute(): ?string
+    {
+        return $this->customer?->name;
+    }
+
+    /**
+     * Get the customer email.
+     */
+    public function getCustomerEmailAttribute(): ?string
+    {
+        return $this->customer?->email;
+    }
+
+    /**
+     * Get the customer business email.
+     */
+    public function getCustomerEmailBusinessAttribute(): ?string
+    {
+        return $this->customer?->commonData?->email_business ?? $this->customer?->email;
+    }
+
+    /**
+     * Get the customer phone.
+     */
+    public function getCustomerPhoneAttribute(): ?string
+    {
+        return $this->customer?->contact?->phone;
+    }
+
+    /**
+     * Get the customer business phone.
+     */
+    public function getCustomerPhoneBusinessAttribute(): ?string
+    {
+        return $this->customer?->contact?->phone_business ?? $this->customer?->contact?->phone;
+    }
+
+    /**
+     * Get the provider company name.
+     */
+    public function getProviderCompanyNameAttribute(): ?string
+    {
+        return $this->tenant?->company_name ?? $this->tenant?->name;
+    }
+
+    /**
+     * Get the provider name.
+     */
+    public function getProviderNameAttribute(): ?string
+    {
+        return $this->tenant?->name;
+    }
+
+    /**
+     * Get the provider email.
+     */
+    public function getProviderEmailAttribute(): ?string
+    {
+        return $this->tenant?->email;
+    }
+
+    /**
+     * Get the provider phone.
+     */
+    public function getProviderPhoneAttribute(): ?string
+    {
+        return $this->tenant?->phone;
+    }
+
+    /**
+     * Get the tenant company name.
+     */
+    public function getTenantCompanyNameAttribute(): ?string
+    {
+        return $this->tenant?->company_name ?? $this->tenant?->name;
+    }
+
+    /**
+     * Get the service code.
+     */
+    public function getServiceCodeAttribute(): ?string
+    {
+        return $this->service?->code;
+    }
+
+    /**
+     * Get the service description.
+     */
+    public function getServiceDescriptionAttribute(): ?string
+    {
+        return $this->service?->description;
     }
 
     /**

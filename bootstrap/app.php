@@ -41,6 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
             OptimizeAuthUser::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/*',
+        ]);
+
         $middleware->trustProxies('*', 30);
     })
     ->withExceptions(function (Exceptions $exceptions) {

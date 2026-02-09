@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Infrastructure;
 
 use App\Enums\OperationStatus;
-use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
+use App\Services\Core\Abstracts\BaseNoTenantService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\Http;

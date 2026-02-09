@@ -7,10 +7,11 @@ namespace App\Services\Infrastructure;
 use App\Enums\OperationStatus;
 use App\Models\Invoice;
 use App\Models\ProviderCredential;
-use App\Services\Infrastructure\Abstracts\BaseNoTenantService;
+use App\Services\Core\Abstracts\BaseNoTenantService;
 use App\Support\ServiceResult;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Serviço especializado para processamento de pagamentos de faturas via MercadoPago.
@@ -31,6 +32,12 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
 
             if (! $invoice) {
                 return ServiceResult::error(OperationStatus::NOT_FOUND, 'Fatura não encontrada');
+            }
+
+            // Tentar recuperar do cache para evitar múltiplas preferências para a mesma fatura
+            $cacheKey = 'mp_preference_'.$invoice->code;
+            if (Cache::has($cacheKey)) {
+                return ServiceResult::success(Cache::get($cacheKey), 'Preferência de pagamento recuperada do cache');
             }
 
             $credential = ProviderCredential::where('tenant_id', $invoice->tenant_id)
@@ -76,6 +83,12 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
                     'pending' => $publicUrl,
                 ],
                 'auto_return' => 'approved',
+                'binary_mode' => true, // Pagamento ou é aprovado ou rejeitado, sem meio termo
+                'expires' => true,
+                'date_of_expiration' => now()->addHours(24)->format('Y-m-d\TH:i:s.vP'),
+                'payment_methods' => [
+                    'installments' => 1, // Limita a 1 parcela para evitar múltiplas tentativas de parcelamento
+                ],
             ];
 
             $result = $this->mercadoPagoService->createPreference($accessToken, $preferenceData);
@@ -91,10 +104,15 @@ class PaymentMercadoPagoInvoiceService extends BaseNoTenantService
                 return ServiceResult::error(OperationStatus::ERROR, 'Link de pagamento não retornado pelo MP');
             }
 
-            return ServiceResult::success([
+            $resultData = [
                 'init_point' => $initPoint,
                 'preference_id' => $data['id'] ?? null,
-            ], 'Preferência de pagamento criada');
+            ];
+
+            // Salvar no cache por 24 horas para reuso
+            Cache::put($cacheKey, $resultData, now()->addHours(24));
+
+            return ServiceResult::success($resultData, 'Preferência de pagamento criada');
 
         } catch (Exception $e) {
             Log::error('create_mp_preference_error', ['invoice' => $invoiceCode, 'error' => $e->getMessage()]);

@@ -12,7 +12,7 @@
                 $invoice->code => '#'
             ]">
         <div class="d-flex gap-2">
-            <x-ui.button type="link" :href="route('provider.invoices.print', $invoice)" variant="outline-secondary" icon="printer" label="Imprimir" target="_blank" />
+            {{--  --}}
         </div>
     </x-layout.page-header>
 
@@ -196,15 +196,15 @@
                 </div>
             </div>
 
-            <!-- Status Detalhado -->
+            <!-- Status e Ações -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-transparent p-4">
                     <h6 class="mb-0">
-                        <i class="bi bi-info-circle me-2"></i>Status Detalhado
+                        <i class="bi bi-info-circle me-2"></i>Status e Ações
                     </h6>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
+                <div class="card-body p-4">
+                    <div class="mb-4">
                         <x-ui.status-badge :item="$invoice" class="w-100 py-2 fs-6 mb-1" />
                         <x-ui.status-description :item="$invoice" class="mt-1" />
                     </div>
@@ -212,22 +212,65 @@
                     @if ($invoice->due_date)
                         @if ($invoice->status === 'pending')
                             @if ($invoice->due_date < now())
-                                <div class="alert alert-danger">
+                                <div class="alert alert-danger py-2 mb-4">
                                     <i class="bi bi-exclamation-triangle me-2"></i>
-                                    Fatura vencida há {{ $invoice->due_date->diffInDays(now()) }} dias
+                                    Vencida há {{ $invoice->due_date->diffInDays(now()) }} dias
                                 </div>
                             @else
-                                <div class="alert alert-warning">
+                                <div class="alert alert-warning py-2 mb-4">
                                     <i class="bi bi-clock me-2"></i>
                                     Vence em {{ $invoice->due_date->diffInDays(now()) }} dias
                                 </div>
                             @endif
                         @elseif($invoice->status === 'paid')
-                            <div class="alert alert-success">
+                            <div class="alert alert-success py-2 mb-4">
                                 <i class="bi bi-check-circle me-2"></i>
-                                Fatura paga com sucesso
+                                Paga em {{ $invoice->updated_at->format('d/m/Y') }}
                             </div>
                         @endif
+                    @endif
+
+                    <div class="d-grid gap-2">
+                        @if ($invoice->status === 'pending')
+                            <button type="button" class="btn btn-success" onclick="changeStatus('paid')">
+                                <i class="bi bi-check-circle me-2"></i>Marcar como Paga
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="changeStatus('cancelled')">
+                                <i class="bi bi-x-circle me-2"></i>Cancelar Fatura
+                            </button>
+                        @endif
+
+                        <a href="{{ route('provider.invoices.print', $invoice) }}" target="_blank" class="btn btn-primary">
+                            <i class="bi bi-printer me-2"></i>Imprimir Fatura
+                        </a>
+
+                        @if ($invoice->status === 'pending')
+                            <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-pencil me-2"></i>Editar Fatura
+                            </a>
+                        @endif
+
+                        <button type="button" class="btn btn-link text-danger text-decoration-none p-0 mt-2 small" onclick="deleteInvoice()">
+                            <i class="bi bi-trash me-1"></i>Excluir Fatura
+                        </button>
+                    </div>
+
+                    @if ($invoice->status !== 'paid' && $invoice->status !== 'cancelled')
+                        <hr class="my-4">
+                        <div class="bg-light p-3 rounded">
+                            <h6 class="small fw-bold mb-2">
+                                <i class="bi bi-link-45deg"></i> Link de Pagamento
+                            </h6>
+                            <p class="small text-muted mb-3">
+                                Envie este link para seu cliente visualizar a fatura.
+                            </p>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="sidebarPublicLink" value="{{ $invoice->getPublicUrl() }}" readonly>
+                                <button class="btn btn-outline-secondary" type="button" onclick="copySidebarLink()">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -250,7 +293,7 @@
                                 </p>
                             </div>
                         </div>
-                        @if ($invoice->updated_at->ne($invoice->created_at))
+                        @if ($invoice->updated_at != $invoice->created_at)
                             <div class="timeline-item">
                                 <div class="timeline-marker bg-info"></div>
                                 <div class="timeline-content">
@@ -267,36 +310,31 @@
         </div>
     </div>
 
-    {{-- Botões de Ação (Footer) --}}
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <div class="d-flex gap-2">
-            <a href="{{ url()->previous(route('provider.invoices.index')) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-2"></i>Voltar
-            </a>
-        </div>
-        <small class="text-muted d-none d-md-block">
-            Última atualização: {{ $invoice->updated_at?->format('d/m/Y H:i') }}
-        </small>
-        <div class="d-flex gap-2">
-            @if ($invoice->status === 'pending')
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareInvoiceModal">
-                    <i class="bi bi-share-fill me-2"></i>Compartilhar
-                </button>
-                <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="btn btn-primary">
-                    <i class="bi bi-pencil-fill me-2"></i>Editar
-                </a>
-                <button type="button" class="btn btn-success" onclick="changeStatus('paid')">
-                    <i class="bi bi-check-circle-fill me-2"></i>Marcar como Paga
-                </button>
-                <button type="button" class="btn btn-danger" onclick="changeStatus('cancelled')">
-                    <i class="bi bi-x-circle-fill me-2"></i>Cancelar
-                </button>
-            @endif
-            <button type="button" class="btn btn-outline-danger" onclick="deleteInvoice()">
-                <i class="bi bi-trash-fill me-2"></i>Excluir
-            </button>
-        </div>
+    {{-- Botão Voltar (Estilo Legado) --}}
+    <div class="mt-4">
+        <a href="{{ route('provider.invoices.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Voltar para Faturas
+        </a>
     </div>
+    </div>
+
+    <!-- Status Confirmation Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="statusModalLabel">Confirmar Mudança de Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja alterar o status desta fatura?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirmStatusChange">Confirmar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Share Invoice Modal -->
@@ -347,12 +385,27 @@
     </div>
 
     <script>
+        function copySidebarLink() {
+            const copyText = document.getElementById("sidebarPublicLink");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+
+            // Feedback visual
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check2"></i>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 2000);
+        }
+
         function copyShareLink() {
             const copyText = document.getElementById("publicShareLink");
             copyText.select();
             copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
-            
+
             // Feedback visual simples
             const btn = event.currentTarget;
             const originalHtml = btn.innerHTML;

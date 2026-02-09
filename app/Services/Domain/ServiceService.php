@@ -288,8 +288,8 @@ class ServiceService extends AbstractBaseService
      */
     private function syncScheduleStatus($service, ServiceStatus $newStatus): void
     {
-        // Se o agendamento foi confirmado (pelo prestador manualmente via service)
-        if ($newStatus === ServiceStatus::SCHEDULED) {
+        // Se o agendamento foi confirmado (pelo prestador manualmente via service ou ao iniciar preparação/execução)
+        if (in_array($newStatus, [ServiceStatus::SCHEDULED, ServiceStatus::PREPARING, ServiceStatus::IN_PROGRESS])) {
             $service->schedules()
                 ->where('status', ScheduleStatus::PENDING->value)
                 ->get()

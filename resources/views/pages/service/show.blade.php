@@ -21,8 +21,10 @@
         @php
         $statusValue = $service->status->value;
         $budgetStatus = $service->budget?->status->value;
-        $isApproved = $budgetStatus === 'approved';
+        // O serviço é considerado aprovado se o orçamento estiver em qualquer status a partir de APPROVED
+        $isApproved = in_array($budgetStatus, ['approved', 'in_progress', 'completed']);
         $pendingSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::PENDING->value)->first();
+        $hasConfirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->exists();
         @endphp
 
         {{-- Informações do Serviço (Padrão Budget) --}}
@@ -56,15 +58,9 @@
                 </x-layout.grid-col>
 
                 <x-layout.grid-col size="col-md-3">
-                    @php
-                    $docLabel = $service->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
-                    $docValue = $service->customer->commonData->cnpj
-                    ? \App\Helpers\DocumentHelper::formatCnpj($service->customer->commonData->cnpj)
-                    : ($service->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($service->customer->commonData->cpf) : '-');
-                    @endphp
                     <x-resource.resource-info
-                        :title="$docLabel"
-                        :subtitle="$docValue"
+                        :title="$service->customer->commonData?->cnpj ? 'CNPJ' : 'CPF'"
+                        :subtitle="$service->customer->document"
                         icon="card-text"
                         class="small" />
                 </x-layout.grid-col>
@@ -78,15 +74,9 @@
                 </x-layout.grid-col>
 
                 <x-layout.grid-col size="col-md-3">
-                    @php
-                    $address = $service->customer?->address;
-                    $addressText = $address
-                    ? "{$address->address}, {$address->address_number} - {$address->neighborhood}, {$address->city}/{$address->state}"
-                    : 'Não informado';
-                    @endphp
                     <x-resource.resource-info
                         title="Endereço"
-                        :subtitle="$addressText"
+                        :subtitle="$service->customer?->full_address ?: 'Não informado'"
                         icon="geo-alt"
                         class="small" />
                 </x-layout.grid-col>
@@ -332,78 +322,74 @@
                 <x-layout.v-stack>
                     <x-resource.quick-actions title="Ações do Serviço" icon="lightning-charge" variant="secondary">
                         @if ($isApproved)
-                        {{-- Status PENDING --}}
-                        @if ($statusValue === 'pending')
-                        <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
-                            data-bs-toggle="modal" data-bs-target="#scheduleModal" />
+                        {{-- Status PENDING ou SCHEDULING (sem agendamento confirmado) --}}
+                        @if ($statusValue === 'pending' || ($statusValue === 'scheduling' && !$hasConfirmedSchedule))
+                            @if ($pendingSchedule)
+                                <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
+                                    data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
+                            @elseif (!$hasConfirmedSchedule)
+                                <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
+                                    data-bs-toggle="modal" data-bs-target="#scheduleModal" />
+                            @endif
 
-                        <x-ui.button type="button" variant="warning" icon="tools" label="Preparar"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="preparing"
-                            data-title="Preparar Serviço"
-                            data-message="Deseja marcar o serviço {{ $service->code }} como em preparação?" />
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
+                                data-title="Colocar em Espera"
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
 
-                        <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
-                            data-title="Colocar em Espera"
-                            data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
-                        @endif
+                        {{-- Status SCHEDULED ou SCHEDULING (com agendamento confirmado) --}}
+                        @elseif ($statusValue === 'scheduled' || ($statusValue === 'scheduling' && $hasConfirmedSchedule))
+                            <x-ui.button type="button" variant="warning" icon="tools" label="Preparar"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="preparing"
+                                data-title="Preparar Serviço"
+                                data-message="Deseja preparar o serviço {{ $service->code }}?" />
 
-                        {{-- Status SCHEDULED --}}
-                        @if ($statusValue === 'scheduled')
-                        <x-ui.button type="button" variant="warning" icon="tools" label="Preparar"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="preparing"
-                            data-title="Preparar Serviço"
-                            data-message="Deseja preparar o serviço {{ $service->code }}?" />
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
+                                data-title="Colocar em Espera"
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
 
-                        <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
-                            data-title="Colocar em Espera"
-                            data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
-
-                        <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
-                            data-title="Não Realizado"
-                            data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
-                        @endif
+                            <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
+                                data-title="Não Realizado"
+                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
 
                         {{-- Status PREPARING --}}
-                        @if ($statusValue === 'preparing')
-                        <x-ui.button type="button" variant="success" icon="play-circle" label="Iniciar"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="in_progress"
-                            data-title="Iniciar Serviço"
-                            data-message="Deseja iniciar a execução do serviço {{ $service->code }}?" />
+                        @elseif ($statusValue === 'preparing')
+                            <x-ui.button type="button" variant="success" icon="play-circle" label="Iniciar"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="in_progress"
+                                data-title="Iniciar Serviço"
+                                data-message="Deseja iniciar a execução do serviço {{ $service->code }}?" />
 
-                        <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
-                            data-title="Colocar em Espera"
-                            data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
+                                data-title="Colocar em Espera"
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
 
-                        <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
-                            data-title="Não Realizado"
-                            data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
-                        @endif
+                            <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
+                                data-title="Não Realizado"
+                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
 
                         {{-- Status IN_PROGRESS --}}
-                        @if ($statusValue === 'in_progress')
-                        <x-ui.button type="button" variant="success" icon="check-circle" label="Concluir"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="completed"
-                            data-title="Concluir Serviço"
-                            data-message="Deseja concluir o serviço {{ $service->code }}?" />
+                        @elseif ($statusValue === 'in_progress')
+                            <x-ui.button type="button" variant="success" icon="check-circle" label="Concluir"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="completed"
+                                data-title="Concluir Serviço"
+                                data-message="Deseja concluir o serviço {{ $service->code }}?" />
 
-                        <x-ui.button type="button" variant="success" icon="check-circle" label="Parcial"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="partial"
-                            data-title="Concluir Parcialmente"
-                            data-message="Deseja concluir o serviço {{ $service->code }} parcialmente?" />
+                            <x-ui.button type="button" variant="success" icon="check-circle" label="Parcial"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="partial"
+                                data-title="Concluir Parcialmente"
+                                data-message="Deseja concluir o serviço {{ $service->code }} parcialmente?" />
 
-                        <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
-                            data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
-                            data-title="Colocar em Espera"
-                            data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
-                        @endif
+                            <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
+                                data-title="Colocar em Espera"
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
 
-                        {{-- Status SCHEDULING ou ON_HOLD --}}
-                        @if ($statusValue === 'scheduling' || $statusValue === 'on_hold')
+                        {{-- Status ON_HOLD --}}
+                        @elseif ($statusValue === 'on_hold')
                             @php
                                 $hasConfirmedSchedule = $service->schedules()->where('status', \App\Enums\ScheduleStatus::CONFIRMED->value)->exists();
                             @endphp
@@ -415,6 +401,11 @@
                                 <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
                                     data-bs-toggle="modal" data-bs-target="#scheduleModal" />
                             @endif
+
+                            <x-ui.button type="button" variant="success" icon="play-circle" label="Retomar"
+                                data-bs-toggle="modal" data-bs-target="#actionModal" data-status="in_progress"
+                                data-title="Retomar Serviço"
+                                data-message="Deseja retomar a execução do serviço {{ $service->code }}?" />
 
                             <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
@@ -441,9 +432,14 @@
                         @endif
 
                         @if ($service->budget)
-                        <x-ui.button type="link" href="{{ route('provider.budgets.show', $service->budget->code) }}"
-                            variant="info" icon="receipt" label="Ver Orçamento" />
-                        @endif
+                <x-ui.button type="link" href="{{ route('provider.budgets.show', $service->budget->code) }}"
+                    variant="info" icon="receipt" label="Ver Orçamento" />
+                @endif
+
+                @if ($isApproved)
+                <x-ui.button type="link" href="{{ route('provider.services.edit', $service->code) }}"
+                    variant="outline-primary" icon="pencil" label="Editar Itens/Preços" />
+                @endif
 
                         {{-- Botões de Fatura --}}
                         @if ($service->status->isFinished() || $statusValue === 'completed')

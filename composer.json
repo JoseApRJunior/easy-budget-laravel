@@ -21,6 +21,7 @@
       "mercadopago/dx-php": "^3.0",
       "mpdf/mpdf": "^8.2.4",
       "mpdf/qrcode": "^1.2",
+      "opcodesio/log-viewer": "^3.21",
       "spatie/laravel-directory-cleanup": "^1.10",
       "stancl/tenancy": "^3.7"
    },
