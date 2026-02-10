@@ -31,8 +31,13 @@ jobs:
             # Rodar migrações
             php artisan migrate --force
 
-            # Otimizar Laravel
-            php artisan optimize
+            # Rodar seeders essenciais (idempotentes)
+            php artisan db:seed --class=ResourceSeeder --force
+            php artisan db:seed --class=PlanSeeder --force
+
+            # Limpar flags do Pennant e caches
+            php artisan pennant:purge
+            php artisan limpar:geral
             php artisan view:cache
             php artisan config:cache
             php artisan event:cache

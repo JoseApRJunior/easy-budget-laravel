@@ -49,6 +49,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\UserController;
@@ -175,6 +176,10 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::post('/{plan}/cancel-pending-subscription', [PlanController::class, 'cancelPendingSubscription'])->name('cancel-pending-subscription');
         Route::get('/{plan}/status', [PlanController::class, 'status'])->name('status');
         Route::get('/payment-status', [PlanController::class, 'paymentStatus'])->name('payment-status');
+
+        // Stripe Subscription Routes
+        Route::get('/{plan}/checkout', [SubscriptionController::class, 'checkout'])->name('checkout');
+        Route::get('/billing-portal', [SubscriptionController::class, 'billingPortal'])->name('billing-portal');
     });
 
     // Categories (novo padrão)

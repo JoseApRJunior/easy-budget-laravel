@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
         // Dados básicos necessários para funcionamento do sistema
         $this->command->info('📊 Criando dados básicos do sistema...');
         $this->call([
+            ResourceSeeder::class,
             PlanSeeder::class,
             UnitSeeder::class,
             AreasOfActivitySeeder::class,

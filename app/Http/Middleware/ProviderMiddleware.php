@@ -32,8 +32,11 @@ class ProviderMiddleware
         'settings.avatar.remove',       // Remover avatar
         'settings.company-logo.update', // Atualizar logo
         'settings.audit',               // Auditoria
-        'plans.index',                  // Visualizar planos
-        'plans.show',                   // Visualizar detalhes do plano
+        'provider.plans.index',         // Visualizar planos
+        'provider.plans.show',          // Visualizar detalhes do plano
+        'provider.plans.checkout',      // Iniciar checkout Stripe
+        'provider.plans.billing-portal', // Portal de faturamento Stripe
+        'provider.plans.redirect-to-payment', // Redirecionamento Mercado Pago
         'settings.profile.edit',        // Editar perfil
         'settings.profile.update',      // Atualizar perfil
         'settings.profile.destroy',     // Deletar perfil

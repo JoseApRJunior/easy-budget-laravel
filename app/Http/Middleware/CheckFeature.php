@@ -16,7 +16,7 @@ class CheckFeature
      */
     public function handle(Request $request, Closure $next, string $feature): Response
     {
-        if (Feature::inactive('feature', $feature)) {
+        if (Feature::inactive($feature)) {
             abort(404, 'Módulo em desenvolvimento ou não disponível.');
         }
 
