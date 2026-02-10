@@ -230,8 +230,7 @@
                         @foreach ($service->serviceItems as $item)
                         <x-resource.resource-mobile-item>
                             <x-resource.resource-mobile-header
-                                :title="$item->product?->name ?? 'Produto não encontrado'"
-                                :subtitle="$item->product?->description ?? ''" />
+                                :title="$item->product?->name ?? 'Produto não encontrado'" />
 
                             <x-slot:description>
                                 <div class="row g-2">
