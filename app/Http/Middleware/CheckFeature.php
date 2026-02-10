@@ -16,6 +16,9 @@ class CheckFeature
      */
     public function handle(Request $request, Closure $next, string $feature): Response
     {
+        // Verifica se a feature está ativa via Pennant
+        // Como as features são registradas dinamicamente no AppServiceProvider,
+        // o Pennant cuidará da lógica e do cache.
         if (Feature::inactive($feature)) {
             abort(404, 'Módulo em desenvolvimento ou não disponível.');
         }

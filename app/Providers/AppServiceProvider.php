@@ -121,88 +121,76 @@ class AppServiceProvider extends ServiceProvider
         // Register policies
         $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);
 
-        // Feature Flags com Laravel Pennant (Integrado com seu modelo Resource)
-        $features = [
-            'analytics',
-            'plans',
-            'categories',
-            'customers',
-            'products',
-            'services',
-            'schedules',
-            'budgets',
-            'invoices',
-            'financial',
-            'qrcode',
-            'reports',
-            'inventory',
-        ];
+        // Lógica centralizada para verificar acesso a recursos/módulos
+        $checkResourceAccess = function (User $user, string $featureSlug) {
+            // 1. Verifica se o recurso está ativo globalmente na tabela resources
+            $resource = Resource::where('slug', $featureSlug)
+                ->where('status', Resource::STATUS_ACTIVE)
+                ->first();
 
-        foreach ($features as $featureSlug) {
-            Feature::define($featureSlug, function ($user) use ($featureSlug) {
-                // 1. Verifica se o recurso está ativo globalmente na tabela resources
-                $resource = Resource::where('slug', $featureSlug)
-                    ->where('status', Resource::STATUS_ACTIVE)
-                    ->first();
+            if (! $resource) {
+                return false;
+            }
 
-                if (! $resource) {
-                    return false;
-                }
-
-                // 2. Se for admin do sistema, tem acesso a tudo que está ativo
-                // EXCETO se estiver em modo de simulação de produção
-                if ($user->hasRole('admin') && session('simulation_mode') !== 'production') {
-                    return true;
-                }
-
-                // 3. O módulo de PLANOS deve estar visível para todos, para que possam assinar
-                if ($featureSlug === 'plans') {
-                    return true;
-                }
-
-                // 4. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
-                // 4a. Verifica no sistema legado (PlanSubscription - Mercado Pago)
-                $activeSubscription = $user->tenant->planSubscriptions()
-                    ->where('status', \App\Models\PlanSubscription::STATUS_ACTIVE)
-                    ->where('end_date', '>', now())
-                    ->with('plan')
-                    ->first();
-
-                $plan = $activeSubscription?->plan;
-
-                // 4b. Verifica no Laravel Cashier (Stripe) se não encontrou no legado
-                if (! $plan && $user->subscribed()) {
-                    $stripeSubscription = $user->subscription();
-                    if ($stripeSubscription) {
-                        // Tenta encontrar o plano pelo stripe_id (que deve conter o ID do preço ou do produto no Stripe)
-                        $plan = \App\Models\Plan::where('stripe_id', $stripeSubscription->stripe_price)->first();
-                    }
-                }
-
-                if (! $plan) {
-                    return false;
-                }
-
-                // 5. Se o recurso estiver em desenvolvimento (in_dev), verifica se o plano permite explicitamente
-                if ($resource->in_dev) {
-                    return in_array($featureSlug, $plan->features ?? []);
-                }
-
-                // 6. Se não estiver em dev, qualquer plano ativo acessa por padrão
-                // mas se o plano definir features explicitamente, respeitamos a lista
-                $planFeatures = $plan->features ?? [];
-                if (! empty($planFeatures)) {
-                    return in_array($featureSlug, $planFeatures);
-                }
-
+            // 2. Se for admin do sistema, tem acesso a tudo que está ativo
+            if ($user->hasRole('admin')) {
                 return true;
-            });
+            }
+
+            // 3. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
+            if (! $user->tenant) {
+                return false;
+            }
+
+            $activeSubscription = $user->tenant->planSubscriptions()
+                ->where('status', \App\Models\PlanSubscription::STATUS_ACTIVE)
+                ->where('end_date', '>', now())
+                ->with('plan')
+                ->first();
+
+            if (! $activeSubscription) {
+                return false;
+            }
+
+            // 4. Se o recurso estiver em desenvolvimento (in_dev), verifica se o plano permite explicitamente
+            if ($resource->in_dev) {
+                return in_array($featureSlug, $activeSubscription->plan->features ?? []);
+            }
+
+            // 5. Se não estiver em dev, qualquer plano ativo acessa por padrão
+            // mas se o plano definir features explicitamente, respeitamos a lista
+            $planFeatures = $activeSubscription->plan->features ?? [];
+            if (! empty($planFeatures)) {
+                return in_array($featureSlug, $planFeatures);
+            }
+
+            return true;
+        };
+
+        // Registrar as features individuais baseadas nos slugs do banco para funcionar com @feature('slug')
+        try {
+            if (!app()->runningInConsole() || app()->runningUnitTests()) {
+                $slugs = Resource::pluck('slug')->toArray();
+                foreach ($slugs as $slug) {
+                    Feature::define($slug, fn (User $user) => $checkResourceAccess($user, $slug));
+                }
+            }
+        } catch (\Exception $e) {
+            // Silencioso se o banco não estiver pronto
         }
 
-        // Sobrescreve o Gate para facilitar o uso
-        Gate::define('feature', fn ($user, string $featureSlug) => Feature::active($featureSlug));
-
-        Blade::if('feature', fn (string $featureSlug) => Feature::active($featureSlug));
+        // Blade directive: @feature('slug')
+        Blade::if('feature', function (string $featureSlug) use ($checkResourceAccess) {
+            if (!auth()->check()) return false;
+            
+            // Tenta usar a feature definida no Pennant (que usa o cache do Pennant)
+            // Se não estiver definida (ex: recurso novo), usa a lógica direta
+            try {
+                return Feature::active($featureSlug);
+            } catch (\Exception $e) {
+                return $checkResourceAccess(auth()->user(), $featureSlug);
+            }
+        });
 
         Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));
         Blade::if('anyrole', fn ($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
