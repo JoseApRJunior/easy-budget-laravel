@@ -32,6 +32,9 @@ use App\Services\Infrastructure\OAuth\GoogleOAuthClient;
 use App\Services\NotificationService;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\Paginator;
+use App\Models\Resource;
+use Laravel\Pennant\Feature;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -117,6 +120,18 @@ class AppServiceProvider extends ServiceProvider
 
         // Register policies
         $this->app->make('Illuminate\Contracts\Auth\Access\Gate')->policy(Schedule::class, SchedulePolicy::class);
+
+        // Feature Flags com Laravel Pennant (Integrado com seu modelo Resource)
+        Feature::define('feature', function ($user, string $featureSlug) {
+            return Resource::where('slug', $featureSlug)
+                ->where('status', Resource::STATUS_ACTIVE)
+                ->exists();
+        });
+
+        // Sobrescreve o Gate para usar o Pennant internamente se necessário
+        Gate::define('feature', fn ($user, string $featureSlug) => Feature::active('feature', $featureSlug));
+
+        Blade::if('feature', fn (string $featureSlug) => Feature::active('feature', $featureSlug));
 
         Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));
         Blade::if('anyrole', fn ($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
