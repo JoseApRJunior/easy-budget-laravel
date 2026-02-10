@@ -106,68 +106,72 @@
         <x-slot:desktop>
             <x-resource.resource-table>
                 <x-slot:thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Cliente</th>
-                        <th>Data</th>
-                        <th>Vencimento</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
+                    <x-resource.table-row>
+                        <x-resource.table-cell header>Código</x-resource.table-cell>
+                        <x-resource.table-cell header>Cliente</x-resource.table-cell>
+                        <x-resource.table-cell header>Data</x-resource.table-cell>
+                        <x-resource.table-cell header>Vencimento</x-resource.table-cell>
+                        <x-resource.table-cell header>Valor</x-resource.table-cell>
+                        <x-resource.table-cell header>Status</x-resource.table-cell>
+                        <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                    </x-resource.table-row>
                 </x-slot:thead>
 
-                @forelse($budgets as $budget)
-                    <tr>
-                        <td class="fw-bold text-dark">{{ $budget->code }}</td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="text-truncate" style="max-width: 200px;">
-                                    @php
-                                        $customerName = 'Cliente não informado';
-                                        if ($budget->customer && $budget->customer->commonData) {
-                                            $commonData = $budget->customer->commonData;
-                                            $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
-                                        }
-                                    @endphp
-                                    {{ $customerName ?: 'Cliente não informado' }}
+                <x-slot:tbody>
+                    @forelse($budgets as $budget)
+                        <x-resource.table-row>
+                            <x-resource.table-cell class="fw-bold text-dark">{{ $budget->code }}</x-resource.table-cell>
+                            <x-resource.table-cell>
+                                <div class="d-flex align-items-center">
+                                    <div class="text-truncate" style="max-width: 200px;">
+                                        @php
+                                            $customerName = 'Cliente não informado';
+                                            if ($budget->customer && $budget->customer->commonData) {
+                                                $commonData = $budget->customer->commonData;
+                                                $customerName = $commonData->company_name ?? trim(($commonData->first_name ?? '') . ' ' . ($commonData->last_name ?? ''));
+                                            }
+                                        @endphp
+                                        {{ $customerName ?: 'Cliente não informado' }}
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="text-muted small">{{ optional($budget->created_at)->format('d/m/Y') }}</td>
-                        <td class="text-muted small">
-                            @if($budget->due_date)
-                                <span class="{{ $budget->due_date->isPast() ? 'text-danger fw-bold' : '' }}">
-                                    {{ $budget->due_date->format('d/m/Y') }}
-                                </span>
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td class="fw-bold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</td>
-                        <td>
-                            <x-ui.status-badge :item="$budget" statusField="status" />
-                        </td>
-                        <td class="text-center">
-                            <x-resource.action-buttons
-                                :item="$budget"
-                                resource="budgets"
-                                identifier="code"
-                                size="sm"
-                            />
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7">
-                            <x-resource.empty-state
-                                title="Nenhum orçamento encontrado"
-                                description="Não encontramos orçamentos com os filtros aplicados."
-                                icon="file-earmark-text"
-                            />
-                        </td>
-                    </tr>
-                @endforelse
+                            </x-resource.table-cell>
+                            <x-resource.table-cell>
+                                <x-resource.table-cell-datetime :datetime="$budget->created_at" date-only />
+                            </x-resource.table-cell>
+                            <x-resource.table-cell>
+                                @if($budget->due_date)
+                                    <span class="{{ $budget->due_date->isPast() ? 'text-danger fw-bold' : 'text-muted small' }}">
+                                        {{ $budget->due_date->format('d/m/Y') }}
+                                    </span>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </x-resource.table-cell>
+                            <x-resource.table-cell class="fw-bold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total ?? 0) }}</x-resource.table-cell>
+                            <x-resource.table-cell>
+                                <x-ui.status-badge :item="$budget" statusField="status" />
+                            </x-resource.table-cell>
+                            <x-resource.table-cell align="center">
+                                <x-resource.action-buttons
+                                    :item="$budget"
+                                    resource="budgets"
+                                    identifier="code"
+                                    size="sm"
+                                />
+                            </x-resource.table-cell>
+                        </x-resource.table-row>
+                    @empty
+                        <x-resource.table-row>
+                            <x-resource.table-cell colspan="7">
+                                <x-resource.empty-state
+                                    title="Nenhum orçamento encontrado"
+                                    description="Não encontramos orçamentos com os filtros aplicados."
+                                    icon="file-earmark-text"
+                                />
+                            </x-resource.table-cell>
+                        </x-resource.table-row>
+                    @endforelse
+                </x-slot:tbody>
             </x-resource.resource-table>
         </x-slot:desktop>
 

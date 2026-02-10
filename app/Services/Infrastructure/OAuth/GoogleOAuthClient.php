@@ -32,6 +32,7 @@ class GoogleOAuthClient implements OAuthClientInterface
 
         return Socialite::driver('google')
             ->setHttpClient($this->getHttpClient())
+            ->stateless()
             ->redirect();
     }
 
@@ -45,6 +46,7 @@ class GoogleOAuthClient implements OAuthClientInterface
         try {
             $googleUser = Socialite::driver('google')
                 ->setHttpClient($this->getHttpClient())
+                ->stateless()
                 ->user();
 
             Log::info('Callback do Google OAuth processado com sucesso', [

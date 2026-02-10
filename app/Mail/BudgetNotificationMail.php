@@ -61,6 +61,11 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
     public ?string $customMessage;
 
     /**
+     * Status do orçamento no momento da notificação.
+     */
+    public ?string $status;
+
+    /**
      * Cria uma nova instância da mailable.
      *
      * @param  Budget  $budget  Orçamento relacionado
@@ -71,6 +76,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
      * @param  string|null  $publicUrl  URL pública do orçamento (opcional)
      * @param  string|null  $customMessage  Mensagem personalizada (opcional)
      * @param  string  $locale  Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param  string|null $status Status original no momento do evento (opcional)
      */
     public function __construct(
         Budget $budget,
@@ -81,6 +87,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         ?string $publicUrl = null,
         ?string $customMessage = null,
         string $locale = 'pt-BR',
+        ?string $status = null,
     ) {
         $this->budget = $budget;
         $this->customer = $customer;
@@ -90,6 +97,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
         $this->publicUrl = $publicUrl;
         $this->customMessage = $customMessage;
         $this->locale = $locale;
+        $this->status = $status ?? (is_string($budget->status) ? $budget->status : $budget->status->value);
 
         \Illuminate\Support\Facades\Log::info('[BudgetNotificationMail] Construindo email', [
             'customMessage' => $customMessage,
@@ -129,6 +137,20 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+        $statusDescription = $this->budget->status->getDescription();
+        $statusColor = $this->budget->status->getColor();
+
+        // Tentar obter dados do enum baseado no status capturado no evento para evitar inconsistências da queue
+        try {
+            $statusEnum = \App\Enums\BudgetStatus::tryFrom($this->status);
+            if ($statusEnum) {
+                $statusDescription = $statusEnum->getDescription();
+                $statusColor = $statusEnum->getColor();
+            }
+        } catch (\Exception $e) {
+            // Mantém os valores originais em caso de erro
+        }
+
         return new Content(
             view: 'emails.budget.budget-notification',
             with: [
@@ -142,7 +164,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                 'appName' => config('app.name', 'Easy Budget'),
                 'supportEmail' => $this->getSupportEmail(),
                 'isSystemEmail' => false,
-                'statusColor' => $this->budget->status->getColor(),
+                'statusColor' => $statusColor,
                 'customMessage' => $this->customMessage,
                 'budgetData' => [
                     'code' => $this->budget->code,
@@ -150,7 +172,7 @@ class BudgetNotificationMail extends Mailable implements ShouldQueue
                     'discount' => number_format((float) $this->budget->discount, 2, ',', '.'),
                     'due_date' => $this->budget->due_date?->format('d/m/Y'),
                     'description' => $this->budget->description ?? 'Orçamento sem descrição',
-                    'status' => $this->budget->status->getDescription(),
+                    'status' => $statusDescription,
                     'customer_name' => $this->getCustomerName(),
                 ],
             ],

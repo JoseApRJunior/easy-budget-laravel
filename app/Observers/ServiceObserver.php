@@ -91,12 +91,20 @@ class ServiceObserver
     {
         $budget = \App\Models\Budget::find($budgetId);
         if ($budget) {
-            $total = $budget->services()->get()->sum(function ($service) {
-                return $service->final_total ?? $service->total;
-            });
+            $total = $budget->services()
+                ->whereNotIn('status', [
+                    ServiceStatus::CANCELLED->value,
+                    ServiceStatus::NOT_PERFORMED->value,
+                    ServiceStatus::EXPIRED->value,
+                ])
+                ->get()
+                ->sum(function ($service) {
+                    return $service->final_total ?? $service->total;
+                });
+
             $budget->update(['total' => $total]);
 
-            Log::info('Budget total synchronized via ServiceObserver', [
+            Log::info('Budget total synchronized via ServiceObserver (filtered by active services)', [
                 'budget_id' => $budgetId,
                 'new_total' => $total,
             ]);

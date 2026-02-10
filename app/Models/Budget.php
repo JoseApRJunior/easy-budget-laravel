@@ -459,7 +459,14 @@ class Budget extends Model
      */
     public function calculateTotals(): array
     {
-        $subtotal = $this->services->sum('total');
+        $subtotal = $this->services()
+            ->whereNotIn('status', [
+                \App\Enums\ServiceStatus::CANCELLED->value,
+                \App\Enums\ServiceStatus::NOT_PERFORMED->value,
+                \App\Enums\ServiceStatus::EXPIRED->value,
+            ])
+            ->get()
+            ->sum('total');
 
         // No novo modelo, descontos e impostos são tratados dentro de cada Serviço/Item
         // Mas se houver um desconto global no orçamento, aplicamos aqui

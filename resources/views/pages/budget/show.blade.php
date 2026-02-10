@@ -2,6 +2,13 @@
 
 @section('title', 'Detalhes do Orçamento')
 
+@php
+    $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
+    $isDraft = $budget->status->value === 'draft';
+    $sendModalTitle = ($isSent && !$isDraft) ? 'Reenviar Orçamento' : 'Enviar Orçamento';
+    $sendModalLabel = ($isSent && !$isDraft) ? 'Reenviar' : 'Enviar';
+@endphp
+
 @section('content')
 <x-layout.page-container>
     <x-layout.page-header
@@ -15,173 +22,117 @@
         <p class="text-muted mb-0">Visualize as informações completas do orçamento</p>
     </x-layout.page-header>
 
-    <x-resource.resource-header-card>
-        {{-- Primeira Linha: Informações Principais --}}
-        <x-resource.resource-header-item
-            label="Código"
-            :value="$budget->code" />
+    <x-layout.v-stack gap="4">
+        <x-resource.resource-header-card
+            :title="'Orçamento ' . $budget->code"
+            :subtitle="'Criado em ' . $budget->created_at->format('d/m/Y')"
+            :status-item="$budget"
+            mb="mb-0">
 
-        <x-resource.resource-header-item
-            label="Status Atual">
-            <x-ui.status-description :item="$budget" statusField="status" :useColor="false" class="text-dark fw-medium" />
-        </x-resource.resource-header-item>
+            <x-slot:actions>
+                <div class="d-flex gap-2">
+                    <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
+                        variant="light" size="sm" icon="pencil" label="Editar" />
+                    <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                        variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" />
+                </div>
+            </x-slot:actions>
 
-        <x-resource.resource-header-item
-            label="Total Geral"
-            :value="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)" />
-
-        <x-resource.resource-header-divider />
-
-        {{-- Segunda Linha: Dados do Cliente --}}
-        <x-resource.resource-header-section title="Dados do Cliente" icon="people">
-            @if ($budget->customer)
-            <x-layout.grid-col size="col-md-3">
-                <x-resource.resource-info
-                    title="Nome/Razão Social"
-                    :subtitle="$budget->customer->name"
-                    icon="person-badge"
-                    :href="route('provider.customers.show', $budget->customer->id)"
-                    class="small" />
-            </x-layout.grid-col>
-
-            <x-layout.grid-col size="col-md-3">
-                @php
-                $docLabel = $budget->customer->commonData->cnpj ? 'CNPJ' : 'CPF';
-                $docValue = $budget->customer->commonData->cnpj
-                ? \App\Helpers\DocumentHelper::formatCnpj($budget->customer->commonData->cnpj)
-                : ($budget->customer->commonData->cpf ? \App\Helpers\DocumentHelper::formatCpf($budget->customer->commonData->cpf) : '-');
-                @endphp
-                <x-resource.resource-info
-                    :title="$docLabel"
-                    :subtitle="$docValue"
-                    icon="card-text"
-                    class="small" />
-            </x-layout.grid-col>
-
-            <x-layout.grid-col size="col-md-3">
-                <x-resource.resource-info
-                    title="Contato Principal"
-                    :subtitle="$budget->customer?->contact?->email_personal ?? \App\Helpers\MaskHelper::formatPhone($budget->customer?->contact?->phone_personal ?? '') ?: '-'"
-                    icon="envelope"
-                    class="small" />
-            </x-layout.grid-col>
-
-            <x-layout.grid-col size="col-md-3">
-                @php
-                $address = $budget->customer?->address;
-                $addressText = $address
-                ? "{$address->address}, {$address->address_number} - {$address->neighborhood}, {$address->city}/{$address->state}"
-                : 'Não informado';
-                @endphp
-                <x-resource.resource-info
-                    title="Endereço"
-                    :subtitle="$addressText"
-                    icon="geo-alt"
-                    class="small" />
-            </x-layout.grid-col>
-            @else
-            <x-layout.grid-col size="col-12">
-                <p class="text-muted mb-0 italic">Dados do cliente não vinculados a este orçamento.</p>
-            </x-layout.grid-col>
-            @endif
-        </x-resource.resource-header-section>
-
-        <x-resource.resource-header-divider />
-
-        {{-- Terceira Linha: Vínculos e Detalhes --}}
-        <x-resource.resource-header-section title="Vínculos e Detalhes" icon="link-45deg">
-            @if ($budget->due_date)
-            <div class="col-md-4">
-                <x-resource.resource-info
-                    title="Validade da Proposta"
-                    :subtitle="$budget->due_date->format('d/m/Y')"
-                    icon="calendar-event"
-                    class="small" />
-            </div>
-            @endif
-
-            <div class="col-md-4">
-                <x-resource.resource-info
-                    title="Serviços Vinculados"
-                    :subtitle="$budget->services->count() . ' item(s)'"
-                    icon="tools"
-                    class="small" />
-            </div>
-        </x-resource.resource-header-section>
-
-        <x-resource.resource-header-divider />
-
-        {{-- Quarta Linha: Resumo Financeiro e Datas --}}
-        <div class="col-md-8 mt-2">
-            <div class="row g-3">
-                <div class="col-md-4">
+            <x-resource.resource-header-section title="Informações do Cliente" icon="person-badge">
+                <x-layout.grid-col size="col-md-4">
                     <x-resource.resource-info
-                        title="Criado em"
-                        :subtitle="$budget->created_at->format('d/m/Y H:i')"
-                        icon="calendar-plus"
-                        class="small" />
-                </div>
-                <div class="col-md-4">
-                    <x-resource.resource-info
-                        title="Atualizado"
-                        :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
-                        icon="clock-history"
-                        class="small" />
-                </div>
-            </div>
-        </div>
+                        title="Cliente"
+                        :subtitle="$budget->customer->name ?? 'Não vinculado'"
+                        icon="person" />
+                </x-layout.grid-col>
 
-        <div class="col-md-4 mt-2">
-            <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small fw-medium">Subtotal:</span>
-                    <span class="fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted small fw-medium">Desconto:</span>
-                    <span class="text-danger fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
-                </div>
-                <div class="d-flex justify-content-between pt-2 border-top" style="border-color: #e2e8f0 !important;">
-                    <span class="fw-bold text-dark">Total Líquido:</span>
-                    <span class="fw-bold text-success fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
-                </div>
-            </div>
-        </div>
+                <x-layout.grid-col size="col-md-4">
+                    <x-resource.resource-info
+                        title="E-mail"
+                        :subtitle="$budget->customer->contact->email_personal ?? 'Não informado'"
+                        icon="envelope" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-4">
+                    <x-resource.resource-info
+                        title="Telefone"
+                        :subtitle="$budget->customer->contact->phone_primary ?? 'Não informado'"
+                        icon="telephone" />
+                </x-layout.grid-col>
+            </x-resource.resource-header-section>
+
+            <x-resource.resource-header-divider />
+
+            <x-resource.resource-header-section title="Resumo Financeiro" icon="cash-stack">
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Subtotal"
+                        :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0)"
+                        icon="calculator" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Desconto"
+                        :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->discount)"
+                        icon="percent"
+                        class="{{ $budget->discount > 0 ? 'text-danger' : '' }}" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Total"
+                        :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)"
+                        icon="currency-dollar"
+                        class="fw-bold text-primary" />
+                </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Validade"
+                        :subtitle="$budget->due_date ? $budget->due_date->format('d/m/Y') : 'Não informada'"
+                        icon="calendar-event"
+                        class="{{ $budget->due_date && $budget->due_date->isPast() ? 'text-danger' : '' }}" />
+                </x-layout.grid-col>
+            </x-resource.resource-header-section>
 
         {{-- Descrição e Observações --}}
         @if ($budget->description || $budget->payment_terms)
-        <x-resource.resource-header-divider />
-        @if ($budget->description)
-        <div class="col-md-6 mt-2">
-            <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição</label>
-            <p class="mb-0 text-dark small">{{ $budget->description }}</p>
-        </div>
-        @endif
-        @if ($budget->payment_terms)
-        <div class="col-md-6 mt-2">
-            <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Condições de Pagamento</label>
-            <p class="mb-0 text-dark small">{{ $budget->payment_terms }}</p>
-        </div>
-        @endif
+            <x-resource.resource-header-divider />
+            <x-resource.resource-header-section title="Observações Adicionais" icon="chat-left-text">
+                @if ($budget->description)
+                    <x-layout.grid-col size="col-md-6">
+                        <x-resource.resource-info
+                            title="Descrição"
+                            :subtitle="$budget->description"
+                            class="small" />
+                    </x-layout.grid-col>
+                @endif
+                @if ($budget->payment_terms)
+                    <x-layout.grid-col size="col-md-6">
+                        <x-resource.resource-info
+                            title="Condições de Pagamento"
+                            :subtitle="$budget->payment_terms"
+                            class="small" />
+                    </x-layout.grid-col>
+                @endif
+            </x-resource.resource-header-section>
         @endif
 
         {{-- Comentário do Cliente --}}
         @if ($budget->customer_comment)
-        <x-resource.resource-header-divider />
-        <div class="col-12 mt-2">
-            <div class="alert alert-warning mb-0 border-0 shadow-sm" style="background-color: #fff3cd;">
-                <div class="d-flex align-items-center mb-2">
-                    <i class="bi bi-chat-quote-fill fs-5 me-2 text-warning"></i>
-                    <label class="small fw-bold text-uppercase mb-0 text-dark">Comentário do Cliente</label>
-                </div>
-                <p class="mb-0 text-dark small fst-italic">"{{ $budget->customer_comment }}"</p>
-            </div>
-        </div>
+            <x-resource.resource-header-divider />
+            <x-resource.resource-header-section title="Comentário do Cliente" icon="chat-quote-fill">
+                <x-layout.grid-col size="col-12">
+                    <div class="p-3 rounded-3 border-start border-warning border-4" style="background-color: #fffcf0;">
+                        <p class="mb-0 text-dark small fst-italic">"{{ $budget->customer_comment }}"</p>
+                    </div>
+                </x-layout.grid-col>
+            </x-resource.resource-header-section>
         @endif
     </x-resource.resource-header-card>
 
-    {{-- Serviços Vinculados --}}
-    <div class="mt-4">
+        {{-- Serviços Vinculados --}}
         <x-resource.resource-list-card
             title="Serviços Vinculados"
             mobileTitle="Serviços"
@@ -198,36 +149,38 @@
             <x-slot:desktop>
                 <x-resource.resource-table>
                     <x-slot:thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Descrição</th>
-                            <th>Categoria</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-end">Total</th>
-                            <th class="text-center">Ações</th>
-                        </tr>
+                        <x-resource.table-row>
+                            <x-resource.table-cell header>Código</x-resource.table-cell>
+                            <x-resource.table-cell header>Descrição</x-resource.table-cell>
+                            <x-resource.table-cell header>Categoria</x-resource.table-cell>
+                            <x-resource.table-cell header align="center">Status</x-resource.table-cell>
+                            <x-resource.table-cell header align="end">Total</x-resource.table-cell>
+                            <x-resource.table-cell header align="center">Ações</x-resource.table-cell>
+                        </x-resource.table-row>
                     </x-slot:thead>
                     <x-slot:tbody>
                         @foreach ($budget->services as $service)
-                        <tr>
-                            <td class="fw-bold text-dark">{{ $service->code }}</td>
-                            <td>{{ Str::limit($service->description, 50) }}</td>
-                            <td>{{ $service->category?->name ?? '-' }}</td>
-                            <td class="text-center">
+                        <x-resource.table-row>
+                            <x-resource.table-cell class="fw-bold text-dark">{{ $service->code }}</x-resource.table-cell>
+                            <x-resource.table-cell>
+                                <x-resource.table-cell-truncate :text="$service->description" :limit="50" />
+                            </x-resource.table-cell>
+                            <x-resource.table-cell>{{ $service->category?->name ?? '-' }}</x-resource.table-cell>
+                            <x-resource.table-cell align="center">
                                 <x-ui.status-badge :item="$service" />
-                            </td>
-                            <td class="text-end text-primary fw-bold">
+                            </x-resource.table-cell>
+                            <x-resource.table-cell align="end" class="text-primary fw-bold">
                                 R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}
-                            </td>
-                            <td class="text-center">
+                            </x-resource.table-cell>
+                            <x-resource.table-cell align="center">
                                 <x-resource.action-buttons
                                     :item="$service"
                                     resource="services"
                                     identifier="code"
                                     size="sm"
                                     :showDelete="false" />
-                            </td>
-                        </tr>
+                            </x-resource.table-cell>
+                        </x-resource.table-row>
                         @endforeach
                     </x-slot:tbody>
                 </x-resource.resource-table>
@@ -279,11 +232,9 @@
             </div>
             @endif
         </x-resource.resource-list-card>
-    </div>
 
-    {{-- Histórico de Ações --}}
-    @if($budget->actionHistory && $budget->actionHistory->isNotEmpty())
-    <div class="mt-4">
+        {{-- Histórico de Ações --}}
+        @if($budget->actionHistory && $budget->actionHistory->isNotEmpty())
         <x-resource.resource-list-card
             title="Histórico de Ações"
             mobileTitle="Histórico"
@@ -293,23 +244,25 @@
             <x-slot:desktop>
                 <x-resource.resource-table>
                     <x-slot:thead>
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>Ação</th>
-                            <th>Descrição/Comentário</th>
-                            <th>Usuário/Origem</th>
-                        </tr>
+                        <x-resource.table-row>
+                            <x-resource.table-cell header>Data/Hora</x-resource.table-cell>
+                            <x-resource.table-cell header>Ação</x-resource.table-cell>
+                            <x-resource.table-cell header>Descrição/Comentário</x-resource.table-cell>
+                            <x-resource.table-cell header>Usuário/Origem</x-resource.table-cell>
+                        </x-resource.table-row>
                     </x-slot:thead>
                     <x-slot:tbody>
                         @foreach ($budget->actionHistory as $history)
-                        <tr>
-                            <td class="text-muted small">{{ $history->created_at->format('d/m/Y H:i') }}</td>
-                            <td>
+                        <x-resource.table-row>
+                            <x-resource.table-cell>
+                                <x-resource.table-cell-datetime :datetime="$history->created_at" />
+                            </x-resource.table-cell>
+                            <x-resource.table-cell>
                                 <span class="badge bg-light text-dark border">
                                     {{ $history->action_label }}
                                 </span>
-                            </td>
-                            <td>
+                            </x-resource.table-cell>
+                            <x-resource.table-cell>
                                 <span class="text-dark">{{ $history->description }}</span>
                                 @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
                                 <div class="mt-1 small text-muted fst-italic">
@@ -321,8 +274,8 @@
                                     <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
                                 </div>
                                 @endif
-                            </td>
-                            <td class="small text-muted">
+                            </x-resource.table-cell>
+                            <x-resource.table-cell class="small text-muted">
                                 @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
                                 <span class="badge bg-info text-white">Cliente (Link Público)</span>
                                 @elseif($history->user)
@@ -330,8 +283,8 @@
                                 @else
                                 Sistema
                                 @endif
-                            </td>
-                        </tr>
+                            </x-resource.table-cell>
+                        </x-resource.table-row>
                         @endforeach
                     </x-slot:tbody>
                 </x-resource.resource-table>
@@ -339,137 +292,124 @@
 
             <x-slot:mobile>
                 @foreach ($budget->actionHistory as $history)
-                <div class="border-bottom p-3">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge bg-light text-dark border">{{ $history->action_label }}</span>
-                        <span class="text-muted small">{{ $history->created_at->format('d/m/Y H:i') }}</span>
-                    </div>
-                    <p class="mb-1 small text-dark">{{ $history->description }}</p>
-                    @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
-                    <div class="mt-1 small text-muted fst-italic p-2 bg-light rounded">
-                        <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
-                    </div>
-                    @endif
-                    @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
-                    <div class="mt-1 small text-primary fst-italic p-2 bg-light rounded">
-                        <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
-                    </div>
-                    @endif
-                    <div class="mt-2 text-end">
-                        <span class="badge bg-secondary text-white small" style="font-size: 0.7rem;">
-                            @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
-                            Cliente (Link Público)
-                            @elseif($history->user)
-                            {{ $history->user->name }}
-                            @else
-                            Sistema
-                            @endif
-                        </span>
-                    </div>
-                </div>
+                <x-resource.resource-mobile-item>
+                    <x-resource.resource-mobile-header
+                        :title="$history->action_label"
+                        :subtitle="$history->created_at->format('d/m/Y H:i')" />
+
+                    <x-slot:description>
+                        <p class="mb-2 small text-dark">{{ $history->description }}</p>
+                        @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
+                        <div class="mt-1 small text-muted fst-italic p-2 bg-light rounded border-start border-warning border-4">
+                            <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
+                        </div>
+                        @endif
+                        @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
+                        <div class="mt-1 small text-primary fst-italic p-2 bg-light rounded border-start border-primary border-4">
+                            <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
+                        </div>
+                        @endif
+                    </x-slot:description>
+
+                    <x-slot:footer>
+                        <div class="text-end">
+                            <span class="badge bg-secondary text-white small" style="font-size: 0.7rem;">
+                                @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
+                                Cliente (Link Público)
+                                @elseif($history->user)
+                                {{ $history->user->name }}
+                                @else
+                                Sistema
+                                @endif
+                            </span>
+                        </div>
+                    </x-slot:footer>
+                </x-resource.resource-mobile-item>
                 @endforeach
             </x-slot:mobile>
         </x-resource.resource-list-card>
-    </div>
-    @endif
+        @endif
 
-    {{-- Botões de Ação --}}
-    <div class="mt-auto pt-4 pb-2">
-        <div class="row align-items-center g-3">
-            <div class="col-12 col-md-auto order-2 order-md-1">
-                <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-3" />
-            </div>
+        {{-- Botões de Ação --}}
+        <div class="pt-2 pb-2">
+            <div class="row align-items-center g-3">
+                <div class="col-12 col-md-auto">
+                    <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-3" />
+                </div>
 
-            <div class="col-12 col-md order-2 order-md-2">
-                {{-- Espaçador central --}}
-            </div>
+                <div class="col-12 col-md">
+                    {{-- Espaçador central --}}
+                </div>
 
-            <div class="col-12 col-md-auto order-1 order-md-3">
-                <div class="d-grid d-md-flex gap-2">
-                    @php
-                    $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
-                    $isDraft = $budget->status->value === 'draft';
-                    @endphp
+                <div class="col-12 col-md-auto">
+                    <div class="d-grid d-md-flex gap-2">
+                        <x-ui.button type="button" class="d-flex align-items-center"
+                            variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
+                            icon="send-fill"
+                            :label="$sendModalLabel"
+                            data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
 
-                    <x-ui.button type="button" class="d-flex align-items-center"
-                        variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
-                        icon="send-fill"
-                        label="{{ ($isSent && !$isDraft) ? 'Reenviar' : 'Enviar' }}"
-                        data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
+                        <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
+                            variant="outline-secondary" icon="share-fill" label="Links" />
 
-                    <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
-                        variant="outline-secondary" icon="share-fill" label="Links" />
+                        @if ($budget->canBeEdited())
+                        <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
+                            variant="primary" icon="pencil-fill" label="Editar" />
+                        @endif
 
-                    @if ($budget->canBeEdited())
-                    <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                        variant="primary" icon="pencil-fill" label="Editar" />
-                    @endif
-
-                    <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
-                        target="_blank"
-                        variant="outline-secondary"
-                        icon="file-earmark-pdf"
-                        label="Imprimir PDF" />
+                        <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                            target="_blank"
+                            variant="outline-secondary"
+                            icon="file-earmark-pdf"
+                            label="Imprimir PDF" />
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </x-layout.v-stack>
 </x-layout.page-container>
 
-<!-- Modal Enviar para Cliente -->
-<div class="modal fade" id="sendToCustomerModal" tabindex="-1" aria-labelledby="sendToCustomerModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form action="{{ route('provider.budgets.send-to-customer', $budget->code) }}" method="POST">
-            @csrf
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-info text-white border-0">
-                    <h5 class="modal-title" id="sendToCustomerModalLabel">
-                        <i class="bi bi-send-fill me-2"></i>{{ ($isSent && !$isDraft) ? 'Reenviar Orçamento' : 'Enviar Orçamento' }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <p class="text-muted">O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong></p>
+<x-ui.modal id="sendToCustomerModal" :title="$sendModalTitle" icon="send-fill">
+    <form action="{{ route('provider.budgets.send-to-customer', $budget->code) }}" method="POST">
+        @csrf
+        <div class="p-1">
+            <p class="text-muted mb-3">O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong></p>
 
-                    @if(!($budget->customer->contact->email_personal))
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        O cliente não possui e-mail pessoal cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
-                    </div>
-                    @endif
+            @if(!($budget->customer->contact->email_personal))
+            <x-ui.alert type="warning" icon="exclamation-triangle">
+                O cliente não possui e-mail pessoal cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
+            </x-ui.alert>
+            @endif
 
-                    <div class="mb-3">
-                        <label for="message" class="form-label fw-bold">Mensagem Personalizada (Opcional)</label>
-                        <textarea class="form-control" id="message" name="message" rows="4"
-                            maxlength="255" placeholder="Olá, segue o orçamento solicitado..."
-                            oninput="updateCharCount(this, 'charCount')"></textarea>
-                        <div class="form-text text-end small" id="charCount">0 / 255 caracteres</div>
-                    </div>
-
-                    <div class="alert alert-info small">
-                        <i class="bi bi-info-circle me-2"></i>
-                        @if($isSent)
-                        O orçamento já foi enviado. O reenvio atualizará o PDF e gerará um novo link de acesso.
-                        @else
-                        O PDF do orçamento será gerado e o link de visualização pública será criado.
-                        @endif
-                        <br>
-                        <span class="mt-1 d-block">
-                            <i class="bi bi-shield-check me-1"></i>
-                            <strong>Reserva de Estoque:</strong> Conforme nossa política, os produtos serão reservados automaticamente apenas quando o serviço for movido para o status <strong>"Em Preparação"</strong>.
-                        </span>
-                    </div>
-                </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-info px-4 text-white" {{ !($budget->customer->contact->email_personal) ? 'disabled' : '' }}>
-                        <i class="bi bi-send me-2"></i>{{ ($isSent && !$isDraft) ? 'Reenviar Agora' : 'Enviar E-mail' }}
-                    </button>
-                </div>
+            <div class="mb-3">
+                <x-form.input-label for="message" value="Mensagem Personalizada (Opcional)" class="fw-bold" />
+                <textarea class="form-control" id="message" name="message" rows="4"
+                    maxlength="255" placeholder="Olá, segue o orçamento solicitado..."
+                    oninput="updateCharCount(this, 'charCountText')"></textarea>
+                <div class="form-text text-end small" id="charCountText">0 / 255 caracteres</div>
             </div>
-        </form>
-    </div>
-</div>
+
+            <x-ui.alert type="info" icon="info-circle">
+                @if($isSent)
+                O orçamento já foi enviado. O reenvio atualizará o PDF e gerará um novo link de acesso.
+                @else
+                O PDF do orçamento será gerado e o link de visualização pública será criado.
+                @endif
+                <hr class="my-2 opacity-25">
+                <i class="bi bi-shield-check me-1"></i>
+                <strong>Reserva de Estoque:</strong> Conforme nossa política, os produtos serão reservados automaticamente apenas quando o serviço for movido para o status <strong>"Em Preparação"</strong>.
+            </x-ui.alert>
+        </div>
+
+        <x-slot:footer>
+            <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
+            <x-ui.button type="submit" variant="info" class="text-white"
+                :disabled="!($budget->customer->contact->email_personal)"
+                icon="send"
+                label="{{ ($isSent && !$isDraft) ? 'Reenviar Agora' : 'Enviar E-mail' }}" />
+        </x-slot:footer>
+    </form>
+</x-ui.modal>
 @endsection
 
 @push('scripts')
@@ -479,26 +419,8 @@
         const counter = document.getElementById(counterId);
         if (counter) {
             counter.textContent = `${count} / 255 caracteres`;
-            if (count >= 255) {
-                counter.classList.add('text-danger');
-            } else {
-                counter.classList.remove('text-danger');
-            }
+            counter.classList.toggle('text-danger', count >= 255);
         }
     }
-
-    // Inicialização manual caso o data-bs-toggle falhe por causa do defer
-    document.addEventListener('DOMContentLoaded', function() {
-        const modalBtn = document.querySelector('[data-bs-target="#sendToCustomerModal"]');
-        if (modalBtn) {
-            modalBtn.addEventListener('click', function() {
-                const modalEl = document.getElementById('sendToCustomerModal');
-                if (modalEl && typeof bootstrap !== 'undefined') {
-                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                    modal.show();
-                }
-            });
-        }
-    });
 </script>
 @endpush

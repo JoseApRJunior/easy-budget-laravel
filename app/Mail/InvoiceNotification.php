@@ -57,7 +57,12 @@ class InvoiceNotification extends Mailable implements ShouldQueue
     /**
      * Locale para internacionalização (pt-BR, en, etc).
      */
-    public string $locale;
+    public string $notificationLocale;
+
+    /**
+     * Status da fatura no momento da notificação.
+     */
+    public ?string $status;
 
     /**
      * Cria uma nova instância da mailable.
@@ -69,6 +74,7 @@ class InvoiceNotification extends Mailable implements ShouldQueue
      * @param  string|null  $publicLink  Link público para visualização (opcional)
      * @param  string|null  $customMessage  Mensagem personalizada (opcional)
      * @param  string  $locale  Locale para internacionalização (opcional, padrão: pt-BR)
+     * @param  string|null $status Status original no momento do evento (opcional)
      */
     public function __construct(
         Invoice $invoice,
@@ -78,6 +84,7 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         ?string $publicLink = null,
         ?string $customMessage = null,
         string $locale = 'pt-BR',
+        ?string $status = null,
     ) {
         $this->invoice = $invoice;
         $this->customer = $customer;
@@ -85,10 +92,11 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         $this->company = $company ?? [];
         $this->publicLink = $publicLink;
         $this->customMessage = $customMessage;
-        $this->locale = $locale;
+        $this->notificationLocale = $locale;
+        $this->status = $status ?? (is_string($invoice->status) ? $invoice->status : $invoice->status->value);
 
         // Configurar locale para internacionalização
-        app()->setLocale($this->locale);
+        app()->setLocale($this->notificationLocale);
     }
 
     /**
@@ -99,15 +107,15 @@ class InvoiceNotification extends Mailable implements ShouldQueue
         return new Envelope(
             subject: __('emails.invoice.subject', [
                 'invoice_code' => $this->invoice->code,
-            ], $this->locale),
+            ], $this->notificationLocale),
             tags: ['invoice-notification', 'billing'],
             metadata: [
-                'invoice_id' => $this->invoice->id,
-                'invoice_code' => $this->invoice->code,
-                'customer_id' => $this->customer->id,
-                'tenant_id' => $this->tenant?->id,
-                'locale' => $this->locale,
-                'total_amount' => $this->invoice->total,
+                'invoice_id' => (string) $this->invoice->id,
+                'invoice_code' => (string) $this->invoice->code,
+                'customer_id' => (string) $this->customer->id,
+                'tenant_id' => (string) ($this->tenant?->id ?? ''),
+                'locale' => (string) $this->notificationLocale,
+                'total_amount' => (string) $this->invoice->total,
             ],
         );
     }
@@ -117,6 +125,18 @@ class InvoiceNotification extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
+        $statusColor = $this->invoice->status->getColor();
+
+        // Tentar obter dados do enum baseado no status capturado no evento para evitar inconsistências da queue
+        try {
+            $statusEnum = \App\Enums\InvoiceStatus::tryFrom($this->status);
+            if ($statusEnum) {
+                $statusColor = $statusEnum->getColor();
+            }
+        } catch (\Exception $e) {
+            // Mantém o valor original em caso de erro
+        }
+
         return new Content(
             view: 'emails.invoice-notification',
             with: [
@@ -124,18 +144,18 @@ class InvoiceNotification extends Mailable implements ShouldQueue
                 'customer' => $this->customer,
                 'tenant' => $this->tenant,
                 'company' => $this->getCompanyData(),
-                'locale' => $this->locale,
+                'locale' => $this->notificationLocale,
                 'appName' => config('app.name', 'Easy Budget'),
                 'supportEmail' => $this->getSupportEmail(),
                 'isSystemEmail' => false,
-                'statusColor' => $this->invoice->status->getColor(),
+                'statusColor' => $statusColor,
                 'customMessage' => $this->customMessage,
                 'publicLink' => $this->publicLink ?? $this->generatePublicLink(),
                 'invoiceData' => [
                     'code' => $this->invoice->code,
-                    'total' => number_format($this->invoice->total, 2, ',', '.'),
-                    'subtotal' => number_format($this->invoice->subtotal, 2, ',', '.'),
-                    'discount' => number_format($this->invoice->discount, 2, ',', '.'),
+                    'total' => number_format((float) $this->invoice->total, 2, ',', '.'),
+                    'subtotal' => number_format((float) $this->invoice->subtotal, 2, ',', '.'),
+                    'discount' => number_format((float) $this->invoice->discount, 2, ',', '.'),
                     'due_date' => $this->invoice->due_date?->format('d/m/Y'),
                     'payment_method' => $this->invoice->payment_method,
                     'notes' => $this->invoice->notes,

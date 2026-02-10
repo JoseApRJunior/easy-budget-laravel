@@ -551,8 +551,8 @@ class MailerService
         try {
             $mailable = new WelcomeUserMail($user, $tenant, $confirmationLink);
 
-            // Define o destinatário e envia de forma síncrona
-            Mail::to($user->email)->send($mailable);
+            // Define o destinatário e enfileira o envio
+            Mail::to($user->email)->queue($mailable);
 
             Log::info('E-mail de boas-vindas enviado com sucesso', [
                 'user_id' => $user->id,
@@ -606,10 +606,10 @@ class MailerService
                 $publicLink,
             );
 
-            // Usa envio síncrono para garantir entrega imediata
-            Mail::to($customer->contact?->email ?? $customer->contact?->email_business)->send($mailable);
+            // Usar queue para processamento assíncrono e evitar atrasos na execução
+            Mail::to($customer->contact?->email ?? $customer->contact?->email_business)->queue($mailable);
 
-            Log::info('Notificação de fatura enviada com sucesso de forma síncrona', [
+            Log::info('Notificação de fatura enfileirada com sucesso', [
                 'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->code,
                 'customer_id' => $customer->id,
@@ -620,8 +620,8 @@ class MailerService
                 'invoice_id' => $invoice->id,
                 'invoice_code' => $invoice->code,
                 'customer_id' => $customer->id,
-                'sent_at' => now()->toDateTimeString(),
-            ], 'Notificação de fatura enviada com sucesso de forma síncrona.');
+                'queued_at' => now()->toDateTimeString(),
+            ], 'Notificação de fatura enfileirada com sucesso.');
 
         } catch (Exception $e) {
             Log::error('Erro ao enfileirar notificação de fatura', [
@@ -675,7 +675,8 @@ class MailerService
             }
 
             if ($to) {
-                Mail::to($to)->send($mailable);
+                // Usar queue para processamento assíncrono e evitar atrasos na execução
+                Mail::to($to)->queue($mailable);
             } else {
                 Log::warning('Não foi possível encontrar um destinatário para a notificação de status', [
                     'entity_type' => class_basename($entity),
@@ -734,7 +735,8 @@ class MailerService
                 $token,
             );
 
-            Mail::to($user->email)->send($mailable);
+            // Enfileirar para processamento assíncrono
+            Mail::to($user->email)->queue($mailable);
 
             Log::info('E-mail de redefinição de senha enviado com sucesso', [
                 'user_id' => $user->id,
@@ -866,7 +868,8 @@ class MailerService
             $to = $ticket['customer_email'] ?? $ticket['email'] ?? null;
 
             if ($to) {
-                Mail::to($to)->send($mailable);
+                // Enfileirar para processamento assíncrono
+                Mail::to($to)->queue($mailable);
             } else {
                 Log::warning('Não foi possível encontrar um destinatário para a resposta de suporte', [
                     'ticket_id' => $ticket['id'] ?? 'N/A',
@@ -1419,10 +1422,10 @@ class MailerService
                 $user, $tenant, $confirmationLink,
             );
 
-            // Define o destinatário e envia de forma síncrona
-            Mail::to($user->email)->send($mailable);
+            // Define o destinatário e enfileira o envio
+            Mail::to($user->email)->queue($mailable);
 
-            Log::info('E-mail de verificação enviado com sucesso de forma síncrona', [
+            Log::info('E-mail de verificação enfileirado com sucesso', [
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'tenant_id' => $tenant?->id,
@@ -1431,8 +1434,8 @@ class MailerService
             return ServiceResult::success([
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'sent_at' => now()->toDateTimeString(),
-            ], 'E-mail de verificação enviado com sucesso de forma síncrona.');
+                'queued_at' => now()->toDateTimeString(),
+            ], 'E-mail de verificação enfileirado com sucesso.');
 
         } catch (Exception $e) {
             Log::error('Erro ao enviar e-mail de verificação de forma síncrona', [
@@ -1483,10 +1486,10 @@ class MailerService
                 $locale,
             );
 
-            // Usa envio síncrono para garantir entrega imediata
-            Mail::to($customer->contact?->email ?? $customer->contact?->email_business)->send($mailable);
+            // Usar queue para processamento assíncrono e evitar atrasos na execução
+            Mail::to($customer->contact?->email ?? $customer->contact?->email_business)->queue($mailable);
 
-            Log::info('Notificação de orçamento enviada com sucesso de forma síncrona', [
+            Log::info('Notificação de orçamento enfileirada com sucesso', [
                 'budget_id' => $budget->id,
                 'budget_code' => $budget->code,
                 'customer_id' => $customer->id,
@@ -1500,9 +1503,9 @@ class MailerService
                 'budget_code' => $budget->code,
                 'customer_id' => $customer->id,
                 'notification_type' => $notificationType,
-                'sent_at' => now()->toDateTimeString(),
+                'queued_at' => now()->toDateTimeString(),
                 'locale' => $locale,
-            ], 'Notificação de orçamento enviada com sucesso de forma síncrona.');
+            ], 'Notificação de orçamento enfileirada com sucesso.');
 
         } catch (Exception $e) {
             Log::error('Erro ao enfileirar notificação de orçamento', [
