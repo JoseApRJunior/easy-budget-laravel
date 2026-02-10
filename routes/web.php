@@ -146,7 +146,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     Route::get('/dashboard', [ProviderController::class, 'index'])->name('dashboard');
 
     // AI Analytics
-    Route::prefix('analytics')->name('analytics.')->group(function () {
+    Route::prefix('analytics')->name('analytics.')->middleware('feature:analytics')->group(function () {
         Route::get('/', [AIAnalyticsController::class, 'index'])->name('index');
         Route::get('/overview', [AIAnalyticsController::class, 'overview'])->name('overview');
         Route::get('/trends', [AIAnalyticsController::class, 'trends'])->name('trends');
@@ -159,7 +159,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Plans
-    Route::prefix('plans')->name('plans.')->group(function () {
+    Route::prefix('plans')->name('plans.')->middleware('feature:plans')->group(function () {
         Route::get('/', [PlanController::class, 'index'])->name('index');
         Route::get('/create', [PlanController::class, 'create'])->name('create');
         Route::post('/', [PlanController::class, 'store'])->name('store');
@@ -178,7 +178,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Categories (novo padrão)
-    Route::prefix('categories')->name('categories.')->group(function () {
+    Route::prefix('categories')->name('categories.')->middleware('feature:categories')->group(function () {
         Route::get('/dashboard', [CategoryController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [CategoryController::class, 'index'])->name('index');
         Route::get('/create', [CategoryController::class, 'create'])->name('create');
@@ -195,7 +195,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Customers
-    Route::prefix('customers')->name('customers.')->group(function () {
+    Route::prefix('customers')->name('customers.')->middleware('feature:customers')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('index');
         Route::get('/create', [CustomerController::class, 'create'])->name('create');
 
@@ -230,7 +230,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Products (novo módulo baseado em SKU + Service Layer)
-    Route::prefix('products')->name('products.')->group(function () {
+    Route::prefix('products')->name('products.')->middleware('feature:products')->group(function () {
         // Dashboard de Produtos
         Route::get('/dashboard', [ProductController::class, 'dashboard'])->name('dashboard');
 
@@ -257,7 +257,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Services
-    Route::prefix('services')->name('services.')->group(function () {
+    Route::prefix('services')->name('services.')->middleware('feature:services')->group(function () {
         // Dashboard de Serviços
         Route::get('/dashboard', [ServiceController::class, 'dashboard'])->name('dashboard');
 
@@ -275,7 +275,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Schedules
-    Route::prefix('schedules')->name('schedules.')->group(function () {
+    Route::prefix('schedules')->name('schedules.')->middleware('feature:schedules')->group(function () {
         Route::get('/dashboard', [ScheduleController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [ScheduleController::class, 'index'])->name('index');
         Route::get('/calendar', [ScheduleController::class, 'calendar'])->name('calendar');
@@ -291,7 +291,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Budgets
-    Route::prefix('budgets')->name('budgets.')->group(function () {
+    Route::prefix('budgets')->name('budgets.')->middleware('feature:budgets')->group(function () {
         // Dashboard de Orçamentos
         Route::get('/dashboard', [BudgetController::class, 'dashboard'])->name('dashboard');
 
@@ -325,7 +325,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Invoices
-    Route::prefix('invoices')->name('invoices.')->group(function () {
+    Route::prefix('invoices')->name('invoices.')->middleware('feature:invoices')->group(function () {
         Route::get('/dashboard', [InvoiceController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::get('/create', [InvoiceController::class, 'create'])->name('create');
@@ -350,14 +350,14 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Financial
-    Route::prefix('financial')->name('financial.')->group(function () {
+    Route::prefix('financial')->name('financial.')->middleware('feature:financial')->group(function () {
         Route::get('/dashboard', [FinancialReportController::class, 'dashboard'])->name('dashboard');
         Route::get('/sales', [FinancialReportController::class, 'sales'])->name('sales');
         Route::get('/dashboard/data', [FinancialReportController::class, 'dashboardData'])->name('dashboard.data');
     });
 
     // QR Code routes - MOVIDO PARA DENTRO DO GRUPO PROVIDER
-    Route::prefix('qrcodes')->name('qrcode.')->group(function () {
+    Route::prefix('qrcodes')->name('qrcode.')->middleware('feature:qrcode')->group(function () {
         Route::get('/', [QrCodeController::class, 'index'])->name('index');
         Route::post('/generate', [QrCodeController::class, 'generate'])->name('generate');
         Route::post('/handle', [QrCodeController::class, 'handle'])->name('handle');
@@ -367,7 +367,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     });
 
     // Reports
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('feature:reports')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/dashboard', [ReportController::class, 'index'])->name('dashboard');
         Route::get('/download/{hash}', [ReportController::class, 'download'])->name('download');
@@ -397,7 +397,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
     Route::post('/change-password', [ProviderController::class, 'change_password_store'])->name('change_password_store');
 
     // Inventory Management (Provider Access)
-    Route::prefix('inventory')->name('inventory.')->group(function () {
+    Route::prefix('inventory')->name('inventory.')->middleware('feature:inventory')->group(function () {
         Route::get('/dashboard', [InventoryController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/movements', [InventoryController::class, 'movements'])->name('movements');
