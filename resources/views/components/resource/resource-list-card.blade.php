@@ -39,15 +39,15 @@
         </div>
     </div>
 
-    <div @class(['card-body', $padding])>
+    <div @class(['card-body p-2', $padding => $padding !== 'p-0'])>
         @if(isset($desktop) || isset($mobile))
             @if(isset($desktop))
-                <div class="desktop-view">{{ $desktop }}</div>
+                <div class="desktop-view p-2">{{ $desktop }}</div>
             @endif
 
             @if(isset($mobile))
                 <div class="mobile-view">
-                    <div class="list-group list-group-flush">{{ $mobile }}</div>
+                    <div class="list-group list-group-flush bg-transparent">{{ $mobile }}</div>
                 </div>
             @endif
         @elseif($gap)

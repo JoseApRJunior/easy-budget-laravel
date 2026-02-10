@@ -17,8 +17,8 @@
      *
 
 
-analise esat ideia eu ja tenho tabela de resources de uma breve logica no sistema antigo
-Essa é uma excelente estratégia. Liberar recursos gradualmente (estratégia de **Feature Flags** ou **Feature Toggles**) permite que você teste novas funcionalidades com um grupo pequeno de usuários, valide o feedback e evite que um erro derrube o sistema para todo mundo de uma vez.
+Analise esta ideia eu ja tenho tabela de resources de uma breve logica no sistema antigo pode alterar nome la e model tbm,
+``Essa é uma excelente estratégia. Liberar recursos gradualmente (estratégia de **Feature Flags** ou **Feature Toggles**) permite que você teste novas funcionalidades com um grupo pequeno de usuários, valide o feedback e evite que um erro derrube o sistema para todo mundo de uma vez.
 
 No ecossistema Laravel, existem três caminhos principais para você seguir, dependendo da complexidade que você precisa:
 
@@ -300,3 +300,4 @@ CREATE TABLE user_features (
 6. Documentar o processo de liberação
 
 A pesquisa está correta e a estratégia de Feature Flags é altamente recomendada para o seu cenário de liberação gradual de recursos.
+``

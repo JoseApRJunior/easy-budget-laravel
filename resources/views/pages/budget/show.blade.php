@@ -30,12 +30,12 @@
             mb="mb-0">
 
             <x-slot:actions>
-                <div class="d-flex gap-2">
+                <x-layout.h-stack gap="2">
                     <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
                         variant="light" size="sm" icon="pencil" label="Editar" />
                     <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
                         variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" />
-                </div>
+                </x-layout.h-stack>
             </x-slot:actions>
 
             <x-resource.resource-header-section title="Informações do Cliente" icon="person-badge">
@@ -124,9 +124,12 @@
             <x-resource.resource-header-divider />
             <x-resource.resource-header-section title="Comentário do Cliente" icon="chat-quote-fill">
                 <x-layout.grid-col size="col-12">
-                    <div class="p-3 rounded-3 border-start border-warning border-4" style="background-color: #fffcf0;">
-                        <p class="mb-0 text-dark small fst-italic">"{{ $budget->customer_comment }}"</p>
-                    </div>
+                    <x-ui.comment-box
+                        variant="warning"
+                        icon="quote"
+                        label="Mensagem do Cliente"
+                        :message="$budget->customer_comment"
+                        class="p-3" />
                 </x-layout.grid-col>
             </x-resource.resource-header-section>
         @endif
@@ -188,28 +191,27 @@
 
             <x-slot:mobile>
                 @foreach ($budget->services as $service)
-                <x-resource.resource-mobile-item
-                    :href="route('provider.services.show', $service->code)">
+                <x-resource.resource-mobile-item class="service-item">
                     <x-resource.resource-mobile-header
                         :title="$service->code"
                         :subtitle="$service->category?->name ?? 'Sem categoria'" />
 
                     <x-slot:description>
-                        <p class="text-muted small mb-2">{{ Str::limit($service->description, 100) }}</p>
-                        <div class="row g-2 w-100">
+                        <p class="text-muted small mb-2 text-truncate-2">{{ $service->description }}</p>
+                        <x-layout.grid-row class="g-2 mb-0">
                             <x-resource.resource-mobile-field
-                                col="col-6"
+                                col="col-5"
                                 label="Total">
                                 <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                             </x-resource.resource-mobile-field>
 
                             <x-resource.resource-mobile-field
-                                col="col-6"
+                                col="col-7"
                                 align="end"
                                 label="Status">
                                 <x-ui.status-badge :item="$service" />
                             </x-resource.resource-mobile-field>
-                        </div>
+                        </x-layout.grid-row>
                     </x-slot:description>
 
                     <x-slot:actions>
@@ -224,12 +226,10 @@
                 @endforeach
             </x-slot:mobile>
             @else
-            <div class="py-5">
-                <x-resource.empty-state
-                    resource="serviços"
-                    icon="tools"
-                    message="Nenhum serviço vinculado a este orçamento" />
-            </div>
+            <x-resource.empty-state
+                resource="serviços"
+                icon="tools"
+                message="Nenhum serviço vinculado a este orçamento" />
             @endif
         </x-resource.resource-list-card>
 
@@ -258,30 +258,24 @@
                                 <x-resource.table-cell-datetime :datetime="$history->created_at" />
                             </x-resource.table-cell>
                             <x-resource.table-cell>
-                                <span class="badge bg-light text-dark border">
-                                    {{ $history->action_label }}
-                                </span>
+                                <x-ui.badge :label="$history->action_label" variant="light" />
                             </x-resource.table-cell>
                             <x-resource.table-cell>
-                                <span class="text-dark">{{ $history->description }}</span>
+                                <x-ui.text weight="medium">{{ $history->description }}</x-ui.text>
                                 @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
-                                <div class="mt-1 small text-muted fst-italic">
-                                    <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
-                                </div>
+                                    <x-ui.comment-box variant="warning" icon="quote" :message="$history->metadata['customer_comment']" class="mt-1" />
                                 @endif
                                 @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
-                                <div class="mt-1 small text-primary fst-italic">
-                                    <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
-                                </div>
+                                    <x-ui.comment-box variant="primary" icon="envelope-paper" :message="$history->metadata['custom_message']" class="mt-1" />
                                 @endif
                             </x-resource.table-cell>
                             <x-resource.table-cell class="small text-muted">
                                 @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
-                                <span class="badge bg-info text-white">Cliente (Link Público)</span>
+                                <x-ui.badge label="Cliente (Link Público)" variant="info" />
                                 @elseif($history->user)
                                 {{ $history->user->name }}
                                 @else
-                                Sistema
+                                <span class="text-muted italic">Sistema</span>
                                 @endif
                             </x-resource.table-cell>
                         </x-resource.table-row>
@@ -298,31 +292,27 @@
                         :subtitle="$history->created_at->format('d/m/Y H:i')" />
 
                     <x-slot:description>
-                        <p class="mb-2 small text-dark">{{ $history->description }}</p>
-                        @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
-                        <div class="mt-1 small text-muted fst-italic p-2 bg-light rounded border-start border-warning border-4">
-                            <i class="bi bi-chat-quote me-1"></i>"{{ $history->metadata['customer_comment'] }}"
-                        </div>
-                        @endif
-                        @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
-                        <div class="mt-1 small text-primary fst-italic p-2 bg-light rounded border-start border-primary border-4">
-                            <i class="bi bi-envelope-paper me-1"></i>"{{ $history->metadata['custom_message'] }}"
-                        </div>
-                        @endif
+                        <x-layout.v-stack gap="2">
+                            <x-ui.text weight="medium" size="sm">{{ $history->description }}</x-ui.text>
+                            @if(isset($history->metadata['customer_comment']) && $history->metadata['customer_comment'])
+                                <x-ui.comment-box variant="warning" icon="quote" :message="$history->metadata['customer_comment']" />
+                            @endif
+                            @if(isset($history->metadata['custom_message']) && $history->metadata['custom_message'])
+                                <x-ui.comment-box variant="primary" icon="envelope-paper" :message="$history->metadata['custom_message']" />
+                            @endif
+                        </x-layout.v-stack>
                     </x-slot:description>
 
                     <x-slot:footer>
-                        <div class="text-end">
-                            <span class="badge bg-secondary text-white small" style="font-size: 0.7rem;">
-                                @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
-                                Cliente (Link Público)
-                                @elseif($history->user)
-                                {{ $history->user->name }}
-                                @else
-                                Sistema
-                                @endif
-                            </span>
-                        </div>
+                        <x-layout.h-stack justify="end">
+                            @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
+                                <x-ui.badge label="Cliente (Link Público)" variant="info" pill />
+                            @elseif($history->user)
+                                <x-ui.badge :label="$history->user->name" variant="secondary" pill />
+                            @else
+                                <x-ui.badge label="Sistema" variant="light" pill />
+                            @endif
+                        </x-layout.h-stack>
                     </x-slot:footer>
                 </x-resource.resource-mobile-item>
                 @endforeach
@@ -331,49 +321,41 @@
         @endif
 
         {{-- Botões de Ação --}}
-        <div class="pt-2 pb-2">
-            <div class="row align-items-center g-3">
-                <div class="col-12 col-md-auto">
-                    <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-3" />
-                </div>
+        <x-layout.actions-bar alignment="between" class="mt-4" mb="0">
+            <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-4" />
 
-                <div class="col-12 col-md">
-                    {{-- Espaçador central --}}
-                </div>
+            <x-ui.button-group gap="2" class="w-100 w-md-auto">
+                <x-ui.button type="button"
+                    variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
+                    icon="send-fill"
+                    :label="$sendModalLabel"
+                    data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
 
-                <div class="col-12 col-md-auto">
-                    <div class="d-grid d-md-flex gap-2">
-                        <x-ui.button type="button" class="d-flex align-items-center"
-                            variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
-                            icon="send-fill"
-                            :label="$sendModalLabel"
-                            data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
+                <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
+                    variant="outline-secondary" icon="share-fill" label="Links" />
 
-                        <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
-                            variant="outline-secondary" icon="share-fill" label="Links" />
+                @if ($budget->canBeEdited())
+                <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
+                    variant="primary" icon="pencil-fill" label="Editar" />
+                @endif
 
-                        @if ($budget->canBeEdited())
-                        <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                            variant="primary" icon="pencil-fill" label="Editar" />
-                        @endif
-
-                        <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
-                            target="_blank"
-                            variant="outline-secondary"
-                            icon="file-earmark-pdf"
-                            label="Imprimir PDF" />
-                    </div>
-                </div>
-            </div>
-        </div>
+                <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                    target="_blank"
+                    variant="outline-secondary"
+                    icon="file-earmark-pdf"
+                    label="Imprimir PDF" />
+            </x-ui.button-group>
+        </x-layout.actions-bar>
     </x-layout.v-stack>
 </x-layout.page-container>
 
 <x-ui.modal id="sendToCustomerModal" :title="$sendModalTitle" icon="send-fill">
     <form action="{{ route('provider.budgets.send-to-customer', $budget->code) }}" method="POST">
         @csrf
-        <div class="p-1">
-            <p class="text-muted mb-3">O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong></p>
+        <x-layout.v-stack gap="3">
+            <x-ui.text variant="small">
+                O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong>
+            </x-ui.text>
 
             @if(!($budget->customer->contact->email_personal))
             <x-ui.alert type="warning" icon="exclamation-triangle">
@@ -381,13 +363,17 @@
             </x-ui.alert>
             @endif
 
-            <div class="mb-3">
-                <x-form.input-label for="message" value="Mensagem Personalizada (Opcional)" class="fw-bold" />
-                <textarea class="form-control" id="message" name="message" rows="4"
-                    maxlength="255" placeholder="Olá, segue o orçamento solicitado..."
-                    oninput="updateCharCount(this, 'charCountText')"></textarea>
-                <div class="form-text text-end small" id="charCountText">0 / 255 caracteres</div>
-            </div>
+            <x-ui.form.textarea
+                name="message"
+                label="Mensagem Personalizada (Opcional)"
+                rows="4"
+                maxlength="255"
+                placeholder="Olá, segue o orçamento solicitado..."
+                oninput="updateCharCount(this, 'charCountText')">
+                <x-slot:helpSlot>
+                    <x-ui.form.char-count id="charCountText" max="255" />
+                </x-slot:helpSlot>
+            </x-ui.form.textarea>
 
             <x-ui.alert type="info" icon="info-circle">
                 @if($isSent)
@@ -399,14 +385,13 @@
                 <i class="bi bi-shield-check me-1"></i>
                 <strong>Reserva de Estoque:</strong> Conforme nossa política, os produtos serão reservados automaticamente apenas quando o serviço for movido para o status <strong>"Em Preparação"</strong>.
             </x-ui.alert>
-        </div>
+        </x-layout.v-stack>
 
         <x-slot:footer>
-            <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
-            <x-ui.button type="submit" variant="info" class="text-white"
-                :disabled="!($budget->customer->contact->email_personal)"
-                icon="send"
-                label="{{ ($isSent && !$isDraft) ? 'Reenviar Agora' : 'Enviar E-mail' }}" />
+            <x-layout.h-stack justify="end" gap="2">
+                <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
+                <x-ui.button type="submit" variant="primary" icon="send-fill" label="Confirmar e Enviar" />
+            </x-layout.h-stack>
         </x-slot:footer>
     </form>
 </x-ui.modal>

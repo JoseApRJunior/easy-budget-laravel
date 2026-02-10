@@ -14,6 +14,6 @@ $previousUrl !== $indexUrl &&
 $backUrl = $isAnotherShowPage ? $indexUrl : $previousUrl;
 @endphp
 
-<a href="{{ $backUrl ?: $defaultUrl }}" {{ $attributes->merge(['class' => 'btn btn-outline-secondary']) }}>
+<a href="{{ $backUrl ?: $defaultUrl }}" {{ $attributes->merge(['class' => 'btn btn-outline-secondary d-inline-flex align-items-center justify-content-center']) }}>
     <i class="bi bi-arrow-left me-2"></i>{{ $slot->isEmpty() ? $label : $slot }}
 </a>

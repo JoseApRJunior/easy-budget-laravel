@@ -480,37 +480,27 @@
         </x-layout.grid-row>
 
         {{-- Botões de Ação (Footer) --}}
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <div class="d-flex gap-2">
-                <x-ui.button
-                    href="{{ url()->previous(route('provider.services.index')) }}"
-                    variant="outline-secondary"
-                    icon="bi bi-arrow-left">
-                    Voltar
-                </x-ui.button>
-            </div>
-            <small class="text-muted d-none d-md-block">
-                Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
-            </small>
-            <div class="d-flex gap-2">
+        <x-layout.actions-bar alignment="between" class="mt-4" mb="0">
+            <x-ui.back-button index-route="provider.services.index" class="w-100 w-md-auto px-md-4" />
+
+            <x-ui.button-group gap="2" class="w-100 w-md-auto">
                 @if ($service->canBeEdited())
                 <x-ui.button
+                    type="link"
                     href="{{ route('provider.services.edit', $service->code) }}"
                     variant="primary"
-                    icon="bi bi-pencil-fill">
-                    Editar
-                </x-ui.button>
+                    icon="pencil-fill"
+                    label="Editar" />
                 @endif
                 <x-ui.button
                     type="button"
                     variant="outline-danger"
                     data-bs-toggle="modal"
                     data-bs-target="#deleteModal"
-                    icon="bi bi-trash-fill">
-                    Excluir
-                </x-ui.button>
-            </div>
-        </div>
+                    icon="trash-fill"
+                    label="Excluir" />
+            </x-ui.button-group>
+        </x-layout.actions-bar>
 
         {{-- Modal de Confirmação de Exclusão --}}
         <x-ui.modal id="deleteModal" title="Confirmar Exclusão" icon="trash-fill">
