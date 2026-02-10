@@ -96,6 +96,8 @@
                         {{-- Planos e Configurações --}}
                         <li><a class="dropdown-item" href="{{ route('admin.plans.index') }}">
                                 <i class="bi bi-card-list me-2"></i>Planos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.features.index') }}">
+                                <i class="bi bi-toggle-on me-2"></i>Módulos (Features)</a></li>
                         <li><a class="dropdown-item" href="{{ route('admin.global-settings.index') }}">
                                 <i class="bi bi-gear me-2"></i>Configurações Globais</a></li>
 

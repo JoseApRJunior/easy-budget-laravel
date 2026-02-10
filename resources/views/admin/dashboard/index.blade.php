@@ -257,6 +257,7 @@
                         <h6 class="m-0 font-weight-bold text-primary">Ações Rápidas</h6>
                     </x-slot:header>
                     <div class="d-grid gap-2">
+                        <x-ui.button type="link" :href="route('admin.features.index')" variant="danger" size="sm" icon="toggle-on" label="Gerenciar Módulos" />
                         <x-ui.button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" />
                         <x-ui.button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" />
                         <x-ui.button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" />

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AlertsController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\CustomerManagementController;
 use App\Http\Controllers\Admin\EnterpriseController;
+use App\Http\Controllers\Admin\FeatureManagementController;
 use App\Http\Controllers\Admin\FinancialControlController;
 use App\Http\Controllers\Admin\GlobalSettingsController;
 use App\Http\Controllers\Admin\MonitoringController;
@@ -434,6 +435,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
 Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])->group(function () {
     // Dashboard (rota única)
     Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
+    Route::get('/health', [MonitoringController::class, 'dashboard'])->name('system.health');
 
     // Users
     Route::prefix('users')->name('users.')->group(function () {
@@ -446,10 +448,22 @@ Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])-
         Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
 
+    // Feature Management
+    Route::prefix('features')->name('features.')->group(function () {
+        Route::get('/', [FeatureManagementController::class, 'index'])->name('index');
+        Route::post('/', [FeatureManagementController::class, 'store'])->name('store');
+        Route::post('/{resource}/toggle', [FeatureManagementController::class, 'toggle'])->name('toggle');
+        Route::delete('/{resource}', [FeatureManagementController::class, 'destroy'])->name('destroy');
+    });
+
     // Queues
     Route::prefix('queues')->name('queues.')->group(function () {
+        Route::get('/', [QueueManagementController::class, 'index'])->name('index');
+        Route::get('/failed', [QueueManagementController::class, 'index'])->name('failed'); // Redireciona para o dashboard por enquanto
         Route::post('/work', [QueueManagementController::class, 'work'])->name('work');
         Route::post('/stop', [QueueManagementController::class, 'stop'])->name('stop');
+        Route::post('/retry', [QueueManagementController::class, 'retry'])->name('retry');
+        Route::post('/cleanup', [QueueManagementController::class, 'cleanup'])->name('cleanup');
     });
 
     // Settings
@@ -478,6 +492,7 @@ Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])-
     // Monitoring (Admin)
     Route::prefix('monitoring')->name('monitoring.')->group(function () {
         Route::get('/', [MonitoringController::class, 'dashboard'])->name('dashboard');
+        Route::get('/health', [MonitoringController::class, 'dashboard'])->name('health'); // Alias para o dashboard por enquanto
         Route::get('/metrics', [MonitoringController::class, 'metrics'])->name('metrics');
         Route::get('/middleware', [MonitoringController::class, 'middlewareMetrics'])->name('middleware');
         Route::get('/api/metrics', [MonitoringController::class, 'apiMetrics'])->name('api.metrics');
