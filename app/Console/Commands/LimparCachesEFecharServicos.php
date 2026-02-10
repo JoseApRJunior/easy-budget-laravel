@@ -31,7 +31,6 @@ class LimparCachesEFecharServicos extends Command
         $this->callSilent('view:clear');
         $this->callSilent('event:clear');
         $this->callSilent('logs:clear');
-        $this->callSilent('pennant:purge');
 
         $this->info('✅ Caches do Laravel limpos.');
 

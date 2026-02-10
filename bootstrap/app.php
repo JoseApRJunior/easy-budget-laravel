@@ -45,7 +45,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
-            'stripe/*',
         ]);
 
         $middleware->trustProxies('*', 30);

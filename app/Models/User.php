@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Laravel\Cashier\Billable;
 
 /**
  * @property int $id
@@ -38,7 +37,7 @@ use Laravel\Cashier\Billable;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable, SoftDeletes, TenantScoped, Billable;
+    use HasFactory, Notifiable, SoftDeletes, TenantScoped;
 
     /**
      * Cache para verificações de roles (evita queries duplicadas)

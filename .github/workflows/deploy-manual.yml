@@ -28,16 +28,22 @@ jobs:
             # Instalar dependências PHP
             composer install --no-dev --optimize-autoloader
 
+            # Instalar dependências Node e Build Assets
+            # Se você usa Vite, isso é essencial para o CSS/JS carregar
+            if [ -f "package.json" ]; then
+                npm install
+                npm run build
+            fi
+
             # Rodar migrações
             php artisan migrate --force
 
-            # Rodar seeders essenciais (idempotentes)
+            # Rodar seeder de recursos (Feature Flags)
+            # Como usamos updateOrCreate, é seguro rodar em todo deploy
             php artisan db:seed --class=ResourceSeeder --force
-            php artisan db:seed --class=PlanSeeder --force
 
-            # Limpar flags do Pennant e caches
-            php artisan pennant:purge
-            php artisan limpar:geral
+            # Otimizar Laravel
+            php artisan optimize
             php artisan view:cache
             php artisan config:cache
             php artisan event:cache

@@ -99,6 +99,7 @@ class DatabaseCleanerAndSeeder extends Seeder
         // 1. Executar seeders de dados básicos/globais
         $this->command->info('📊 Criando dados básicos do sistema...');
         $this->call([
+            ResourceSeeder::class,
             PlanSeeder::class,
             UnitSeeder::class,
             AreasOfActivitySeeder::class,
