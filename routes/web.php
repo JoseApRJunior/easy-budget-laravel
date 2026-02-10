@@ -441,6 +441,7 @@ Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])-
     // Dashboard (rota única)
     Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
     Route::get('/health', [MonitoringController::class, 'dashboard'])->name('system.health');
+    Route::post('/toggle-simulation', [\App\Http\Controllers\Admin\DevController::class, 'toggleSimulationMode'])->name('toggle-simulation');
 
     // Users
     Route::prefix('users')->name('users.')->group(function () {

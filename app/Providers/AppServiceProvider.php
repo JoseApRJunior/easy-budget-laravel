@@ -150,7 +150,8 @@ class AppServiceProvider extends ServiceProvider
                 }
 
                 // 2. Se for admin do sistema, tem acesso a tudo que está ativo
-                if ($user->hasRole('admin')) {
+                // EXCETO se estiver em modo de simulação de produção
+                if ($user->hasRole('admin') && session('simulation_mode') !== 'production') {
                     return true;
                 }
 

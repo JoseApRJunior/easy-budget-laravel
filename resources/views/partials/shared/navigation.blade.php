@@ -104,6 +104,21 @@
                                 <i class="bi bi-gear me-2"></i>Configurações Globais</a></li>
 
                         <li>
+                            <form action="{{ route('admin.toggle-simulation') }}" method="POST" class="px-3 py-2">
+                                @csrf
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="simulationModeToggle"
+                                        {{ session('simulation_mode') === 'production' ? 'checked' : '' }}
+                                        onchange="this.form.submit()">
+                                    <label class="form-check-label small fw-bold text-{{ session('simulation_mode') === 'production' ? 'danger' : 'success' }}" for="simulationModeToggle">
+                                        <i class="bi bi-eye{{ session('simulation_mode') === 'production' ? '-slash' : '' }} me-1"></i>
+                                        {{ session('simulation_mode') === 'production' ? 'Simulação: Produção' : 'Modo: Desenvolvedor' }}
+                                    </label>
+                                </div>
+                            </form>
+                        </li>
+
+                        <li>
                             <hr class="dropdown-divider">
                         </li>
 
