@@ -60,6 +60,23 @@
                 </x-ui.card>
             </div>
 
+            <div class="col-md-4">
+                <x-ui.card class="h-100 shadow-sm border-0 hover-shadow">
+                    <div class="d-flex flex-column h-100">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-opacity-10 me-3">
+                                <i class="bi bi-toggle-on fs-4 text-info"></i>
+                            </div>
+                            <h5 class="card-title mb-0">Módulos do Sistema</h5>
+                        </div>
+                        <p class="card-text text-muted flex-grow-1">
+                            Ative ou desative funcionalidades globais do sistema (Feature Flags).
+                        </p>
+                        <x-ui.button href="{{ route('admin.features.index') }}" variant="info" label="Gerenciar Módulos" />
+                    </div>
+                </x-ui.card>
+            </div>
+
             {{-- Adicione mais cards aqui para outras funcionalidades administrativas --}}
 
         </div>

@@ -400,6 +400,8 @@ class InvoiceController extends Controller
             'service_code' => 'required|string|exists:services,code',
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:issue_date',
+            'discount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         $dto = InvoiceFromServiceDTO::fromRequest($request->all());

@@ -16,7 +16,7 @@ $tag = $isLink ? 'a' : 'button';
 $buttonType = $type ?: ($isLink ? null : 'button');
 
 // Base das classes
-$classes = 'btn ';
+$classes = 'btn d-inline-flex align-items-center justify-content-center ';
 $classes .= $outline ? "btn-outline-{$variant}" : "btn-{$variant}";
 
 // Lógica de Cor do Texto (Só se aplica se NÃO for outline)

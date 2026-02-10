@@ -2293,3 +2293,24 @@ input[type="number"] {
     padding: 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* Utility classes not present in Bootstrap 5 by default */
+@media (min-width: 768px) {
+    .w-md-auto {
+        width: auto !important;
+    }
+}
+
+/* Hover effects and transitions */
+.transition-all {
+    transition: all 0.3s ease !important;
+}
+
+.hover-bg {
+    transition: background-color 0.3s ease !important;
+}
+
+.hover-bg:hover {
+    background-color: var(--hover-bg) !important;
+    cursor: pointer;
+}

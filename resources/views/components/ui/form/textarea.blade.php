@@ -43,7 +43,13 @@ $id = $id ?? $name;
     </div>
     @enderror
 
-    @if($help)
-    <div class="form-text text-muted small">{{ $help }}</div>
+    @if($help || isset($helpSlot))
+    <div class="form-text text-muted small">
+        @if(isset($helpSlot))
+            {{ $helpSlot }}
+        @else
+            {{ $help }}
+        @endif
+    </div>
     @endif
 </div>

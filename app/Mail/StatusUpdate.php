@@ -103,9 +103,27 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     public function content(): Content
     {
-        $statusDescription = null;
-        if (isset($this->entity->status) && method_exists($this->entity->status, 'getDescription')) {
-            $statusDescription = $this->entity->status->getDescription();
+        $statusDescription = $this->statusName;
+        
+        // Tentar obter a descrição completa do enum baseado no status capturado no evento
+        try {
+            $entityType = $this->getEntityType();
+            $enumClass = match ($entityType) {
+                'budget' => \App\Enums\BudgetStatus::class,
+                'invoice' => \App\Enums\InvoiceStatus::class,
+                'service' => \App\Enums\ServiceStatus::class,
+                'schedule' => \App\Enums\ScheduleStatus::class,
+                default => null,
+            };
+
+            if ($enumClass && method_exists($enumClass, 'tryFrom')) {
+                $statusEnum = $enumClass::tryFrom($this->status);
+                if ($statusEnum && method_exists($statusEnum, 'getDescription')) {
+                    $statusDescription = $statusEnum->getDescription();
+                }
+            }
+        } catch (\Exception $e) {
+            // Mantém o statusName original em caso de erro
         }
 
         $serviceStatus = null;
@@ -168,12 +186,7 @@ class StatusUpdate extends Mailable implements ShouldQueue
      */
     private function getStatusColor(): string
     {
-        // Se a entidade tem o status atual como enum
-        if (isset($this->entity->status) && $this->entity->status instanceof \App\Contracts\Interfaces\StatusEnumInterface) {
-            return $this->entity->status->getColor();
-        }
-
-        // Tentar obter do enum baseado no tipo da entidade e no valor da string de status
+        // Tentar obter a cor do enum baseado no status capturado no evento (snapshot)
         try {
             $entityType = $this->getEntityType();
             $enumClass = match ($entityType) {
@@ -191,7 +204,12 @@ class StatusUpdate extends Mailable implements ShouldQueue
                 }
             }
         } catch (\Exception $e) {
-            // Ignora erro e usa padrão
+            // Ignora erro e tenta fallback
+        }
+
+        // Fallback: se o status capturado não funcionar, tenta o status atual da entidade
+        if (isset($this->entity->status) && $this->entity->status instanceof \App\Contracts\Interfaces\StatusEnumInterface) {
+            return $this->entity->status->getColor();
         }
 
         return config('theme.colors.primary', '#093172');

@@ -97,21 +97,33 @@
                             </ul>
 
                             <!-- Action Button -->
-                            <form action="/plans/pay" method="post" class="mt-auto">
-                                @csrf
-                                <input type="hidden" name="planSlug" value="{{ $plan->slug }}" required>
-                                <div class="d-grid">
-                                    @if ($isCurrentPlan)
-                                        <button type="button" class="btn btn-lg btn-success" disabled>
-                                            <i class="bi bi-check-circle me-2"></i>Plano Atual
-                                        </button>
-                                    @else
-                                        <button type="submit" class="btn btn-lg {{ $isPro ? 'btn-primary' : 'btn-outline-primary' }}">
-                                            Escolher Plano
-                                        </button>
-                                    @endif
+                            @if ($isCurrentPlan)
+                                <div class="mt-auto">
+                                    <x-ui.button variant="outline-success" class="w-100 disabled" label="Plano Atual" icon="check-lg" />
+                                    <a href="{{ route('provider.plans.billing-portal') }}" class="btn btn-link btn-sm mt-2 w-100">
+                                        Gerenciar Assinatura (Stripe)
+                                    </a>
                                 </div>
-                            </form>
+                            @else
+                                <div class="mt-auto d-grid gap-2">
+                                    {{-- Stripe (Cashier) --}}
+                                    <a href="{{ route('provider.plans.checkout', $plan->slug) }}" class="btn btn-{{ $isPro ? 'success' : 'primary' }} w-100 py-2 fw-bold shadow-sm">
+                                        <i class="bi bi-credit-card me-2"></i>Assinar com Stripe
+                                    </a>
+
+                                    {{-- Mercado Pago (Antigo/Funcional) --}}
+                                    <form action="{{ route('provider.plans.redirect-to-payment', $plan->slug) }}" method="post">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-info w-100 py-2 fw-bold">
+                                            <i class="bi bi-wallet2 me-2"></i>Pagar com Mercado Pago
+                                        </button>
+                                    </form>
+                                    
+                                    <small class="text-muted text-center d-block mt-1">
+                                        Escolha seu método de pagamento preferido.
+                                    </small>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

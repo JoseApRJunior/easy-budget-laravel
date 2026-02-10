@@ -123,15 +123,16 @@ class SendBudgetNotification implements ShouldQueue
                 'notification_type' => $notificationType,
             ]);
 
-            // Enviar email
+            // Enviar email usando fila para evitar atrasos
             Mail::to($customer->contact->email_personal)
-                ->send(new BudgetNotificationMail(
+                ->queue(new BudgetNotificationMail(
                     budget: $budget,
                     customer: $customer,
                     notificationType: $notificationType,
                     tenant: $budget->tenant,
                     company: $companyData,
-                    customMessage: $event->comment
+                    customMessage: $event->comment,
+                    status: $event->newStatus
                 ));
 
             Log::info('Notificação de orçamento enviada', [

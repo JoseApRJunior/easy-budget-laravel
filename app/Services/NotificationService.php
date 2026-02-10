@@ -33,8 +33,8 @@ class NotificationService
                 'sent_at' => now(),
             ]);
 
-            // Enviar email
-            Mail::to($emails)->send(new AlertNotificationMail($alert, $subject));
+            // Enviar email usando fila
+            Mail::to($emails)->queue(new AlertNotificationMail($alert, $subject));
 
             Log::info('Notificação de alerta por email enviada', [
                 'alert_id' => $alert->id,

@@ -107,7 +107,7 @@
                 <div class="row mt-4">
                     <div class="col-md-6 mb-3 mb-md-0">
                         <p class="text-muted mb-1"><strong>Notas e Termos:</strong></p>
-                        <p class="small">Pagamento a ser realizado na data de vencimento.</p>
+                        <textarea class="form-control form-control-sm" name="notes" rows="3" placeholder="Observações adicionais para a fatura...">{{ old('notes', 'Pagamento a ser realizado na data de vencimento.') }}</textarea>
                     </div>
                     <div class="col-md-6">
                         <div class="table-responsive-sm">
@@ -115,19 +115,24 @@
                                 <tbody>
                                     <tr>
                                         <th class="text-end py-1" style="width:70%">Subtotal:</th>
-                                        <td class="text-end py-1">R$
-                                            {{ \App\Helpers\CurrencyHelper::format($invoiceData['subtotal']) }}
+                                        <td class="text-end py-1">
+                                            <span id="display_subtotal">R$ {{ \App\Helpers\CurrencyHelper::format($invoiceData['subtotal']) }}</span>
+                                            <input type="hidden" id="subtotal_value" value="{{ $invoiceData['subtotal'] }}">
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th class="text-end py-1">Desconto:</th>
-                                        <td class="text-end py-1 text-danger">- R$
-                                            {{ \App\Helpers\CurrencyHelper::format($invoiceData['discount']) }}</td>
+                                        <th class="text-end py-1 align-middle">Desconto (R$):</th>
+                                        <td class="text-end py-1">
+                                            <input type="text" class="form-control form-control-sm text-end text-danger d-inline-block currency-brl"
+                                                style="width: 120px;" name="discount_display" id="discount_input"
+                                                value="{{ old('discount', \App\Helpers\CurrencyHelper::format($invoiceData['discount'] ?? 0)) }}">
+                                        </td>
                                     </tr>
                                     <tr class="border-top">
-                                        <th class="text-end pt-2 h5 mb-0">Total:</th>
-                                        <td class="text-end pt-2 h5 mb-0 text-success fw-bold">R$
-                                            {{ \App\Helpers\CurrencyHelper::format($invoiceData['total']) }}</td>
+                                        <th class="text-end pt-2 h5 mb-0">Total Final:</th>
+                                        <td class="text-end pt-2 h5 mb-0 text-success fw-bold">
+                                            <span id="display_total">R$ {{ \App\Helpers\CurrencyHelper::format($invoiceData['total']) }}</span>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -141,6 +146,8 @@
                 <form action="{{ route('provider.invoices.store.from-service') }}" method="POST" id="invoiceForm">
                     @csrf
                     <input type="hidden" name="service_code" value="{{ $serviceCode }}">
+                    <input type="hidden" name="discount" id="hidden_discount" value="{{ old('discount', $invoiceData['discount'] ?? 0) }}">
+                    <input type="hidden" name="notes" id="hidden_notes">
 
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -181,10 +188,94 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const discountInput = document.getElementById('discount_input');
+            const hiddenDiscount = document.getElementById('hidden_discount');
+            const hiddenNotes = document.getElementById('hidden_notes');
+            const notesTextarea = document.querySelector('textarea[name="notes"]');
+            const subtotalValue = parseFloat(document.getElementById('subtotal_value').value);
+            const displayTotal = document.getElementById('display_total');
+
+            // Inicializar VanillaMask se disponível
+            if (window.VanillaMask) {
+                new VanillaMask(discountInput, 'currency');
+            }
+
+            // Limpar campo ao focar se for zero para facilitar a digitação
+            discountInput.addEventListener('focus', function() {
+                let value = 0;
+                if (window.parseCurrencyBRLToNumber) {
+                    value = window.parseCurrencyBRLToNumber(this.value);
+                } else {
+                    value = parseFloat(this.value.replace(/\./g, '').replace(',', '.')) || 0;
+                }
+
+                if (value === 0) {
+                    this.value = '';
+                } else {
+                    this.select(); // Se já tiver valor, seleciona tudo para facilitar a troca
+                }
+            });
+
+            // Se sair do campo e estiver vazio, volta para 0,00 formatado
+            discountInput.addEventListener('blur', function() {
+                if (this.value === '') {
+                    if (window.formatCurrencyBRL) {
+                        this.value = window.formatCurrencyBRL(0);
+                    } else {
+                        this.value = '0,00';
+                    }
+                }
+                updateTotal();
+            });
+
+            function updateTotal() {
+                let discountValue = 0;
+                if (window.parseCurrencyBRLToNumber) {
+                    discountValue = window.parseCurrencyBRLToNumber(discountInput.value);
+                } else {
+                    discountValue = parseFloat(discountInput.value.replace(/\./g, '').replace(',', '.')) || 0;
+                }
+
+                // Impede que o desconto seja maior que o subtotal
+                if (discountValue > subtotalValue) {
+                    discountValue = subtotalValue;
+                    if (window.formatCurrencyBRL) {
+                        discountInput.value = window.formatCurrencyBRL(discountValue);
+                    } else {
+                        discountInput.value = discountValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+                    alert('O desconto não pode ser maior que o subtotal da fatura.');
+                }
+
+                let total = subtotalValue - discountValue;
+                if (total < 0) total = 0;
+
+                hiddenDiscount.value = discountValue;
+
+                if (window.formatCurrencyBRL) {
+                    displayTotal.textContent = 'R$ ' + window.formatCurrencyBRL(total);
+                } else {
+                    displayTotal.textContent = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            }
+
+            discountInput.addEventListener('input', updateTotal);
+
             // Validação do formulário
             document.getElementById('invoiceForm').addEventListener('submit', function(e) {
                 const issueDate = document.getElementById('issue_date').value;
                 const dueDate = document.getElementById('due_date').value;
+
+                // Sincronizar campos que estão fora do form original
+                hiddenNotes.value = notesTextarea.value;
+
+                let discountValue = 0;
+                if (window.parseCurrencyBRLToNumber) {
+                    discountValue = window.parseCurrencyBRLToNumber(discountInput.value);
+                } else {
+                    discountValue = parseFloat(discountInput.value.replace(/\./g, '').replace(',', '.')) || 0;
+                }
+                hiddenDiscount.value = discountValue;
 
                 if (new Date(dueDate) < new Date(issueDate)) {
                     e.preventDefault();
@@ -192,6 +283,9 @@
                     return false;
                 }
             });
+
+            // Inicializar total
+            updateTotal();
         });
     </script>
 @endpush

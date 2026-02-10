@@ -60,7 +60,7 @@ class EmailService
                 $data['message'] ?? null
             );
 
-            Mail::to($to)->send($mailable);
+            Mail::to($to)->queue($mailable);
 
             return ServiceResult::success([], 'E-mail de compartilhamento de orçamento enviado.');
         } catch (\Exception $e) {
@@ -97,7 +97,7 @@ class EmailService
                 $data['message'] ?? null
             );
 
-            Mail::to($to)->send($mailable);
+            Mail::to($to)->queue($mailable);
 
             return ServiceResult::success([], 'E-mail de compartilhamento de fatura enviado.');
         } catch (\Exception $e) {

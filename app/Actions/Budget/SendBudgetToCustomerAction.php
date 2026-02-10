@@ -136,16 +136,17 @@ class SendBudgetToCustomerAction
                 }
             });
 
-            // 5. Enviar E-mail (FORA DA TRANSAÇÃO para evitar timeout de banco)
-            \Illuminate\Support\Facades\Log::info('[SendBudgetToCustomerAction] Enviando email', ['customMessage' => $customMessage]);
-            Mail::to($customer->email)->send(new BudgetNotificationMail(
+            // 5. Enviar E-mail (FORA DA TRANSAÇÃO para evitar timeout de banco) usando fila
+            \Illuminate\Support\Facades\Log::info('[SendBudgetToCustomerAction] Enfileirando email', ['customMessage' => $customMessage]);
+            Mail::to($customer->email)->queue(new BudgetNotificationMail(
                 budget: $budget,
                 customer: $customer,
                 notificationType: 'sent',
                 tenant: $budget->tenant,
                 company: $companyData,
                 publicUrl: $publicUrl,
-                customMessage: $customMessage
+                customMessage: $customMessage,
+                status: $budget->status->value
             ));
 
             $msg = 'Orçamento enviado e produtos reservados com sucesso!';

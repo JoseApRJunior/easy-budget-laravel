@@ -25,6 +25,7 @@ class TenantManagementController extends Controller
     {
         $search = $request->get('search');
         $status = $request->get('status');
+        $filter = $request->get('filter');
         $sort = $request->get('sort', 'name');
         $direction = $request->get('direction', 'asc');
 
@@ -42,11 +43,18 @@ class TenantManagementController extends Controller
             $query->where('status', $status);
         }
 
+        if ($filter === 'trial_expired') {
+            $query->whereHas('subscriptions', function ($q) {
+                $q->where('payment_method', 'trial')
+                  ->where('end_date', '<', now());
+            });
+        }
+
         $tenants = $query->orderBy($sort, $direction)
             ->paginate(15)
             ->appends($request->query());
 
-        return view('admin.tenants.index', compact('tenants', 'search', 'status', 'sort', 'direction'));
+        return view('admin.tenants.index', compact('tenants', 'search', 'status', 'filter', 'sort', 'direction'));
     }
 
     /**

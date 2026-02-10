@@ -78,13 +78,9 @@ class ServiceObserver
             ));
         }
 
-        // Verificar se o status mudou para "completed"
-        if ($service->isDirty('status') && $service->status->value === ServiceStatus::COMPLETED->value) {
-            Log::info('Service status changed to completed, generating automatic invoice', [
-                'service_id' => $service->id,
-                'service_code' => $service->code,
-            ]);
-            $this->generateAutomaticInvoice($service);
+        // Sincronizar o total do orçamento sempre que o serviço for atualizado
+        if ($service->isDirty('total') || $service->isDirty('final_total')) {
+            $this->updateBudgetTotal($service->budget_id);
         }
     }
 
@@ -95,10 +91,20 @@ class ServiceObserver
     {
         $budget = \App\Models\Budget::find($budgetId);
         if ($budget) {
-            $total = $budget->services()->sum('total');
+            $total = $budget->services()
+                ->whereNotIn('status', [
+                    ServiceStatus::CANCELLED->value,
+                    ServiceStatus::NOT_PERFORMED->value,
+                    ServiceStatus::EXPIRED->value,
+                ])
+                ->get()
+                ->sum(function ($service) {
+                    return $service->final_total ?? $service->total;
+                });
+
             $budget->update(['total' => $total]);
 
-            Log::info('Budget total synchronized via ServiceObserver', [
+            Log::info('Budget total synchronized via ServiceObserver (filtered by active services)', [
                 'budget_id' => $budgetId,
                 'new_total' => $total,
             ]);

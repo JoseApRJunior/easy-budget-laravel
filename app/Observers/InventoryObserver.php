@@ -22,16 +22,18 @@ class InventoryObserver
     }
 
     /**
-     * Handle the "updated" event for Budget or Service models.
-     * Gerencia estoque quando orçamento ou serviço muda de status.
+     * Handle the "updated" event for Budget, Service or ServiceItem models.
+     * Gerencia estoque quando orçamento, serviço ou item muda.
      */
-    public function updated(Budget|Service $model): void
+    public function updated(Budget|Service|ServiceItem $model): void
     {
         // Delegar para o método específico baseado no tipo do modelo
         if ($model instanceof Budget) {
             $this->handleBudgetUpdated($model);
         } elseif ($model instanceof Service) {
             $this->handleServiceUpdated($model);
+        } elseif ($model instanceof ServiceItem) {
+            $this->handleServiceItemUpdated($model);
         }
     }
 
@@ -86,22 +88,31 @@ class InventoryObserver
         $oldStatus = $service->getOriginal('status');
         $newStatus = $service->status;
 
+        // Normalizar status para comparação (pode vir como string ou Enum do getOriginal)
+        $oldStatusValue = $oldStatus instanceof \UnitEnum ? $oldStatus->value : (string) $oldStatus;
+        $newStatusValue = $newStatus->value;
+
         Log::info('Service status changed', [
             'service_id' => $service->id,
-            'old_status' => $oldStatus,
-            'new_status' => $newStatus->value,
+            'old_status' => $oldStatusValue,
+            'new_status' => $newStatusValue,
             'tenant_id' => $service->tenant_id,
         ]);
 
         // Se serviço foi cancelado, devolver produtos ao estoque (ou liberar reserva se ainda não consumido)
-        if ($newStatus->value === ServiceStatus::CANCELLED->value) {
+        if ($newStatusValue === ServiceStatus::CANCELLED->value) {
             $this->returnServiceItemsToInventory($service);
         }
 
         // Se serviço foi para preparação, reservar produtos do estoque
         if (
-            $newStatus->value === ServiceStatus::PREPARING->value &&
-            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value])
+            $newStatusValue === ServiceStatus::PREPARING->value &&
+            in_array($oldStatusValue, [
+                ServiceStatus::PENDING->value,
+                ServiceStatus::SCHEDULING->value,
+                ServiceStatus::SCHEDULED->value,
+                ServiceStatus::DRAFT->value,
+            ])
         ) {
             $this->reserveServiceItemsFromInventory($service);
         }
@@ -109,8 +120,14 @@ class InventoryObserver
         // Se serviço foi para execução, consumir produtos do estoque
         // Isso confirma a reserva (se existir) ou faz a baixa direta
         if (
-            $newStatus->value === ServiceStatus::IN_PROGRESS->value &&
-            in_array($oldStatus, [ServiceStatus::PENDING->value, ServiceStatus::SCHEDULED->value, ServiceStatus::DRAFT->value, ServiceStatus::PREPARING->value])
+            $newStatusValue === ServiceStatus::IN_PROGRESS->value &&
+            in_array($oldStatusValue, [
+                ServiceStatus::PENDING->value,
+                ServiceStatus::SCHEDULING->value,
+                ServiceStatus::SCHEDULED->value,
+                ServiceStatus::DRAFT->value,
+                ServiceStatus::PREPARING->value,
+            ])
         ) {
             $this->consumeServiceItemsFromInventory($service);
         }
@@ -203,6 +220,134 @@ class InventoryObserver
                 $serviceItem->id,
                 $service->tenant_id,
             );
+        }
+    }
+
+    /**
+     * Handle the ServiceItem "updated" event.
+     * Quando um item é atualizado em um serviço.
+     */
+    protected function handleServiceItemUpdated(ServiceItem $serviceItem): void
+    {
+        // Se a quantidade ou produto não mudou, nada a fazer para o estoque
+        if (! $serviceItem->isDirty(['quantity', 'product_id'])) {
+            return;
+        }
+
+        $service = $serviceItem->service;
+        $oldQuantity = (int) $serviceItem->getOriginal('quantity');
+        $newQuantity = (int) $serviceItem->quantity;
+        $oldProductId = $serviceItem->getOriginal('product_id');
+        $newProductId = $serviceItem->product_id;
+
+        // Se o serviço estiver em preparação, ajustar reserva
+        if ($service->status->value === ServiceStatus::PREPARING->value) {
+            // Se o produto mudou
+            if ($oldProductId !== $newProductId) {
+                // Liberar reserva do produto antigo
+                if ($oldProductId) {
+                    $this->inventoryService->releaseReservation(
+                        (int) $oldProductId,
+                        $oldQuantity,
+                        'Liberação de reserva (Troca de produto) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                        $service->tenant_id,
+                    );
+                }
+
+                // Reservar novo produto
+                if ($newProductId) {
+                    $this->inventoryService->reserveProduct(
+                        (int) $newProductId,
+                        $newQuantity,
+                        'Reserva automática (Troca de produto) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                        $service->tenant_id,
+                    );
+                }
+            }
+            // Se apenas a quantidade mudou para o mesmo produto
+            elseif ($oldQuantity !== $newQuantity) {
+                $diff = $newQuantity - $oldQuantity;
+
+                if ($diff > 0) {
+                    // Reservar a diferença
+                    $this->inventoryService->reserveProduct(
+                        $newProductId,
+                        $diff,
+                        'Ajuste de reserva (Aumento de quantidade) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                        $service->tenant_id,
+                    );
+                } else {
+                    // Liberar a diferença
+                    $this->inventoryService->releaseReservation(
+                        $newProductId,
+                        abs($diff),
+                        'Ajuste de reserva (Redução de quantidade) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                        $service->tenant_id,
+                    );
+                }
+            }
+        }
+
+        // Se o serviço estiver em progresso, ajustar consumo físico
+        if ($service->status->value === ServiceStatus::IN_PROGRESS->value) {
+            // Se o produto mudou
+            if ($oldProductId !== $newProductId) {
+                // Devolver produto antigo
+                if ($oldProductId) {
+                    $this->inventoryService->returnProduct(
+                        (int) $oldProductId,
+                        $oldQuantity,
+                        'Devolução automática (Troca de produto) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                        $service->tenant_id,
+                    );
+                }
+
+                // Consumir novo produto
+                if ($newProductId) {
+                    $this->inventoryService->consumeProduct(
+                        (int) $newProductId,
+                        $newQuantity,
+                        'Consumo automático (Troca de produto) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                    );
+                }
+            }
+            // Se apenas a quantidade mudou
+            elseif ($oldQuantity !== $newQuantity) {
+                $diff = $newQuantity - $oldQuantity;
+
+                if ($diff > 0) {
+                    // Consumir a diferença
+                    $this->inventoryService->consumeProduct(
+                        $newProductId,
+                        $diff,
+                        'Ajuste de consumo (Aumento de quantidade) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                    );
+                } else {
+                    // Devolver a diferença
+                    $this->inventoryService->returnProduct(
+                        $newProductId,
+                        abs($diff),
+                        'Ajuste de consumo (Redução de quantidade) - Serviço: '.$service->code,
+                        ServiceItem::class,
+                        $serviceItem->id,
+                        $service->tenant_id,
+                    );
+                }
+            }
         }
     }
 
@@ -333,14 +478,16 @@ class InventoryObserver
     protected function consumeServiceItemsFromInventory(Service $service): void
     {
         try {
+            $service->loadMissing('serviceItems');
+
             foreach ($service->serviceItems as $item) {
                 if ($item->product_id) {
                     $this->inventoryService->consumeProduct(
                         $item->product_id,
                         $item->quantity,
                         'Início de serviço - Código: '.$service->code,
-                        Service::class,
-                        $service->id,
+                        ServiceItem::class,
+                        $item->id,
                         $service->tenant_id,
                     );
                 }

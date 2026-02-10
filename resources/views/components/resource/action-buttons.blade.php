@@ -16,7 +16,7 @@
     $resourceSingular = rtrim($resource, 's'); // Remove 's' final para singular
 @endphp
 
-<div {{ $attributes->merge(['class' => 'action-btn-group']) }}>
+<div {{ $attributes->merge(['class' => 'action-btn-group d-flex gap-2']) }}>
     @if ($isDeleted)
         {{-- Item deletado: mostrar Visualizar + Restaurar --}}
         <x-ui.button

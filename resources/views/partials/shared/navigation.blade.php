@@ -27,12 +27,14 @@
                 </a>
             </li>
 
+            @feature('analytics')
             <li class="nav-item">
                 <a class="nav-link d-flex align-items-center" href="{{ route('provider.analytics.index') }}">
                     <i class="bi bi-robot me-2"></i>
                     <span>IA Analytics</span>
                 </a>
             </li>
+            @endfeature
 
             {{-- Botão Temporário para Logs --}}
             <li class="nav-item">
@@ -96,6 +98,8 @@
                         {{-- Planos e Configurações --}}
                         <li><a class="dropdown-item" href="{{ route('admin.plans.index') }}">
                                 <i class="bi bi-card-list me-2"></i>Planos</a></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.features.index') }}">
+                                <i class="bi bi-toggle-on me-2"></i>Módulos (Features)</a></li>
                         <li><a class="dropdown-item" href="{{ route('admin.global-settings.index') }}">
                                 <i class="bi bi-gear me-2"></i>Configurações Globais</a></li>
 
@@ -137,38 +141,71 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="managementDropdown">
                         {{-- Processo de Venda e Execução --}}
+                        @feature('customers')
                         <li><a class="dropdown-item" href="{{ route('provider.customers.dashboard') }}">
                                 <i class="bi bi-people me-2"></i>Clientes</a></li>
+                        @endfeature
+
+                        @feature('budgets')
                         <li><a class="dropdown-item" href="{{ route('provider.budgets.dashboard') }}">
                                 <i class="bi bi-file-earmark-text me-2"></i>Orçamentos</a></li>
+                        @endfeature
+
+                        @feature('services')
                         <li><a class="dropdown-item" href="{{ route('provider.services.dashboard') }}">
                                 <i class="bi bi-tools me-2"></i>Serviços</a></li>
+                        @endfeature
+
+                        @feature('schedules')
                         <li><a class="dropdown-item" href="{{ route('provider.schedules.dashboard') }}">
                                 <i class="bi bi-calendar-event me-2"></i>Agendamentos</a></li>
+                        @endfeature
+
+                        @feature('budgets') {{-- Compartilhamentos depende de orçamentos --}}
                         <li><a class="dropdown-item" href="{{ route('provider.budgets.shares.dashboard') }}">
                                 <i class="bi bi-share me-2"></i>Compartilhamentos</a></li>
+                        @endfeature
+
+                        @feature('invoices')
                         <li><a class="dropdown-item" href="{{ route('provider.invoices.dashboard') }}">
                                 <i class="bi bi-receipt me-2"></i>Faturas</a></li>
+                        @endfeature
 
                         <li><hr class="dropdown-divider"></li>
 
                         {{-- Gestão de Catálogo e Estoque --}}
+                        @feature('products')
                         <li><a class="dropdown-item" href="{{ route('provider.products.dashboard') }}">
                                 <i class="bi bi-box me-2"></i>Produtos</a></li>
+                        @endfeature
+
+                        @feature('inventory')
                         <li><a class="dropdown-item" href="{{ route('provider.inventory.dashboard') }}">
                                 <i class="bi bi-archive me-2"></i>Estoque</a></li>
+                        @endfeature
+
+                        @feature('categories')
                         <li><a class="dropdown-item" href="{{ route('provider.categories.dashboard') }}">
                                 <i class="bi bi-tags me-2"></i>Categorias</a></li>
+                        @endfeature
 
                         <li><hr class="dropdown-divider"></li>
 
                         {{-- Análise e Ferramentas --}}
+                        @feature('financial')
                         <li><a class="dropdown-item" href="{{ route('provider.financial.dashboard') }}">
                                 <i class="bi bi-currency-dollar me-2"></i>Financeiro</a></li>
+                        @endfeature
+
+                        @feature('reports')
                         <li><a class="dropdown-item" href="{{ route('reports.dashboard') }}">
                                 <i class="bi bi-graph-up me-2"></i>Relatórios</a></li>
+                        @endfeature
+
+                        @feature('qrcode')
                         <li><a class="dropdown-item" href="{{ route('provider.qrcode.index') }}">
                                 <i class="bi bi-qr-code me-2"></i>Gerador QR Code</a></li>
+                        @endfeature
                     </ul>
             @endif
         @endauth

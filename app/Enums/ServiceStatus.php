@@ -196,8 +196,7 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     public function canEdit(): bool
     {
         return match ($this) {
-            self::DRAFT, self::SCHEDULED, self::PREPARING, self::ON_HOLD,
-            self::IN_PROGRESS, self::PARTIAL => true,
+            self::DRAFT => true,
             default => false,
         };
     }
@@ -257,9 +256,9 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
     {
         return match ($currentStatus) {
             self::DRAFT->value => [self::PENDING->value, self::CANCELLED->value],
-            self::PENDING->value => [self::SCHEDULING->value, self::SCHEDULED->value, self::PREPARING->value, self::ON_HOLD->value, self::CANCELLED->value, self::EXPIRED->value, self::DRAFT->value, self::APPROVED->value, self::REJECTED->value],
+            self::PENDING->value => [self::SCHEDULING->value, self::SCHEDULED->value, self::PREPARING->value, self::ON_HOLD->value, self::CANCELLED->value, self::EXPIRED->value, self::DRAFT->value],
             self::SCHEDULING->value => [self::SCHEDULED->value, self::PREPARING->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::PENDING->value],
-            self::SCHEDULED->value => [self::IN_PROGRESS->value, self::PREPARING->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::ON_HOLD->value, self::APPROVED->value, self::REJECTED->value],
+            self::SCHEDULED->value => [self::IN_PROGRESS->value, self::PREPARING->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::ON_HOLD->value],
             self::PREPARING->value => [self::IN_PROGRESS->value, self::NOT_PERFORMED->value, self::CANCELLED->value, self::ON_HOLD->value],
             self::IN_PROGRESS->value => [self::COMPLETED->value, self::PARTIAL->value, self::ON_HOLD->value, self::CANCELLED->value],
             self::ON_HOLD->value => [self::SCHEDULED->value, self::PREPARING->value, self::IN_PROGRESS->value, self::NOT_PERFORMED->value, self::CANCELLED->value],
@@ -280,8 +279,6 @@ enum ServiceStatus: string implements \App\Contracts\Interfaces\StatusEnumInterf
             self::CANCELLED->value,
             self::NOT_PERFORMED->value,
             self::EXPIRED->value,
-            self::APPROVED->value,
-            self::REJECTED->value,
         ];
     }
 

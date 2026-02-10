@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\CheckFeature;
 use App\Http\Middleware\MonitoringMiddleware;
 use App\Http\Middleware\OptimizeAuthUser;
 use App\Http\Middleware\ProviderMiddleware;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => AdminMiddleware::class,
             'monitoring' => MonitoringMiddleware::class,
             'optimize.auth' => OptimizeAuthUser::class,
+            'feature' => CheckFeature::class,
         ]);
 
         $middleware->web(append: [
@@ -43,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/*',
+            'stripe/*',
         ]);
 
         $middleware->trustProxies('*', 30);

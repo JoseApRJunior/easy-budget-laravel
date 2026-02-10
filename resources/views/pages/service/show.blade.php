@@ -30,18 +30,30 @@
         {{-- Informações do Serviço (Padrão Budget) --}}
         <x-resource.resource-header-card>
             {{-- Primeira Linha: Informações Principais --}}
-            <x-resource.resource-header-item
-                label="Código do Serviço"
-                :value="$service->code" />
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Código do Serviço"
+                    :subtitle="$service->code"
+                    icon="hash" />
+            </x-layout.grid-col>
 
-            <x-resource.resource-header-item
-                label="Status Atual">
-                <x-ui.status-description :item="$service" statusField="status" :useColor="false" class="text-dark fw-medium" />
-            </x-resource.resource-header-item>
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Status Atual"
+                    icon="info-circle">
+                    <x-slot:subtitle>
+                        <x-ui.status-description :item="$service" statusField="status" :useColor="false" class="text-dark fw-medium" />
+                    </x-slot:subtitle>
+                </x-resource.resource-info>
+            </x-layout.grid-col>
 
-            <x-resource.resource-header-item
-                label="Total do Serviço"
-                :value="'R$ ' . \App\Helpers\CurrencyHelper::format($service->total)" />
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Total do Serviço"
+                    :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($service->total)"
+                    icon="cash-stack"
+                    class="text-primary fw-bold" />
+            </x-layout.grid-col>
 
             <x-resource.resource-header-divider />
 
@@ -82,7 +94,7 @@
                 </x-layout.grid-col>
                 @else
                 <x-layout.grid-col size="col-12">
-                    <p class="text-muted mb-0 italic">Dados do cliente não vinculados a este serviço.</p>
+                    <p class="text-muted mb-0 italic small">Dados do cliente não vinculados a este serviço.</p>
                 </x-layout.grid-col>
                 @endif
             </x-resource.resource-header-section>
@@ -91,74 +103,79 @@
 
             {{-- Terceira Linha: Vínculos e Detalhes --}}
             <x-resource.resource-header-section title="Vínculos e Detalhes" icon="link-45deg">
-                <div class="col-md-4">
+                <x-layout.grid-col size="col-md-4">
                     <x-resource.resource-info
                         title="Categoria"
                         :subtitle="$service->category?->name ?? 'Não definida'"
                         icon="tag"
                         class="small" />
-                </div>
-                <div class="col-md-4">
+                </x-layout.grid-col>
+                <x-layout.grid-col size="col-md-4">
                     <x-resource.resource-info
                         title="Orçamento Vinculado"
                         :subtitle="$service->budget?->code ?? 'N/A'"
                         icon="file-earmark-text"
                         :href="route('provider.budgets.show', $service->budget?->code)"
                         class="small fw-bold" />
-                </div>
+                </x-layout.grid-col>
                 @if ($service->due_date)
-                <div class="col-md-4">
+                <x-layout.grid-col size="col-md-4">
                     <x-resource.resource-info
                         title="Prazo de Entrega"
                         :subtitle="\Carbon\Carbon::parse($service->due_date)->format('d/m/Y')"
                         icon="calendar-event"
                         class="small" />
-                </div>
+                </x-layout.grid-col>
                 @endif
             </x-resource.resource-header-section>
 
             <x-resource.resource-header-divider />
 
-            {{-- Terceira Linha: Resumo Financeiro e Datas --}}
-            <div class="col-md-8 mt-2">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <x-resource.resource-info
-                            title="Criado em"
-                            :subtitle="$service->created_at->format('d/m/Y H:i')"
-                            icon="calendar-plus"
-                            class="small" />
+            {{-- Quarta Linha: Resumo Financeiro e Datas --}}
+            <x-resource.resource-header-section title="Resumo e Histórico" icon="clock-history">
+                <x-layout.grid-col size="col-md-8">
+                    <div class="row g-3">
+                        <x-layout.grid-col size="col-md-4">
+                            <x-resource.resource-info
+                                title="Criado em"
+                                :subtitle="$service->created_at->format('d/m/Y H:i')"
+                                icon="calendar-plus"
+                                class="small" />
+                        </x-layout.grid-col>
+                        <x-layout.grid-col size="col-md-4">
+                            <x-resource.resource-info
+                                title="Última Atualização"
+                                :subtitle="$service->updated_at?->format('d/m/Y H:i')"
+                                icon="clock-history"
+                                class="small" />
+                        </x-layout.grid-col>
                     </div>
-                    <div class="col-md-4">
-                        <x-resource.resource-info
-                            title="Última Atualização"
-                            :subtitle="$service->updated_at?->format('d/m/Y H:i')"
-                            icon="clock-history"
-                            class="small" />
-                    </div>
-                </div>
-            </div>
+                </x-layout.grid-col>
 
-            <div class="col-md-4 mt-2">
-                <div class="bg-light p-3 rounded-3 border border-light-subtle h-100 d-flex flex-column justify-content-center">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span class="text-muted small">Desconto:</span>
-                        <span class="fw-semibold small text-danger">R$ {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
+                <x-layout.grid-col size="col-md-4">
+                    <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small fw-medium">Desconto:</span>
+                            <span class="text-danger fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top" style="border-color: #e2e8f0 !important;">
+                            <span class="fw-bold text-dark">Total Final:</span>
+                            <span class="fw-bold text-success fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between pt-2 border-top border-secondary-subtle">
-                        <span class="fw-bold">Total Final:</span>
-                        <span class="fw-bold text-success">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                    </div>
-                </div>
-            </div>
+                </x-layout.grid-col>
+            </x-resource.resource-header-section>
 
             {{-- Descrição e Observações --}}
             @if ($service->description)
-            <x-resource.resource-header-divider />
-            <div class="col-12 mt-2">
-                <label class="text-muted small d-block mb-1 fw-bold text-uppercase">Descrição do Serviço</label>
-                <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $service->description }}</p>
-            </div>
+                <x-resource.resource-header-divider />
+                <x-resource.resource-header-section title="Descrição do Serviço" icon="text-paragraph">
+                    <x-layout.grid-col size="col-12">
+                        <div class="p-3 rounded-3 bg-light border border-light-subtle">
+                            <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $service->description }}</p>
+                        </div>
+                    </x-layout.grid-col>
+                </x-resource.resource-header-section>
             @endif
         </x-resource.resource-header-card>
 
@@ -172,66 +189,78 @@
                     :total="$service->serviceItems->count()"
                     class="mb-4">
 
-                    <x-slot name="desktop">
+                    <x-slot:desktop>
                         <x-resource.resource-table>
-                            <x-slot name="thead">
+                            <x-slot:thead>
                                 <x-resource.table-row>
                                     <x-resource.table-cell header>Produto</x-resource.table-cell>
                                     <x-resource.table-cell header>Quantidade</x-resource.table-cell>
                                     <x-resource.table-cell header>Valor Unitário</x-resource.table-cell>
                                     <x-resource.table-cell header>Total</x-resource.table-cell>
                                 </x-resource.table-row>
-                            </x-slot>
+                            </x-slot:thead>
+                            <x-slot:tbody>
+                                @foreach ($service->serviceItems as $item)
+                                <x-resource.table-row>
+                                    <x-resource.table-cell>
+                                        <x-resource.resource-info
+                                            :title="$item->product?->name ?? 'Produto não encontrado'"
+                                            :subtitle="$item->product?->description ?? ''"
+                                            icon="box-seam"
+                                            titleClass="fw-bold"
+                                            subtitleClass="text-muted small" />
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</x-resource.table-cell>
+                                    <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</x-resource.table-cell>
+                                    <x-resource.table-cell><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></x-resource.table-cell>
+                                </x-resource.table-row>
+                                @endforeach
+                            </x-slot:tbody>
 
-                            @foreach ($service->serviceItems as $item)
-                            <x-resource.table-row>
-                                <x-resource.table-cell>
-                                    <x-resource.resource-info
-                                        :title="$item->product?->name ?? 'Produto não encontrado'"
-                                        :subtitle="$item->product?->description ?? ''"
-                                        icon="box-seam"
-                                        titleClass="fw-bold"
-                                        subtitleClass="text-muted small" />
-                                </x-resource.table-cell>
-                                <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</x-resource.table-cell>
-                                <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</x-resource.table-cell>
-                                <x-resource.table-cell><strong>{{ \App\Helpers\CurrencyHelper::format($item->total) }}</strong></x-resource.table-cell>
-                            </x-resource.table-row>
-                            @endforeach
-
-                            <x-slot name="tfoot">
+                            <x-slot:tfoot>
                                 <x-resource.table-row class="table-secondary">
                                     <x-resource.table-cell colspan="3" header>Total dos Itens:</x-resource.table-cell>
                                     <x-resource.table-cell header>{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</x-resource.table-cell>
                                 </x-resource.table-row>
-                            </x-slot>
+                            </x-slot:tfoot>
                         </x-resource.resource-table>
-                    </x-slot>
+                    </x-slot:desktop>
 
-                    <x-slot name="mobile">
-                        <div class="p-3">
-                            @foreach ($service->serviceItems as $item)
-                            <div class="mb-3 pb-3 {{ !$loop->last ? 'border-bottom border-light-subtle' : '' }}">
-                                <div class="fw-bold text-dark mb-1">{{ $item->product?->name ?? 'Produto não encontrado' }}</div>
-                                <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
-                                    <span>Qtd: <span class="text-dark fw-semibold">{{ \App\Helpers\CurrencyHelper::format($item->quantity, false) }}</span></span>
-                                    <span>Unit: <span class="text-dark fw-semibold">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span></span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="small text-muted">Subtotal:</span>
-                                    <span class="text-success fw-bold h6 mb-0">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</span>
-                                </div>
-                            </div>
-                            @endforeach
+                    <x-slot:mobile>
+                        @foreach ($service->serviceItems as $item)
+                        <x-resource.resource-mobile-item>
+                            <x-resource.resource-mobile-header
+                                :title="$item->product?->name ?? 'Produto não encontrado'" />
 
-                            <div class="bg-light p-3 rounded-3 mt-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-bold text-muted small">TOTAL DOS ITENS</span>
-                                    <span class="h5 mb-0 text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</span>
+                            <x-slot:description>
+                                <div class="row g-2">
+                                    <x-resource.resource-mobile-field
+                                        col="col-6"
+                                        label="Qtd"
+                                        :value="\App\Helpers\CurrencyHelper::format($item->quantity, false)" />
+                                    <x-resource.resource-mobile-field
+                                        col="col-6"
+                                        label="Unitário"
+                                        :value="\App\Helpers\CurrencyHelper::format($item->unit_value)" />
                                 </div>
+                            </x-slot:description>
+
+                            <x-slot:footer>
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <span class="small text-muted fw-bold text-uppercase">Subtotal:</span>
+                                    <span class="text-success fw-bold fs-6">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</span>
+                                </div>
+                            </x-slot:footer>
+                        </x-resource.resource-mobile-item>
+                        @endforeach
+
+                        <div class="bg-light p-3 rounded-3 mt-3 border border-light-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-muted small">TOTAL DOS ITENS</span>
+                                <span class="h5 mb-0 text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</span>
                             </div>
                         </div>
-                    </x-slot>
+                    </x-slot:mobile>
                 </x-resource.resource-list-card>
                 @endif
 
@@ -243,77 +272,73 @@
                     :total="$service->schedules->count()"
                     class="mb-4">
 
-                    <x-slot name="desktop">
+                    <x-slot:desktop>
                         <x-resource.resource-table>
-                            <x-slot name="thead">
+                            <x-slot:thead>
                                 <x-resource.table-row>
                                     <x-resource.table-cell header>Data</x-resource.table-cell>
                                     <x-resource.table-cell header>Horário</x-resource.table-cell>
                                     <x-resource.table-cell header>Localização</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-center">Status</x-resource.table-cell>
-                                    <x-resource.table-cell header class="text-end">Ações</x-resource.table-cell>
+                                    <x-resource.table-cell header align="center">Status</x-resource.table-cell>
+                                    <x-resource.table-cell header align="end">Ações</x-resource.table-cell>
                                 </x-resource.table-row>
-                            </x-slot>
-
-                            @foreach ($service->schedules as $schedule)
-                            <x-resource.table-row>
-                                <x-resource.table-cell class="fw-bold">
-                                    {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
-                                </x-resource.table-cell>
-                                <x-resource.table-cell class="text-muted">
-                                    {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
-                                    -
-                                    {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
-                                </x-resource.table-cell>
-                                <x-resource.table-cell>
-                                    @if ($schedule->location)
-                                    <i class="bi bi-geo-alt me-1 text-muted"></i>
-                                    {{ $schedule->location }}
-                                    @else
-                                    <span class="text-muted small">Não informada</span>
-                                    @endif
-                                </x-resource.table-cell>
-                                <x-resource.table-cell class="text-center">
-                                    <x-ui.status-badge :item="$schedule" statusField="status" />
-                                </x-resource.table-cell>
-                                <x-resource.table-cell class="text-end">
-                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                </x-resource.table-cell>
-                            </x-resource.table-row>
-                            @endforeach
-                        </x-resource.resource-table>
-                    </x-slot>
-
-                    <x-slot name="mobile">
-                        <div class="p-3">
-                            @foreach ($service->schedules as $schedule)
-                            <div class="mb-4 {{ !$loop->last ? 'border-bottom border-light-subtle pb-4' : '' }}">
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <div class="fw-bold text-dark h6 mb-0">{{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}</div>
-                                            <div class="small text-muted">
-                                                {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
-                                            </div>
-                                        </div>
+                            </x-slot:thead>
+                            <x-slot:tbody>
+                                @foreach ($service->schedules as $schedule)
+                                <x-resource.table-row>
+                                    <x-resource.table-cell class="fw-bold">
+                                        {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell class="text-muted small">
+                                        {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') }}
+                                        -
+                                        {{ \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i') }}
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell>
+                                        @if ($schedule->location)
+                                        <i class="bi bi-geo-alt me-1 text-muted"></i>
+                                        {{ $schedule->location }}
+                                        @else
+                                        <span class="text-muted small italic">Não informada</span>
+                                        @endif
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell align="center">
                                         <x-ui.status-badge :item="$schedule" statusField="status" />
-                                    </div>
+                                    </x-resource.table-cell>
+                                    <x-resource.table-cell align="end">
+                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                    </x-resource.table-cell>
+                                </x-resource.table-row>
+                                @endforeach
+                            </x-slot:tbody>
+                        </x-resource.resource-table>
+                    </x-slot:desktop>
 
-                                    @if ($schedule->location)
-                                    <div class="bg-light p-2 rounded small mb-2">
-                                        <i class="bi bi-geo-alt text-primary me-1"></i>
-                                        <span class="text-dark">{{ $schedule->location }}</span>
-                                    </div>
-                                    @endif
+                    <x-slot:mobile>
+                        @foreach ($service->schedules as $schedule)
+                        <x-resource.resource-mobile-item>
+                            <x-resource.resource-mobile-header
+                                :title="\Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y')"
+                                :subtitle="\Carbon\Carbon::parse($schedule->start_date_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($schedule->end_date_time)->format('H:i')" />
 
-                                    <div class="d-flex justify-content-end">
-                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" />
-                                    </div>
+                            <x-slot:description>
+                                @if ($schedule->location)
+                                <x-resource.resource-mobile-field
+                                    label="Localização"
+                                    :value="$schedule->location"
+                                    icon="geo-alt" />
+                                @endif
+                            </x-slot:description>
+
+                            <x-slot:footer>
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <x-ui.status-badge :item="$schedule" statusField="status" />
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" />
                                 </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </x-slot>
+                            </x-slot:footer>
+                        </x-resource.resource-mobile-item>
+                        @endforeach
+                    </x-slot:mobile>
                 </x-resource.resource-list-card>
                 @endif
             </x-layout.grid-col>
@@ -436,20 +461,15 @@
                     variant="info" icon="receipt" label="Ver Orçamento" />
                 @endif
 
-                @if ($isApproved)
-                <x-ui.button type="link" href="{{ route('provider.services.edit', $service->code) }}"
-                    variant="outline-primary" icon="pencil" label="Editar Itens/Preços" />
-                @endif
-
                         {{-- Botões de Fatura --}}
-                        @if ($service->status->isFinished() || $statusValue === 'completed')
-                        <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
-                            variant="success" icon="receipt" label="Criar Fatura" />
-                        @else
-                        @if($service->serviceItems && $service->serviceItems->count() > 0)
-                        <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
-                            variant="warning" icon="receipt" label="Criar Fatura Parcial" />
-                        @endif
+                        @if ($statusValue === 'completed' || $statusValue === 'partial')
+                            <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
+                                variant="success" icon="receipt" label="Criar Fatura" />
+                        @elseif (!in_array($statusValue, ['cancelled', 'not_performed', 'expired', 'draft']))
+                            @if($service->serviceItems && $service->serviceItems->count() > 0)
+                                <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
+                                    variant="warning" icon="receipt" label="Criar Fatura Parcial" />
+                            @endif
                         @endif
 
                         <x-ui.button type="button" variant="secondary" onclick="window.print()" icon="printer" label="Imprimir" />
@@ -459,37 +479,27 @@
         </x-layout.grid-row>
 
         {{-- Botões de Ação (Footer) --}}
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <div class="d-flex gap-2">
-                <x-ui.button
-                    href="{{ url()->previous(route('provider.services.index')) }}"
-                    variant="outline-secondary"
-                    icon="bi bi-arrow-left">
-                    Voltar
-                </x-ui.button>
-            </div>
-            <small class="text-muted d-none d-md-block">
-                Última atualização: {{ $service->updated_at?->format('d/m/Y H:i') }}
-            </small>
-            <div class="d-flex gap-2">
+        <x-layout.actions-bar alignment="between" class="mt-4" mb="0">
+            <x-ui.back-button index-route="provider.services.index" class="w-100 w-md-auto px-md-4" />
+
+            <x-ui.button-group gap="2" class="w-100 w-md-auto">
                 @if ($service->canBeEdited())
                 <x-ui.button
+                    type="link"
                     href="{{ route('provider.services.edit', $service->code) }}"
                     variant="primary"
-                    icon="bi bi-pencil-fill">
-                    Editar
-                </x-ui.button>
+                    icon="pencil-fill"
+                    label="Editar" />
                 @endif
                 <x-ui.button
                     type="button"
                     variant="outline-danger"
                     data-bs-toggle="modal"
                     data-bs-target="#deleteModal"
-                    icon="bi bi-trash-fill">
-                    Excluir
-                </x-ui.button>
-            </div>
-        </div>
+                    icon="trash-fill"
+                    label="Excluir" />
+            </x-ui.button-group>
+        </x-layout.actions-bar>
 
         {{-- Modal de Confirmação de Exclusão --}}
         <x-ui.modal id="deleteModal" title="Confirmar Exclusão" icon="trash-fill">

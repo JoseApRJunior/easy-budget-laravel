@@ -2,22 +2,10 @@
 
 namespace App\Models;
 
-use App\Models\Traits\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class Resource extends Model
 {
-    use TenantScoped;
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        static::bootTenantScoped();
-    }
-
     /**
      * Status constants.
      */
