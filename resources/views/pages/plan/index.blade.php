@@ -85,13 +85,29 @@
 
                             <!-- Features -->
                             <ul class="list-unstyled text-start mb-4 flex-grow-1 px-2">
+                                {{-- Explicit Limits --}}
+                                <li class="mb-3 d-flex align-items-start">
+                                    <i class="bi bi-check-circle-fill text-success me-2 mt-1 flex-shrink-0"></i>
+                                    <span class="small">Até {{ $plan->max_budgets }} orçamentos</span>
+                                </li>
+                                <li class="mb-3 d-flex align-items-start">
+                                    <i class="bi bi-check-circle-fill text-success me-2 mt-1 flex-shrink-0"></i>
+                                    <span class="small">Até {{ $plan->max_clients }} clientes</span>
+                                </li>
+
                                 @php
                                     $features = is_array($plan->features) ? $plan->features : json_decode($plan->features ?? '[]', true);
                                 @endphp
                                 @foreach ($features as $feature)
                                     <li class="mb-3 d-flex align-items-start">
                                         <i class="bi bi-check-circle-fill text-success me-2 mt-1 flex-shrink-0"></i>
-                                        <span class="small">{{ $feature }}</span>
+                                        <span class="small">
+                                            @if(config("features.{$feature}"))
+                                                {{ config("features.{$feature}.name") }}
+                                            @else
+                                                {{ $feature }}
+                                            @endif
+                                        </span>
                                     </li>
                                 @endforeach
                             </ul>

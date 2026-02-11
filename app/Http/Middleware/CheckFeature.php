@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Laravel\Pennant\Feature;
+use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckFeature
@@ -16,10 +16,8 @@ class CheckFeature
      */
     public function handle(Request $request, Closure $next, string $feature): Response
     {
-        // Verifica se a feature está ativa via Pennant
-        // Como as features são registradas dinamicamente no AppServiceProvider,
-        // o Pennant cuidará da lógica e do cache.
-        if (Feature::inactive($feature)) {
+        // Verifica se a feature está ativa via Gate (substituindo Pennant)
+        if (Gate::denies($feature)) {
             abort(404, 'Módulo em desenvolvimento ou não disponível.');
         }
 

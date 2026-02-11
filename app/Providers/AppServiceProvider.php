@@ -4,23 +4,21 @@ namespace App\Providers;
 
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
-use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\PlanSubscription;
 use App\Models\Product;
 use App\Models\Provider;
+use App\Models\Resource;
 use App\Models\Schedule;
-use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Observers\BudgetObserver;
 use App\Observers\CategoryObserver;
 use App\Observers\CustomerObserver;
 use App\Observers\InvoiceObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProviderObserver;
-use App\Observers\ServiceObserver;
 use App\Observers\TenantObserver;
 use App\Observers\UserObserver;
 use App\Policies\SchedulePolicy;
@@ -32,10 +30,8 @@ use App\Services\Infrastructure\OAuth\GoogleOAuthClient;
 use App\Services\NotificationService;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\Paginator;
-use App\Models\Resource;
-use Laravel\Pennant\Feature;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -152,9 +148,20 @@ class AppServiceProvider extends ServiceProvider
                 return false;
             }
 
-            // 4. Se o recurso estiver em desenvolvimento (in_dev), verifica se o plano permite explicitamente
+            // 4. Se o recurso estiver em desenvolvimento (in_dev), bloqueia para todos exceto admins e beta testers
             if ($resource->in_dev) {
-                return in_array($featureSlug, $activeSubscription->plan->features ?? []);
+                // Admin ou Beta Tester podem acessar
+                if ($user->hasRole('admin') || $user->is_beta) {
+                    // Para beta testers, ainda precisamos verificar se o plano deles dá acesso ao recurso?
+                    // Geralmente beta testers testam recursos novos que podem nem estar no plano ainda.
+                    // Se quisermos que beta testers acessem TUDO que é in_dev:
+                    return true;
+
+                    // Se quisermos que beta testers acessem APENAS se estiver no plano deles (mas o recurso é in_dev):
+                    // return in_array($featureSlug, $activeSubscription->plan->features ?? []);
+                }
+
+                return false;
             }
 
             // 5. Se não estiver em dev, qualquer plano ativo acessa por padrão
@@ -169,10 +176,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Registrar as features individuais baseadas nos slugs do banco para funcionar com @feature('slug')
         try {
-            if (!app()->runningInConsole() || app()->runningUnitTests()) {
+            if (! app()->runningInConsole() || app()->runningUnitTests()) {
                 $slugs = Resource::pluck('slug')->toArray();
                 foreach ($slugs as $slug) {
-                    Feature::define($slug, fn (User $user) => $checkResourceAccess($user, $slug));
+                    Gate::define($slug, fn (User $user) => $checkResourceAccess($user, $slug));
                 }
             }
         } catch (\Exception $e) {
@@ -180,16 +187,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // Blade directive: @feature('slug')
-        Blade::if('feature', function (string $featureSlug) use ($checkResourceAccess) {
-            if (!auth()->check()) return false;
-            
-            // Tenta usar a feature definida no Pennant (que usa o cache do Pennant)
-            // Se não estiver definida (ex: recurso novo), usa a lógica direta
-            try {
-                return Feature::active($featureSlug);
-            } catch (\Exception $e) {
-                return $checkResourceAccess(auth()->user(), $featureSlug);
-            }
+        Blade::if('feature', function (string $featureSlug) {
+            return Gate::check($featureSlug);
         });
 
         Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));

@@ -90,6 +90,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'google_data' => 'array',
         'logo' => 'string',
         'is_active' => 'boolean',
+        'is_beta' => 'boolean',
         'remember_token' => 'string',
         'email_verified_at' => 'datetime',
         'extra_links' => 'string',

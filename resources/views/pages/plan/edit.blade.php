@@ -128,14 +128,33 @@
 
                             <!-- Features -->
                             <div class="mb-4">
-                                <label for="features" class="form-label fw-bold">
-                                    <i class="bi bi-check-circle text-primary me-1"></i>Recursos Incluídos
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-check-circle text-primary me-1"></i>Recursos do Sistema
                                 </label>
-                                <textarea class="form-control @error('features') is-invalid @enderror" id="features" name="features" rows="4"
-                                    placeholder="Liste os recursos incluídos no plano, um por linha">{{ old('features', is_array($plan->features) ? implode("\n", $plan->features) : $plan->features) }}</textarea>
-                                <div class="form-text">Digite cada recurso em uma linha separada.</div>
+                                <div class="row g-3">
+                                    @php
+                                        $currentFeatures = old('features', $plan->features ?? []);
+                                        if (!is_array($currentFeatures)) {
+                                            $currentFeatures = [];
+                                        }
+                                    @endphp
+                                    @foreach(config('features') as $key => $feature)
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="features[]" 
+                                                    id="feature_{{ $key }}" value="{{ $key }}"
+                                                    {{ in_array($key, $currentFeatures) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="feature_{{ $key }}">
+                                                    {{ $feature['name'] }}
+                                                    <small class="d-block text-muted">{{ $feature['description'] }}</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="form-text mt-2">Selecione os módulos aos quais este plano terá acesso.</div>
                                 @error('features')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
 

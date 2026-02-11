@@ -499,25 +499,7 @@ class PlanManagementController extends Controller
      */
     private function getAvailableFeatures(): array
     {
-        return [
-            'unlimited_customers' => 'Clientes Ilimitados',
-            'unlimited_invoices' => 'Faturas Ilimitadas',
-            'unlimited_budgets' => 'Orçamentos Ilimitados',
-            'unlimited_products' => 'Produtos Ilimitados',
-            'unlimited_services' => 'Serviços Ilimitados',
-            'unlimited_storage' => 'Armazenamento Ilimitado',
-            'advanced_reports' => 'Relatórios Avançados',
-            'custom_branding' => 'Marca Personalizada',
-            'api_access' => 'Acesso à API',
-            'priority_support' => 'Suporte Prioritário',
-            'team_members' => 'Membros da Equipe',
-            'multi_language' => 'Multi-idioma',
-            'advanced_analytics' => 'Analytics Avançado',
-            'ai_features' => 'Recursos de IA',
-            'custom_integrations' => 'Integrações Customizadas',
-            'white_label' => 'White Label',
-            'dedicated_server' => 'Servidor Dedicado',
-        ];
+        return collect(config('features'))->map(fn($f) => $f['name'])->toArray();
     }
 
     /**

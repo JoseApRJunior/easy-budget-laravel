@@ -12,91 +12,16 @@ class ResourceSeeder extends Seeder
      */
     public function run(): void
     {
-        $modules = [
-            [
-                'name' => 'IA Analytics',
-                'slug' => 'analytics',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Gestão de Planos',
-                'slug' => 'plans',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Categorias',
-                'slug' => 'categories',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Clientes',
-                'slug' => 'customers',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Produtos',
-                'slug' => 'products',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Serviços',
-                'slug' => 'services',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Agendamentos',
-                'slug' => 'schedules',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Orçamentos',
-                'slug' => 'budgets',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Financeiro',
-                'slug' => 'financial',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Faturas',
-                'slug' => 'invoices',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Estoque',
-                'slug' => 'inventory',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'QR Code',
-                'slug' => 'qrcode',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-            [
-                'name' => 'Relatórios',
-                'slug' => 'reports',
-                'status' => Resource::STATUS_ACTIVE,
-                'in_dev' => false,
-            ],
-        ];
+        $features = config('features');
 
-        foreach ($modules as $module) {
+        foreach ($features as $slug => $details) {
             Resource::updateOrCreate(
-                ['slug' => $module['slug']],
-                $module
+                ['slug' => $slug],
+                [
+                    'name' => $details['name'],
+                    'status' => Resource::STATUS_ACTIVE,
+                    'in_dev' => $details['in_dev'] ?? false,
+                ]
             );
         }
     }
