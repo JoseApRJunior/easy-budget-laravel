@@ -198,6 +198,11 @@ class AppServiceProvider extends ServiceProvider
         Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));
         Blade::if('anyrole', fn ($roles) => auth()->check() && auth()->user()->hasAnyRole((array) $roles));
 
+        // Gate para Log Viewer (Opcodes)
+        Gate::define('viewLogViewer', function ($user) {
+            return $user->hasRole('admin');
+        });
+
         Paginator::useBootstrapFive();
 
         // Aumentar limite de memória para evitar erros em requisições pesadas
