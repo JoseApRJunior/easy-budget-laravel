@@ -119,21 +119,25 @@ class AppServiceProvider extends ServiceProvider
 
         // Lógica centralizada para verificar acesso a recursos/módulos
         $checkResourceAccess = function (User $user, string $featureSlug) {
-            // 1. Verifica se o recurso está ativo globalmente na tabela resources
-            $resource = Resource::where('slug', $featureSlug)
-                ->where('status', Resource::STATUS_ACTIVE)
-                ->first();
+            // 1. Busca o recurso pelo slug (independente do status)
+            $resource = Resource::where('slug', $featureSlug)->first();
 
             if (! $resource) {
                 return false;
             }
 
-            // 2. Se for admin do sistema, tem acesso a tudo que está ativo
+            // 2. Admin do sistema tem acesso IRRESTRITO (vê inativos, em dev, tudo)
+            // Isso permite que o Admin conserte bugs em recursos desativados sem expor a ninguém
             if ($user->hasRole('admin')) {
                 return true;
             }
 
-            // 3. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
+            // 3. Para todos os outros usuários (incluindo Beta), o recurso DEVE estar ATIVO
+            if ($resource->status !== Resource::STATUS_ACTIVE) {
+                return false;
+            }
+
+            // 4. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
             if (! $user->tenant) {
                 return false;
             }

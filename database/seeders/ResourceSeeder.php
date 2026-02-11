@@ -15,11 +15,14 @@ class ResourceSeeder extends Seeder
         $features = config('features');
 
         foreach ($features as $slug => $details) {
-            Resource::updateOrCreate(
+            // Usamos firstOrCreate para respeitar as edições feitas via Admin.
+            // O seeder só vai criar se a feature NOVA ainda não existir no banco.
+            Resource::firstOrCreate(
                 ['slug' => $slug],
                 [
                     'name' => $details['name'],
-                    'status' => Resource::STATUS_ACTIVE,
+                    'description' => $details['description'] ?? null,
+                    'status' => $details['status'] ?? Resource::STATUS_ACTIVE,
                     'in_dev' => $details['in_dev'] ?? false,
                 ]
             );

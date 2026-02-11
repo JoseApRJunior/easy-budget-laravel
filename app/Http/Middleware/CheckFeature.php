@@ -16,7 +16,7 @@ class CheckFeature
      */
     public function handle(Request $request, Closure $next, string $feature): Response
     {
-        // Verifica se a feature está ativa via Gate (substituindo Pennant)
+        // Verifica se a feature está ativa via Gate
         if (Gate::denies($feature)) {
             abort(404, 'Módulo em desenvolvimento ou não disponível.');
         }

@@ -453,6 +453,8 @@ Route::prefix('a')->name('admin.')->middleware(['auth', 'admin', 'monitoring'])-
         Route::get('/', [FeatureManagementController::class, 'index'])->name('index');
         Route::post('/', [FeatureManagementController::class, 'store'])->name('store');
         Route::post('/{resource}/toggle', [FeatureManagementController::class, 'toggle'])->name('toggle');
+        Route::post('/{resource}/toggle-dev', [FeatureManagementController::class, 'toggleDev'])->name('toggle-dev');
+        Route::put('/{resource}', [FeatureManagementController::class, 'update'])->name('update');
         Route::delete('/{resource}', [FeatureManagementController::class, 'destroy'])->name('destroy');
     });
 
