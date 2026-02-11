@@ -4,13 +4,18 @@
     'id' => null,
     'checked' => false,
     'required' => false,
+    'switch' => false,
 ])
 
 @php
     $id = $id ?? $name;
+    $wrapperClasses = 'form-check mb-4';
+    if ($switch) {
+        $wrapperClasses .= ' form-switch';
+    }
 @endphp
 
-<div class="form-check mb-4">
+<div class="{{ $wrapperClasses }}">
     <input 
         class="form-check-input @error($name) is-invalid @enderror" 
         type="checkbox" 

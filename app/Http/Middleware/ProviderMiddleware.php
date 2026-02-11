@@ -32,8 +32,13 @@ class ProviderMiddleware
         'settings.avatar.remove',       // Remover avatar
         'settings.company-logo.update', // Atualizar logo
         'settings.audit',               // Auditoria
-        'plans.index',                  // Visualizar planos
-        'plans.show',                   // Visualizar detalhes do plano
+        'plans.index',                  // Visualizar planos (Legado/Admin)
+        'plans.show',                   // Visualizar detalhes do plano (Legado/Admin)
+        'provider.plans.index',         // Visualizar planos (Provider)
+        'provider.plans.show',          // Visualizar detalhes do plano (Provider)
+        'provider.plans.status',        // Status do plano
+        'provider.plans.payment-status',// Status do pagamento
+        'provider.plans.redirect-to-payment', // Redirecionar para pagamento
         'settings.profile.edit',        // Editar perfil
         'settings.profile.update',      // Atualizar perfil
         'settings.profile.destroy',     // Deletar perfil

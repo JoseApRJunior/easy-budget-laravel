@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Resource;
-use Laravel\Pennant\Feature;
 use Illuminate\Support\Collection;
 
 class FeatureService
@@ -15,7 +14,7 @@ class FeatureService
      */
     public function getAllFeatures(): Collection
     {
-        return Resource::all();
+        return Resource::orderBy('name')->get();
     }
 
     /**
@@ -23,14 +22,19 @@ class FeatureService
      */
     public function toggleFeature(Resource $resource): void
     {
-        $resource->status = $resource->status === Resource::STATUS_ACTIVE 
+        $newStatus = $resource->status === Resource::STATUS_ACTIVE 
             ? Resource::STATUS_INACTIVE 
             : Resource::STATUS_ACTIVE;
         
-        $resource->save();
+        $resource->status = $newStatus;
 
-        // Clear Pennant cache for this resource
-        Feature::forget('feature', $resource->slug);
+        // Regra de Negócio: Se desativar o recurso, ele volta para "Em Desenvolvimento" automaticamente.
+        // Isso previne que um recurso seja reativado acidentalmente para produção sem revisão.
+        if ($newStatus === Resource::STATUS_INACTIVE) {
+            $resource->in_dev = true;
+        }
+        
+        $resource->save();
     }
 
     /**
@@ -51,7 +55,6 @@ class FeatureService
      */
     public function deleteFeature(Resource $resource): void
     {
-        Feature::forget('feature', $resource->slug);
         $resource->delete();
     }
 }

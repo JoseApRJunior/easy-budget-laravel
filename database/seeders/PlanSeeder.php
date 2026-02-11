@@ -10,6 +10,15 @@ class PlanSeeder extends Seeder
     public function run(): void
     {
         $now = now();
+        
+        // Define feature groups
+        $basicFeatures = ['categories', 'customers', 'products', 'services', 'schedules', 'budgets'];
+        $proFeatures = array_merge($basicFeatures, ['financial', 'invoices', 'inventory', 'qrcode', 'reports']);
+        $enterpriseFeatures = array_merge($proFeatures, ['analytics']);
+        
+        // Trial gets everything available in Enterprise
+        $trialFeatures = $enterpriseFeatures;
+
         $plans = [
             [
                 'name' => 'Plano Trial',
@@ -19,15 +28,7 @@ class PlanSeeder extends Seeder
                 'status' => true,
                 'max_budgets' => 5,
                 'max_clients' => 25,
-                'features' => json_encode([
-                    'Plano experimental gratuito',
-                    'Período de teste: 7 dias',
-                    'Até 5 orçamentos',
-                    'Até 25 clientes',
-                    'Relatórios incluídos',
-                    'Suporte básico',
-                    'Sem custo durante o trial',
-                ]),
+                'features' => json_encode($trialFeatures),
                 'created_at' => $now,
             ],
             [
@@ -38,7 +39,7 @@ class PlanSeeder extends Seeder
                 'status' => true,
                 'max_budgets' => 50,
                 'max_clients' => 100,
-                'features' => json_encode(['Acesso a recursos básicos', 'Até 3 orçamentos por mês', '1 Cliente por mês']),
+                'features' => json_encode($basicFeatures),
                 'created_at' => $now,
             ],
             [
@@ -49,7 +50,7 @@ class PlanSeeder extends Seeder
                 'status' => true,
                 'max_budgets' => 1000,
                 'max_clients' => 5000,
-                'features' => json_encode(['Acesso a recursos básicos', 'Até 15 orçamentos por mês', '5 Clientes por mês', 'Relatórios básicos']),
+                'features' => json_encode($proFeatures),
                 'created_at' => $now,
             ],
             [
@@ -60,7 +61,7 @@ class PlanSeeder extends Seeder
                 'status' => true,
                 'max_budgets' => 100000,
                 'max_clients' => 100000,
-                'features' => json_encode(['Acesso a todos os recursos', 'Orçamentos ilimitados', 'Clientes ilimitados', 'Relatórios avançados', 'Integração com pagamentos', 'Gerencimento de projetos']),
+                'features' => json_encode($enterpriseFeatures),
                 'created_at' => $now,
             ],
         ];

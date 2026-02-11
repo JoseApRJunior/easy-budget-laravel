@@ -62,6 +62,7 @@ class PlanController extends Controller
         return view('pages.plan.index', [
             'plans' => $result->getData(),
             'filters' => $filters,
+            'availableResources' => \App\Models\Resource::all()->keyBy('slug'),
         ]);
     }
 
@@ -98,6 +99,7 @@ class PlanController extends Controller
 
         return view('pages.plan.show', [
             'plan' => $result->getData(),
+            'availableResources' => \App\Models\Resource::all()->keyBy('slug'),
         ]);
     }
 

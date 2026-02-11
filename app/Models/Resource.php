@@ -62,4 +62,30 @@ class Resource extends Model
             ]),
         ];
     }
+
+    /**
+     * Verifica se o recurso é visível para um determinado usuário.
+     */
+    public function isVisibleTo(?User $user = null): bool
+    {
+        // Se deletado ou inativo, nunca é visível publicamente
+        if ($this->status !== self::STATUS_ACTIVE) {
+            return false;
+        }
+
+        // Se em desenvolvimento, apenas admin ou beta podem ver
+        if ((bool) $this->in_dev) {
+            if (! $user) {
+                return false;
+            }
+
+            // Verifica se é admin (independente de tenant se possível) ou se é beta
+            $isAdmin = method_exists($user, 'hasRole') ? $user->hasRole('admin') : false;
+            $isBeta = $user->is_beta ?? false;
+
+            return $isAdmin || $isBeta;
+        }
+
+        return true;
+    }
 }

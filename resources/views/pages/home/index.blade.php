@@ -11,7 +11,7 @@
 
     <x-home.features-section />
 
-    <x-home.plans-section :plans="$plans">
+    <x-home.plans-section :plans="$plans" :availableResources="$availableResources">
         <x-home.cta-section />
     </x-home.plans-section>
 @endsection

@@ -24,8 +24,8 @@
 
         {{-- Links comuns para todos os usuários --}}
         @feature('plans')
-        <li><a class="dropdown-item" href="{{ route( 'provider.plans.index' ) }}">
-                <i class="bi bi-clipboard-check me-2"></i>Planos</a></li>
+            <li><a class="dropdown-item" href="{{ route( 'provider.plans.index' ) }}">
+                    <i class="bi bi-clipboard-check me-2"></i>Planos</a></li>
         @endfeature
         <li><a class="dropdown-item" href="{{ route( 'settings.index' ) }}">
                 <i class="bi bi-gear me-2"></i>Configurações</a></li>

@@ -4,23 +4,21 @@ namespace App\Providers;
 
 use App\Contracts\Interfaces\Auth\OAuthClientInterface;
 use App\Contracts\Interfaces\Auth\SocialAuthenticationInterface;
-use App\Models\Budget;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\PlanSubscription;
 use App\Models\Product;
 use App\Models\Provider;
+use App\Models\Resource;
 use App\Models\Schedule;
-use App\Models\Service;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Observers\BudgetObserver;
 use App\Observers\CategoryObserver;
 use App\Observers\CustomerObserver;
 use App\Observers\InvoiceObserver;
 use App\Observers\ProductObserver;
 use App\Observers\ProviderObserver;
-use App\Observers\ServiceObserver;
 use App\Observers\TenantObserver;
 use App\Observers\UserObserver;
 use App\Policies\SchedulePolicy;
@@ -32,10 +30,8 @@ use App\Services\Infrastructure\OAuth\GoogleOAuthClient;
 use App\Services\NotificationService;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\Paginator;
-use App\Models\Resource;
-use Laravel\Pennant\Feature;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -123,21 +119,36 @@ class AppServiceProvider extends ServiceProvider
 
         // Lógica centralizada para verificar acesso a recursos/módulos
         $checkResourceAccess = function (User $user, string $featureSlug) {
-            // 1. Verifica se o recurso está ativo globalmente na tabela resources
-            $resource = Resource::where('slug', $featureSlug)
-                ->where('status', Resource::STATUS_ACTIVE)
-                ->first();
+            // 1. Busca o recurso pelo slug
+            $resource = Resource::where('slug', $featureSlug)->first();
 
             if (! $resource) {
                 return false;
             }
 
-            // 2. Se for admin do sistema, tem acesso a tudo que está ativo
+            // 2. Admin do sistema tem acesso IRRESTRITO
             if ($user->hasRole('admin')) {
                 return true;
             }
 
-            // 3. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
+            // 3. Para todos os outros usuários, o recurso DEVE estar ATIVO
+            if ($resource->status !== Resource::STATUS_ACTIVE) {
+                return false;
+            }
+
+            // 4. Bloqueio centralizado para recursos em desenvolvimento (in_dev)
+            // Apenas Admins (já verificado acima) e Beta Testers podem acessar
+            if ((bool) $resource->in_dev && ! ($user->is_beta ?? false)) {
+                return false;
+            }
+
+            // 5. Exceção: O módulo de planos deve ser acessível mesmo sem assinatura ativa
+            // (Desde que não esteja bloqueado pelo in_dev acima)
+            if ($featureSlug === 'plans') {
+                return true;
+            }
+
+            // 6. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
             if (! $user->tenant) {
                 return false;
             }
@@ -152,13 +163,7 @@ class AppServiceProvider extends ServiceProvider
                 return false;
             }
 
-            // 4. Se o recurso estiver em desenvolvimento (in_dev), verifica se o plano permite explicitamente
-            if ($resource->in_dev) {
-                return in_array($featureSlug, $activeSubscription->plan->features ?? []);
-            }
-
-            // 5. Se não estiver em dev, qualquer plano ativo acessa por padrão
-            // mas se o plano definir features explicitamente, respeitamos a lista
+            // 7. Se o plano definir features explicitamente, respeitamos a lista
             $planFeatures = $activeSubscription->plan->features ?? [];
             if (! empty($planFeatures)) {
                 return in_array($featureSlug, $planFeatures);
@@ -169,27 +174,25 @@ class AppServiceProvider extends ServiceProvider
 
         // Registrar as features individuais baseadas nos slugs do banco para funcionar com @feature('slug')
         try {
-            if (!app()->runningInConsole() || app()->runningUnitTests()) {
+            // Removemos a verificação de runningInConsole para garantir que as gates sejam definidas
+            // mesmo em ambientes de teste/console (como tinker), e garantir consistência.
+            // A verificação runningUnitTests é mantida se necessário, mas geralmente queremos gates lá também.
+            
+            // Verifica se a tabela existe antes de tentar buscar (para evitar erro em migrações iniciais)
+            if (\Illuminate\Support\Facades\Schema::hasTable('resources')) {
                 $slugs = Resource::pluck('slug')->toArray();
                 foreach ($slugs as $slug) {
-                    Feature::define($slug, fn (User $user) => $checkResourceAccess($user, $slug));
+                    Gate::define($slug, fn (User $user) => $checkResourceAccess($user, $slug));
                 }
             }
         } catch (\Exception $e) {
             // Silencioso se o banco não estiver pronto
+            \Illuminate\Support\Facades\Log::warning('Failed to register feature gates: ' . $e->getMessage());
         }
 
         // Blade directive: @feature('slug')
-        Blade::if('feature', function (string $featureSlug) use ($checkResourceAccess) {
-            if (!auth()->check()) return false;
-            
-            // Tenta usar a feature definida no Pennant (que usa o cache do Pennant)
-            // Se não estiver definida (ex: recurso novo), usa a lógica direta
-            try {
-                return Feature::active($featureSlug);
-            } catch (\Exception $e) {
-                return $checkResourceAccess(auth()->user(), $featureSlug);
-            }
+        Blade::if('feature', function (string $featureSlug) {
+            return Gate::check($featureSlug);
         });
 
         Blade::if('role', fn ($role) => auth()->check() && auth()->user()->hasRole($role));

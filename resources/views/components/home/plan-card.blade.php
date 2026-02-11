@@ -1,5 +1,6 @@
 @props([
     'plan',
+    'availableResources' => [],
     'isPopular' => false
 ])
 
@@ -28,10 +29,29 @@
 
             <ul class="plan-card__features feature-list list-unstyled mb-4" role="list">
                 @foreach( $plan[ 'features' ] as $feature )
-                    <li class="d-flex align-items-start mb-2">
-                        <i class="bi bi-check-circle-fill text-success me-2"></i>
-                        <span>{{ $feature }}</span>
-                    </li>
+                    @php
+                        $resource = $availableResources[$feature] ?? null;
+                        $configFeature = config("features.{$feature}");
+
+                        if ($resource) {
+                            $isVisible = $resource->isVisibleTo(auth()->user());
+                            $displayName = $resource->name;
+                        } elseif ($configFeature) {
+                            $inDev = $configFeature['in_dev'] ?? false;
+                            $isVisible = ! $inDev || (auth()->check() && (auth()->user()->hasRole('admin') || (auth()->user()->is_beta ?? false)));
+                            $displayName = $configFeature['name'] ?? $feature;
+                        } else {
+                            $isVisible = false;
+                            $displayName = $feature;
+                        }
+                    @endphp
+
+                    @if ($isVisible)
+                        <li class="d-flex align-items-start mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>{{ $displayName }}</span>
+                        </li>
+                    @endif
                 @endforeach
             </ul>
         </div>

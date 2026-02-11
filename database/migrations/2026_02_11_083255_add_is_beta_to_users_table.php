@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('subscription_items', function (Blueprint $table) {
-            $table->string('meter_id')->nullable()->after('stripe_price');
+        Schema::table('users', function (Blueprint $table) {
+            $table->boolean('is_beta')->default(false)->after('is_active');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('subscription_items', function (Blueprint $table) {
-            $table->dropColumn('meter_id');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('is_beta');
         });
     }
 };
