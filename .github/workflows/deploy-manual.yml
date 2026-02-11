@@ -41,6 +41,9 @@ jobs:
             # Como usamos updateOrCreate, é seguro rodar em todo deploy
             php artisan db:seed --class=ResourceSeeder --force
 
+            # Rodar seeder de Planos (Garante features corretas na tabela plans)
+            php artisan db:seed --class=PlanSeeder --force
+
             # Otimizar Laravel (Removido build npm por enquanto)
             php artisan optimize:clear
             php artisan optimize
