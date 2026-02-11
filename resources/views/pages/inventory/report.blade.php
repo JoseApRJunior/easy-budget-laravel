@@ -75,8 +75,8 @@
                         </div>
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
-                                <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="x" label="Limpar" />
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" feature="inventory" />
+                                <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="x" label="Limpar" feature="inventory" />
                             </div>
                         </div>
                     </div>
@@ -107,8 +107,8 @@
                     <div class="col-12 col-lg-4 text-start text-lg-end">
                         <div class="d-flex justify-content-start justify-content-lg-end">
                             <div class="d-flex gap-1" role="group">
-                                <x-ui.button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                <x-ui.button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'pdf', 'report_type' => $type ?? 'summary']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" feature="inventory" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export', array_merge(request()->query(), ['type' => 'xlsx', 'report_type' => $type ?? 'summary']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" feature="inventory" />
                             </div>
                         </div>
                     </div>

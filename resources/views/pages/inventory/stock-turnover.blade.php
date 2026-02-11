@@ -71,9 +71,9 @@
                     </div>
                     <div class="col-12">
                         <div class="d-flex gap-2">
-                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                            <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x" label="Limpar" />
-                        </div>
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" feature="inventory" />
+                                <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="secondary" icon="x" label="Limpar" feature="inventory" />
+                            </div>
                     </div>
                 </div>
             </form>
@@ -164,8 +164,8 @@
                 <div class="col-12 col-lg-4 text-start text-lg-end">
                     @if($hasResults)
                     <div class="d-flex justify-content-start justify-content-lg-end gap-1">
-                        <x-ui.button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                        <x-ui.button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                        <x-ui.button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" feature="inventory" />
+                        <x-ui.button type="link" :href="route('provider.inventory.export-stock-turnover', array_merge(request()->all(), ['type' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" feature="inventory" />
                     </div>
                     @endif
                 </div>
@@ -253,9 +253,9 @@
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="action-btn-group justify-content-center">
-                                            <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Ver Movimentações" />
-                                            <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajustar" />
-                                        </div>
+                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Ver Movimentações" feature="inventory" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajustar" feature="inventory" />
+                                            </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -329,8 +329,8 @@
                                 </div>
 
                                 <div class="d-flex justify-content-end gap-2">
-                                    <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Histórico" />
-                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajuste" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $item->sku])" variant="info" size="sm" icon="clock-history" title="Histórico" feature="inventory" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->sku)" variant="success" size="sm" icon="sliders" title="Ajuste" feature="inventory" />
                                 </div>
                             </div>
                         @endforeach

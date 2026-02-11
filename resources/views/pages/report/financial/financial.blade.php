@@ -126,8 +126,8 @@
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                             <div class="d-flex justify-content-start justify-content-lg-end">
                                 <div class="d-flex gap-1" role="group">
-                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                    <x-ui.button type="button" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" feature="reports" />
+                                    <x-ui.button type="button" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" feature="reports" />
                                 </div>
                             </div>
                         </div>

@@ -344,11 +344,11 @@
                                 <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($currentQuantity * $product->price) }}</span>
                             </div>
                             <div class="d-flex gap-1">
-                                <x-ui.button :href="route('provider.inventory.show', $product->sku)" variant="info" outline icon="eye" size="sm" />
-                                <x-ui.button :href="route('provider.inventory.entry', $product->sku)" variant="success" outline icon="plus" size="sm" />
-                                <x-ui.button :href="route('provider.inventory.exit', $product->sku)" variant="warning" outline icon="dash" size="sm" />
-                                <x-ui.button :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" outline icon="sliders" size="sm" />
-                            </div>
+                            <x-ui.button :href="route('provider.inventory.show', $product->sku)" variant="info" outline icon="eye" size="sm" feature="inventory" />
+                            <x-ui.button :href="route('provider.inventory.entry', $product->sku)" variant="success" outline icon="plus" size="sm" feature="inventory" />
+                            <x-ui.button :href="route('provider.inventory.exit', $product->sku)" variant="warning" outline icon="dash" size="sm" feature="inventory" />
+                            <x-ui.button :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" outline icon="sliders" size="sm" feature="inventory" />
+                        </div>
                         </div>
                     </div>
                 @empty
