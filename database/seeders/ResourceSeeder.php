@@ -15,18 +15,25 @@ class ResourceSeeder extends Seeder
         $features = config('features');
 
         foreach ($features as $slug => $details) {
-            // Usamos updateOrCreate para garantir que o status 'in_dev' e 'status' 
-            // do config sejam sincronizados, mas permitindo que nome/descrição 
-            // possam ser editados no banco se desejado (opcional).
-            Resource::updateOrCreate(
-                ['slug' => $slug],
-                [
+            $resource = Resource::where('slug', $slug)->first();
+
+            if ($resource) {
+                // Se já existe, atualizamos apenas nome e descrição (traduções)
+                // Preservamos 'status' e 'in_dev' definidos via Painel Admin
+                $resource->update([
+                    'name' => $details['name'],
+                    'description' => $details['description'] ?? null,
+                ]);
+            } else {
+                // Se não existe, criamos com os padrões do config
+                Resource::create([
+                    'slug' => $slug,
                     'name' => $details['name'],
                     'description' => $details['description'] ?? null,
                     'status' => $details['status'] ?? Resource::STATUS_ACTIVE,
                     'in_dev' => $details['in_dev'] ?? false,
-                ]
-            );
+                ]);
+            }
         }
     }
 }

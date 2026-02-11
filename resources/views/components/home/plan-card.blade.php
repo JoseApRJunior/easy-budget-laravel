@@ -6,28 +6,28 @@
 
 <div class="col position-relative">
     <article {{ $attributes->merge(['class' => 'plan-card card h-100 shadow-sm hover-card']) }} aria-label="Plano {{ $plan['name'] }}">
-        <div class="card-body d-flex flex-column">
-            <div class="plan-card__header text-center mb-4">
+        <div class="card-body d-flex flex-column p-3">
+            <div class="plan-card__header text-center mb-3">
                 @if( $plan[ 'slug' ] == 'trial' )
-                    <i class="bi bi-hourglass-split display-6 text-primary mb-2"></i>
+                    <i class="bi bi-hourglass-split fs-1 text-primary mb-1"></i>
                 @elseif( $plan[ 'slug' ] == 'basic' )
-                    <i class="bi bi-rocket display-6 text-primary mb-2"></i>
+                    <i class="bi bi-rocket fs-1 text-primary mb-1"></i>
                 @elseif( $plan[ 'slug' ] == 'pro' )
-                    <i class="bi bi-star display-6 text-success mb-2"></i>
+                    <i class="bi bi-star fs-1 text-success mb-1"></i>
                 @else
-                    <i class="bi bi-gem display-6 text-info mb-2"></i>
+                    <i class="bi bi-gem fs-1 text-info mb-1"></i>
                 @endif
-                <h3 class="card-title h4">{{ $plan[ 'name' ] }}</h3>
+                <h3 class="card-title h5">{{ $plan[ 'name' ] }}</h3>
                 <div class="plan-card__price">
-                    <span class="plan-card__currency">R$</span>
-                    <span class="plan-card__value">{{ number_format( $plan[ 'price' ], 2, ',', '.' ) }}</span>
-                    <span class="plan-card__period">/mês</span>
+                    <span class="plan-card__currency small">R$</span>
+                    <span class="plan-card__value fs-3 fw-bold">{{ number_format( $plan[ 'price' ], 2, ',', '.' ) }}</span>
+                    <span class="plan-card__period text-muted small">/mês</span>
                 </div>
             </div>
 
-            <p class="plan-card__description card-text small-text mb-4">{{ $plan[ 'description' ] }}</p>
+            <p class="plan-card__description card-text small text-muted mb-3 text-center">{{ $plan[ 'description' ] }}</p>
 
-            <ul class="plan-card__features feature-list list-unstyled mb-4" role="list">
+            <ul class="plan-card__features feature-list list-unstyled mb-3 small" role="list">
                 @foreach( $plan[ 'features' ] as $feature )
                     @php
                         $resource = $availableResources[$feature] ?? null;

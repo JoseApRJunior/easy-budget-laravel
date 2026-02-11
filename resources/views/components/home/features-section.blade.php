@@ -48,7 +48,7 @@
             <div class="col-md-4">
                 <div class="card h-100 border-0 shadow-sm hover-card p-4">
                     <div class="feature-icon-container mb-3">
-                        <i class="bi bi-robot text-warning fs-3"></i>
+                        <i class="bi bi-robot text-warning fs-3" style="color: #fd7e14 !important;"></i>
                     </div>
                     <h3 class="h5 fw-bold mb-2">IA Analytics</h3>
                     <p class="text-muted small">Insights inteligentes gerados por IA para ajudar na tomada de decisões e previsão de faturamento.</p>
