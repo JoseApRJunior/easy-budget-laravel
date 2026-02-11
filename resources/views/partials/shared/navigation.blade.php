@@ -37,12 +37,14 @@
             @endfeature
 
             {{-- Botão Temporário para Logs --}}
+            @role('admin')
             <li class="nav-item">
                 <a class="nav-link d-flex align-items-center text-warning" href="{{ url('/log-viewer') }}" target="_blank">
                     <i class="bi bi-terminal me-2"></i>
                     <span>Logs (Temp)</span>
                 </a>
             </li>
+            @endrole
 
             {{-- Menu administrativo - apenas para admins --}}
             @role('admin')
