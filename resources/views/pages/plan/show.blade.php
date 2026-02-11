@@ -62,12 +62,34 @@
                                         : json_decode($plan->features ?? '[]', true);
                                 @endphp
                                 @foreach ($features as $feature)
-                                    <div class="col-md-6 mb-2">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-check-lg text-success me-2"></i>
-                                            <span class="small">{{ $feature }}</span>
+                                    @php
+                                        $resource = $availableResources[$feature] ?? null;
+                                        $configFeature = config("features.{$feature}");
+
+                                        if ($resource) {
+                                            $isVisible = $resource->isVisibleTo(auth()->user());
+                                        } elseif ($configFeature) {
+                                            $inDev = $configFeature['in_dev'] ?? false;
+                                            $isVisible = ! $inDev || (auth()->check() && (auth()->user()->hasRole('admin') || (auth()->user()->is_beta ?? false)));
+                                        } else {
+                                            $isVisible = false;
+                                        }
+                                    @endphp
+
+                                    @if ($isVisible)
+                                        <div class="col-md-6 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-check-lg text-success me-2"></i>
+                                                <span class="small">
+                                                    @if(config("features.{$feature}"))
+                                                        {{ config("features.{$feature}.name") }}
+                                                    @else
+                                                        {{ $feature }}
+                                                    @endif
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>
@@ -167,8 +189,8 @@
 
                 <!-- Botão voltar -->
                 <div class="text-center mt-3">
-                    <x-ui.button 
-                        href="{{ route('plans.index') }}" 
+                    <x-ui.button
+                        href="{{ route('plans.index') }}"
                         variant="outline-primary"
                         icon="bi bi-arrow-left">
                         Voltar para Lista

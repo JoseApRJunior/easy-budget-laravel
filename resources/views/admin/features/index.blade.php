@@ -46,9 +46,9 @@
                                     </x-resource.table-cell>
                                     <x-resource.table-cell>
                                         @if($feature->in_dev)
-                                            <x-ui.badge variant="warning" label="Em Desenvolvimento" />
+                                            <x-ui.badge variant="warning" label="Em Desenvolvimento" icon="cone-striped" solid />
                                         @else
-                                            <x-ui.badge variant="primary" label="Produção" />
+                                            <x-ui.badge variant="primary" label="Produção" icon="rocket-takeoff" solid />
                                         @endif
                                     </x-resource.table-cell>
                                     <x-resource.table-cell>

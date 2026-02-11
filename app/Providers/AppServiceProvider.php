@@ -119,25 +119,36 @@ class AppServiceProvider extends ServiceProvider
 
         // Lógica centralizada para verificar acesso a recursos/módulos
         $checkResourceAccess = function (User $user, string $featureSlug) {
-            // 1. Busca o recurso pelo slug (independente do status)
+            // 1. Busca o recurso pelo slug
             $resource = Resource::where('slug', $featureSlug)->first();
 
             if (! $resource) {
                 return false;
             }
 
-            // 2. Admin do sistema tem acesso IRRESTRITO (vê inativos, em dev, tudo)
-            // Isso permite que o Admin conserte bugs em recursos desativados sem expor a ninguém
+            // 2. Admin do sistema tem acesso IRRESTRITO
             if ($user->hasRole('admin')) {
                 return true;
             }
 
-            // 3. Para todos os outros usuários (incluindo Beta), o recurso DEVE estar ATIVO
+            // 3. Para todos os outros usuários, o recurso DEVE estar ATIVO
             if ($resource->status !== Resource::STATUS_ACTIVE) {
                 return false;
             }
 
-            // 4. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
+            // 4. Bloqueio centralizado para recursos em desenvolvimento (in_dev)
+            // Apenas Admins (já verificado acima) e Beta Testers podem acessar
+            if ((bool) $resource->in_dev && ! ($user->is_beta ?? false)) {
+                return false;
+            }
+
+            // 5. Exceção: O módulo de planos deve ser acessível mesmo sem assinatura ativa
+            // (Desde que não esteja bloqueado pelo in_dev acima)
+            if ($featureSlug === 'plans') {
+                return true;
+            }
+
+            // 6. Verifica se o tenant do usuário tem uma assinatura ativa que contempla este recurso
             if (! $user->tenant) {
                 return false;
             }
@@ -152,24 +163,7 @@ class AppServiceProvider extends ServiceProvider
                 return false;
             }
 
-            // 4. Se o recurso estiver em desenvolvimento (in_dev), bloqueia para todos exceto admins e beta testers
-            if ($resource->in_dev) {
-                // Admin ou Beta Tester podem acessar
-                if ($user->hasRole('admin') || $user->is_beta) {
-                    // Para beta testers, ainda precisamos verificar se o plano deles dá acesso ao recurso?
-                    // Geralmente beta testers testam recursos novos que podem nem estar no plano ainda.
-                    // Se quisermos que beta testers acessem TUDO que é in_dev:
-                    return true;
-
-                    // Se quisermos que beta testers acessem APENAS se estiver no plano deles (mas o recurso é in_dev):
-                    // return in_array($featureSlug, $activeSubscription->plan->features ?? []);
-                }
-
-                return false;
-            }
-
-            // 5. Se não estiver em dev, qualquer plano ativo acessa por padrão
-            // mas se o plano definir features explicitamente, respeitamos a lista
+            // 7. Se o plano definir features explicitamente, respeitamos a lista
             $planFeatures = $activeSubscription->plan->features ?? [];
             if (! empty($planFeatures)) {
                 return in_array($featureSlug, $planFeatures);
@@ -180,7 +174,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Registrar as features individuais baseadas nos slugs do banco para funcionar com @feature('slug')
         try {
-            if (! app()->runningInConsole() || app()->runningUnitTests()) {
+            // Removemos a verificação de runningInConsole para garantir que as gates sejam definidas
+            // mesmo em ambientes de teste/console (como tinker), e garantir consistência.
+            // A verificação runningUnitTests é mantida se necessário, mas geralmente queremos gates lá também.
+            
+            // Verifica se a tabela existe antes de tentar buscar (para evitar erro em migrações iniciais)
+            if (\Illuminate\Support\Facades\Schema::hasTable('resources')) {
                 $slugs = Resource::pluck('slug')->toArray();
                 foreach ($slugs as $slug) {
                     Gate::define($slug, fn (User $user) => $checkResourceAccess($user, $slug));
@@ -188,6 +187,7 @@ class AppServiceProvider extends ServiceProvider
             }
         } catch (\Exception $e) {
             // Silencioso se o banco não estiver pronto
+            \Illuminate\Support\Facades\Log::warning('Failed to register feature gates: ' . $e->getMessage());
         }
 
         // Blade directive: @feature('slug')

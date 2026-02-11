@@ -4,6 +4,7 @@
     'icon' => null,
     'outline' => false,
     'pill' => false,
+    'solid' => false, // Novo prop para estilo sólido
 ])
 
 @php
@@ -20,17 +21,26 @@
 
     $color = $variantColors[$variant] ?? $variantColors['secondary'];
     
-    // Estilo moderno: fundo suave com cor de texto forte
-    $badgeStyle = $variant === 'light' 
-        ? "background-color: var(--hover-bg); color: #64748b; border: 1px solid var(--form-border);"
-        : "background-color: {$color}15; color: {$color}; border: 1px solid {$color}30;";
-    
-    if ($outline) {
+    // Define cor do texto para modo sólido
+    $textColor = in_array($variant, ['warning', 'info', 'light']) ? '#212529' : '#ffffff';
+
+    if ($solid) {
+        // Estilo sólido: fundo cor cheia, texto contrastante
+        $badgeStyle = "background-color: {$color}; color: {$textColor}; border: 1px solid {$color};";
+    } elseif ($outline) {
+        // Estilo outline
         $badgeStyle = "background-color: transparent; color: {$color}; border: 1px solid {$color};";
+    } elseif ($variant === 'light') {
+        // Estilo light específico
+        $badgeStyle = "background-color: var(--hover-bg); color: #64748b; border: 1px solid var(--form-border);";
+    } else {
+        // Estilo moderno padrão (suave): fundo 15% opacidade
+        $badgeStyle = "background-color: {$color}15; color: {$color}; border: 1px solid {$color}30;";
     }
 
     $classes = 'modern-badge';
     if ($pill) $classes .= ' rounded-pill';
+    if ($solid) $classes .= ' shadow-sm'; // Adiciona sombra suave no modo sólido
 @endphp
 
 <span {{ $attributes->merge(['class' => $classes, 'style' => $badgeStyle]) }}>

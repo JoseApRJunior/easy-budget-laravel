@@ -62,6 +62,7 @@ class HomeController extends Controller
 
             return view('pages.home.index', [
                 'plans' => $plans,
+                'availableResources' => \App\Models\Resource::all()->keyBy('slug'),
             ]);
         }
 

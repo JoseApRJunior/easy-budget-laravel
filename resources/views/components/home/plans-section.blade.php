@@ -1,5 +1,6 @@
 @props([
     'plans',
+    'availableResources' => [],
     'title' => 'Escolha o Plano Perfeito para Você',
     'subtitle' => 'Selecione o plano que melhor atende às suas necessidades'
 ])
@@ -13,7 +14,7 @@
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4 mb-5">
             @foreach( $plans as $plan )
-                <x-home.plan-card :plan="$plan" :isPopular="$plan['slug'] == 'pro'" />
+                <x-home.plan-card :plan="$plan" :isPopular="$plan['slug'] == 'pro'" :availableResources="$availableResources" />
             @endforeach
         </div>
 
