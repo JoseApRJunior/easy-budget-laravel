@@ -130,8 +130,8 @@
                                     </small>
                                 </td>
                                 <x-resource.table-actions>
-                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" icon="eye" title="Ver Detalhes" />
-                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" icon="box" title="Ver Inventário" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" icon="eye" title="Ver Detalhes" feature="inventory" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" icon="box" title="Ver Inventário" feature="inventory" />
                                 </x-resource.table-actions>
                             </tr>
                         @endforeach
@@ -162,8 +162,8 @@
 
                             <x-slot:actions>
                                 <x-resource.table-actions mobile>
-                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" size="sm" icon="eye" />
-                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" size="sm" icon="box" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.movements.show', $movement->id)" variant="info" size="sm" icon="eye" feature="inventory" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.show', $movement->product->sku)" variant="secondary" size="sm" icon="box" feature="inventory" />
                                 </x-resource.table-actions>
                             </x-slot:actions>
                         </x-resource.resource-mobile-item>

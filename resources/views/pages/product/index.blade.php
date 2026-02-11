@@ -218,18 +218,18 @@
                             <td class="text-center">
                                 <x-resource.table-actions>
                                     @if ($product->deleted_at)
-                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="outline-info" size="sm" icon="eye" title="Visualizar" feature="products" />
                                         <x-ui.button variant="outline-success" size="sm" icon="arrow-counterclockwise"
                                             data-bs-toggle="modal" data-bs-target="#restoreModal"
                                             data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                                            data-product-name="{{ $product->name }}" title="Restaurar" />
+                                            data-product-name="{{ $product->name }}" title="Restaurar" feature="products" />
                                     @else
-                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" variant="outline-primary" size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="outline-info" size="sm" icon="eye" title="Visualizar" feature="products" />
+                                        <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" variant="outline-primary" size="sm" icon="pencil-square" title="Editar" feature="products" />
                                         <x-ui.button variant="outline-danger" size="sm" icon="trash"
                                             data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                                            data-product-name="{{ $product->name }}" title="Excluir" />
+                                            data-product-name="{{ $product->name }}" title="Excluir" feature="products" />
                                     @endif
                                 </x-resource.table-actions>
                             </td>
@@ -280,18 +280,18 @@
 
                     <x-slot:actions>
                         <x-resource.table-actions mobile>
-                            <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="outline-info" size="sm" icon="eye" title="Visualizar" />
+                            <x-ui.button type="link" :href="route('provider.products.show', $product->sku)" variant="outline-info" size="sm" icon="eye" title="Visualizar" feature="products" />
                             @if ($product->deleted_at)
                                 <x-ui.button variant="outline-success" size="sm" icon="arrow-counterclockwise"
                                     data-bs-toggle="modal" data-bs-target="#restoreModal"
                                     data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                                    data-product-name="{{ $product->name }}" title="Restaurar" />
+                                    data-product-name="{{ $product->name }}" title="Restaurar" feature="products" />
                             @else
-                                <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" variant="outline-primary" size="sm" icon="pencil-square" title="Editar" />
+                                <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" variant="outline-primary" size="sm" icon="pencil-square" title="Editar" feature="products" />
                                 <x-ui.button variant="outline-danger" size="sm" icon="trash"
                                     data-bs-toggle="modal" data-bs-target="#deleteModal"
                                     data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                                    data-product-name="{{ $product->name }}" title="Excluir" />
+                                    data-product-name="{{ $product->name }}" title="Excluir" feature="products" />
                             @endif
                         </x-resource.table-actions>
                     </x-slot:actions>

@@ -132,8 +132,8 @@
                     </div>
                     <div class="col-12">
                         <div class="d-flex gap-2 flex-nowrap">
-                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" />
-                            <x-ui.button href="{{ route('provider.inventory.index') }}" variant="secondary" outline icon="x" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" id="btnFilterInventory" class="flex-grow-1" feature="inventory" />
+                            <x-ui.button href="{{ route('provider.inventory.index') }}" variant="secondary" outline icon="x" label="Limpar" feature="inventory" />
                         </div>
                     </div>
                 </div>
@@ -163,9 +163,9 @@
                 </div>
                 <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                     <div class="d-flex justify-content-start justify-content-lg-end gap-2">
-                        <x-ui.button href="{{ route('provider.inventory.movements') }}" variant="primary" size="sm" icon="clock-history" label="Histórico" />
+                        <x-ui.button href="{{ route('provider.inventory.movements') }}" variant="primary" size="sm" icon="clock-history" label="Histórico" feature="inventory" />
                         <div class="dropdown">
-                            <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                            <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" feature="inventory" />
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                                 <li>
                                     <a class="dropdown-item"
@@ -260,10 +260,10 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <x-ui.button :href="route('provider.inventory.show', $product->sku)" variant="info" outline icon="eye" title="Ver Inventário" size="sm" />
-                                        <x-ui.button :href="route('provider.inventory.entry', $product->sku)" variant="success" outline icon="plus" title="Entrada" size="sm" />
-                                        <x-ui.button :href="route('provider.inventory.exit', $product->sku)" variant="warning" outline icon="dash" title="Saída" size="sm" />
-                                        <x-ui.button :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" outline icon="sliders" title="Ajustar" size="sm" />
+                                        <x-ui.button :href="route('provider.inventory.show', $product->sku)" variant="info" outline icon="eye" title="Ver Inventário" size="sm" feature="inventory" />
+                                        <x-ui.button :href="route('provider.inventory.entry', $product->sku)" variant="success" outline icon="plus" title="Entrada" size="sm" feature="inventory" />
+                                        <x-ui.button :href="route('provider.inventory.exit', $product->sku)" variant="warning" outline icon="dash" title="Saída" size="sm" feature="inventory" />
+                                        <x-ui.button :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" outline icon="sliders" title="Ajustar" size="sm" feature="inventory" />
                                     </div>
                                 </td>
                             </tr>

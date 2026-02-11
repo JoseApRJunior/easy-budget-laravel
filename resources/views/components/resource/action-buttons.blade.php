@@ -7,6 +7,7 @@
     'restoreBlocked' => false,   // Se a restauração está bloqueada
     'restoreBlockedMessage' => 'Não é possível restaurar este item no momento.',
     'size' => null,              // Tamanho dos botões (sm, lg, null)
+    'feature' => null,           // Feature flag para controle de acesso (opcional)
 ])
 
 @php
@@ -14,6 +15,7 @@
     $itemName = $item->{$nameField};
     $isDeleted = $item->deleted_at !== null;
     $resourceSingular = rtrim($resource, 's'); // Remove 's' final para singular
+    $effectiveFeature = $feature ?? $resource; // Se não informado, assume que o feature tem o mesmo nome do recurso
 @endphp
 
 <div {{ $attributes->merge(['class' => 'action-btn-group d-flex gap-2']) }}>
@@ -26,6 +28,7 @@
             icon="eye"
             title="Visualizar"
             :size="$size"
+            :feature="$effectiveFeature"
         />
 
         <x-ui.button
@@ -40,6 +43,7 @@
             style="{{ $restoreBlocked ? 'cursor: not-allowed;' : '' }}"
             :onclick="$restoreBlocked ? 'easyAlert.warning(\'' . addslashes($restoreBlockedMessage) . '\', { duration: 8000 }); return false;' : ''"
             :size="$size"
+            :feature="$effectiveFeature"
         />
     @else
         {{-- Item ativo: mostrar Visualizar + Editar + Deletar (condicional) --}}
@@ -50,6 +54,7 @@
             icon="eye"
             title="Visualizar"
             :size="$size"
+            :feature="$effectiveFeature"
         />
 
         <x-ui.button
@@ -58,6 +63,7 @@
             icon="pencil-square"
             title="Editar"
             :size="$size"
+            :feature="$effectiveFeature"
         />
 
         @if ($canDelete)
@@ -70,6 +76,7 @@
                 :data-item-name="$itemName"
                 title="Excluir"
                 :size="$size"
+                :feature="$effectiveFeature"
             />
         @endif
     @endif

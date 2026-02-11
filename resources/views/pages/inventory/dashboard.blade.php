@@ -89,8 +89,8 @@
                                         </x-resource.table-cell>
                                         <x-resource.table-cell align="center">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="outline-success" icon="plus" size="sm" title="Entrada" />
-                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" title="Ajustar" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $item->product->sku)" variant="outline-success" icon="plus" size="sm" title="Entrada" feature="inventory" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $item->product->sku)" variant="outline-secondary" icon="sliders" size="sm" title="Ajustar" feature="inventory" />
                                             </div>
                                         </x-resource.table-cell>
                                     </x-resource.table-row>

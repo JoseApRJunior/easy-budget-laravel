@@ -160,7 +160,7 @@
                                             <x-ui.status-badge :item="$sc" />
                                         </x-resource.table-cell>
                                         <x-resource.table-cell align="center">
-                                            <x-ui.button type="link" :href="route('provider.schedules.show', $sc->id)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route('provider.schedules.show', $sc->id)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" feature="schedules" />
                                         </x-resource.table-cell>
                                     </x-resource.table-row>
                                 @endforeach

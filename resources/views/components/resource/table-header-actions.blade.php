@@ -8,9 +8,14 @@
     'size' => 'sm',              // Tamanho dos botões
     'showExport' => true,        // Mostrar botão de exportação
     'showCreate' => true,        // Mostrar botão de criar
+    'feature' => null,           // Feature flag para controle de acesso (opcional)
 ])
 
 @php
+    // Se feature não for informada, tenta usar o resource.
+    // Se o resource contiver ponto (ex: inventory.movements), pega a primeira parte (inventory)
+    $effectiveFeature = $feature ?? (str_contains($resource, '.') ? explode('.', $resource)[0] : $resource);
+
     // Mapear ícones e estilos por formato
     $formatConfig = [
         'xlsx' => [
@@ -76,6 +81,7 @@
                 :size="$size"
                 icon="plus"
                 :label="$createLabel"
+                :feature="$effectiveFeature"
             />
         @endif
 

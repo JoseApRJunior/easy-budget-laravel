@@ -158,7 +158,7 @@
                                             {{ optional($inv->due_date)->format('d/m/Y') }}
                                         </x-resource.table-cell>
                                         <x-resource.table-cell align="center">
-                                            <x-ui.button type="link" :href="route('provider.invoices.show', $inv->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route('provider.invoices.show', $inv->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" feature="invoices" />
                                         </x-resource.table-cell>
                                     </x-resource.table-row>
                                 @endforeach

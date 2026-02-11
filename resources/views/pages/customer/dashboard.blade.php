@@ -186,10 +186,10 @@
                     title="Ações de Cliente"
                     icon="lightning-charge"
                 >
-                    <x-ui.button type="link" :href="route('provider.customers.create')" variant="success" icon="person-plus" label="Novo Cliente" />
-                    <x-ui.button type="link" :href="route('provider.budgets.create')" variant="success" icon="plus-lg" label="Novo Orçamento" />
-                    <x-ui.button type="link" :href="route('provider.customers.index')" variant="primary" icon="people" label="Listar Clientes" />
-                    <x-ui.button type="link" :href="route('provider.customers.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Ver Deletados" />
+                    <x-ui.button type="link" :href="route('provider.customers.create')" variant="success" icon="person-plus" label="Novo Cliente" feature="customers" />
+                    <x-ui.button type="link" :href="route('provider.budgets.create')" variant="success" icon="plus-lg" label="Novo Orçamento" feature="budgets" />
+                    <x-ui.button type="link" :href="route('provider.customers.index')" variant="primary" icon="people" label="Listar Clientes" feature="customers" />
+                    <x-ui.button type="link" :href="route('provider.customers.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Ver Deletados" feature="customers" />
                 </x-resource.quick-actions>
             </x-layout.v-stack>
         </x-layout.grid-col>
