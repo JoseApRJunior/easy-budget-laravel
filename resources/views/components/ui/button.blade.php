@@ -7,9 +7,15 @@
 'href' => null,
 'label' => null,
 'bold' => true,
+'feature' => null,
 ])
 
 @php
+// Se feature for informada e o usuário não tiver acesso, não renderiza nada
+if ($feature && !Gate::check($feature)) {
+    return;
+}
+
 // Se tiver href, é um link
 $isLink = $href !== null || $type === 'link';
 $tag = $isLink ? 'a' : 'button';

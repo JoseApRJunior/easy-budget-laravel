@@ -135,12 +135,12 @@
                         title="Ações Rápidas"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" icon="person-plus" label="Novo Cliente" />
-                        <x-ui.button type="link" :href="route('provider.budgets.create')" variant="outline-success" icon="plus-lg" label="Novo Orçamento" />
-                        <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-success" icon="plus-lg" label="Novo Serviço" />
-                        <x-ui.button type="link" :href="route('provider.services.index')" variant="outline-primary" icon="tools" label="Listar Serviços" />
-                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="outline-primary" icon="box-seam" label="Listar Estoque" />
-                        <x-ui.button type="link" :href="route('provider.qrcode.index')" variant="outline-secondary" icon="qr-code-scan" label="QR Code" />
+                        <x-ui.button type="link" :href="route('provider.customers.create')" variant="outline-success" icon="person-plus" label="Novo Cliente" feature="customers" />
+                        <x-ui.button type="link" :href="route('provider.budgets.create')" variant="outline-success" icon="plus-lg" label="Novo Orçamento" feature="budgets" />
+                        <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-success" icon="plus-lg" label="Novo Serviço" feature="services" />
+                        <x-ui.button type="link" :href="route('provider.services.index')" variant="outline-primary" icon="tools" label="Listar Serviços" feature="services" />
+                        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="outline-primary" icon="box-seam" label="Listar Estoque" feature="inventory" />
+                        <x-ui.button type="link" :href="route('provider.qrcode.index')" variant="outline-secondary" icon="qr-code-scan" label="QR Code" feature="qrcode" />
                     </x-resource.quick-actions>
 
                     {{-- Próximos Compromissos --}}
