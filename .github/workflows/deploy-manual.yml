@@ -21,19 +21,18 @@ jobs:
           script: |
             cd /home/user/htdocs/srv1340418.hstgr.cloud
 
-            # Garantir que estamos no diretório correto e atualizar código
-            git fetch origin main
-            git reset --hard origin/main
+            # Garantir que estamos no diretório correto e atualizar código da branch de produção (master)
+            git fetch origin master
+            git reset --hard origin/master
 
             # Instalar dependências PHP
             composer install --no-dev --optimize-autoloader
 
-            # Instalar dependências Node e Build Assets
-            # Se você usa Vite, isso é essencial para o CSS/JS carregar
-            if [ -f "package.json" ]; then
-                npm install
-                npm run build
-            fi
+            # Regenerar Autoload (Corrige erro de classes não encontradas)
+            composer dump-autoload -o
+
+            # Criar diretório de cache de view se não existir
+            mkdir -p resources/views/vendor/mail
 
             # Rodar migrações
             php artisan migrate --force
@@ -42,7 +41,8 @@ jobs:
             # Como usamos updateOrCreate, é seguro rodar em todo deploy
             php artisan db:seed --class=ResourceSeeder --force
 
-            # Otimizar Laravel
+            # Otimizar Laravel (Removido build npm por enquanto)
+            php artisan optimize:clear
             php artisan optimize
             php artisan view:cache
             php artisan config:cache
