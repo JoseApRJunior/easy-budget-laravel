@@ -79,4 +79,10 @@ return [
         'status' => 'active',
         'in_dev' => false,
     ],
+    'manage-settings' => [
+        'name' => 'Configurações do Sistema',
+        'description' => 'Gerenciamento de filas, logs e configurações avançadas.',
+        'status' => 'active',
+        'in_dev' => false,
+    ],
 ];

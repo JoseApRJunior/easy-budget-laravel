@@ -44,8 +44,8 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <x-ui.button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" class="flex-grow-1" />
-                            <x-ui.button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" class="flex-grow-1" feature="qrcode" />
+                            <x-ui.button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" feature="qrcode" />
                         </div>
                     </form>
                 </x-layout.grid-col>

@@ -192,7 +192,8 @@
                     <x-ui.button
                         href="{{ route('plans.index') }}"
                         variant="outline-primary"
-                        icon="bi bi-arrow-left">
+                        icon="bi bi-arrow-left"
+                        feature="plans">
                         Voltar para Lista
                     </x-ui.button>
                 </div>

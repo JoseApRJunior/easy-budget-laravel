@@ -488,7 +488,7 @@
 
         {{-- Botões de Ação (Footer) --}}
         <x-layout.actions-bar alignment="between" class="mt-4" mb="0">
-            <x-ui.back-button index-route="provider.services.index" class="w-100 w-md-auto px-md-4" />
+            <x-ui.back-button index-route="provider.services.index" class="w-100 w-md-auto px-md-4" feature="services" />
 
             <x-ui.button-group gap="2" class="w-100 w-md-auto">
                 @if ($service->canBeEdited())

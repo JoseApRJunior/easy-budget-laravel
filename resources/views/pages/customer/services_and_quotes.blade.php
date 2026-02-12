@@ -62,8 +62,8 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="route('provider.services.show', $servico->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="route('provider.services.edit', $servico->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button :href="route('provider.services.show', $servico->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="services" />
+                                        <x-ui.button :href="route('provider.services.edit', $servico->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="services" />
                                         <x-ui.button 
                                             type="button" 
                                             variant="danger" 
@@ -75,6 +75,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ route('provider.services.destroy', $servico->id) }}"
                                             data-item-name="{{ $servico->nome }}"
+                                            feature="services"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>
@@ -136,8 +137,8 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="route('provider.budgets.show', $orcamento->code ?? $orcamento->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="route('provider.budgets.edit', $orcamento->code ?? $orcamento->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button :href="route('provider.budgets.show', $orcamento->code ?? $orcamento->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="budgets" />
+                                        <x-ui.button :href="route('provider.budgets.edit', $orcamento->code ?? $orcamento->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="budgets" />
                                         <x-ui.button 
                                             type="button" 
                                             variant="danger" 
@@ -147,8 +148,9 @@
                                             title="Excluir"
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteModal" 
-                                            data-delete-url="{{ route('provider.budgets.destroy', $orcamento->code ?? $orcamento->id) }}"
-                                            data-item-name="Orçamento #{{ $orcamento->code ?? $orcamento->id }}"
+                                            data-delete-url="{{ route('provider.budgets.destroy', $orcamento->id) }}"
+                                            data-item-name="{{ $orcamento->code ?? $orcamento->id }}"
+                                            feature="budgets"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>

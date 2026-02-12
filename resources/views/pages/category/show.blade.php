@@ -252,9 +252,9 @@
                          label="Restaurar"
                          title="{{ $parentIsTrashed ? 'Restaure o pai primeiro' : 'Restaurar' }}"
                          :class="$parentIsTrashed ? 'opacity-50' : ''"
-                         onclick="{{ $parentIsTrashed ? 'easyAlert.warning("<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.", { duration: 8000 }); return false;' : '' }}" />
+                         onclick="{{ $parentIsTrashed ? 'easyAlert.warning("<strong>Ação Bloqueada</strong><br>Não é possível restaurar esta subcategoria porque a categoria pai está na lixeira. Restaure o pai primeiro.", { duration: 8000 }); return false;' : '' }}" feature="categories" />
                     @else
-                    <x-ui.button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+                    <x-ui.button type="link" :href="route('provider.categories.edit', $category->slug)" style="min-width: 120px;" icon="pencil-fill" label="Editar" feature="categories" />
 
                     @php
                         $blockedMessage = '';
@@ -274,18 +274,18 @@
                         :icon="$toggleIcon"
                         :label="$toggleLabel"
                         :class="$toggleDisabled ? 'opacity-50' : ''"
-                        onclick="{{ $toggleDisabled ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>\' + \'' . addslashes($blockedMessage) . '\', { duration: 8000 }); return false;' : '' }}" />
+                        onclick="{{ $toggleDisabled ? 'easyAlert.warning(\'<strong>Ação Bloqueada</strong><br>\' + \'' . addslashes($blockedMessage) . '\', { duration: 8000 }); return false;' : '' }}" feature="categories" />
 
                     @if ($canDelete)
                         <x-ui.button variant="outline-danger" style="min-width: 120px;" data-bs-toggle="modal"
-                            data-bs-target="#deleteModal-{{ $category->slug }}" icon="trash-fill" label="Excluir" />
+                            data-bs-target="#deleteModal-{{ $category->slug }}" icon="trash-fill" label="Excluir" feature="categories" />
                     @else
                         <x-ui.button variant="outline-danger"
                             style="min-width: 120px; cursor: not-allowed;"
                             icon="trash-fill"
                             label="Excluir"
                             class="opacity-50"
-                            onclick="easyAlert.warning('<strong>Exclusão Bloqueada</strong><br>Não é possível excluir esta categoria porque ela possui subcategorias, serviços ou produtos vinculados.', { duration: 8000 }); return false;" />
+                            onclick="easyAlert.warning('<strong>Exclusão Bloqueada</strong><br>Não é possível excluir esta categoria porque ela possui subcategorias, serviços ou produtos vinculados.', { duration: 8000 }); return false;" feature="categories" />
                     @endif
                     @endif
             </div>

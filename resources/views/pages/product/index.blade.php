@@ -326,6 +326,7 @@
     form-id="deleteForm"
     method="DELETE"
     item-name-id="deleteProductName"
+    feature="products"
 />
 
 <x-ui.confirm-modal
@@ -336,5 +337,6 @@
     variant="success"
     form-id="restoreForm"
     item-name-id="restoreProductName"
+    feature="products"
 />
 @endsection

@@ -12,7 +12,7 @@
                 'Profissões' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="url('/admin/professions/create')" variant="primary" icon="plus-circle" label="Adicionar Profissão" />
+                <x-ui.button :href="url('/admin/professions/create')" variant="primary" icon="plus-circle" label="Adicionar Profissão" feature="manage-professions" />
             </x-slot:actions>
         </x-layout.page-header>
 

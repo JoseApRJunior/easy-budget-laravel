@@ -197,7 +197,7 @@
                                 </h5>
 
                                 <div class="mb-3">
-                                    <x-ui.button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" />
+                                    <x-ui.button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" feature="services" />
                                 </div>
 
                                 <div id="itemsContainer">

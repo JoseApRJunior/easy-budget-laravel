@@ -5,8 +5,8 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1 class="h3 mb-0">Gerenciamento de Filas de E-mail</h1>
                     <div>
-                        <x-ui.button variant="primary" label="Atualizar" icon="sync-alt" onclick="refreshStats()" class="me-2" />
-                        <x-ui.button variant="success" label="Testar E-mail" icon="paper-plane" onclick="testEmail()" />
+                        <x-ui.button variant="primary" label="Atualizar" icon="sync-alt" onclick="refreshStats()" class="me-2" feature="manage-settings" />
+                        <x-ui.button variant="success" label="Testar E-mail" icon="paper-plane" onclick="testEmail()" feature="manage-settings" />
                     </div>
                 </div>
 
@@ -68,8 +68,8 @@
                             <div class="card-body">
                                 <p class="text-muted">Remove jobs antigos e falhados para manter o sistema limpo.</p>
                                 <div class="d-flex gap-2">
-                                    <x-ui.button variant="warning" label="Limpar Jobs (7 dias)" onclick="cleanupJobs(7)" />
-                                    <x-ui.button variant="warning" outline label="Limpar Jobs (30 dias)" onclick="cleanupJobs(30)" />
+                                    <x-ui.button variant="warning" label="Limpar Jobs (7 dias)" onclick="cleanupJobs(7)" feature="manage-settings" />
+                                    <x-ui.button variant="warning" outline label="Limpar Jobs (30 dias)" onclick="cleanupJobs(30)" feature="manage-settings" />
                                 </div>
                             </div>
                         </div>

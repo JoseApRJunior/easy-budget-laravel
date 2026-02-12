@@ -331,21 +331,21 @@
                     variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
                     icon="send-fill"
                     :label="$sendModalLabel"
-                    data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
+                    data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" feature="budgets" />
 
                 <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
-                    variant="outline-secondary" icon="share-fill" label="Links" />
+                    variant="outline-secondary" icon="share-fill" label="Links" feature="budgets" />
 
                 @if ($budget->canBeEdited())
                 <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                    variant="primary" icon="pencil-fill" label="Editar" />
+                    variant="primary" icon="pencil-fill" label="Editar" feature="budgets" />
                 @endif
 
                 <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
                     target="_blank"
                     variant="outline-secondary"
                     icon="file-earmark-pdf"
-                    label="Imprimir PDF" />
+                    label="Imprimir PDF" feature="budgets" />
             </x-ui.button-group>
         </x-layout.actions-bar>
     </x-layout.v-stack>
