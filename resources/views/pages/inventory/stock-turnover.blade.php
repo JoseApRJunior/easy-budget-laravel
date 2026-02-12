@@ -416,7 +416,7 @@
                             Não foram encontradas movimentações para os filtros selecionados. Tente ajustar o período ou a busca.
                         </p>
                     @endif
-                    <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="outline-primary" icon="arrow-left" label="Limpar Filtros" />
+                    <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="outline-primary" icon="arrow-left" label="Limpar Filtros" feature="inventory" />
                 </div>
             @endif
         </div>

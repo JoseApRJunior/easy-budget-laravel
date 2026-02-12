@@ -346,9 +346,9 @@
 
                 <div class="col-12 col-md-auto order-1 order-md-3">
                     <div class="d-grid d-md-flex gap-2">
-                        <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" />
-                        <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" />
-                        <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" />
+                        <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" feature="inventory" />
+                        <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" feature="inventory" />
+                        <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" feature="inventory" />
                     </div>
                 </div>
             </div>

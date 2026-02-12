@@ -12,7 +12,7 @@
                 'Áreas de Atividade' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" />
+                <x-ui.button :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" feature="manage-activities" />
             </x-slot:actions>
         </x-layout.page-header>
 

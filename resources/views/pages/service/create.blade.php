@@ -317,7 +317,7 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" feature="services" />
             </div>
         </div>
     </div>

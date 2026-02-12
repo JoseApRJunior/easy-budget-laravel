@@ -9,7 +9,7 @@
                 'Novo' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-plans" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -123,8 +123,8 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                            <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline label="Cancelar" />
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Criar Plano" />
+                            <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline label="Cancelar" feature="manage-plans" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Criar Plano" feature="manage-plans" />
                         </div>
                     </x-ui.card>
                 </div>

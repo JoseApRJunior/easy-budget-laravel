@@ -164,6 +164,7 @@
                 resource="products"
                 :filters="$filters"
                 createLabel="Novo Produto"
+                feature="products"
             />
         </x-slot:headerActions>
 

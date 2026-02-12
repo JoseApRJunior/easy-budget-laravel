@@ -234,10 +234,10 @@
                         title="Atalhos da Agenda"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.schedules.index')" variant="primary" icon="list-ul" label="Listar Todos" />
-                        <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="primary" icon="calendar-week" label="Ver Calendário" />
-                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="warning" icon="hourglass-split" label="Ver Pendentes" />
-                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="info" icon="check-circle" label="Ver Confirmados" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index')" variant="primary" icon="list-ul" label="Listar Todos" feature="schedules" />
+                        <x-ui.button type="link" :href="route('provider.schedules.calendar')" variant="primary" icon="calendar-week" label="Ver Calendário" feature="schedules" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'pending'])" variant="warning" icon="hourglass-split" label="Ver Pendentes" feature="schedules" />
+                        <x-ui.button type="link" :href="route('provider.schedules.index', ['status' => 'confirmed'])" variant="info" icon="check-circle" label="Ver Confirmados" feature="schedules" />
                     </x-resource.quick-actions>
 
                     <!-- Ações de Lote -->
@@ -248,9 +248,9 @@
                     >
                         <x-layout.v-stack gap="2">
                             @if ($pending > 0)
-                                <x-ui.button variant="primary" outline size="sm" icon="check-all" label="Confirmar Pendentes" onclick="confirmAllPending()" class="w-100" />
+                                <x-ui.button variant="primary" outline size="sm" icon="check-all" label="Confirmar Pendentes" onclick="confirmAllPending()" class="w-100" feature="schedules" />
                             @endif
-                            <x-ui.button variant="secondary" outline size="sm" icon="download" label="Exportar Agenda" onclick="exportSchedules()" class="w-100" />
+                            <x-ui.button variant="secondary" outline size="sm" icon="download" label="Exportar Agenda" onclick="exportSchedules()" class="w-100" feature="schedules" />
                         </x-layout.v-stack>
                     </x-resource.resource-list-card>
                 </x-layout.v-stack>

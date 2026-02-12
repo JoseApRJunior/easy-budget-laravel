@@ -260,8 +260,8 @@
                                                 @else
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="create">
                                                 @endif
-                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" feature="services" />
+                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" feature="services" />
                                             </x-layout.grid-col>
                                             <x-layout.grid-col size="col-12" class="mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
@@ -322,8 +322,8 @@
                                             <x-layout.grid-col size="col-md-2">
                                                 <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
                                                 <input type="hidden" name="items[{{ $index }}][action]" value="update">
-                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                                                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" feature="services" />
+                                                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" feature="services" />
                                             </x-layout.grid-col>
                                             <x-layout.grid-col size="col-12" class="mt-2">
                                                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>
@@ -394,8 +394,8 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
-                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" />
+                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" feature="services" />
+                <x-ui.button type="button" variant="outline-secondary" size="sm" class="undo-item w-100 d-none" icon="arrow-counterclockwise" label="Desfazer" feature="services" />
             </div>
             <div class="col-12 mt-2">
                 <span class="badge bg-warning text-dark item-deleted-badge d-none"><i class="bi bi-exclamation-triangle me-1"></i>Marcado para exclusão</span>

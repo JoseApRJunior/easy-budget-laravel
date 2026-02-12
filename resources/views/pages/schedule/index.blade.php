@@ -13,7 +13,7 @@
             ]">
         <x-slot:actions>
             <div class="d-flex gap-2">
-                <x-ui.button :href="route('provider.schedules.calendar')" variant="secondary" outline icon="calendar3" label="Ver Calendário" />
+                <x-ui.button :href="route('provider.schedules.calendar')" variant="secondary" outline icon="calendar3" label="Ver Calendário" feature="schedules" />
             </div>
         </x-slot:actions>
     </x-layout.page-header>

@@ -232,27 +232,27 @@
 
                     <div class="d-grid gap-2">
                         @if ($invoice->status === 'pending')
-                            <button type="button" class="btn btn-success" onclick="changeStatus('paid')">
+                            <x-ui.button type="button" variant="success" onclick="changeStatus('paid')" feature="invoices">
                                 <i class="bi bi-check-circle me-2"></i>Marcar como Paga
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" onclick="changeStatus('cancelled')">
+                            </x-ui.button>
+                            <x-ui.button type="button" variant="outline-danger" onclick="changeStatus('cancelled')" feature="invoices">
                                 <i class="bi bi-x-circle me-2"></i>Cancelar Fatura
-                            </button>
+                            </x-ui.button>
                         @endif
 
-                        <a href="{{ route('provider.invoices.print', $invoice) }}" target="_blank" class="btn btn-primary">
+                        <x-ui.button href="{{ route('provider.invoices.print', $invoice) }}" target="_blank" variant="primary" feature="invoices">
                             <i class="bi bi-printer me-2"></i>Imprimir Fatura
-                        </a>
+                        </x-ui.button>
 
                         @if ($invoice->status === 'pending')
-                            <a href="{{ route('provider.invoices.edit', $invoice->code) }}" class="btn btn-outline-secondary">
+                            <x-ui.button href="{{ route('provider.invoices.edit', $invoice->code) }}" variant="outline-secondary" feature="invoices">
                                 <i class="bi bi-pencil me-2"></i>Editar Fatura
-                            </a>
+                            </x-ui.button>
                         @endif
 
-                        <button type="button" class="btn btn-link text-danger text-decoration-none p-0 mt-2 small" onclick="deleteInvoice()">
+                        <x-ui.button type="button" variant="link" class="text-danger text-decoration-none p-0 mt-2 small" onclick="deleteInvoice()" feature="invoices">
                             <i class="bi bi-trash me-1"></i>Excluir Fatura
-                        </button>
+                        </x-ui.button>
                     </div>
 
                     @if ($invoice->status !== 'paid' && $invoice->status !== 'cancelled')

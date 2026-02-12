@@ -14,7 +14,7 @@
                 'Criar' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="budgets" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -196,8 +196,8 @@
                         <div class="row mt-4 pt-3 border-top">
                             <div class="col-12">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline label="Cancelar" />
-                                    <x-ui.button type="submit" variant="primary" icon="share" label="Criar Compartilhamento" />
+                                    <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline label="Cancelar" feature="budgets" />
+                                    <x-ui.button type="submit" variant="primary" icon="share" label="Criar Compartilhamento" feature="budgets" />
                                 </div>
                             </div>
                         </div>

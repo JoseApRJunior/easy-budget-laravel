@@ -10,7 +10,7 @@
                 'Unidades' => route('admin.units.index'),
                 'Nova' => '#'
             ]">
-            <x-ui.button :href="route('admin.units.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-ui.button :href="route('admin.units.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-units" />
         </x-layout.page-header>
 
         <!-- Formulário -->

@@ -211,8 +211,8 @@
 
         {{-- Botões de Ação (Footer) --}}
         <div class="d-flex justify-content-between mt-4 pb-4">
-            <x-ui.back-button index-route="provider.invoices.index" label="Cancelar" />
-            <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Fatura" />
+            <x-ui.back-button index-route="provider.invoices.index" label="Cancelar" feature="invoices" />
+            <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Fatura" feature="invoices" />
         </div>
     </form>
 </x-layout.page-container>

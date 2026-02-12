@@ -10,8 +10,8 @@
             'Assinantes' => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
-            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="primary" icon="download" label="Exportar" />
+            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" feature="manage-plans" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="primary" icon="download" label="Exportar" feature="manage-plans" />
         </div>
     </x-layout.page-header>
 
@@ -67,7 +67,7 @@
                 <div class="col-md-3">
                     <label class="form-label d-block">&nbsp;</label>
                     <div class="d-grid">
-                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" feature="manage-plans" />
                     </div>
                 </div>
             </div>
@@ -130,7 +130,7 @@
                                 <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                        <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" feature="manage-plans" />
                                     </div>
                                 </td>
                             </tr>

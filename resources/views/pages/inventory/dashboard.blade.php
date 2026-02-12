@@ -256,11 +256,11 @@
                     title="Ações de Estoque"
                     icon="lightning-charge"
                 >
-                    <x-ui.button type="link" :href="route('provider.inventory.index')" variant="primary" icon="list" label="Ver Inventário" />
-                    <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="primary" icon="arrow-left-right" label="Movimentações" />
-                    <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="primary" icon="graph-up" label="Giro de Estoque" />
-                    <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="primary" icon="star" label="Mais Usados" />
-                    <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" />
+                    <x-ui.button type="link" :href="route('provider.inventory.index')" variant="primary" icon="list" label="Ver Inventário" feature="inventory" />
+                    <x-ui.button type="link" :href="route('provider.inventory.movements')" variant="primary" icon="arrow-left-right" label="Movimentações" feature="inventory" />
+                    <x-ui.button type="link" :href="route('provider.inventory.stock-turnover')" variant="primary" icon="graph-up" label="Giro de Estoque" feature="inventory" />
+                    <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="primary" icon="star" label="Mais Usados" feature="inventory" />
+                    <x-ui.button type="link" :href="route('provider.inventory.report')" variant="secondary" icon="file-earmark-text" label="Relatórios" feature="inventory" />
                 </x-resource.quick-actions>
 
                 <!-- Reservados -->

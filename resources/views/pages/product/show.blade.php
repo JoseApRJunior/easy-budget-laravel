@@ -297,13 +297,13 @@
                 <br><small class="text-muted">Esta ação pode afetar a disponibilidade do produto.</small>
             </div>
             <div class="modal-footer">
-                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="products" />
                 <form id="toggleForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('PATCH')
                     <x-ui.button type="submit" :variant="$product->active ? 'warning' : 'success'"
                         :icon="$product->active ? 'slash-circle' : 'check-lg'"
-                        :label="$product->active ? 'Desativar' : 'Ativar'" />
+                        :label="$product->active ? 'Desativar' : 'Ativar'" feature="products" />
                 </form>
             </div>
         </div>
@@ -323,11 +323,11 @@
                 <br><small class="text-muted">Esta ação pode ser desfeita.</small>
             </div>
             <div class="modal-footer">
-                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="products" />
                 <form id="deleteForm" action="#" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <x-ui.button type="submit" variant="danger" label="Excluir" />
+                    <x-ui.button type="submit" variant="danger" label="Excluir" feature="products" />
                 </form>
             </div>
         </div>
@@ -347,10 +347,10 @@
                 <br><small class="text-muted">O produto será restaurado e ficará disponível novamente.</small>
             </div>
             <div class="modal-footer">
-                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="products" />
                 <form id="restoreForm" action="#" method="POST" class="d-inline">
                     @csrf
-                    <x-ui.button type="submit" variant="success" label="Restaurar" />
+                    <x-ui.button type="submit" variant="success" label="Restaurar" feature="products" />
                 </form>
             </div>
         </div>
@@ -395,7 +395,7 @@
                 </div>
                 <div class="modal-footer bg-light border-0 p-3">
                     <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                    <x-ui.button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
+                    <x-ui.button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" feature="inventory" />
                 </div>
             </form>
         </div>

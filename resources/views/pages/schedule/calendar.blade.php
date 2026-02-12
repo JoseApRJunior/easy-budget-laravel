@@ -14,7 +14,7 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="list-ul" label="Ver Lista" />
+                    <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="list-ul" label="Ver Lista" feature="schedules" />
                     {{-- Note: Create usually requires a service context, so maybe this button should be conditional or link to service selection --}}
                 </div>
             </x-slot:actions>
@@ -28,7 +28,7 @@
                             <h5 class="mb-0 text-primary fw-bold">
                                 <i class="bi bi-calendar me-2"></i>Visualização em Calendário
                             </h5>
-                            <x-ui.button type="link" :href="route('provider.schedules.index')" variant="outline-primary" size="sm" icon="list-ul" label="Lista" />
+                            <x-ui.button type="link" :href="route('provider.schedules.index')" variant="outline-primary" size="sm" icon="list-ul" label="Lista" feature="schedules" />
                         </div>
                     </x-slot:header>
                     

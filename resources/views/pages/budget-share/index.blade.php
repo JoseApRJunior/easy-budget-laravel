@@ -13,7 +13,7 @@
                 'Compartilhamentos' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" />
+                <x-ui.button :href="route('provider.budgets.index')" variant="secondary" outline icon="arrow-left" label="Voltar aos Orçamentos" feature="budgets" />
             </x-slot:actions>
         </x-layout.page-header>
 

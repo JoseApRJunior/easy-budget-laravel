@@ -13,7 +13,7 @@
                 'Criar' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" feature="schedules" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -129,12 +129,12 @@
                         <!-- Footer -->
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
                             <div class="d-flex align-items-center">
-                                <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="outline-secondary" icon="arrow-left" label="Voltar ao Serviço" class="me-2" />
+                                <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="outline-secondary" icon="arrow-left" label="Voltar ao Serviço" class="me-2" feature="schedules" />
                                 <small class="text-muted d-none d-md-block">
                                     Serviço: <strong>{{ $service->code }}</strong>
                                 </small>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="calendar-plus" label="Criar Agendamento" id="submitBtn" />
+                            <x-ui.button type="submit" variant="primary" icon="calendar-plus" label="Criar Agendamento" id="submitBtn" feature="schedules" />
                         </div>
                     </form>
                 </x-ui.card>

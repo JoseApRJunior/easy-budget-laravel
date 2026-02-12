@@ -115,7 +115,8 @@
                                             variant="outline-info"
                                             size="sm"
                                             icon="box-arrow-up-right"
-                                            label="Ver Status" />
+                                            label="Ver Status"
+                                            feature="schedules" />
                                     </td>
                                 </tr>
                             </table>
@@ -130,7 +131,8 @@
                         href="{{ url()->previous() }}"
                         variant="secondary"
                         icon="arrow-left"
-                        label="Voltar" />
+                        label="Voltar"
+                        feature="schedules" />
                     <small class="text-muted d-none d-md-block">
                         Última atualização: {{ $schedule->updated_at->format('d/m/Y H:i') }}
                     </small>
@@ -140,7 +142,8 @@
                             href="{{ route('provider.schedules.edit', $schedule) }}"
                             variant="warning"
                             icon="pencil"
-                            label="Editar" />
+                            label="Editar"
+                            feature="schedules" />
                         @endcan
                         @can('delete', $schedule)
                         <x-ui.button
@@ -151,7 +154,8 @@
                             data-bs-toggle="modal"
                             data-bs-target="#deleteModal"
                             data-delete-url="{{ route('provider.schedules.destroy', $schedule) }}"
-                            data-item-name="o agendamento #{{ $schedule->id }}" />
+                            data-item-name="o agendamento #{{ $schedule->id }}"
+                            feature="schedules" />
                         @endcan
                     </div>
                 </div>

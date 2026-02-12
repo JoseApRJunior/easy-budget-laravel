@@ -113,7 +113,7 @@
                                     <td>{{ $subscription->created_at ? $subscription->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" />
+                                            <x-ui.button type="link" :href="route('admin.subscriptions.show', $subscription)" variant="info" size="sm" icon="eye" title="Ver detalhes" feature="manage-plans" />
                                         </div>
                                     </td>
                                 </tr>
