@@ -17,7 +17,8 @@
                     variant="primary" 
                     onclick="refreshDashboard()"
                     icon="arrow-clockwise"
-                    label="Atualizar" />
+                    label="Atualizar"
+                    feature="manage-settings" />
             </div>
         </x-layout.page-header>
 
@@ -257,11 +258,11 @@
                         <h6 class="m-0 font-weight-bold text-primary">Ações Rápidas</h6>
                     </x-slot:header>
                     <div class="d-grid gap-2">
-                        <x-ui.button type="link" :href="route('admin.features.index')" variant="danger" size="sm" icon="toggle-on" label="Gerenciar Módulos" />
-                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" />
-                        <x-ui.button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" />
-                        <x-ui.button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" />
-                        <x-ui.button type="link" :href="route('admin.reports.index')" variant="warning" size="sm" icon="file-earmark-text" label="Ver Relatórios" />
+                        <x-ui.button type="link" :href="route('admin.features.index')" variant="danger" size="sm" icon="toggle-on" label="Gerenciar Módulos" feature="manage-settings" />
+                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="primary" size="sm" icon="gear" label="Gerenciar Planos" feature="manage-settings" />
+                        <x-ui.button type="link" :href="route('admin.tenants.index')" variant="success" size="sm" icon="building" label="Gerenciar Tenants" feature="manage-tenants" />
+                        <x-ui.button type="link" :href="route('admin.global-settings.index')" variant="info" size="sm" icon="gear" label="Configurações" feature="manage-settings" />
+                        <x-ui.button type="link" :href="route('admin.reports.index')" variant="warning" size="sm" icon="file-earmark-text" label="Ver Relatórios" feature="manage-tenants" />
                     </div>
                 </x-ui.card>
             </div>
@@ -274,7 +275,7 @@
                     <x-slot:header>
                         <div class="d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold text-primary">Atividades Recentes do Sistema</h6>
-                            <x-ui.button type="link" :href="route('admin.audit.logs')" variant="primary" size="sm" label="Ver todas" />
+                            <x-ui.button type="link" :href="route('admin.audit.logs')" variant="primary" size="sm" label="Ver todas" feature="manage-settings" />
                         </div>
                     </x-slot:header>
                     <div class="table-responsive">

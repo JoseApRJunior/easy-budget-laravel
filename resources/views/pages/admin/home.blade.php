@@ -22,7 +22,7 @@
                         <p class="card-text text-muted flex-grow-1">
                             Visualize e gerencie os usuários e provedores do sistema.
                         </p>
-                        <x-ui.button href="/admin/user" variant="success" label="Acessar Usuários" />
+                        <x-ui.button href="/admin/user" variant="success" label="Acessar Usuários" feature="manage-users" />
                     </div>
                 </x-ui.card>
             </div>
@@ -39,7 +39,7 @@
                         <p class="card-text text-muted flex-grow-1">
                             Acompanhe, cancele ou estorne assinaturas de planos dos usuários.
                         </p>
-                        <x-ui.button href="/admin/plans/subscriptions" variant="primary" label="Gerenciar Assinaturas" />
+                        <x-ui.button href="/admin/plans/subscriptions" variant="primary" label="Gerenciar Assinaturas" feature="manage-plans" />
                     </div>
                 </x-ui.card>
             </div>
@@ -55,7 +55,7 @@
                         <p class="card-text text-muted flex-grow-1">
                             Monitore os logs de erro e eventos importantes da aplicação.
                         </p>
-                        <x-ui.button href="/admin/logs" variant="warning" label="Acessar Logs" />
+                        <x-ui.button href="/admin/logs" variant="warning" label="Acessar Logs" feature="view-monitoring" />
                     </div>
                 </x-ui.card>
             </div>
@@ -72,7 +72,7 @@
                         <p class="card-text text-muted flex-grow-1">
                             Ative ou desative funcionalidades globais do sistema (Feature Flags).
                         </p>
-                        <x-ui.button href="{{ route('admin.features.index') }}" variant="info" label="Gerenciar Módulos" />
+                        <x-ui.button href="{{ route('admin.features.index') }}" variant="info" label="Gerenciar Módulos" feature="manage-settings" />
                     </div>
                 </x-ui.card>
             </div>

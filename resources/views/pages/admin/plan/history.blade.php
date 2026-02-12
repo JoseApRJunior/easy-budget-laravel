@@ -10,8 +10,8 @@
             'Histórico' => '#'
         ]">
         <div class="d-flex gap-2">
-            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" />
-            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'json'])" variant="primary" icon="download" label="Exportar Dados" />
+            <x-ui.button type="link" :href="route('admin.plans.show', $plan)" variant="secondary" icon="arrow-left" label="Voltar ao Plano" feature="manage-plans" />
+            <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'json'])" variant="primary" icon="download" label="Exportar Dados" feature="manage-plans" />
         </div>
     </x-layout.page-header>
 

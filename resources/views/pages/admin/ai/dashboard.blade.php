@@ -131,7 +131,7 @@
                             <p class="mt-2">Carregando predições...</p>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-3">
-                            <x-ui.button type="link" href="/admin/ai/reports?type=churn" variant="primary" size="sm" label="Ver Relatório Completo" />
+                            <x-ui.button type="link" href="/admin/ai/reports?type=churn" variant="primary" size="sm" label="Ver Relatório Completo" feature="analytics" />
                             <small class="text-muted">Atualizado há 2 horas</small>
                         </div>
                     </div>
@@ -155,7 +155,7 @@
                             <p class="mt-2">Carregando alertas...</p>
                         </div>
                         <div class="text-center mt-3">
-                            <x-ui.button variant="primary" size="sm" icon="arrow-clockwise" label="Atualizar Dashboard" onclick="loadDashboardData()" />
+                            <x-ui.button variant="primary" size="sm" icon="arrow-clockwise" label="Atualizar Dashboard" onclick="loadDashboardData()" feature="analytics" />
                         </div>
                     </div>
                 </div>

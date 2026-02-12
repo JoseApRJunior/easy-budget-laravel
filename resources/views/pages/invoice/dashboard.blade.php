@@ -232,9 +232,9 @@
                         title="Ações de Fatura"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.invoices.create')" variant="success" icon="plus-lg" label="Nova Fatura" />
-                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" icon="receipt" label="Listar Faturas" />
-                        <x-ui.button type="link" :href="route('provider.financial.dashboard')" variant="secondary" icon="currency-dollar" label="Dashboard Financeiro" />
+                        <x-ui.button type="link" :href="route('provider.invoices.create')" variant="success" icon="plus-lg" label="Nova Fatura" feature="invoices" />
+                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" icon="receipt" label="Listar Faturas" feature="invoices" />
+                        <x-ui.button type="link" :href="route('provider.financial.dashboard')" variant="secondary" icon="currency-dollar" label="Dashboard Financeiro" feature="financial" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

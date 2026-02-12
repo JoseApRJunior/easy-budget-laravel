@@ -60,9 +60,9 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="route('provider.budgets.shares.show', $share)" variant="primary" outline size="sm" icon="eye" title="Ver detalhes" />
+                                        <x-ui.button :href="route('provider.budgets.shares.show', $share)" variant="primary" outline size="sm" icon="eye" title="Ver detalhes" feature="budgets" />
                                         
-                                        <x-ui.button :href="route('budgets.public.shared.view', $share->token)" target="_blank" variant="info" outline size="sm" icon="box-arrow-up-right" title="Ver link público" />
+                                        <x-ui.button :href="route('budgets.public.shared.view', $share->token)" target="_blank" variant="info" outline size="sm" icon="box-arrow-up-right" title="Ver link público" feature="budgets" />
 
                                         @if(!($share->expires_at && \Carbon\Carbon::parse($share->expires_at)->isPast()))
                                             <x-ui.button 
@@ -76,6 +76,7 @@
                                                 data-bs-target="#revokeModal" 
                                                 data-action-url="{{ route('provider.budgets.shares.revoke', $share) }}"
                                                 data-item-name="{{ $share->budget->code }}"
+                                                feature="budgets"
                                             />
                                         @endif
 
@@ -90,6 +91,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ route('provider.budgets.shares.destroy', $share) }}"
                                             data-item-name="{{ $share->budget->code }}"
+                                            feature="budgets"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>

@@ -8,7 +8,7 @@
                 'Usuários' => '#'
             ]">
             <x-slot:actions>
-                {{-- <x-ui.button :href="route('admin.users.create')" variant="primary" icon="plus-lg" label="Novo Usuário" /> --}}
+                <x-ui.button :href="route('admin.users.create')" variant="primary" icon="plus-lg" label="Novo Usuário" feature="manage-users" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -33,10 +33,8 @@
                                 <x-resource.table-cell>{{ $user->created_at->format('d/m/Y H:i') }}</x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        {{-- 
-                                        <x-ui.button :href="route('admin.users.show', $user)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="route('admin.users.edit', $user)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
-                                        --}}
+                                        <x-ui.button :href="route('admin.users.show', $user)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="manage-users" />
+                                        <x-ui.button :href="route('admin.users.edit', $user)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="manage-users" />
                                         <x-ui.button 
                                             type="button" 
                                             variant="danger" 

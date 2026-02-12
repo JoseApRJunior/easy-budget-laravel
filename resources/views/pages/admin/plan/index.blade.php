@@ -93,8 +93,8 @@
                 </div>
                 <div class="row mt-3">
                     <div class="col-12 d-flex gap-2 justify-content-end">
-                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="secondary" outline icon="x-circle" label="Limpar" />
-                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                        <x-ui.button type="link" :href="route('admin.plans.index')" variant="secondary" outline icon="x-circle" label="Limpar" feature="manage-plans" />
+                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" feature="manage-plans" />
                     </div>
                 </div>
             </form>

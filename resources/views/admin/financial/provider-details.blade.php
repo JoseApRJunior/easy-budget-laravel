@@ -225,9 +225,9 @@
             <div class="card shadow">
                 <div class="card-footer bg-white border-top-0">
                     <div class="d-flex flex-wrap gap-2">
-                        <x-ui.button type="link" :href="route('admin.financial.reports', ['tenant_id' => $providerFinancialDetails['tenant_id']])" variant="primary" label="Ver Relatórios" icon="chart-bar" class="flex-grow-1" />
-                        <x-ui.button variant="success" label="Exportar Dados" icon="download" class="flex-grow-1" onclick="exportProviderReports()" />
-                        <x-ui.button type="link" :href="route('admin.enterprises.show', $providerFinancialDetails['tenant_id'])" variant="info" label="Ver Empresa" icon="building" class="flex-grow-1" />
+                        <x-ui.button type="link" :href="route('admin.financial.reports', ['tenant_id' => $providerFinancialDetails['tenant_id']])" variant="primary" label="Ver Relatórios" icon="chart-bar" class="flex-grow-1" feature="manage-tenants" />
+                        <x-ui.button variant="success" label="Exportar Dados" icon="download" class="flex-grow-1" onclick="exportProviderReports()" feature="manage-tenants" />
+                        <x-ui.button type="link" :href="route('admin.enterprises.show', $providerFinancialDetails['tenant_id'])" variant="info" label="Ver Empresa" icon="building" class="flex-grow-1" feature="manage-tenants" />
                         <x-ui.back-button index-route="admin.financial.index" class="flex-grow-1" label="Voltar" />
                     </div>
                 </div>

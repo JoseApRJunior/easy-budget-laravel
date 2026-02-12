@@ -7,7 +7,7 @@
                 'Admin' => route('admin.dashboard'),
                 'Notificações' => '#'
             ]">
-            <x-ui.button :href="route('admin.dashboard')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-ui.button :href="route('admin.dashboard')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-settings" />
         </x-layout.page-header>
 
         <div class="row">

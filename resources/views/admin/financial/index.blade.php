@@ -9,9 +9,9 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportReports()" />
-                    <x-ui.button type="button" variant="secondary" outline icon="bell" label="Alertas" onclick="refreshBudgetAlerts()" />
-                    <x-ui.button :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
+                    <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportReports()" feature="manage-tenants" />
+                    <x-ui.button type="button" variant="secondary" outline icon="bell" label="Alertas" onclick="refreshBudgetAlerts()" feature="manage-tenants" />
+                    <x-ui.button :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" feature="manage-tenants" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -181,8 +181,8 @@
                     <div class="col-md-3">
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="d-flex gap-2">
-                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
-                            <x-ui.button type="link" :href="route('admin.financial.index')" variant="secondary" icon="x-lg" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" feature="manage-tenants" />
+                            <x-ui.button type="link" :href="route('admin.financial.index')" variant="secondary" icon="x-lg" label="Limpar" feature="manage-tenants" />
                         </div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
                         <i class="fas fa-chart-bar me-2"></i>Desempenho dos Provedores
                     </h6>
                     <div class="d-flex gap-2">
-                        <x-ui.button type="link" :href="route('admin.financial.reports')" variant="primary" size="sm" icon="chart-bar" label="Relatórios Detalhados" />
+                        <x-ui.button type="link" :href="route('admin.financial.reports')" variant="primary" size="sm" icon="chart-bar" label="Relatórios Detalhados" feature="manage-tenants" />
                     </div>
                 </div>
             </x-slot:header>
@@ -269,8 +269,8 @@
                                     </td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <x-ui.button type="link" :href="'/admin/financial/providers/' . $provider['id'] . '/details'" variant="primary" size="sm" icon="chart-line" title="Ver Detalhes" />
-                                            <x-ui.button type="link" :href="route('admin.enterprises.show', $provider['id'])" variant="info" size="sm" icon="building" title="Ver Empresa" />
+                                            <x-ui.button type="link" :href="'/admin/financial/providers/' . $provider['id'] . '/details'" variant="primary" size="sm" icon="chart-line" title="Ver Detalhes" feature="manage-tenants" />
+                                            <x-ui.button type="link" :href="route('admin.enterprises.show', $provider['id'])" variant="info" size="sm" icon="building" title="Ver Empresa" feature="manage-tenants" />
                                         </div>
                                     </td>
                                 </tr>
@@ -325,8 +325,8 @@
                                 <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
                             </p>
                             <div class="d-flex gap-2 mt-3">
-                                <x-ui.button type="link" :href="'/admin/financial/providers/' . $provider['id'] . '/details'" variant="primary" size="sm" icon="chart-line" label="Detalhes" class="flex-grow-1" />
-                                <x-ui.button type="link" :href="route('admin.enterprises.show', $provider['id'])" variant="info" size="sm" icon="building" label="Empresa" class="flex-grow-1" />
+                                <x-ui.button type="link" :href="'/admin/financial/providers/' . $provider['id'] . '/details'" variant="primary" size="sm" icon="chart-line" label="Detalhes" class="flex-grow-1" feature="manage-tenants" />
+                                <x-ui.button type="link" :href="route('admin.enterprises.show', $provider['id'])" variant="info" size="sm" icon="building" label="Empresa" class="flex-grow-1" feature="manage-tenants" />
                             </div>
                         </x-ui.card>
                     @endforeach
@@ -337,7 +337,7 @@
                     <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nenhum dado financeiro encontrado</h5>
                     <p class="text-muted">Não há dados para exibir com os filtros aplicados.</p>
-                    <x-ui.button type="link" :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" />
+                    <x-ui.button type="link" :href="route('admin.enterprises.index')" variant="primary" icon="building" label="Ver Empresas" feature="manage-tenants" />
                 </div>
             @endif
         </x-ui.card>

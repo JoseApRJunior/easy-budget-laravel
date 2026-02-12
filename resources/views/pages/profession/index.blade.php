@@ -42,8 +42,8 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="url('/admin/professions/' . $profession->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="url('/admin/professions/' . $profession->id . '/edit')" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button :href="url('/admin/professions/' . $profession->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="manage-professions" />
+                                        <x-ui.button :href="url('/admin/professions/' . $profession->id . '/edit')" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="manage-professions" />
                                         <x-ui.button 
                                             type="button" 
                                             variant="danger" 
@@ -55,6 +55,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ url('/admin/professions/' . $profession->id) }}"
                                             data-item-name="{{ $profession->name }}"
+                                            feature="manage-professions"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>
