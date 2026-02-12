@@ -1,6 +1,11 @@
-@props(['indexRoute' => null, 'defaultIndexRoute' => null, 'label' => 'Voltar', 'routeParams' => []])
+@props(['indexRoute' => null, 'defaultIndexRoute' => null, 'label' => 'Voltar', 'routeParams' => [], 'feature' => null])
 
 @php
+// Se feature for informada e o usuário não tiver acesso, não renderiza nada
+if ($feature && !Gate::check($feature)) {
+    return;
+}
+
 $previousUrl = url()->previous();
 $indexUrl = $indexRoute ? route($indexRoute, $routeParams) : $previousUrl;
 $defaultUrl = $defaultIndexRoute ? route($defaultIndexRoute, $routeParams) : $indexUrl;

@@ -181,7 +181,7 @@
         </x-layout.grid-row>
 
         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-            <x-ui.back-button index-route="provider.products.index" label="Cancelar" />
+            <x-ui.back-button index-route="provider.products.index" label="Cancelar" feature="products" />
             <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Produto" class="px-4" feature="products" />
         </div>
     </form>

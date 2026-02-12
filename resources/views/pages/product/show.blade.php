@@ -245,7 +245,7 @@
     <div class="mt-4 pt-3 border-top">
         <x-layout.grid-row class="align-items-center g-3">
             <x-layout.grid-col cols="12" md="auto" class="order-2 order-md-1">
-                <x-ui.back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-4" />
+                <x-ui.back-button index-route="provider.products.index" class="w-100 w-md-auto px-md-4" feature="products" />
             </x-layout.grid-col>
 
             <x-layout.grid-col cols="12" md="true" class="text-center d-none d-md-block order-md-2">

@@ -272,7 +272,7 @@
         <div class="mt-auto pt-4 pb-2">
             <div class="row align-items-center g-3">
                 <div class="col-12 col-md-auto order-2 order-md-1">
-                    <x-ui.back-button index-route="provider.customers.index" class="w-100 w-md-auto px-md-3" />
+                    <x-ui.back-button index-route="provider.customers.index" class="w-100 w-md-auto px-md-3" feature="customers" />
                 </div>
 
                 <div class="col-12 col-md text-center d-none d-md-block order-md-2">

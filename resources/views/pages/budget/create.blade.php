@@ -110,7 +110,7 @@
                 </x-layout.grid-row>
 
                 <div class="d-flex justify-content-between align-items-center mt-5">
-                    <x-ui.back-button index-route="provider.budgets.index" label="Cancelar" />
+                    <x-ui.back-button index-route="provider.budgets.index" label="Cancelar" feature="budgets" />
                     <x-ui.button type="submit" variant="primary" icon="check-circle" label="Criar Orçamento" feature="budgets" />
                 </div>
             </form>

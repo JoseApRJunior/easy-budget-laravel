@@ -32,7 +32,7 @@
                                             <label class="text-muted small text-uppercase fw-bold d-block mb-1">Chave Pública</label>
                                             <div class="d-flex align-items-center">
                                                 <code class="bg-white px-3 py-2 rounded border flex-grow-1 text-dark">{{ $public_key }}</code>
-                                                <x-ui.button variant="outline-secondary" size="sm" class="ms-2" onclick="copyToClipboard('{{ $public_key }}')" title="Copiar" icon="clipboard" />
+                                                <x-ui.button variant="outline-secondary" size="sm" class="ms-2" onclick="copyToClipboard('{{ $public_key }}')" title="Copiar" icon="clipboard" feature="manage-settings" />
                                             </div>
                                         </x-layout.grid-col>
                                     @endif
@@ -51,11 +51,11 @@
                             <div class="d-flex flex-wrap gap-2">
                                 <form action="{{ route('integrations.mercadopago.refresh') }}" method="POST" class="d-inline">
                                     @csrf
-                                    <x-ui.button type="submit" variant="primary" icon="arrow-repeat" label="Renovar Conexão" :disabled="!$can_refresh" />
+                                    <x-ui.button type="submit" variant="primary" icon="arrow-repeat" label="Renovar Conexão" :disabled="!$can_refresh" feature="manage-settings" />
                                 </form>
                                 <form action="{{ route('integrations.mercadopago.disconnect') }}" method="POST" class="d-inline" id="form-disconnect-mp">
                                     @csrf
-                                    <x-ui.button type="button" variant="outline-danger" icon="plug" label="Desconectar Conta" onclick="confirmDisconnect()" />
+                                    <x-ui.button type="button" variant="outline-danger" icon="plug" label="Desconectar Conta" onclick="confirmDisconnect()" feature="manage-settings" />
                                 </form>
                             </div>
                         @else
@@ -83,7 +83,7 @@
                                     </ul>
                                 </div>
 
-                                <x-ui.button :href="$authorization_url" variant="primary" size="lg" icon="link-45deg" label="Conectar Agora" />
+                                <x-ui.button :href="$authorization_url" variant="primary" size="lg" icon="link-45deg" label="Conectar Agora" feature="manage-settings" />
                             </x-resource.empty-state>
                         @endif
                     </div>
