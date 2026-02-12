@@ -1,23 +1,14 @@
 # Configuração do Cloudflare Tunnel para Easy Budget
 # Arquivo configurado com credenciais reais do projeto
 
-# ID do tunnel
-tunnel: 37375574-f138-4588-b38d-6953da23a1d4
+tunnel: af571229-b602-418f-a0c3-d6f0f6b6612a
+credentials-file: C:/Users/junio/.cloudflared/af571229-b602-418f-a0c3-d6f0f6b6612a.json
 
-# Arquivo de credenciais
-credentials-file: C:/Users/junio/.cloudflared/37375574-f138-4588-b38d-6953da23a1d4.json
-
-# Configurações de ingress - mapeamento de domínios para serviços locais
 ingress:
-  # Mapeia o domínio principal para o servidor PHP local
   - hostname: dev.easybudget.net.br
-    service: http://dev.easybudget.net.br
-
-  # Suporte a subdomínios (multi-tenant)
+    service: http://localhost:80 # O Laragon responde aqui
   - hostname: "*.dev.easybudget.net.br"
-    service: http://dev.easybudget.net.br
-
-  # Regra catch-all obrigatória (deve ser a última)
+    service: http://localhost:80
   - service: http_status:404
 
 # Logs

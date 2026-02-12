@@ -17,10 +17,6 @@
      *
 
 
-que acha desta minha ideia para implementar amanhã um Development (Dev) Onde você escreve o código e testa funcionalidades novas de forma bruta. Sua máquina local (Docker/XAMPP).
-Staging (Homologação) Uma cópia idêntica à produção. Serve para o teste final antes do "deploy". Um VPS separado (mesmo que pequeno) ou uma partição isolada.
-Production (Prod) Onde os usuários reais acessam. Deve ser o mais estável possível.
-
 ## Resumo do que falta fazer (Feature Flags & RBAC)
 
 ### 1. Reforço de RBAC nos Componentes de UI
