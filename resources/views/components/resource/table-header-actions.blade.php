@@ -49,6 +49,7 @@
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                     id="exportDropdown{{ ucfirst($resource) }}"
+                    :feature="$effectiveFeature"
                 />
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown{{ ucfirst($resource) }}">
                     @foreach($exportFormats as $format)

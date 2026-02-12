@@ -246,7 +246,7 @@
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="center">
                                         <x-ui.button type="link" :href="route('provider.customers.show', $customer)"
-                                            variant="light" size="sm" icon="eye" class="btn-icon" title="Ver Detalhes" />
+                                            variant="light" size="sm" icon="eye" class="btn-icon" title="Ver Detalhes" feature="customers" />
                                     </x-resource.table-cell>
                                 </x-resource.table-row>
                             @endforeach

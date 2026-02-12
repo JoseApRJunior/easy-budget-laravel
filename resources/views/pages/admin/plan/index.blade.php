@@ -9,8 +9,8 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" />
-                    <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" />
+                    <x-ui.button type="link" :href="route('admin.plans.create')" variant="primary" icon="plus-circle" label="Novo Plano" feature="manage-plans" />
+                    <x-ui.button type="link" :href="route('admin.plans.export', ['format' => 'csv'])" variant="secondary" icon="download" label="Exportar" feature="manage-plans" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -135,9 +135,9 @@
                         <x-resource.table-cell>{{ $plan->created_at ? $plan->created_at->format('d/m/Y') : 'N/A' }}</x-resource.table-cell>
                         <x-resource.table-cell>
                             <x-resource.action-buttons>
-                                <x-ui.button :href="route('admin.plans.show', $plan)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
-                                <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="warning" outline size="sm" icon="people" title="Assinantes" />
+                                <x-ui.button :href="route('admin.plans.show', $plan)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="manage-plans" />
+                                <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="manage-plans" />
+                                <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="warning" outline size="sm" icon="people" title="Assinantes" feature="manage-plans" />
                                 <x-ui.button 
                                     type="button" 
                                     variant="danger" 
@@ -150,6 +150,7 @@
                                     data-bs-target="#deleteModal" 
                                     data-delete-url="{{ route('admin.plans.destroy', $plan) }}"
                                     data-item-name="{{ $plan->name }}"
+                                    feature="manage-plans"
                                 />
                             </x-resource.action-buttons>
                         </x-resource.table-cell>

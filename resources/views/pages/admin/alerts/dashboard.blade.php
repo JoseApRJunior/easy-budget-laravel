@@ -8,8 +8,8 @@
                 'Alertas' => '#'
             ]">
             <div class="d-flex gap-2">
-                <x-ui.button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" />
-                <x-ui.button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" />
+                <x-ui.button type="button" variant="primary" icon="sync-alt" label="Verificar Agora" onclick="checkAlertsNow()" feature="manage-alerts" />
+                <x-ui.button type="link" :href="url('/admin/alerts/settings')" variant="secondary" icon="cog" label="Configurações" feature="manage-alerts" />
             </div>
         </x-layout.page-header>
 
@@ -135,7 +135,7 @@
                                                 </td>
                                                 <td>
                                                     <x-ui.button variant="success" size="sm" icon="check" label="Resolver"
-                                                        onclick="resolveAlert({{ $alert['id'] }})" />
+                                                        onclick="resolveAlert({{ $alert['id'] }})" feature="manage-alerts" />
                                                 </td>
                                             </tr>
                                         @endforeach

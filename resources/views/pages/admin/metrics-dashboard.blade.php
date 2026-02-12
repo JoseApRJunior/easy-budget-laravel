@@ -7,7 +7,7 @@
                 'Admin' => url('/admin'),
                 'Métricas' => '#'
             ]">
-            <x-ui.button type="link" :href="url('/admin')" variant="secondary" icon="arrow-left" label="Voltar" />
+            <x-ui.button type="link" :href="url('/admin')" variant="secondary" icon="arrow-left" label="Voltar" feature="view-monitoring" />
         </x-layout.page-header>
 
         <!-- Cards de Resumo -->

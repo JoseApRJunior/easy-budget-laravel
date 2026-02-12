@@ -10,9 +10,9 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
-                    <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" />
-                    <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" />
+                    <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-plans" />
+                    <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar" feature="manage-plans" />
+                    <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="info" icon="people" label="Assinantes" feature="manage-plans" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -166,7 +166,8 @@
                             'route' => route('admin.plans.subscribers', $plan),
                             'variant' => 'primary',
                             'outline' => true,
-                            'size' => 'sm'
+                            'size' => 'sm',
+                            'feature' => 'manage-plans'
                         ]
                     ]"
                 >
@@ -193,7 +194,7 @@
                                 <x-resource.table-cell>{{ \App\Helpers\CurrencyHelper::format($subscription->transaction_amount) }}</x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" outline size="sm" icon="eye" title="Ver detalhes" />
+                                        <x-ui.button :href="route('admin.plans.subscribers', [$plan, 'search' => $subscription->id])" variant="info" outline size="sm" icon="eye" title="Ver detalhes" feature="manage-plans" />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>
                             </x-resource.table-row>
@@ -226,13 +227,14 @@
                                     data-bs-target="#deleteModal" 
                                     data-delete-url="{{ route('admin.plans.destroy', $plan) }}"
                                     data-item-name="{{ $plan->name }}"
+                                    feature="manage-plans"
                                 />
                             @endif
                         </div>
                         <div class="d-flex gap-2">
-                            <x-ui.button :href="route('admin.plans.duplicate', $plan)" variant="secondary" outline icon="copy" label="Duplicar" />
-                            <x-ui.button :href="route('admin.plans.analytics', $plan)" variant="primary" outline icon="graph-up" label="Análises" />
-                            <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" />
+                            <x-ui.button :href="route('admin.plans.duplicate', $plan)" variant="secondary" outline icon="copy" label="Duplicar" feature="manage-plans" />
+                            <x-ui.button :href="route('admin.plans.analytics', $plan)" variant="primary" outline icon="graph-up" label="Análises" feature="manage-plans" />
+                            <x-ui.button :href="route('admin.plans.edit', $plan)" variant="primary" icon="pencil-square" label="Editar Plano" feature="manage-plans" />
                         </div>
                     </div>
                 </x-ui.card>

@@ -250,7 +250,7 @@
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-end">
-                                                                <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
+                                                                <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" feature="budgets" />
                                                             </td>
                                                                 </tr>
                                                             @endforeach

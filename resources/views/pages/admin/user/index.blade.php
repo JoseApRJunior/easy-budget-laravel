@@ -48,6 +48,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ route('admin.users.destroy', $user) }}"
                                             data-item-name="{{ $user->name }}"
+                                            feature="manage-users"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>

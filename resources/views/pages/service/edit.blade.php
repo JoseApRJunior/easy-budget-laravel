@@ -336,12 +336,10 @@
                             </x-layout.grid-col>
                         </x-layout.grid-row>
 
-                        <x-layout.grid-row class="mt-4">
-                            <x-layout.grid-col size="col-12 text-end">
-                                <x-ui.button type="link" :href="route('provider.services.show', $service->code)" variant="outline-secondary" icon="x" label="Cancelar" />
-                                <x-ui.button type="submit" variant="primary" icon="check-lg" label="Salvar Alterações" />
-                            </x-layout.grid-col>
-                        </x-layout.grid-row>
+                    <x-layout.actions-bar alignment="between" class="align-items-center mt-4 pt-3 border-top" mb="0">
+                        <x-ui.back-button index-route="provider.services.show" :route-params="[$service->code]" label="Cancelar" />
+                        <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" feature="services" />
+                    </x-layout.actions-bar>
                     </form>
                 </x-resource.resource-list-card>
             </x-layout.grid-col>

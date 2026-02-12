@@ -218,9 +218,9 @@
                                         </x-layout.grid-col>
                                         <x-layout.grid-col cols="12">
                                             <div class="d-flex gap-2 mt-2">
-                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" />
-                                                <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" />
-                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" feature="inventory" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" feature="inventory" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" feature="inventory" />
                                             </div>
                                         </x-layout.grid-col>
                                     </x-layout.grid-row>
@@ -259,9 +259,9 @@
                     @if ($product->deleted_at)
                         <x-ui.button variant="success" class="px-4" data-bs-toggle="modal" data-bs-target="#restoreModal"
                             data-restore-url="{{ route('provider.products.restore', $product->sku) }}"
-                            data-product-name="{{ $product->name }}" icon="arrow-counterclockwise" label="Restaurar" />
+                            data-product-name="{{ $product->name }}" icon="arrow-counterclockwise" label="Restaurar" feature="products" />
                     @else
-                        <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" class="px-4" icon="pencil-fill" label="Editar" />
+                        <x-ui.button type="link" :href="route('provider.products.edit', $product->sku)" class="px-4" icon="pencil-fill" label="Editar" feature="products" />
 
                         <x-ui.button :variant="$product->active ? 'warning' : 'success'" class="px-4"
                             data-bs-toggle="modal" data-bs-target="#toggleModal"
@@ -269,11 +269,11 @@
                             data-product-name="{{ $product->name }}"
                             data-action="{{ $product->active ? 'Desativar' : 'Ativar' }}"
                             :icon="$product->active ? 'slash-circle' : 'check-lg'"
-                            :label="$product->active ? 'Desativar' : 'Ativar'" />
+                            :label="$product->active ? 'Desativar' : 'Ativar'" feature="products" />
 
                         <x-ui.button variant="danger" class="px-4" data-bs-toggle="modal" data-bs-target="#deleteModal"
                             data-delete-url="{{ route('provider.products.destroy', $product->sku) }}"
-                            data-product-name="{{ $product->name }}" icon="trash-fill" label="Excluir" />
+                            data-product-name="{{ $product->name }}" icon="trash-fill" label="Excluir" feature="products" />
                     @endif
                 </div>
             </x-layout.grid-col>

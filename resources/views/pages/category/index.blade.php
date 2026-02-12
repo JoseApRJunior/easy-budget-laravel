@@ -245,8 +245,8 @@
         <p>Você não aplicou filtros. Listar todos pode retornar muitos registros.</p>
 
         <x-slot:footer>
-            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-            <x-ui.button type="button" class="btn-confirm-all-categories" label="Listar todos" />
+            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="categories" />
+            <x-ui.button type="button" class="btn-confirm-all-categories" label="Listar todos" feature="categories" />
         </x-slot:footer>
     </x-ui.modal>
 @endsection

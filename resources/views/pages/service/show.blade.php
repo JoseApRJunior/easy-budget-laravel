@@ -11,6 +11,14 @@
             $service->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
+        <x-slot:actions>
+            <x-layout.h-stack gap="2">
+                <x-ui.button type="link" :href="route('provider.services.edit', $service->code)"
+                    variant="light" size="sm" icon="pencil" label="Editar" feature="services" />
+                <x-ui.button type="link" :href="route('provider.services.print', ['code' => $service->code, 'pdf' => true])"
+                    variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="services" />
+            </x-layout.h-stack>
+        </x-slot:actions>
     </x-layout.page-header>
 
     {{-- Alerta de Faturas Existentes --}}

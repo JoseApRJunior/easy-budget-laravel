@@ -272,12 +272,10 @@
                 </x-layout.grid-col>
             </x-layout.grid-row>
 
-            <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <x-ui.back-button index-route="provider.services.index" label="Cancelar" />
-                </div>
-                <x-ui.button type="submit" icon="check-circle" label="Criar" />
-            </div>
+            <x-layout.actions-bar alignment="between" class="align-items-center mt-4 pt-3 border-top" mb="0">
+                <x-ui.back-button index-route="provider.services.dashboard" label="Cancelar" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Serviço" feature="services" />
+            </x-layout.actions-bar>
         </form>
     </x-resource.resource-list-card>
 </x-layout.page-container>

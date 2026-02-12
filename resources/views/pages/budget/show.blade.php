@@ -31,10 +31,12 @@
 
             <x-slot:actions>
                 <x-layout.h-stack gap="2">
+                    @if ($budget->canBeEdited())
                     <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                        variant="light" size="sm" icon="pencil" label="Editar" />
+                        variant="light" size="sm" icon="pencil" label="Editar" feature="budgets" />
+                    @endif
                     <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
-                        variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" />
+                        variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="budgets" />
                 </x-layout.h-stack>
             </x-slot:actions>
 
@@ -144,7 +146,7 @@
             <x-slot:actions>
                 @if ($budget->canBeEdited())
                 <x-ui.button type="link" :href="route('provider.budgets.services.create', $budget->code)"
-                    variant="success" size="sm" icon="plus" label="Novo Serviço" />
+                    variant="success" size="sm" icon="plus" label="Novo Serviço" feature="budgets" />
                 @endif
             </x-slot:actions>
 
@@ -390,7 +392,7 @@
         <x-slot:footer>
             <x-layout.h-stack justify="end" gap="2">
                 <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
-                <x-ui.button type="submit" variant="primary" icon="send-fill" label="Confirmar e Enviar" />
+                <x-ui.button type="submit" variant="primary" icon="send-fill" label="Confirmar e Enviar" feature="budgets" />
             </x-layout.h-stack>
         </x-slot:footer>
     </form>
