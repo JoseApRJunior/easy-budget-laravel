@@ -15,7 +15,7 @@
             <x-layout.h-stack gap="2">
                 <x-ui.button type="link" :href="route('provider.services.edit', $service->code)"
                     variant="light" size="sm" icon="pencil" label="Editar" feature="services" />
-                <x-ui.button type="link" :href="route('provider.services.print', ['code' => $service->code, 'pdf' => true])"
+                <x-ui.button type="link" :href="route('provider.services.print', ['service' => $service->code, 'pdf' => true])"
                     variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="services" />
             </x-layout.h-stack>
         </x-slot:actions>
