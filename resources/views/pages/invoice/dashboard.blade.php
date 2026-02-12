@@ -158,7 +158,7 @@
                                             {{ optional($inv->due_date)->format('d/m/Y') }}
                                         </x-resource.table-cell>
                                         <x-resource.table-cell align="center">
-                                            <x-ui.button type="link" :href="route('provider.invoices.show', $inv->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route('provider.invoices.show', $inv->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" feature="invoices" />
                                         </x-resource.table-cell>
                                     </x-resource.table-row>
                                 @endforeach
@@ -232,9 +232,9 @@
                         title="Ações de Fatura"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.invoices.create')" variant="success" icon="plus-lg" label="Nova Fatura" />
-                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" icon="receipt" label="Listar Faturas" />
-                        <x-ui.button type="link" :href="route('provider.financial.dashboard')" variant="secondary" icon="currency-dollar" label="Dashboard Financeiro" />
+                        <x-ui.button type="link" :href="route('provider.invoices.create')" variant="success" icon="plus-lg" label="Nova Fatura" feature="invoices" />
+                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" icon="receipt" label="Listar Faturas" feature="invoices" />
+                        <x-ui.button type="link" :href="route('provider.financial.dashboard')" variant="secondary" icon="currency-dollar" label="Dashboard Financeiro" feature="financial" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

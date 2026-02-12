@@ -9,9 +9,9 @@
                 'Editar' => '#'
             ]">
             <x-slot:actions>
-                <div class="btn-group" role="group">
-                    <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" label="Ver" />
-                    <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <div class="d-flex gap-2">
+                    <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="info" icon="eye" label="Ver" feature="manage-alerts" />
+                    <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-alerts" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -89,8 +89,8 @@
                         </div>
                         
                         <div class="d-flex justify-content-end gap-2">
-                            <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="secondary" icon="x-circle" label="Cancelar" />
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Atualizar Alerta" />
+                            <x-ui.button type="link" :href="route('admin.alerts.show', $alert['id'])" variant="secondary" icon="x-circle" label="Cancelar" feature="manage-alerts" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Atualizar Alerta" feature="manage-alerts" />
                         </div>
                     </form>
                 </x-ui.card>

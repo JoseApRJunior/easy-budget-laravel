@@ -22,7 +22,8 @@
                             data-bs-toggle="modal"
                             data-bs-target="#createFeatureModal"
                             icon="plus-lg"
-                            label="Novo Módulo" />
+                            label="Novo Módulo"
+                            feature="manage-settings" />
                     </x-slot:headerActions>
 
                     <x-resource.resource-table>
@@ -72,6 +73,7 @@
                                                 onclick="populateEditModal(this)"
                                                 icon="pencil"
                                                 title="Editar"
+                                                feature="manage-settings"
                                             />
 
                                             <form action="{{ route('admin.features.toggle-dev', $feature) }}" method="POST">
@@ -82,6 +84,7 @@
                                                     size="sm"
                                                     icon="{{ $feature->in_dev ? 'check-circle' : 'cone-striped' }}"
                                                     title="{{ $feature->in_dev ? 'Promover para Produção' : 'Voltar para Desenvolvimento' }}"
+                                                    feature="manage-settings"
                                                 />
                                             </form>
 
@@ -93,6 +96,7 @@
                                                     size="sm"
                                                     icon="{{ $feature->status === \App\Models\Resource::STATUS_ACTIVE ? 'toggle-on' : 'toggle-off' }}"
                                                     title="{{ $feature->status === \App\Models\Resource::STATUS_ACTIVE ? 'Desativar' : 'Ativar' }}"
+                                                    feature="manage-settings"
                                                 />
                                             </form>
 
@@ -105,6 +109,7 @@
                                                     size="sm"
                                                     icon="trash"
                                                     title="Excluir"
+                                                    feature="manage-settings"
                                                 />
                                             </form>
                                         </x-layout.h-stack>
@@ -152,8 +157,8 @@
                 switch />
         </form>
         <x-slot:footer>
-            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-            <x-ui.button type="submit" form="createFeatureForm" variant="primary" label="Salvar Módulo" />
+            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="manage-settings" />
+            <x-ui.button type="submit" form="createFeatureForm" variant="primary" label="Salvar Módulo" feature="manage-settings" />
         </x-slot:footer>
     </x-ui.modal>
 
@@ -177,8 +182,8 @@
                 rows="3" />
         </form>
         <x-slot:footer>
-            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-            <x-ui.button type="submit" form="editFeatureForm" variant="primary" label="Salvar Alterações" />
+            <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="manage-settings" />
+            <x-ui.button type="submit" form="editFeatureForm" variant="primary" label="Salvar Alterações" feature="manage-settings" />
         </x-slot:footer>
     </x-ui.modal>
 

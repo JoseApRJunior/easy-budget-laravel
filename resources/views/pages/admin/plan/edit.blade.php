@@ -9,7 +9,7 @@
                 'Editar' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-plans" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -127,8 +127,8 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                            <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline label="Cancelar" />
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Atualizar Plano" />
+                            <x-ui.button :href="route('admin.plans.index')" variant="secondary" outline label="Cancelar" feature="manage-plans" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Atualizar Plano" feature="manage-plans" />
                         </div>
                     </x-ui.card>
                 </div>
@@ -193,9 +193,9 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-grid gap-2">
-                                    <x-ui.button :href="route('admin.plans.duplicate', $plan)" variant="secondary" outline icon="copy" label="Duplicar Plano" size="sm" />
-                                    <x-ui.button :href="route('admin.plans.analytics', $plan)" variant="primary" outline icon="graph-up" label="Ver Análises" size="sm" />
-                                    <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="info" outline icon="people" label="Ver Assinantes" size="sm" />
+                                    <x-ui.button :href="route('admin.plans.duplicate', $plan)" variant="secondary" outline icon="copy" label="Duplicar Plano" size="sm" feature="manage-plans" />
+                                    <x-ui.button :href="route('admin.plans.analytics', $plan)" variant="primary" outline icon="graph-up" label="Ver Análises" size="sm" feature="manage-plans" />
+                                    <x-ui.button :href="route('admin.plans.subscribers', $plan)" variant="info" outline icon="people" label="Ver Assinantes" size="sm" feature="manage-plans" />
                                 </div>
                             </div>
                         </div>

@@ -94,7 +94,7 @@
                     </div>
                     <div class="col-12 col-lg-4 mt-2 mt-lg-0">
                         <div class="d-flex justify-content-start justify-content-lg-end">
-                            <x-ui.button type="link" :href="route('provider.invoices.create')" variant="primary" size="sm" icon="plus" label="Novo" />
+                            <x-ui.button type="link" :href="route('provider.invoices.create')" variant="primary" size="sm" icon="plus" label="Novo" feature="invoices" />
                         </div>
                     </div>
                 </div>
@@ -128,9 +128,9 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1">
-                                                <x-ui.button type="link" :href="route('provider.invoices.show', $invoice->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                                <x-ui.button type="link" :href="route('provider.invoices.show', $invoice->code)" variant="info" size="sm" icon="eye" title="Visualizar" feature="invoices" />
                                                 @if ($invoice->status === 'PENDING')
-                                                    <x-ui.button type="link" :href="route('provider.invoices.edit', $invoice->code)" variant="primary" size="sm" icon="pencil" title="Editar" />
+                                                    <x-ui.button type="link" :href="route('provider.invoices.edit', $invoice->code)" variant="primary" size="sm" icon="pencil" title="Editar" feature="invoices" />
                                                 @endif
                                             </div>
                                         </td>

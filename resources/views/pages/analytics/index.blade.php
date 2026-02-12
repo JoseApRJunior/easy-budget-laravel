@@ -15,7 +15,8 @@
                             variant="primary" 
                             id="refreshAnalytics"
                             outline
-                            icon="bi bi-arrow-clockwise">
+                            icon="bi bi-arrow-clockwise"
+                            feature="analytics">
                             Atualizar
                         </x-ui.button>
                         <x-ui.button 
@@ -23,7 +24,8 @@
                             variant="secondary" 
                             id="exportReport"
                             outline
-                            icon="bi bi-download">
+                            icon="bi bi-download"
+                            feature="analytics">
                             Exportar
                         </x-ui.button>
                     </div>

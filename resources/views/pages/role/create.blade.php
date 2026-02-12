@@ -10,7 +10,7 @@
                 'Funções' => url('/admin/roles'),
                 'Nova' => '#'
             ]">
-            <x-ui.button :href="url('/admin/roles')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-ui.button :href="url('/admin/roles')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-users" />
         </x-layout.page-header>
 
         <!-- Formulário -->

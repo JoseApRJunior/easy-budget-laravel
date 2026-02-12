@@ -143,7 +143,7 @@
                 <div class="d-flex justify-content-end gap-2">
                     <div class="dropdown">
                         <x-ui.button variant="outline-secondary" size="sm" icon="download" label="Exportar"
-                            class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" />
+                            class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" feature="customers" />
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                             <li>
                                 <a class="dropdown-item"
@@ -159,7 +159,7 @@
                             </li>
                         </ul>
                     </div>
-                    <x-ui.button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" />
+                    <x-ui.button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" feature="customers" />
                 </div>
             </x-slot:headerActions>
 
@@ -242,7 +242,7 @@
                                         data-bs-target="#restoreModal"
                                         data-restore-url="{{ route('provider.customers.restore', $customer->id) }}"
                                         data-name="{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'Cliente' }}"
-                                        title="Restaurar" size="sm" />
+                                        title="Restaurar" size="sm" feature="customers" />
                                 @endif
                             </td>
                         </tr>

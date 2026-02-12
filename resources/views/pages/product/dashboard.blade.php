@@ -211,10 +211,10 @@
                     title="Ações de Produto"
                     icon="lightning-charge"
                 >
-                    <x-ui.button type="link" :href="route('provider.products.create')" variant="success" icon="plus-lg" label="Novo Produto" />
-                    <x-ui.button type="link" :href="route('provider.products.index')" variant="primary" icon="box-seam" label="Listar Produtos" />
-                    <x-ui.button type="link" :href="route('provider.inventory.index')" variant="primary" icon="box" label="Gerir Estoque" />
-                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="secondary" icon="tags" label="Categorias" />
+                    <x-ui.button type="link" :href="route('provider.products.create')" variant="success" icon="plus-lg" label="Novo Produto" feature="products" />
+        <x-ui.button type="link" :href="route('provider.products.index')" variant="primary" icon="box-seam" label="Listar Produtos" feature="products" />
+        <x-ui.button type="link" :href="route('provider.inventory.index')" variant="primary" icon="box" label="Gerir Estoque" feature="inventory" />
+        <x-ui.button type="link" :href="route('provider.categories.index')" variant="secondary" icon="tags" label="Categorias" feature="categories" />
                 </x-resource.quick-actions>
             </x-layout.v-stack>
         </x-layout.grid-col>

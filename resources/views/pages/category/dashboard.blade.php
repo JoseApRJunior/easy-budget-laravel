@@ -195,9 +195,9 @@
                     title="Ações de Categoria"
                     icon="lightning-charge"
                 >
-                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" icon="plus-lg" label="Nova Categoria" />
-                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" icon="tags" label="Listar Categorias" />
-                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Ver Deletadas" />
+                    <x-ui.button type="link" :href="route('provider.categories.create')" variant="success" icon="plus-lg" label="Nova Categoria" feature="categories" />
+                    <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" icon="tags" label="Listar Categorias" feature="categories" />
+                    <x-ui.button type="link" :href="route('provider.categories.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Lixeira" feature="categories" />
                 </x-resource.quick-actions>
             </x-layout.v-stack>
         </x-layout.grid-col>

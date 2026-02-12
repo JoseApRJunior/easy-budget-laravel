@@ -121,7 +121,7 @@
                     <div class="mt-4 p-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <x-ui.back-button index-route="provider.inventory.index" />
-                            <x-ui.button type="submit" variant="primary" icon="check-lg" label="Confirmar Ajuste" />
+                            <x-ui.button type="submit" variant="primary" icon="check-lg" label="Confirmar Ajuste" feature="inventory" />
                         </div>
                     </div>
                 </form>

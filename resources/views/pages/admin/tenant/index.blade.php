@@ -8,7 +8,7 @@
                 'Tenants' => '#'
             ]">
             <x-slot:actions>
-                {{-- <x-ui.button :href="route('admin.tenants.create')" variant="primary" icon="plus-lg" label="Novo Tenant" /> --}}
+                {{-- <x-ui.button :href="route('admin.tenants.create')" variant="primary" icon="plus-lg" label="Novo Tenant" feature="manage-tenants" /> --}}
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -48,8 +48,8 @@
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
                                         {{-- 
-                                        <x-ui.button :href="route('admin.tenants.show', $tenant)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="route('admin.tenants.edit', $tenant)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button :href="route('admin.tenants.show', $tenant)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="manage-tenants" />
+                                        <x-ui.button :href="route('admin.tenants.edit', $tenant)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="manage-tenants" />
                                         --}}
                                         <x-ui.button 
                                             type="button" 
@@ -62,6 +62,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ route('admin.tenants.destroy', $tenant) }}"
                                             data-item-name="{{ $tenant->name }}"
+                                            feature="manage-tenants"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>

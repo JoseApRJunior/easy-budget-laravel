@@ -11,6 +11,14 @@
             $service->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
+        <x-slot:actions>
+            <x-layout.h-stack gap="2">
+                <x-ui.button type="link" :href="route('provider.services.edit', $service->code)"
+                    variant="light" size="sm" icon="pencil" label="Editar" feature="services" />
+                <x-ui.button type="link" :href="route('provider.services.print', ['code' => $service->code, 'pdf' => true])"
+                    variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="services" />
+            </x-layout.h-stack>
+        </x-slot:actions>
     </x-layout.page-header>
 
     {{-- Alerta de Faturas Existentes --}}
@@ -306,7 +314,7 @@
                                         <x-ui.status-badge :item="$schedule" statusField="status" />
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="end">
-                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" />
+                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" feature="schedules" />
                                     </x-resource.table-cell>
                                 </x-resource.table-row>
                                 @endforeach
@@ -333,7 +341,7 @@
                             <x-slot:footer>
                                 <div class="d-flex justify-content-between align-items-center w-100">
                                     <x-ui.status-badge :item="$schedule" statusField="status" />
-                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" />
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" feature="schedules" />
                                 </div>
                             </x-slot:footer>
                         </x-resource.resource-mobile-item>
@@ -351,67 +359,67 @@
                         @if ($statusValue === 'pending' || ($statusValue === 'scheduling' && !$hasConfirmedSchedule))
                             @if ($pendingSchedule)
                                 <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
-                                    data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
+                                    data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" feature="services" />
                             @elseif (!$hasConfirmedSchedule)
                                 <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
-                                    data-bs-toggle="modal" data-bs-target="#scheduleModal" />
+                                    data-bs-toggle="modal" data-bs-target="#scheduleModal" feature="services" />
                             @endif
 
                             <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
-                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" feature="services" />
 
                         {{-- Status SCHEDULED ou SCHEDULING (com agendamento confirmado) --}}
                         @elseif ($statusValue === 'scheduled' || ($statusValue === 'scheduling' && $hasConfirmedSchedule))
                             <x-ui.button type="button" variant="warning" icon="tools" label="Preparar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="preparing"
                                 data-title="Preparar Serviço"
-                                data-message="Deseja preparar o serviço {{ $service->code }}?" />
+                                data-message="Deseja preparar o serviço {{ $service->code }}?" feature="services" />
 
                             <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
-                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" feature="services" />
 
                             <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
                                 data-title="Não Realizado"
-                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
+                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" feature="services" />
 
                         {{-- Status PREPARING --}}
                         @elseif ($statusValue === 'preparing')
                             <x-ui.button type="button" variant="success" icon="play-circle" label="Iniciar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="in_progress"
                                 data-title="Iniciar Serviço"
-                                data-message="Deseja iniciar a execução do serviço {{ $service->code }}?" />
+                                data-message="Deseja iniciar a execução do serviço {{ $service->code }}?" feature="services" />
 
                             <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
-                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" feature="services" />
 
                             <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
                                 data-title="Não Realizado"
-                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
+                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" feature="services" />
 
                         {{-- Status IN_PROGRESS --}}
                         @elseif ($statusValue === 'in_progress')
                             <x-ui.button type="button" variant="success" icon="check-circle" label="Concluir"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="completed"
                                 data-title="Concluir Serviço"
-                                data-message="Deseja concluir o serviço {{ $service->code }}?" />
+                                data-message="Deseja concluir o serviço {{ $service->code }}?" feature="services" />
 
                             <x-ui.button type="button" variant="success" icon="check-circle" label="Parcial"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="partial"
                                 data-title="Concluir Parcialmente"
-                                data-message="Deseja concluir o serviço {{ $service->code }} parcialmente?" />
+                                data-message="Deseja concluir o serviço {{ $service->code }} parcialmente?" feature="services" />
 
                             <x-ui.button type="button" variant="warning" icon="pause-circle" label="Em Espera"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="on_hold"
                                 data-title="Colocar em Espera"
-                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" />
+                                data-message="Deseja colocar o serviço {{ $service->code }} em espera?" feature="services" />
 
                         {{-- Status ON_HOLD --}}
                         @elseif ($statusValue === 'on_hold')
@@ -421,21 +429,21 @@
 
                             @if ($pendingSchedule)
                                 <x-ui.button type="button" variant="warning" icon="hourglass-split" label="Aguardando Aprovação"
-                                    data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" />
+                                    data-bs-toggle="modal" data-bs-target="#pendingScheduleModal" feature="services" />
                             @elseif (!$hasConfirmedSchedule)
                                 <x-ui.button type="button" variant="info" icon="calendar-check" label="Agendar"
-                                    data-bs-toggle="modal" data-bs-target="#scheduleModal" />
+                                    data-bs-toggle="modal" data-bs-target="#scheduleModal" feature="services" />
                             @endif
 
                             <x-ui.button type="button" variant="success" icon="play-circle" label="Retomar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="in_progress"
                                 data-title="Retomar Serviço"
-                                data-message="Deseja retomar a execução do serviço {{ $service->code }}?" />
+                                data-message="Deseja retomar a execução do serviço {{ $service->code }}?" feature="services" />
 
                             <x-ui.button type="button" variant="danger" icon="x-circle" label="Não Realizar"
                                 data-bs-toggle="modal" data-bs-target="#actionModal" data-status="not_performed"
                                 data-title="Não Realizado"
-                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" />
+                                data-message="Deseja marcar o serviço {{ $service->code }} como não realizado?" feature="services" />
                         @endif
 
                         {{-- Botão Cancelar - Sempre disponível para status não finais --}}
@@ -443,7 +451,7 @@
                         <x-ui.button type="button" variant="danger" icon="x-circle" label="Cancelar"
                             data-bs-toggle="modal" data-bs-target="#actionModal" data-status="cancelled"
                             data-title="Cancelar Serviço"
-                            data-message="Deseja cancelar definitivamente o serviço {{ $service->code }}?" />
+                            data-message="Deseja cancelar definitivamente o serviço {{ $service->code }}?" feature="services" />
                         @endif
                         @else
                         <x-ui.alert type="warning" message="Aguardando aprovação do orçamento para prosseguir com o serviço." icon="exclamation-triangle" />
@@ -453,26 +461,26 @@
 
                         @if ($service->canBeEdited())
                         <x-ui.button type="link" href="{{ route('provider.services.edit', $service->code) }}"
-                            variant="primary" icon="pencil" label="Editar Serviço" />
+                            variant="primary" icon="pencil" label="Editar Serviço" feature="services" />
                         @endif
 
                         @if ($service->budget)
                 <x-ui.button type="link" href="{{ route('provider.budgets.show', $service->budget->code) }}"
-                    variant="info" icon="receipt" label="Ver Orçamento" />
+                    variant="info" icon="receipt" label="Ver Orçamento" feature="budgets" />
                 @endif
 
                         {{-- Botões de Fatura --}}
                         @if ($statusValue === 'completed' || $statusValue === 'partial')
                             <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
-                                variant="success" icon="receipt" label="Criar Fatura" />
+                                variant="success" icon="receipt" label="Criar Fatura" feature="invoices" />
                         @elseif (!in_array($statusValue, ['cancelled', 'not_performed', 'expired', 'draft']))
                             @if($service->serviceItems && $service->serviceItems->count() > 0)
                                 <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
-                                    variant="warning" icon="receipt" label="Criar Fatura Parcial" />
+                                    variant="warning" icon="receipt" label="Criar Fatura Parcial" feature="invoices" />
                             @endif
                         @endif
 
-                        <x-ui.button type="button" variant="secondary" onclick="window.print()" icon="printer" label="Imprimir" />
+                        <x-ui.button type="button" variant="secondary" onclick="window.print()" icon="printer" label="Imprimir" feature="services" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>
@@ -489,7 +497,8 @@
                     href="{{ route('provider.services.edit', $service->code) }}"
                     variant="primary"
                     icon="pencil-fill"
-                    label="Editar" />
+                    label="Editar"
+                    feature="services" />
                 @endif
                 <x-ui.button
                     type="button"
@@ -497,7 +506,8 @@
                     data-bs-toggle="modal"
                     data-bs-target="#deleteModal"
                     icon="trash-fill"
-                    label="Excluir" />
+                    label="Excluir"
+                    feature="services" />
             </x-ui.button-group>
         </x-layout.actions-bar>
 
@@ -507,11 +517,11 @@
             <br><small class="text-muted">Esta ação não pode ser desfeita.</small>
 
             <x-slot name="footer">
-                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="services" />
                 <form action="{{ route('provider.services.destroy', $service->code) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <x-ui.button type="submit" variant="danger" label="Excluir" />
+                    <x-ui.button type="submit" variant="danger" label="Excluir" feature="services" />
                 </form>
             </x-slot>
         </x-ui.modal>
@@ -527,8 +537,8 @@
                 </p>
             </form>
             <x-slot name="footer">
-                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-ui.button type="submit" form="actionForm" variant="primary" id="actionConfirmButton" label="Confirmar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="services" />
+                <x-ui.button type="submit" form="actionForm" variant="primary" id="actionConfirmButton" label="Confirmar" feature="services" />
             </x-slot>
         </x-ui.modal>
 
@@ -647,8 +657,8 @@
                 </div>
             </x-ui.form>
             <x-slot name="footer">
-                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
-                <x-ui.button type="submit" form="scheduleForm" variant="info" label="Agendar Serviço" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="schedules" />
+                <x-ui.button type="submit" form="scheduleForm" variant="info" label="Agendar Serviço" feature="schedules" />
             </x-slot>
         </x-ui.modal>
 
@@ -691,9 +701,9 @@
             </p>
 
             <x-slot name="footer">
-                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Fechar" />
+                <x-ui.button type="button" variant="secondary" data-bs-dismiss="modal" label="Fechar" feature="schedules" />
                 <x-ui.form action="{{ route('provider.schedules.cancel', $pendingSchedule->id) }}" method="POST" class="d-inline">
-                    <x-ui.button type="submit" variant="outline-danger" icon="x-circle" label="Cancelar Agendamento" />
+                    <x-ui.button type="submit" variant="outline-danger" icon="x-circle" label="Cancelar Agendamento" feature="schedules" />
                 </x-ui.form>
             </x-slot>
         </x-ui.modal>

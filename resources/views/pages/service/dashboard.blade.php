@@ -217,10 +217,10 @@
                         title="Ações de Serviço"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.services.create')" variant="success" icon="plus-lg" label="Novo Serviço" />
-                        <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" icon="tags" label="Categorias" />
-                        <x-ui.button type="link" :href="route('provider.services.index')" variant="primary" icon="tools" label="Listar Serviços" />
-                        <x-ui.button type="link" :href="route('provider.services.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Ver Deletados" />
+                        <x-ui.button type="link" :href="route('provider.services.create')" variant="success" icon="plus-lg" label="Novo Serviço" feature="services" />
+                        <x-ui.button type="link" :href="route('provider.categories.index')" variant="primary" icon="tags" label="Categorias" feature="categories" />
+                        <x-ui.button type="link" :href="route('provider.services.index')" variant="primary" icon="tools" label="Listar Serviços" feature="services" />
+                        <x-ui.button type="link" :href="route('provider.services.index', ['deleted' => 'only'])" variant="secondary" icon="trash" label="Ver Deletados" feature="services" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

@@ -9,7 +9,7 @@
                 'Dashboard' => route('provider.dashboard'),
                 'Unidades' => '#'
             ]">
-            <x-ui.button type="link" :href="route('admin.units.create')" variant="primary" icon="plus-circle" label="Nova Unidade" />
+            <x-ui.button type="link" :href="route('admin.units.create')" variant="primary" icon="plus-circle" label="Nova Unidade" feature="manage-units" />
         </x-layout.page-header>
 
         <!-- Tabela de Unidades -->
@@ -42,12 +42,12 @@
                                 <td>{{ $unit->created_at->format('d/m/Y') }}</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <x-ui.button type="link" :href="route('admin.units.edit', $unit)" variant="primary" size="sm" icon="pencil" title="Editar" />
+                                        <x-ui.button type="link" :href="route('admin.units.edit', $unit)" variant="primary" size="sm" icon="pencil" title="Editar" feature="manage-units" />
                                         <form action="{{ route('admin.units.destroy', $unit) }}" method="POST"
                                             onsubmit="return confirm('Tem certeza que deseja excluir esta unidade?')">
                                             @csrf
                                             @method('DELETE')
-                                            <x-ui.button type="submit" variant="danger" size="sm" icon="trash" title="Excluir" />
+                                            <x-ui.button type="submit" variant="danger" size="sm" icon="trash" title="Excluir" feature="manage-units" />
                                         </form>
                                     </div>
                                 </td>
@@ -79,12 +79,12 @@
                         </x-slot:description>
                         <x-slot:actions>
                             <div class="d-flex gap-1">
-                                <x-ui.button type="link" :href="route('admin.units.edit', $unit)" variant="primary" size="sm" icon="pencil" />
+                                <x-ui.button type="link" :href="route('admin.units.edit', $unit)" variant="primary" size="sm" icon="pencil" feature="manage-units" />
                                 <form action="{{ route('admin.units.destroy', $unit) }}" method="POST"
                                     onsubmit="return confirm('Tem certeza que deseja excluir esta unidade?')">
                                     @csrf
                                     @method('DELETE')
-                                    <x-ui.button type="submit" variant="danger" size="sm" icon="trash" />
+                                    <x-ui.button type="submit" variant="danger" size="sm" icon="trash" feature="manage-units" />
                                 </form>
                             </div>
                         </x-slot:actions>

@@ -84,7 +84,7 @@
                             </div>
                             <div class="card-body">
                                 <p class="text-muted">Tenta processar novamente jobs que falharam.</p>
-                                <x-ui.button variant="info" label="Retry Jobs Falhados" onclick="retryFailedJobs()" />
+                                <x-ui.button variant="info" label="Retry Jobs Falhados" onclick="retryFailedJobs()" feature="manage-settings" />
                             </div>
                         </div>
                     </div>

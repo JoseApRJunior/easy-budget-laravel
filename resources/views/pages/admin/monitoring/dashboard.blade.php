@@ -9,8 +9,8 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" />
-                    <x-ui.button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" icon="graph-up" label="Métricas Detalhadas" />
+                    <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar" onclick="refreshMetrics()" feature="view-monitoring" />
+                    <x-ui.button type="link" href="{{ url('/admin/monitoring/metrics') }}" variant="primary" icon="graph-up" label="Métricas Detalhadas" feature="view-monitoring" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>

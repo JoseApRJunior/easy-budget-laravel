@@ -75,6 +75,7 @@
                             variant="primary"
                             size="sm"
                             label="Ver todos"
+                            feature="budgets"
                         />
                     </x-slot:actions>
 
@@ -128,7 +129,7 @@
                                             />
                                         </x-resource.table-cell>
                                         <x-resource.table-actions>
-                                            <x-ui.button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="outline-info" size="sm" icon="eye" title="Visualizar Orçamento" />
+                                            <x-ui.button type="link" :href="route('provider.budgets.show', $share->budget->code)" variant="outline-info" size="sm" icon="eye" title="Visualizar Orçamento" feature="budgets" />
                                         </x-resource.table-actions>
                                     </x-resource.table-row>
                                 @endforeach
@@ -225,9 +226,9 @@
 
                     <!-- Atalhos -->
                     <x-resource.quick-actions title="Atalhos" icon="lightning-charge">
-                        <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="outline-success" icon="plus-circle" label="Novo Link" />
-                        <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="outline-primary" icon="list" label="Gerenciar" />
-                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="file-earmark-text" label="Orçamentos" />
+                        <x-ui.button type="link" :href="route('provider.budgets.shares.create')" variant="outline-success" icon="plus-circle" label="Novo Link" feature="budgets" />
+                        <x-ui.button type="link" :href="route('provider.budgets.shares.index')" variant="outline-primary" icon="list" label="Gerenciar" feature="budgets" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="outline-secondary" icon="file-earmark-text" label="Orçamentos" feature="budgets" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

@@ -76,7 +76,7 @@
         </x-ui.alert>
 
         <div class="d-grid gap-2">
-            <x-ui.button href="{{ url('/') }}" variant="outline-primary" label="Voltar para o Início" icon="house" class="py-3 rounded-pill fw-bold" />
+            <x-ui.button href="{{ url('/') }}" variant="outline-primary" label="Voltar para o Início" icon="house" class="py-3 rounded-pill fw-bold" feature="schedules" />
         </div>
 
         <div class="text-center mt-4 pt-3 border-top">

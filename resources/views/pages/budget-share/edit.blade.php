@@ -14,7 +14,7 @@
                 'Editar' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="budgets" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -277,7 +277,7 @@
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
                                     <div class="d-flex gap-2">
-                                        <x-ui.button :href="route('provider.budgets.shares.show', $share->id)" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                                        <x-ui.button :href="route('provider.budgets.shares.show', $share->id)" variant="secondary" outline icon="arrow-left" label="Voltar" feature="budgets" />
                                         
                                         <x-ui.button 
                                             type="button" 
@@ -288,6 +288,7 @@
                                             data-bs-toggle="modal" 
                                             data-bs-target="#regenerateTokenModal" 
                                             data-action-url="{{ route('provider.budgets.shares.regenerate', $share->id) }}"
+                                            feature="budgets"
                                         />
                                     </div>
                                     <div class="d-flex gap-2">
@@ -300,9 +301,10 @@
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ route('provider.budgets.shares.destroy', $share->id) }}"
+                                            feature="budgets"
                                         />
                                         
-                                        <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Alterações" />
+                                        <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Alterações" feature="budgets" />
                                     </div>
                                 </div>
                             </div>

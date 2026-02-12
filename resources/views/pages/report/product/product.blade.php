@@ -12,7 +12,7 @@
                 'Relatórios' => route('provider.reports.index'),
                 'Produtos' => '#'
             ]">
-            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+            <x-ui.button type="link" :href="route('provider.reports.index')" variant="secondary" icon="arrow-left" label="Voltar" feature="reports" />
         </x-layout.page-header>
 
         <!-- Filtros de Busca -->
@@ -114,7 +114,7 @@
                 <p class="text-muted mb-3">
                     Configure os critérios desejados e clique em "Filtrar" para visualizar os resultados
                 </p>
-                <x-ui.button type="link" :href="route('provider.products.create')" variant="primary" icon="plus" label="Criar Primeiro Produto" />
+                <x-ui.button type="link" :href="route('provider.products.create')" variant="primary" icon="plus" label="Criar Primeiro Produto" feature="products" />
             </x-ui.card>
         @else
             <!-- Resultados -->
@@ -229,8 +229,8 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-1">
-                                                    <x-ui.button type="link" :href="route('provider.products.show', $product->code)" variant="info" size="sm" icon="eye" title="Visualizar" />
-                                                    <x-ui.button type="link" :href="route('provider.products.edit', $product->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                                    <x-ui.button type="link" :href="route('provider.products.show', $product->code)" variant="info" size="sm" icon="eye" title="Visualizar" feature="products" />
+                                                    <x-ui.button type="link" :href="route('provider.products.edit', $product->code)" variant="primary" size="sm" icon="pencil-square" title="Editar" feature="products" />
                                                 </div>
                                             </td>
                                         </tr>

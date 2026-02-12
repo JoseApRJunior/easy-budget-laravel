@@ -12,7 +12,7 @@
                 'Áreas de Atividade' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" />
+                <x-ui.button :href="url('/admin/area-of-activities/create')" variant="primary" icon="plus-circle" label="Adicionar Área de Atividade" feature="manage-activities" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -42,8 +42,8 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="url('/admin/area-of-activities/' . $areaOfActivity->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="url('/admin/area-of-activities/' . $areaOfActivity->id . '/edit')" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button :href="url('/admin/area-of-activities/' . $areaOfActivity->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="manage-activities" />
+                                        <x-ui.button :href="url('/admin/area-of-activities/' . $areaOfActivity->id . '/edit')" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="manage-activities" />
                                         <x-ui.button 
                                             type="button" 
                                             variant="danger" 
@@ -55,6 +55,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ url('/admin/area-of-activities/' . $areaOfActivity->id) }}"
                                             data-item-name="{{ $areaOfActivity->name }}"
+                                            feature="manage-activities"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>

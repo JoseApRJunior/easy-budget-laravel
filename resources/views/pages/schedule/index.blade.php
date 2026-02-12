@@ -13,7 +13,7 @@
             ]">
         <x-slot:actions>
             <div class="d-flex gap-2">
-                <x-ui.button :href="route('provider.schedules.calendar')" variant="secondary" outline icon="calendar3" label="Ver Calendário" />
+                <x-ui.button :href="route('provider.schedules.calendar')" variant="secondary" outline icon="calendar3" label="Ver Calendário" feature="schedules" />
             </div>
         </x-slot:actions>
     </x-layout.page-header>
@@ -54,8 +54,8 @@
                 </div>
                 <div class="col-12">
                     <div class="d-flex gap-2 justify-content-end">
-                        <x-ui.button :href="route('provider.schedules.index')" variant="secondary" outline icon="x" label="Limpar" />
-                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
+                        <x-ui.button :href="route('provider.schedules.index')" variant="secondary" outline icon="x" label="Limpar" feature="schedules" />
+                        <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" feature="schedules" />
                     </div>
                 </div>
             </div>
@@ -98,8 +98,8 @@
                         </x-resource.table-cell>
                         <x-resource.table-cell>
                             <x-resource.action-buttons>
-                                <x-ui.button :href="route('provider.schedules.show', $schedule->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                <x-ui.button :href="route('provider.schedules.edit', $schedule->id)" variant="primary" outline size="sm" icon="pencil" title="Editar" />
+                                <x-ui.button :href="route('provider.schedules.show', $schedule->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="schedules" />
+                                <x-ui.button :href="route('provider.schedules.edit', $schedule->id)" variant="primary" outline size="sm" icon="pencil" title="Editar" feature="schedules" />
                                 <x-ui.button
                                     type="button"
                                     variant="danger"
@@ -107,6 +107,7 @@
                                     size="sm"
                                     icon="trash"
                                     title="Excluir"
+                                    feature="schedules"
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteModal"
                                     data-delete-url="{{ route('provider.schedules.destroy', $schedule->id) }}"

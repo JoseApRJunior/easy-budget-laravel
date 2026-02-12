@@ -184,9 +184,9 @@
                         title="Ações Financeiras"
                         icon="lightning-charge"
                     >
-                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" icon="receipt" label="Gerir Faturas" />
-                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="primary" icon="file-earmark-text" label="Ver Orçamentos" />
-                        <x-ui.button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="file-earmark-bar-graph" label="Relatórios" />
+                        <x-ui.button type="link" :href="route('provider.invoices.index')" variant="primary" icon="receipt" label="Gerir Faturas" feature="invoices" />
+                        <x-ui.button type="link" :href="route('provider.budgets.index')" variant="primary" icon="file-earmark-text" label="Ver Orçamentos" feature="budgets" />
+                        <x-ui.button type="link" :href="route('provider.reports.financial')" variant="secondary" icon="file-earmark-bar-graph" label="Relatórios" feature="reports" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>

@@ -141,7 +141,7 @@
                                             </div>
                                             <h5 class="card-title">Financeiro</h5>
                                             <p class="card-text text-muted small">Receitas, despesas e análises</p>
-                                            <x-ui.button type="link" :href="route('reports.financial')" variant="primary" size="sm" icon="graph-up" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.financial')" variant="primary" size="sm" icon="graph-up" label="Ver Relatório" feature="reports" />
                                         </div>
                                     </x-ui.card>
                                 </div>
@@ -155,7 +155,7 @@
                                             </div>
                                             <h5 class="card-title">Clientes</h5>
                                             <p class="card-text text-muted small">Base de clientes e CRM</p>
-                                            <x-ui.button type="link" :href="route('reports.customers')" variant="info" size="sm" icon="people" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.customers')" variant="info" size="sm" icon="people" label="Ver Relatório" feature="reports" />
                                         </div>
                                     </x-ui.card>
                                 </div>
@@ -169,7 +169,7 @@
                                             </div>
                                             <h5 class="card-title">Produtos</h5>
                                             <p class="card-text text-muted small">Catálogo e inventário</p>
-                                            <x-ui.button type="link" :href="route('reports.products')" variant="success" size="sm" icon="box" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.products')" variant="success" size="sm" icon="box" label="Ver Relatório" feature="reports" />
                                         </div>
                                     </x-ui.card>
                                 </div>
@@ -183,7 +183,7 @@
                                             </div>
                                             <h5 class="card-title">Serviços</h5>
                                             <p class="card-text text-muted small">Prestação de serviços</p>
-                                            <x-ui.button type="link" :href="route('reports.services')" variant="warning" size="sm" icon="gear" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.services')" variant="warning" size="sm" icon="gear" label="Ver Relatório" feature="reports" />
                                         </div>
                                     </x-ui.card>
                                 </div>
@@ -197,7 +197,7 @@
                                             </div>
                                             <h5 class="card-title">Orçamentos</h5>
                                             <p class="card-text text-muted small">Propostas e vendas</p>
-                                            <x-ui.button type="link" :href="route('reports.budgets')" variant="danger" size="sm" icon="receipt" label="Ver Relatório" />
+                                            <x-ui.button type="link" :href="route('reports.budgets')" variant="danger" size="sm" icon="receipt" label="Ver Relatório" feature="reports" />
                                         </div>
                                     </x-ui.card>
                                 </div>
