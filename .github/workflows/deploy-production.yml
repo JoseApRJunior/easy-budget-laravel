@@ -1,0 +1,47 @@
+name: 🚀 Deploy Production
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Pasta fornecida para produção
+            cd /home/easybudget/htdocs/easybudget.net.br
+
+            # Atualizar código da branch master
+            git fetch origin master
+            git reset --hard origin/master
+
+            # Instalação (Sem pacotes de dev)
+            composer install --no-dev --no-interaction --optimize-autoloader
+
+            # Banco de Dados
+            php artisan migrate --force
+            php artisan db:seed --class=ResourceSeeder --force
+            php artisan db:seed --class=PlanSeeder --force
+
+            # Cache máximo para Produção
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+            php artisan queue:restart
+
+            # Permissões CloudPanel
+            chown -R easybudget:easybudget .
+            chmod -R 775 storage bootstrap/cache
