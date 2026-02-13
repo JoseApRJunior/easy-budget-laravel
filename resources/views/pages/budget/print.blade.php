@@ -306,7 +306,7 @@
     }
 
     .table th {
-        background-color: #f8f9fa !important;
+        background-color: #e9ecef !important;
         padding: 8px;
         text-align: left;
         border-bottom: 2px solid #dee2e6;
@@ -327,8 +327,23 @@
         color: #ffffff;
     }
 
+    .fw-bold {
+        font-weight: bold;
+    }
+
+    .fw-medium {
+        font-weight: 500;
+    }
+
+    /* Background adjustments for better visibility */
     .bg-light {
-        background-color: #f8f9fa !important;
+        background-color: #e9ecef !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .table-light th {
+        background-color: #e9ecef !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
     }

@@ -35,7 +35,7 @@
     }
 
     .info-box {
-      background-color: #f8f9fa;
+      background-color: #e9ecef;
       border: 1px solid #dee2e6;
       border-radius: 8px;
       padding: 15px;
@@ -49,7 +49,7 @@
     }
 
     .total-highlight {
-      background-color: #e3f2fd;
+      background-color: #cfe2ff;
       border: 2px solid #2196f3;
       border-radius: 8px;
       padding: 15px;
@@ -64,8 +64,14 @@
     <!-- Botão de impressão (não aparece na impressão) -->
     <div class="text-center no-print mb-3 py-3">
       <x-ui.button onclick="window.print()" variant="primary" icon="printer" label="Imprimir" />
-      <x-ui.button type="link" :href="route('services.public.view-status', ['code' => $service->code, 'token' => request('token')])"
-        variant="outline-secondary" icon="arrow-left" label="Voltar" class="ms-2" />
+
+      @if(request('token'))
+          <x-ui.button type="link" :href="route('services.public.view-status', ['code' => $service->code, 'token' => request('token')])"
+            variant="outline-secondary" icon="arrow-left" label="Voltar" class="ms-2" />
+      @else
+          <x-ui.button type="link" :href="route('provider.services.show', $service->code)"
+            variant="outline-secondary" icon="arrow-left" label="Voltar" class="ms-2" />
+      @endif
     </div>
 
     <!-- Cabeçalho -->
