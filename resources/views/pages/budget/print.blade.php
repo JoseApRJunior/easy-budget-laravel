@@ -1,22 +1,51 @@
-@extends( 'layouts.public' )
+@extends('layouts.print')
 
-@section( 'content' )
-<div class="container p-4 print-content">
+@section('title', 'Orçamento #' . $budget->code)
+
+@section('actions')
+    <a href="{{ route('provider.budgets.show', $budget->code) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+@endsection
+
+@section('content')
+<div class="print-content">
     <!-- Header -->
     <div class="mb-4">
         <div class="row">
             <!-- Company Data -->
             <div class="col-6">
-                <h5 class="fw-bold mb-2">{{ $budget->tenant->name ?? 'Easy Budget' }}</h5>
+                @php
+                    $provider = $budget->provider;
+                    $providerCommonData = $provider?->commonData;
+                @endphp
+                <h5 class="fw-bold mb-2">
+                    @if($providerCommonData)
+                        {{ $providerCommonData->display_name }}
+                    @else
+                        {{ $budget->tenant->name ?? 'Easy Budget' }}
+                    @endif
+                </h5>
                 <div class="text-secondary small">
-                    @if( $budget->tenant->contact ?? false )
-                    <p class="mb-1">{{ $budget->tenant->contact->email }}</p>
-                    @if( $budget->tenant->contact->phone )
-                    <p class="mb-1">Tel: {{ $budget->tenant->contact->phone }}</p>
-                    @endif
-                    @if( $budget->tenant->contact->website )
-                    <p class="mb-0">{{ $budget->tenant->contact->website }}</p>
-                    @endif
+                    @if($provider?->contact)
+                        <p class="mb-1">{{ $provider->contact->email_business ?? $provider->contact->email_personal }}</p>
+                        @php
+                            $phone = $provider->contact->phone_business ?? $provider->contact->phone_personal;
+                        @endphp
+                        @if($phone)
+                            <p class="mb-1">Tel: {{ \App\Helpers\MaskHelper::formatPhone($phone) }}</p>
+                        @endif
+                        @if($provider->contact->website)
+                            <p class="mb-0">{{ $provider->contact->website }}</p>
+                        @endif
+                    @elseif($budget->tenant->contact ?? false)
+                        <p class="mb-1">{{ $budget->tenant->contact->email }}</p>
+                        @if($budget->tenant->contact->phone)
+                            <p class="mb-1">Tel: {{ $budget->tenant->contact->phone }}</p>
+                        @endif
+                        @if($budget->tenant->contact->website)
+                            <p class="mb-0">{{ $budget->tenant->contact->website }}</p>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -28,8 +57,11 @@
                     <p class="mb-1">Emissão: {{ $budget->created_at->format( 'd/m/Y' ) }}</p>
                     <p class="mb-1">Validade: {{ $budget->due_date->format( 'd/m/Y' ) }}</p>
                 </div>
+                @php
+                    $status = $budget->status instanceof \App\Enums\BudgetStatus ? $budget->status : \App\Enums\BudgetStatus::tryFrom($budget->status);
+                @endphp
                 <span class="badge"
-                    style="background-color: {{ $budget->budgetStatus->color }};">{{ $budget->budgetStatus->name }}</span>
+                    style="background-color: {{ $status?->getColor() ?? '#6c757d' }};">{{ $status?->label() ?? $budget->status }}</span>
             </div>
         </div>
     </div>
@@ -80,8 +112,22 @@
                 @endif
             </div>
             <div class="col-6">
-                <p class="mb-1"><strong>Anexos:</strong> {{ $budget->attachments->count() ?? 0 }}</p>
-                <p class="mb-0"><strong>Histórico:</strong> {{ $budget->history->count() ?? 0 }} registros</p>
+                @php
+                    // Se os campos forem JSON, decodifica para contar. Se forem texto simples, verifica se não estão vazios.
+                    $attachmentsCount = 0;
+                    if (!empty($budget->attachment)) {
+                        $decoded = json_decode($budget->attachment, true);
+                        $attachmentsCount = is_array($decoded) ? count($decoded) : 1;
+                    }
+
+                    $historyCount = 0;
+                    if (!empty($budget->history)) {
+                        $decoded = json_decode($budget->history, true);
+                        $historyCount = is_array($decoded) ? count($decoded) : 1;
+                    }
+                @endphp
+                <p class="mb-1"><strong>Anexos:</strong> {{ $attachmentsCount }}</p>
+                <p class="mb-0"><strong>Histórico:</strong> {{ $historyCount }} registros</p>
             </div>
         </div>
     </div>

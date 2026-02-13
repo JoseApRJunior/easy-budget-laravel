@@ -149,7 +149,7 @@ class Budget extends Model
         return [
             'tenant_id' => 'required|integer|exists:tenants,id',
             'customer_id' => 'required|integer|exists:customers,id',
-            'status' => 'required|string|in:' . implode(',', array_column(\App\Enums\BudgetStatus::cases(), 'value')),
+            'status' => 'required|string|in:'.implode(',', array_column(\App\Enums\BudgetStatus::cases(), 'value')),
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'code' => 'required|string|max:50|unique:budgets,code',
             'due_date' => 'nullable|date|after:today',
@@ -181,8 +181,8 @@ class Budget extends Model
     public static function updateRules(int $budgetId): array
     {
         $rules = self::businessRules();
-        $rules['code'] = 'required|string|max:50|unique:budgets,code,' . $budgetId;
-        $rules['pdf_verification_hash'] = 'nullable|string|max:64|unique:budgets,pdf_verification_hash,' . $budgetId;
+        $rules['code'] = 'required|string|max:50|unique:budgets,code,'.$budgetId;
+        $rules['pdf_verification_hash'] = 'nullable|string|max:64|unique:budgets,pdf_verification_hash,'.$budgetId;
 
         return $rules;
     }
@@ -298,22 +298,6 @@ class Budget extends Model
     }
 
     /**
-     * Get the budget attachments.
-     */
-    public function attachments(): HasMany
-    {
-        return $this->hasMany(BudgetAttachment::class);
-    }
-
-    /**
-     * Get the budget shares.
-     */
-    public function shares(): HasMany
-    {
-        return $this->hasMany(BudgetShare::class);
-    }
-
-    /**
      * Get the budget action history.
      */
     public function actionHistory(): HasMany
@@ -341,7 +325,7 @@ class Budget extends Model
     {
         $activeStatuses = array_filter(
             array_column(\App\Enums\BudgetStatus::cases(), 'value'),
-            fn($status) => \App\Enums\BudgetStatus::tryFrom($status)?->isActive() ?? false
+            fn ($status) => \App\Enums\BudgetStatus::tryFrom($status)?->isActive() ?? false
         );
 
         return $query->whereIn('status', $activeStatuses);
@@ -510,7 +494,7 @@ class Budget extends Model
             'version_number' => $this->getNextVersionNumber(),
             'changes_description' => $changeDescription,
             'budget_data' => $this->toArray(),
-            'services_data' => $this->services->map(fn($s) => [
+            'services_data' => $this->services->map(fn ($s) => [
                 'id' => $s->id,
                 'category_id' => $s->category_id,
                 'description' => $s->description,
@@ -546,7 +530,7 @@ class Budget extends Model
         $major = (int) $parts[0];
         $minor = (int) $parts[1];
 
-        return ($minor + 1) >= 10 ? ($major + 1) . '.0' : $major . '.' . ($minor + 1);
+        return ($minor + 1) >= 10 ? ($major + 1).'.0' : $major.'.'.($minor + 1);
     }
 
     /**
@@ -586,7 +570,7 @@ class Budget extends Model
                     'category_id' => $serviceData['category_id'],
                     'description' => $serviceData['description'],
                     'status' => $this->status,
-                    'code' => $serviceData['code'] ?? 'SRV-' . uniqid(),
+                    'code' => $serviceData['code'] ?? 'SRV-'.uniqid(),
                     'total' => $serviceData['total'],
                 ]);
 

@@ -8,7 +8,7 @@
 
 <div style="width: 100%; margin-bottom: 25px; page-break-inside: avoid;">
     {{-- Cabeçalho do Serviço - Design mais limpo com borda lateral --}}
-    <div style="width: 100%; border-left: 3px solid {{ $colors['primary'] }}; padding-left: 12px; margin-bottom: 12px; background-color: #fcfcfc; padding-top: 5px; padding-bottom: 5px;">
+    <div style="width: 100%; border-left: 3px solid {{ $colors['primary'] }}; padding-left: 12px; margin-bottom: 12px; background-color: #e9ecef; padding-top: 5px; padding-bottom: 5px;">
         <table style="width: 100%; border-collapse: collapse;">
             <tr>
                 <td style="text-align: left;">
@@ -36,11 +36,11 @@
         {{-- Tabela de Itens - Minimalista --}}
         <table style="width: 100%; font-size: 10px; table-layout: fixed; border-collapse: collapse;">
             <thead>
-                <tr style="border-bottom: 1px solid {{ $colors['primary'] }};">
-                    <th style="width: 55%; text-align: left; padding: 5px 0; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Item / Detalhes</th>
-                    <th style="width: 10%; text-align: center; padding: 5px 0; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Qtd</th>
-                    <th style="width: 17.5%; text-align: right; padding: 5px 0; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Unitário</th>
-                    <th style="width: 17.5%; text-align: right; padding: 5px 0; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Subtotal</th>
+                <tr style="border-bottom: 1px solid {{ $colors['primary'] }}; background-color: #e9ecef;">
+                    <th style="width: 55%; text-align: left; padding: 5px 5px; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Item / Detalhes</th>
+                    <th style="width: 10%; text-align: center; padding: 5px 5px; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Qtd</th>
+                    <th style="width: 17.5%; text-align: right; padding: 5px 5px; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Unitário</th>
+                    <th style="width: 17.5%; text-align: right; padding: 5px 5px; font-size: 8px; color: {{ $colors['text'] }}; text-transform: uppercase; letter-spacing: 1px;">Subtotal</th>
                 </tr>
             </thead>
             <tbody>

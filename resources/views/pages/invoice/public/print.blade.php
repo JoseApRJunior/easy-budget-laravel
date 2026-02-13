@@ -1,98 +1,41 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('layouts.print')
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fatura {{ $invoice->code }} - {{ $invoice->tenant->name ?? 'Easy Budget' }}</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  <style>
-    @media print {
-      .no-print {
-        display: none !important;
-      }
+@section('title', 'Fatura ' . $invoice->code . ' - ' . ($invoice->tenant->name ?? 'Easy Budget'))
 
-      body {
-        font-size: 12px;
-      }
-
-      .container {
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-    }
-
-    body {
-      font-size: 14px;
-    }
-
-    .header {
-      border-bottom: 2px solid #dee2e6;
-      padding-bottom: 15px;
-      margin-bottom: 20px;
-    }
-
-    .info-box {
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-
+@section('styles')
     .status-badge {
       font-size: 16px;
       padding: 8px 16px;
       border-radius: 20px;
     }
 
-    .total-highlight {
-      background-color: #e8f5e8;
-      border: 2px solid #28a745;
-      border-radius: 8px;
-      padding: 15px;
-      text-align: center;
-      margin: 20px 0;
-    }
-
     .payment-info {
-      background-color: #fff3cd;
-      border: 1px solid #ffeaa7;
+      background-color: #ffeeba;
+      border: 1px solid #d4ac0d;
       border-radius: 8px;
       padding: 15px;
       margin: 15px 0;
+      color: #000;
     }
-  </style>
-</head>
+@endsection
 
-<body>
-  <div class="container">
-    <!-- Botão de impressão (não aparece na impressão) -->
-    <div class="text-center no-print mb-3">
-      <button onclick="window.print()" class="btn btn-primary">
-        <i class="bi bi-printer me-2"></i>
-        Imprimir
-      </button>
-      <a href="{{ $invoice->getPublicUrl() }}"
-        class="btn btn-outline-secondary ms-2">
-        <i class="bi bi-arrow-left me-2"></i>
-        Voltar
-      </a>
-    </div>
+@section('actions')
+    <a href="{{ $invoice->getPublicUrl() }}" class="btn btn-outline-secondary ms-2">
+        <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+@endsection
 
+@section('content')
     <!-- Cabeçalho -->
-    <div class="header text-center">
+    <div class="print-header text-center">
       <h1 class="mb-2">{{ $invoice->tenant->name ?? 'Easy Budget' }}</h1>
       <h3 class="text-muted">Fatura #{{ $invoice->code }}</h3>
-      <p class="mb-0">{{ date('d/m/Y H:i:s') }}</p>
     </div>
 
     <!-- Status e informações principais -->
     <div class="row mb-4">
       <div class="col-md-6">
-        <div class="info-box">
+        <div class="info-box h-100">
           <h5 class="text-muted mb-3">
             <i class="bi bi-person-circle me-2"></i>
             Dados do Cliente
@@ -126,7 +69,7 @@
       </div>
 
       <div class="col-md-6">
-        <div class="info-box">
+        <div class="info-box h-100">
           <h5 class="text-muted mb-3">
             <i class="bi bi-receipt me-2"></i>
             Serviço
@@ -135,7 +78,7 @@
           <strong>Descrição:</strong> {{ $invoice->service?->description }}<br>
           <strong>Status:</strong>
           <span class="badge bg-{{ $invoice->status?->getColor() ?? 'secondary' }}">
-            {{ $invoice->status?->getName() ?? 'N/A' }}
+            {{ $invoice->status?->label() ?? 'N/A' }}
           </span>
         </div>
       </div>
@@ -171,7 +114,7 @@
           <strong>Status Atual:</strong><br>
           <span class="badge bg-{{ $invoiceStatus->getColor() ?? 'secondary' }} status-badge fs-5 mb-3">
             <i class="bi bi-{{ $invoiceStatus->getIcon() ?? 'circle' }} me-2"></i>
-            {{ $invoiceStatus->getName() }}
+            {{ $invoiceStatus->label() }}
           </span><br><br>
 
           @if( $invoice->transaction_date )
@@ -185,7 +128,7 @@
           @endif
 
           <div class="total-highlight">
-            <strong class="fs-4">Total: R$ {{ number_format( $invoice->total, 2, ',', '.' ) }}</strong>
+            <strong class="fs-4">Total: {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</strong>
           </div>
         </div>
       </div>
@@ -214,8 +157,8 @@
                 <tr>
                   <td>{{ $item->product?->name ?? 'Produto não encontrado' }}</td>
                   <td class="text-center">{{ $item->quantity }}</td>
-                  <td class="text-end">R$ {{ number_format( $item->unit_price, 2, ',', '.' ) }}</td>
-                  <td class="text-end">R$ {{ number_format( $item->total, 2, ',', '.' ) }}</td>
+                  <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_price) }}</td>
+                  <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
                 </tr>
               @endforeach
             </tbody>
@@ -275,25 +218,17 @@
         <p>{{ $invoice->notes }}</p>
       </div>
     @endif
+@endsection
 
-    <!-- Rodapé -->
-    <div class="text-center mt-5 pt-4 border-top">
-      <p class="text-muted mb-1">
-        <strong>{{ $invoice->tenant->name ?? 'Easy Budget' }}</strong>
-      </p>
-      @if( $invoice->tenant->contact ?? false )
-        <p class="text-muted mb-1">{{ $invoice->tenant->contact->email }}</p>
-        @if( $invoice->tenant->contact->phone )
-          <p class="text-muted mb-1">{{ $invoice->tenant->contact->phone }}</p>
-        @endif
+@section('footer')
+    <p class="text-muted mb-1">
+      <strong>{{ $invoice->tenant->name ?? 'Easy Budget' }}</strong>
+    </p>
+    @if( $invoice->tenant->contact ?? false )
+      <p class="text-muted mb-1">{{ $invoice->tenant->contact->email }}</p>
+      @if( $invoice->tenant->contact->phone )
+        <p class="text-muted mb-1">{{ $invoice->tenant->contact->phone }}</p>
       @endif
-      <p class="text-muted mb-0">
-        <small>Documento gerado em {{ date( 'd/m/Y \à\s H:i:s' ) }}</small>
-      </p>
-    </div>
-  </div>
+    @endif
+@endsection
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
-</html>

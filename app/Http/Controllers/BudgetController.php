@@ -308,7 +308,8 @@ class BudgetController extends Controller
             ]);
         }
 
-        return view('pages.budget.pdf_budget', compact('budget', 'provider'));
+        // Se não for PDF, retorna a view de impressão HTML otimizada
+        return view('pages.budget.print', compact('budget', 'provider'));
     }
 
     /**

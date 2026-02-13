@@ -11,14 +11,6 @@
             $service->code => '#'
         ]">
         <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
-        <x-slot:actions>
-            <x-layout.h-stack gap="2">
-                <x-ui.button type="link" :href="route('provider.services.edit', $service->code)"
-                    variant="light" size="sm" icon="pencil" label="Editar" feature="services" />
-                <x-ui.button type="link" :href="route('provider.services.print', ['service' => $service->code, 'pdf' => true])"
-                    variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="services" />
-            </x-layout.h-stack>
-        </x-slot:actions>
     </x-layout.page-header>
 
     {{-- Alerta de Faturas Existentes --}}
@@ -479,8 +471,6 @@
                                     variant="warning" icon="receipt" label="Criar Fatura Parcial" feature="invoices" />
                             @endif
                         @endif
-
-                        <x-ui.button type="button" variant="secondary" onclick="window.print()" icon="printer" label="Imprimir" feature="services" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>
@@ -508,6 +498,12 @@
                     icon="trash-fill"
                     label="Excluir"
                     feature="services" />
+
+                <x-ui.button type="link" :href="route('provider.services.print', ['service' => $service->code])"
+                    target="_blank"
+                    variant="outline-secondary"
+                    icon="printer"
+                    label="Imprimir" feature="services" />
             </x-ui.button-group>
         </x-layout.actions-bar>
 
