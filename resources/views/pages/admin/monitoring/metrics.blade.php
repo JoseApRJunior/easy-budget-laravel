@@ -8,7 +8,7 @@
                 'Monitoramento' => url('/admin/monitoring/dashboard'),
                 'Métricas' => '#'
             ]">
-            <x-ui.button type="link" :href="url('/admin/monitoring/dashboard')" variant="secondary" icon="arrow-left" label="Voltar" />
+            <x-ui.button type="link" :href="url('/admin/monitoring/dashboard')" variant="secondary" icon="arrow-left" label="Voltar" feature="view-monitoring" />
         </x-layout.page-header>
 
                 <!-- Navegação por Abas -->

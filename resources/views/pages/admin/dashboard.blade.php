@@ -117,9 +117,9 @@
                     </x-slot:header>
 
                     <div class="d-grid gap-2">
-                        <x-ui.button href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" />
-                        <x-ui.button href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" />
-                        <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar Dados" onclick="refreshData()" />
+                        <x-ui.button href="/admin/monitoring" variant="secondary" outline icon="graph-up" label="Ver Métricas Técnicas" feature="view-monitoring" />
+                        <x-ui.button href="/admin/alerts" variant="secondary" outline icon="bell" label="Gerenciar Alertas" feature="manage-alerts" />
+                        <x-ui.button variant="secondary" outline icon="arrow-clockwise" label="Atualizar Dados" onclick="refreshData()" feature="view-monitoring" />
                     </div>
                 </x-ui.card>
             </div>

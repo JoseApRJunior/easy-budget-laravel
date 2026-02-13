@@ -136,8 +136,8 @@
                 <hr class="my-4 opacity-25">
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <x-ui.back-button index-route="provider.categories.index" label="Cancelar" />
-                    <x-ui.button type="submit" icon="check-circle" label="Salvar Alterações" variant="primary" />
+                    <x-ui.back-button index-route="provider.categories.index" label="Cancelar" feature="categories" />
+                    <x-ui.button type="submit" icon="check-circle" label="Salvar Alterações" variant="primary" feature="categories" />
                 </div>
             </form>
         </div>

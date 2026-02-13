@@ -44,8 +44,8 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <x-ui.button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" class="flex-grow-1" />
-                            <x-ui.button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="qr-code" label="Gerar QR Code" class="flex-grow-1" feature="qrcode" />
+                            <x-ui.button type="button" variant="outline-secondary" id="clearBtn" icon="eraser" label="Limpar" feature="qrcode" />
                         </div>
                     </form>
                 </x-layout.grid-col>
@@ -84,7 +84,7 @@
                     <h5 class="card-title">{{ $action['title'] }}</h5>
                     <p class="card-text text-muted small">Gerar QR Code para verificação rápida de {{ strtolower($action['title']) }}</p>
                     <x-ui.button variant="{{ $action['color'] }}" size="sm" icon="qr-code" label="Gerar QR {{ Str::singular($action['title']) }}"
-                        data-bs-toggle="modal" data-bs-target="{{ $action['target'] }}" />
+                        data-bs-toggle="modal" data-bs-target="{{ $action['target'] }}" feature="qrcode" />
                 </div>
             </div>
         </x-layout.grid-col>

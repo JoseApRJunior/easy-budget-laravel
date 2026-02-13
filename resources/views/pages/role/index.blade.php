@@ -12,7 +12,7 @@
                 'Funções' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button :href="url('/admin/roles/create')" variant="primary" icon="plus-circle" label="Adicionar Função" />
+                <x-ui.button :href="url('/admin/roles/create')" variant="primary" icon="plus-circle" label="Adicionar Função" feature="manage-users" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -42,8 +42,8 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="url('/admin/roles/' . $role->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" />
-                                        <x-ui.button :href="url('/admin/roles/' . $role->id . '/edit')" variant="primary" outline size="sm" icon="pencil-square" title="Editar" />
+                                        <x-ui.button :href="url('/admin/roles/' . $role->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="manage-users" />
+                                        <x-ui.button :href="url('/admin/roles/' . $role->id . '/edit')" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="manage-users" />
                                         <x-ui.button 
                                             type="button" 
                                             variant="danger" 
@@ -55,6 +55,7 @@
                                             data-bs-target="#deleteModal" 
                                             data-delete-url="{{ url('/admin/roles/' . $role->id) }}"
                                             data-item-name="{{ $role->name }}"
+                                            feature="manage-users"
                                         />
                                     </x-resource.action-buttons>
                                 </x-resource.table-cell>

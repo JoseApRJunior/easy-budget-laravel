@@ -13,7 +13,7 @@
                 'Editar' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="link" :href="route('provider.schedules.index')" variant="secondary" icon="arrow-left" label="Voltar" feature="schedules" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -32,22 +32,22 @@
 
                         <div class="row">
                             <div class="col-md-6">
-                                <x-ui.form.input 
-                                    type="datetime-local" 
-                                    name="start_date_time" 
-                                    id="start_date_time" 
-                                    label="Data e Hora de Início *" 
+                                <x-ui.form.input
+                                    type="datetime-local"
+                                    name="start_date_time"
+                                    id="start_date_time"
+                                    label="Data e Hora de Início *"
                                     value="{{ old('start_date_time', $schedule->start_date_time->format('Y-m-d\TH:i')) }}"
                                     required
                                 />
                             </div>
 
                             <div class="col-md-6">
-                                <x-ui.form.input 
-                                    type="datetime-local" 
-                                    name="end_date_time" 
-                                    id="end_date_time" 
-                                    label="Data e Hora de Término *" 
+                                <x-ui.form.input
+                                    type="datetime-local"
+                                    name="end_date_time"
+                                    id="end_date_time"
+                                    label="Data e Hora de Término *"
                                     value="{{ old('end_date_time', $schedule->end_date_time->format('Y-m-d\TH:i')) }}"
                                     required
                                 />
@@ -56,11 +56,11 @@
 
                         <div class="row">
                             <div class="col-md-12">
-                                <x-ui.form.input 
-                                    type="text" 
-                                    name="location" 
-                                    id="location" 
-                                    label="Local do Agendamento" 
+                                <x-ui.form.input
+                                    type="text"
+                                    name="location"
+                                    id="location"
+                                    label="Local do Agendamento"
                                     value="{{ old('location', $schedule->location) }}"
                                     placeholder="Ex: Escritório do cliente, Sala de reunião, etc."
                                 />
@@ -105,12 +105,12 @@
                         <!-- Footer -->
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
                             <div class="d-flex align-items-center">
-                                <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-secondary" icon="arrow-left" label="Voltar" class="me-2" />
+                                <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-secondary" icon="arrow-left" label="Voltar" class="me-2" feature="schedules" />
                                 <small class="text-muted d-none d-md-block">
                                     Serviço: <strong>{{ $schedule->service->code }}</strong>
                                 </small>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="calendar-check" label="Atualizar Agendamento" id="submitBtn" />
+                            <x-ui.button type="submit" variant="primary" icon="calendar-check" label="Atualizar Agendamento" id="submitBtn" feature="schedules" />
                         </div>
                     </form>
                 </x-ui.card>
@@ -134,11 +134,11 @@
             // Note: toISOString() uses UTC. We need local time.
             const offset = now.getTimezoneOffset() * 60000;
             const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
-            
-            // Allow editing past dates if the original date was in the past? 
-            // Usually we don't want to restrict editing to future only if fixing records, 
+
+            // Allow editing past dates if the original date was in the past?
+            // Usually we don't want to restrict editing to future only if fixing records,
             // but the original code had this restriction. I'll keep it consistent with create.
-            // startDateTimeInput.min = localISOTime; 
+            // startDateTimeInput.min = localISOTime;
 
             // Check conflicts function
             function checkConflicts() {

@@ -347,8 +347,8 @@
 
             <!-- Botões -->
             <div class="d-flex justify-content-between align-items-center mt-4 mb-5">
-                <x-ui.back-button index-route="provider.customers.index" label="Cancelar" />
-                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Cadastrar Cliente" />
+                <x-ui.back-button index-route="provider.customers.index" label="Cancelar" feature="customers" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Cadastrar Cliente" feature="customers" />
             </div>
         </div>
     </form>

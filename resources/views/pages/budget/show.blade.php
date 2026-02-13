@@ -31,10 +31,12 @@
 
             <x-slot:actions>
                 <x-layout.h-stack gap="2">
+                    @if ($budget->canBeEdited())
                     <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                        variant="light" size="sm" icon="pencil" label="Editar" />
+                        variant="light" size="sm" icon="pencil" label="Editar" feature="budgets" />
+                    @endif
                     <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
-                        variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" />
+                        variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="budgets" />
                 </x-layout.h-stack>
             </x-slot:actions>
 
@@ -144,7 +146,7 @@
             <x-slot:actions>
                 @if ($budget->canBeEdited())
                 <x-ui.button type="link" :href="route('provider.budgets.services.create', $budget->code)"
-                    variant="success" size="sm" icon="plus" label="Novo Serviço" />
+                    variant="success" size="sm" icon="plus" label="Novo Serviço" feature="budgets" />
                 @endif
             </x-slot:actions>
 
@@ -329,21 +331,21 @@
                     variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
                     icon="send-fill"
                     :label="$sendModalLabel"
-                    data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" />
+                    data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" feature="budgets" />
 
                 <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
-                    variant="outline-secondary" icon="share-fill" label="Links" />
+                    variant="outline-secondary" icon="share-fill" label="Links" feature="budgets" />
 
                 @if ($budget->canBeEdited())
                 <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                    variant="primary" icon="pencil-fill" label="Editar" />
+                    variant="primary" icon="pencil-fill" label="Editar" feature="budgets" />
                 @endif
 
                 <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
                     target="_blank"
                     variant="outline-secondary"
                     icon="file-earmark-pdf"
-                    label="Imprimir PDF" />
+                    label="Imprimir PDF" feature="budgets" />
             </x-ui.button-group>
         </x-layout.actions-bar>
     </x-layout.v-stack>
@@ -390,7 +392,7 @@
         <x-slot:footer>
             <x-layout.h-stack justify="end" gap="2">
                 <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
-                <x-ui.button type="submit" variant="primary" icon="send-fill" label="Confirmar e Enviar" />
+                <x-ui.button type="submit" variant="primary" icon="send-fill" label="Confirmar e Enviar" feature="budgets" />
             </x-layout.h-stack>
         </x-slot:footer>
     </form>

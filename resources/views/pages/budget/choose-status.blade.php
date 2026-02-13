@@ -133,7 +133,7 @@
                                     <textarea name="comment" id="comment" class="form-control" rows="3" maxlength="500"></textarea>
                                 </div>
 
-                                <x-ui.button type="submit" variant="primary" class="w-100 btn-lg" icon="check-circle-fill" label="Confirmar Decisão" />
+                                <x-ui.button type="submit" variant="primary" class="w-100 btn-lg" icon="check-circle-fill" label="Confirmar Decisão" feature="budgets" />
                             </form>
                         </div>
                     @else

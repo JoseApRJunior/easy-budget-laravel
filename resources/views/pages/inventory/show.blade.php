@@ -206,7 +206,7 @@
                 <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Histórico de Movimentações</h6>
                 <div class="d-flex gap-2">
                     <div class="dropdown">
-                        <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHistoryDropdown" />
+                        <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHistoryDropdown" feature="inventory" />
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportHistoryDropdown">
                             <li>
                                 <a class="dropdown-item"
@@ -226,7 +226,8 @@
                 href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}" 
                 variant="primary" 
                 size="sm"
-                icon="bi bi-list-ul">
+                icon="bi bi-list-ul"
+                feature="inventory">
                 Ver Tudo
             </x-ui.button>
                 </div>
@@ -345,9 +346,9 @@
 
                 <div class="col-12 col-md-auto order-1 order-md-3">
                     <div class="d-grid d-md-flex gap-2">
-                        <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" />
-                        <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" />
-                        <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" />
+                        <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" icon="arrow-down-circle" label="Entrada" style="min-width: 120px;" feature="inventory" />
+                        <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" icon="arrow-up-circle" label="Saída" style="min-width: 120px;" feature="inventory" />
+                        <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" icon="sliders" label="Ajustar" style="min-width: 120px;" feature="inventory" />
                     </div>
                 </div>
             </div>
@@ -394,7 +395,7 @@
                     </div>
                     <div class="modal-footer bg-light border-0 p-3">
                         <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                        <x-ui.button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" />
+                        <x-ui.button type="submit" variant="primary" label="Salvar Alterações" icon="check-lg" feature="inventory" />
                     </div>
                 </form>
             </div>

@@ -9,8 +9,8 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" />
-                    <x-ui.button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" />
+                    <x-ui.button type="button" variant="secondary" outline icon="download" label="Exportar" onclick="exportData()" feature="manage-tenants" />
+                    <x-ui.button :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Nova Empresa" feature="manage-tenants" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -149,8 +149,8 @@
                     <div class="col-md-3">
                         <label class="form-label d-block">&nbsp;</label>
                         <div class="d-flex gap-2">
-                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" />
-                            <x-ui.button type="link" :href="route('admin.enterprises.index')" variant="secondary" icon="x-circle" label="Limpar" />
+                            <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" feature="manage-tenants" />
+                            <x-ui.button type="link" :href="route('admin.enterprises.index')" variant="secondary" icon="x-circle" label="Limpar" feature="manage-tenants" />
                         </div>
                     </div>
                 </div>
@@ -215,14 +215,14 @@
                                     <td>{{ $enterprise->created_at->format('d/m/Y') }}</td>
                                     <td>
                                         <div class="d-flex gap-1">
-                                            <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" title="Ver" />
-                                            <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                            <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" title="Ver" feature="manage-tenants" />
+                                            <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" title="Editar" feature="manage-tenants" />
                                             @if ($enterprise->status === 'active')
                                                 <x-ui.button variant="danger" size="sm" icon="pause" title="Suspender"
-                                                    onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
+                                                    onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" feature="manage-tenants" />
                                             @else
                                                 <x-ui.button variant="success" size="sm" icon="play" title="Reativar"
-                                                    onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
+                                                    onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" feature="manage-tenants" />
                                             @endif
                                         </div>
                                     </td>
@@ -268,14 +268,14 @@
                                 <strong>Criado em:</strong> {{ $enterprise->created_at->format('d/m/Y') }}
                             </p>
                             <div class="d-flex gap-2 mt-3">
-                                <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" />
-                                <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" />
+                                <x-ui.button type="link" :href="route('admin.enterprises.show', $enterprise->id)" variant="info" size="sm" icon="eye" label="Ver" class="flex-grow-1" feature="manage-tenants" />
+                                <x-ui.button type="link" :href="route('admin.enterprises.edit', $enterprise->id)" variant="primary" size="sm" icon="pencil-square" label="Editar" class="flex-grow-1" feature="manage-tenants" />
                                 @if ($enterprise->status === 'active')
                                     <x-ui.button variant="danger" size="sm" icon="pause" label="Suspender" class="flex-grow-1"
-                                        onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
+                                        onclick="suspendEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" feature="manage-tenants" />
                                 @else
                                     <x-ui.button variant="success" size="sm" icon="play" label="Reativar" class="flex-grow-1"
-                                        onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" />
+                                        onclick="reactivateEnterprise({{ $enterprise->id }}, '{{ $enterprise->name }}')" feature="manage-tenants" />
                                 @endif
                             </div>
                         </x-ui.card>
@@ -312,7 +312,7 @@
                     <i class="bi bi-building fa-3x text-muted mb-3"></i>
                     <h5 class="text-muted">Nenhuma empresa encontrada</h5>
                     <p class="text-muted">Não há empresas para exibir com os filtros aplicados.</p>
-                    <x-ui.button type="link" :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Criar Primeira Empresa" />
+                    <x-ui.button type="link" :href="route('admin.enterprises.create')" variant="primary" icon="plus-circle" label="Criar Primeira Empresa" feature="manage-tenants" />
                 </div>
             @endif
         </x-ui.card>

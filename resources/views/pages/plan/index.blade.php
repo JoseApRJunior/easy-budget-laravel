@@ -21,7 +21,7 @@
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <span class="small me-3">Você tem um plano pendente ({{ $pendingPlan->name }}).</span>
                         <div class="d-flex gap-2">
-                            <x-ui.button href="/plans/status" variant="warning" size="sm" icon="hourglass-split" label="Ver Status" />
+                            <x-ui.button href="/plans/status" variant="warning" size="sm" icon="hourglass-split" label="Ver Status" feature="plans" />
                             <form action="/plans/cancel-pending" method="post" class="d-inline">
                                 @csrf
                                 <button type="submit" class="btn btn-outline-dark btn-sm">

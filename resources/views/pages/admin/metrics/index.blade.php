@@ -90,13 +90,9 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="header-title">Métricas Recentes</h4>
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary" onclick="refreshMetrics()">
-                                <i class="mdi mdi-refresh"></i> Atualizar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="cleanupMetrics()">
-                                <i class="mdi mdi-delete"></i> Limpar Antigas
-                            </button>
+                        <div class="d-flex gap-2">
+                            <x-ui.button size="sm" variant="outline-primary" icon="refresh" label="Atualizar" onclick="refreshMetrics()" feature="view-monitoring" />
+                            <x-ui.button size="sm" variant="outline-danger" icon="delete" label="Limpar Antigas" onclick="cleanupMetrics()" feature="view-monitoring" />
                         </div>
                     </div>
 

@@ -31,9 +31,24 @@
                 </h5>
             </div>
 
-            @if(isset($headerActions))
+            @if(isset($headerActions) || !empty($actions))
                 <div class="col-12 col-md text-md-end">
-                    {{ $headerActions }}
+                    @if(!empty($actions))
+                        <div class="d-flex gap-2 justify-content-md-end">
+                            @foreach($actions as $action)
+                                <x-ui.button 
+                                    :href="$action['route'] ?? '#'" 
+                                    :variant="$action['variant'] ?? 'primary'" 
+                                    :outline="$action['outline'] ?? false" 
+                                    :size="$action['size'] ?? 'sm'" 
+                                    :icon="$action['icon'] ?? null" 
+                                    :label="$action['label'] ?? ''"
+                                    :feature="$action['feature'] ?? null"
+                                />
+                            @endforeach
+                        </div>
+                    @endif
+                    {{ $headerActions ?? '' }}
                 </div>
             @endif
         </div>

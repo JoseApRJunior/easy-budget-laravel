@@ -9,13 +9,9 @@
                 'Detalhes' => '#'
             ]">
             <x-slot:actions>
-                <div class="btn-group" role="group">
-                    <a href="{{ route('admin.alerts.edit', $alert['id']) }}" class="btn btn-primary">
-                        <i class="bi bi-pencil me-2"></i>Editar
-                    </a>
-                    <a href="{{ route('admin.alerts.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Voltar
-                    </a>
+                <div class="d-flex gap-2">
+                    <x-ui.button :href="route('admin.alerts.edit', $alert['id'])" variant="primary" icon="pencil" label="Editar" feature="manage-alerts" />
+                    <x-ui.button :href="route('admin.alerts.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-alerts" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -136,18 +132,12 @@
                               onsubmit="return confirm('Tem certeza que deseja excluir este alerta?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-trash me-2"></i>Excluir Alerta
-                            </button>
+                            <x-ui.button type="submit" variant="danger" icon="trash" label="Excluir Alerta" feature="manage-alerts" />
                         </form>
                         
-                        <div class="btn-group">
-                            <a href="{{ route('admin.alerts.edit', $alert['id']) }}" class="btn btn-primary">
-                                <i class="bi bi-pencil me-2"></i>Editar
-                            </a>
-                            <a href="{{ route('admin.alerts.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Voltar
-                            </a>
+                        <div class="d-flex gap-2">
+                            <x-ui.button :href="route('admin.alerts.edit', $alert['id'])" variant="primary" icon="pencil" label="Editar" feature="manage-alerts" />
+                            <x-ui.button :href="route('admin.alerts.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-alerts" />
                         </div>
                     </div>
                 </div>
@@ -225,8 +215,8 @@
                     @endif
                     
                     <div class="d-grid gap-2">
-                        <x-ui.button variant="primary" icon="printer" label="Imprimir" onclick="window.print()" />
-                        <x-ui.button variant="secondary" icon="clipboard" label="Copiar Link" onclick="navigator.clipboard.writeText(window.location.href)" />
+                        <x-ui.button variant="primary" icon="printer" label="Imprimir" onclick="window.print()" feature="manage-alerts" />
+                        <x-ui.button variant="secondary" icon="clipboard" label="Copiar Link" onclick="navigator.clipboard.writeText(window.location.href)" feature="manage-alerts" />
                     </div>
                 </div>
             </div>

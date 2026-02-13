@@ -64,8 +64,8 @@
                             </div>
                             <div class="col-12">
                                 <div class="d-flex gap-2">
-                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                                    <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x" label="Limpar" />
+                                    <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" feature="inventory" />
+                                    <x-ui.button type="link" :href="route('provider.inventory.most-used')" variant="secondary" icon="x" label="Limpar" feature="inventory" />
                                 </div>
                             </div>
                         </div>
@@ -163,8 +163,8 @@
                         </div>
                         <div class="col-12 col-lg-4 mt-2 mt-lg-0 text-lg-end">
                             <div class="d-flex justify-content-start justify-content-lg-end gap-1">
-                                <x-ui.button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" />
-                                <x-ui.button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'pdf']))" variant="primary" size="sm" icon="file-earmark-pdf" label="PDF" id="export-pdf" title="Exportar PDF" feature="inventory" />
+                                <x-ui.button type="link" :href="route('provider.inventory.export-most-used', array_merge(request()->query(), ['format' => 'xlsx']))" variant="success" size="sm" icon="file-earmark-excel" label="Excel" id="export-excel" title="Exportar Excel" feature="inventory" />
                             </div>
                         </div>
                     </div>
@@ -232,9 +232,9 @@
                                                 </td>
                                                 <td class="text-center pe-4">
                                                     <div class="action-btn-group justify-content-center">
-                                                        <x-ui.button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" />
-                                                        <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" />
-                                                    </div>
+                                                <x-ui.button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" title="Ver Produto" feature="inventory" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" title="Ver Movimentações" feature="inventory" />
+                                            </div>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -286,8 +286,8 @@
                                                 <span class="fw-bold small">{{ \App\Helpers\CurrencyHelper::format($product['total_value']) }}</span>
                                             </div>
                                             <div class="action-btn-group d-flex gap-1">
-                                                <x-ui.button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" size="sm" title="Ver Produto" />
-                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" size="sm" title="Ver Movimentações" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.show', $product['sku'])" variant="info" icon="eye" size="sm" title="Ver Produto" feature="inventory" />
+                                                <x-ui.button type="link" :href="route('provider.inventory.movements', ['sku' => $product['sku']])" variant="primary" icon="clock-history" size="sm" title="Ver Movimentações" feature="inventory" />
                                             </div>
                                         </div>
                                     </div>

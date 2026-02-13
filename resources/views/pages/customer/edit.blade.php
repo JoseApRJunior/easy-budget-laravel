@@ -417,8 +417,8 @@
 
             <!-- Botões -->
             <div class="d-flex justify-content-between mt-4">
-                <x-ui.back-button index-route="provider.customers.show" :route-params="[$customer]" label="Cancelar" />
-                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Atualizar" />
+                <x-ui.back-button index-route="provider.customers.show" :route-params="[$customer]" label="Cancelar" feature="customers" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Atualizar" feature="customers" />
             </div>
         </form>
 </x-layout.page-container>

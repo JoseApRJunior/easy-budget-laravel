@@ -14,7 +14,7 @@
                 'Editar' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Voltar" />
+                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" icon="arrow-left" label="Voltar" feature="invoices" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -166,7 +166,7 @@
                             @endforeach
                         </div>
 
-                        <x-ui.button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" class="w-100" />
+                        <x-ui.button type="button" variant="outline-success" icon="plus-circle" label="Adicionar Item" size="sm" id="addItemBtn" class="w-100" feature="invoices" />
                     </x-ui.card>
                 </div>
             </x-layout.grid-row>
@@ -197,8 +197,8 @@
 
             {{-- Botões de Ação (Footer) --}}
             <div class="d-flex justify-content-end gap-2 mt-4">
-                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" label="Cancelar" />
-                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
+                <x-ui.button type="link" :href="url()->previous(route('provider.invoices.index'))" variant="outline-secondary" label="Cancelar" feature="invoices" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" feature="invoices" />
             </div>
         </form>
     </x-layout.page-container>

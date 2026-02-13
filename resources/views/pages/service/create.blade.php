@@ -34,7 +34,7 @@
             <x-ui.alert type="info">
                 <strong>Orçamento pré-selecionado:</strong> {{ $budget->code }} -
                 {{ Str::limit($budget->description, 50) }}
-                <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" />
+                <x-ui.button type="link" :href="route('provider.services.create')" variant="outline-info" size="sm" class="ms-2" icon="x" label="Remover" feature="services" />
             </x-ui.alert>
         @endif
 
@@ -213,7 +213,7 @@
                     </h5>
 
                     <div class="mb-3">
-                        <x-ui.button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" disabled />
+                        <x-ui.button type="button" variant="success" size="sm" id="addItem" icon="plus" label="Adicionar Item" disabled feature="services" />
                     </div>
 
                     <div id="itemsContainer">
@@ -255,7 +255,7 @@
                                         </x-layout.grid-col>
                                         <x-layout.grid-col size="col-md-2">
                                             <input type="hidden" name="items[{{ $index }}][action]" value="create">
-                                            <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                                            <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" feature="services" />
                                         </x-layout.grid-col>
                                     </x-layout.grid-row>
                                 </div>
@@ -272,12 +272,10 @@
                 </x-layout.grid-col>
             </x-layout.grid-row>
 
-            <div class="d-flex justify-content-between mt-4">
-                <div>
-                    <x-ui.back-button index-route="provider.services.index" label="Cancelar" />
-                </div>
-                <x-ui.button type="submit" icon="check-circle" label="Criar" />
-            </div>
+            <x-layout.actions-bar alignment="between" class="align-items-center mt-4 pt-3 border-top" mb="0">
+                <x-ui.back-button index-route="provider.services.dashboard" label="Cancelar" feature="services" />
+                <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Serviço" feature="services" />
+            </x-layout.actions-bar>
         </form>
     </x-resource.resource-list-card>
 </x-layout.page-container>
@@ -319,7 +317,7 @@
             </div>
             <div class="col-md-2">
                 <input type="hidden" name="items[__INDEX__][action]" value="create">
-                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" />
+                <x-ui.button type="button" variant="outline-danger" size="sm" class="remove-item w-100 mt-2 mt-md-0" icon="trash" label="Excluir" feature="services" />
             </div>
         </div>
     </div>

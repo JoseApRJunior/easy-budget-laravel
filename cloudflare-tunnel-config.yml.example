@@ -1,0 +1,25 @@
+# Configuração Exemplo do Cloudflare Tunnel para Easy Budget
+# Copie este arquivo para cloudflare-tunnel-config.yml e preencha com suas credenciais
+
+tunnel: YOUR_TUNNEL_ID_HERE
+credentials-file: /path/to/your/credentials/YOUR_TUNNEL_ID_HERE.json
+
+ingress:
+  - hostname: dev.your-domain.com
+    service: http://localhost:80 # Porta onde seu servidor local (Laragon/Sail) está rodando
+  - hostname: "*.dev.your-domain.com"
+    service: http://localhost:80
+  - service: http_status:404
+
+# Logs
+logLevel: info
+logFile: logs/cloudflared.log
+
+# INSTRUÇÕES DE CONFIGURAÇÃO:
+# 1. Instale o cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/
+# 2. Faça login: cloudflared tunnel login
+# 3. Crie um tunnel: cloudflared tunnel create easy-budget
+# 4. Substitua YOUR_TUNNEL_ID_HERE pelo ID do tunnel criado no passo anterior
+# 5. Substitua /path/to/your/credentials/ pelo caminho real do arquivo .json gerado no login
+# 6. Configure seu domínio no Cloudflare Dashboard e aponte para o Tunnel
+# 7. Substitua dev.your-domain.com pelo seu subdomínio de desenvolvimento real

@@ -9,8 +9,8 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button variant="info" icon="download" label="Exportar" onclick="exportSettings()" />
-                    <x-ui.button variant="danger" icon="trash" label="Limpar Cache" onclick="clearCache()" />
+                    <x-ui.button variant="info" icon="download" label="Exportar" onclick="exportSettings()" feature="manage-settings" />
+                    <x-ui.button variant="danger" icon="trash" label="Limpar Cache" onclick="clearCache()" feature="manage-settings" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -160,7 +160,7 @@
                                 <label for="app_description" class="form-label">Descrição da Aplicação</label>
                                 <textarea class="form-control" id="app_description" name="app_description" rows="3">{{ $settings['app_description'] ?? '' }}</textarea>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -231,7 +231,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Configurações de Email</h6>
-                        <x-ui.button type="button" variant="info" size="sm" icon="envelope-check" label="Testar Email" onclick="testEmail()" />
+                        <x-ui.button type="button" variant="info" size="sm" icon="envelope-check" label="Testar Email" onclick="testEmail()" feature="manage-settings" />
                     </div>
                     <div class="card-body">
                         <form action="{{ route('admin.settings.email.update') }}" method="POST">
@@ -319,7 +319,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -330,7 +330,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Configurações de Pagamento</h6>
-                        <x-ui.button type="button" variant="info" size="sm" icon="credit-card" label="Testar Pagamento" onclick="testPayment()" />
+                        <x-ui.button type="button" variant="info" size="sm" icon="credit-card" label="Testar Pagamento" onclick="testPayment()" feature="manage-settings" />
                     </div>
                     <div class="card-body">
                         <form action="{{ route('admin.settings.payment.update') }}" method="POST">
@@ -416,7 +416,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -497,7 +497,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -619,7 +619,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -706,7 +706,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Salvar Configurações" feature="manage-settings" />
                         </form>
                     </div>
                 </div>
@@ -722,7 +722,7 @@
                                 <h5 class="card-title">Categorias</h5>
                                 <p class="card-text">Gerenciar categorias do sistema</p>
                                 <h3 class="text-primary">{{ $categories }}</h3>
-                                <x-ui.button type="link" :href="route('admin.categories.index')" variant="primary" icon="gear" label="Gerenciar" />
+                                <x-ui.button type="link" :href="route('admin.categories.index')" variant="primary" icon="gear" label="Gerenciar" feature="manage-settings" />
                             </div>
                         </div>
                     </div>
@@ -733,7 +733,7 @@
                                 <h5 class="card-title">Áreas de Atividade</h5>
                                 <p class="card-text">Gerenciar áreas de atividade</p>
                                 <h3 class="text-success">{{ $activities }}</h3>
-                                <x-ui.button type="link" :href="route('admin.activities.index')" variant="success" icon="gear" label="Gerenciar" />
+                                <x-ui.button type="link" :href="route('admin.activities.index')" variant="success" icon="gear" label="Gerenciar" feature="manage-settings" />
                             </div>
                         </div>
                     </div>
@@ -744,7 +744,7 @@
                                 <h5 class="card-title">Profissões</h5>
                                 <p class="card-text">Gerenciar profissões do sistema</p>
                                 <h3 class="text-info">{{ $professions }}</h3>
-                                <x-ui.button type="link" :href="route('admin.professions.index')" variant="info" icon="gear" label="Gerenciar" />
+                                <x-ui.button type="link" :href="route('admin.professions.index')" variant="info" icon="gear" label="Gerenciar" feature="manage-settings" />
                             </div>
                         </div>
                     </div>
@@ -757,7 +757,7 @@
                                 <h5 class="card-title">Planos</h5>
                                 <p class="card-text">Gerenciar planos de assinatura</p>
                                 <h3 class="text-warning">{{ $plans }}</h3>
-                                <x-ui.button type="link" :href="route('admin.plans.index')" variant="warning" icon="gear" label="Gerenciar" />
+                                <x-ui.button type="link" :href="route('admin.plans.index')" variant="warning" icon="gear" label="Gerenciar" feature="manage-settings" />
                             </div>
                         </div>
                     </div>
@@ -787,8 +787,8 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <x-ui.button variant="secondary" label="Cancelar" data-bs-dismiss="modal" />
-                            <x-ui.button type="submit" variant="primary" label="Importar" />
+                            <x-ui.button variant="secondary" label="Cancelar" data-bs-dismiss="modal" feature="manage-settings" />
+                            <x-ui.button type="submit" variant="primary" label="Importar" feature="manage-settings" />
                         </div>
                     </form>
                 </div>

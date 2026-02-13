@@ -15,7 +15,7 @@
             ]">
             <x-slot:actions>
                 <div class="d-flex gap-2">
-                    <x-ui.button :href="route('provider.budgets.shares.edit', $share->id)" variant="primary" icon="pencil" label="Editar" />
+                    <x-ui.button :href="route('provider.budgets.shares.edit', $share->id)" variant="primary" icon="pencil" label="Editar" feature="budgets" />
                     
                     <x-ui.button 
                         type="button" 
@@ -27,9 +27,10 @@
                         data-bs-target="#revokeModal" 
                         data-action-url="{{ route('provider.budgets.shares.destroy', $share->id) }}"
                         data-item-name="{{ $share->budget->code }}"
+                        feature="budgets"
                     />
                     
-                    <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                    <x-ui.button :href="route('provider.budgets.shares.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="budgets" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>

@@ -8,7 +8,7 @@
                 'Configurações' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button type="submit" form="settingsForm" variant="primary" icon="save" label="Salvar Alterações" />
+                <x-ui.button type="submit" form="settingsForm" variant="primary" icon="save" label="Salvar Alterações" feature="manage-settings" />
             </x-slot:actions>
         </x-layout.page-header>
 

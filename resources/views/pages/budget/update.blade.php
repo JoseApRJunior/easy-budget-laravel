@@ -11,7 +11,7 @@
                 $budget->code => route('budget.show', $budget->code),
                 'Editar' => '#'
             ]">
-            <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="arrow-left" label="Voltar" />
+            <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="arrow-left" label="Voltar" feature="budgets" />
         </x-layout.page-header>
 
         <!-- Budget Edit Form -->
@@ -96,12 +96,12 @@
 
                 <!-- Form Actions -->
                 <div class="d-flex justify-content-between mt-4 pt-4 border-top">
-                    <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="x-circle">
-                        Cancelar
-                    </x-ui.button>
+                    <x-ui.button type="link" :href="route('budget.show', $budget->code)" variant="secondary" icon="x-circle" feature="budgets">
+                    Cancelar
+                </x-ui.button>
                     <div>
                         @if ( StatusHelper::status_allows_edit( $budget->status->value ) )
-                            <x-ui.button type="submit" form="update-budget-form" variant="primary" icon="check-lg" class="px-4">
+                            <x-ui.button type="submit" form="update-budget-form" variant="primary" icon="check-lg" class="px-4" feature="budgets">
                                 Salvar Alterações
                             </x-ui.button>
                         @else
@@ -142,8 +142,8 @@
                                         </td>
                                         <td>{{ \App\Helpers\CurrencyHelper::format($service->total) }}</td>
                                         <td class="text-end">
-                                            <x-ui.button type="link" :href="route('provider.services.show', $service->code)"
-                                                    variant="info" size="sm" icon="eye" title="Visualizar" />
+                                            <x-ui.button type="link" :href="route('service.show', $service->code)"
+                                                    variant="info" size="sm" icon="eye" title="Visualizar" feature="services" />
                                         </td>
                                     </tr>
                                 @endforeach

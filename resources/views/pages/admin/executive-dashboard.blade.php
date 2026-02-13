@@ -14,12 +14,14 @@
                         onclick="refreshCharts()"
                         icon="arrow-clockwise"
                         label="Atualizar"
+                        feature="view-monitoring"
                     />
                     <x-ui.button 
                         href="/admin/executive-dashboard/export-pdf" 
                         variant="success"
                         icon="file-earmark-pdf"
                         label="Exportar PDF"
+                        feature="view-monitoring"
                     />
                 </div>
             </x-slot:actions>

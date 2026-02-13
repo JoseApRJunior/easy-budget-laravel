@@ -9,7 +9,7 @@
                 'Novo Alerta' => '#'
             ]">
             <x-slot:actions>
-                <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+                <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-alerts" />
             </x-slot:actions>
         </x-layout.page-header>
 
@@ -89,8 +89,8 @@
                         </div>
                         
                         <div class="d-flex justify-content-end gap-2">
-                            <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Cancelar" />
-                            <x-ui.button type="submit" variant="primary" icon="save" label="Criar Alerta" />
+                            <x-ui.button type="link" :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Cancelar" feature="manage-alerts" />
+                            <x-ui.button type="submit" variant="primary" icon="save" label="Criar Alerta" feature="manage-alerts" />
                         </div>
                     </form>
                 </x-ui.card>

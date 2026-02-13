@@ -10,7 +10,7 @@
                 'Áreas de Atividade' => url('/admin/area-of-activities'),
                 'Nova' => '#'
             ]">
-            <x-ui.button :href="url('/admin/area-of-activities')" variant="secondary" outline icon="arrow-left" label="Voltar" />
+            <x-ui.button :href="url('/admin/area-of-activities')" variant="secondary" outline icon="arrow-left" label="Voltar" feature="manage-activities" />
         </x-layout.page-header>
 
         <!-- Formulário -->

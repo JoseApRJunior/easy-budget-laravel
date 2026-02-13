@@ -250,7 +250,7 @@
                                                                         </span>
                                                                     </td>
                                                                     <td class="text-end">
-                                                                <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" />
+                                                                <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="info" size="sm" icon="eye" feature="budgets" />
                                                             </td>
                                                                 </tr>
                                                             @endforeach
@@ -272,7 +272,7 @@
         <div class="mt-auto pt-4 pb-2">
             <div class="row align-items-center g-3">
                 <div class="col-12 col-md-auto order-2 order-md-1">
-                    <x-ui.back-button index-route="provider.customers.index" class="w-100 w-md-auto px-md-3" />
+                    <x-ui.back-button index-route="provider.customers.index" class="w-100 w-md-auto px-md-3" feature="customers" />
                 </div>
 
                 <div class="col-12 col-md text-center d-none d-md-block order-md-2">
@@ -284,16 +284,16 @@
 
                 <div class="col-12 col-md-auto order-1 order-md-3">
                     <div class="d-grid d-md-flex gap-2">
-                        <x-ui.button type="link" :href="route('provider.customers.edit', $customer->id)" style="min-width: 120px;" icon="pencil-fill" label="Editar" />
+                        <x-ui.button type="link" :href="route('provider.customers.edit', $customer->id)" style="min-width: 120px;" icon="pencil-fill" label="Editar" feature="customers" />
 
                         <x-ui.button :variant="$customer->status === 'active' ? 'warning' : 'success'" style="min-width: 120px;"
                             data-bs-toggle="modal" data-bs-target="#toggleModal"
                             data-action="{{ $customer->status === 'active' ? 'Desativar' : 'Ativar' }}"
                             :icon="$customer->status === 'active' ? 'slash-circle' : 'check-lg'"
-                            :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" />
+                            :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" feature="customers" />
 
                         <x-ui.button variant="danger" style="min-width: 120px;" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                            icon="trash-fill" label="Excluir" />
+                            icon="trash-fill" label="Excluir" feature="customers" />
                     </div>
                 </div>
             </div>
@@ -312,11 +312,11 @@
                     <p>Deseja realmente {{ $customer->status === 'active' ? 'desativar' : 'ativar' }} o cliente <strong>{{ $customer->commonData ? ($customer->commonData->isCompany() ? $customer->commonData->company_name : $customer->commonData->first_name . ' ' . $customer->commonData->last_name) : 'este cliente' }}</strong>?</p>
                 </div>
                 <div class="modal-footer border-0">
-                    <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                    <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="customers" />
                     <form action="{{ route('provider.customers.toggle-status', $customer->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('PATCH')
-                        <x-ui.button type="submit" :variant="$customer->status === 'active' ? 'warning' : 'success'" :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" />
+                        <x-ui.button type="submit" :variant="$customer->status === 'active' ? 'warning' : 'success'" :label="$customer->status === 'active' ? 'Desativar' : 'Ativar'" feature="customers" />
                     </form>
                 </div>
             </div>
@@ -339,11 +339,11 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" />
+                    <x-ui.button variant="secondary" data-bs-dismiss="modal" label="Cancelar" feature="customers" />
                     <form action="{{ route('provider.customers.destroy', $customer->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <x-ui.button type="submit" variant="danger" icon="trash" label="Confirmar Exclusão" />
+                        <x-ui.button type="submit" variant="danger" icon="trash" label="Confirmar Exclusão" feature="customers" />
                     </form>
                 </div>
             </div>

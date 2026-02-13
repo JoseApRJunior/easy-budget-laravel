@@ -123,8 +123,8 @@
 
                     <!-- Botões -->
                     <x-layout.actions-bar alignment="between" class="align-items-center mt-4 pt-3 border-top" mb="0">
-                        <x-ui.back-button index-route="provider.budgets.show" :route-params="[$budget->code]" label="Cancelar" />
-                        <x-ui.button type="submit" variant="primary" icon="check-circle" label="Salvar Alterações" />
+                        <x-ui.button type="link" :href="route('provider.budgets.show', $budget->code)" variant="secondary" outline icon="x-lg" label="Cancelar" feature="budgets" />
+                        <x-ui.button type="submit" form="edit-budget-form" variant="primary" icon="check-circle" label="Salvar Alterações" feature="budgets" />
                     </x-layout.actions-bar>
                 </x-ui.form.form>
             </x-resource.resource-list-card>

@@ -10,7 +10,7 @@
             <x-slot:actions>
                 <div class="d-flex gap-2">
                     <div class="dropdown">
-                        <x-ui.button variant="secondary" outline class="dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" icon="download" label="Exportar" />
+                        <x-ui.button variant="secondary" outline class="dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" icon="download" label="Exportar" feature="manage-alerts" />
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
                             <li>
                                 <a class="dropdown-item" href="{{ route('admin.alerts.export', 'excel') }}">
@@ -24,7 +24,7 @@
                             </li>
                         </ul>
                     </div>
-                    <x-ui.button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" />
+                    <x-ui.button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Novo Alerta" feature="manage-alerts" />
                 </div>
             </x-slot:actions>
         </x-layout.page-header>
@@ -102,8 +102,8 @@
                         <div class="col-md-3">
                             <label class="form-label d-none d-md-block">&nbsp;</label>
                             <div class="d-flex gap-2">
-                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" />
-                                <x-ui.button :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Limpar" />
+                                <x-ui.button type="submit" variant="primary" icon="search" label="Filtrar" class="flex-grow-1" feature="manage-alerts" />
+                                <x-ui.button :href="route('admin.alerts.index')" variant="secondary" icon="x-circle" label="Limpar" feature="manage-alerts" />
                             </div>
                         </div>
                     </x-layout.grid-row>
@@ -162,8 +162,8 @@
                         <x-resource.table-cell>{{ $alert['created_at']->format('d/m/Y H:i') }}</x-resource.table-cell>
                         <x-resource.table-cell>
                             <x-resource.action-buttons>
-                                <x-ui.button :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" title="Ver Detalhes" />
-                                <x-ui.button :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" title="Editar" />
+                                <x-ui.button :href="route('admin.alerts.show', $alert['id'])" variant="info" size="sm" icon="eye" title="Ver Detalhes" feature="manage-alerts" />
+                                <x-ui.button :href="route('admin.alerts.edit', $alert['id'])" variant="primary" size="sm" icon="pencil-square" title="Editar" feature="manage-alerts" />
                                 <x-ui.button 
                                     type="button" 
                                     variant="danger" 
@@ -171,6 +171,7 @@
                                     icon="trash" 
                                     title="Excluir"
                                     onclick="confirmDelete({{ $alert['id'] }})" 
+                                    feature="manage-alerts"
                                 />
                             </x-resource.action-buttons>
                         </x-resource.table-cell>
@@ -181,7 +182,7 @@
                             <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                             <h5 class="text-muted">Nenhum alerta encontrado</h5>
                             <p class="text-muted mb-4">Não há alertas para exibir com os filtros aplicados.</p>
-                            <x-ui.button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Criar Primeiro Alerta" />
+                            <x-ui.button :href="route('admin.alerts.create')" variant="primary" icon="plus-circle" label="Criar Primeiro Alerta" feature="manage-alerts" />
                         </td>
                     </x-resource.table-row>
                 @endforelse

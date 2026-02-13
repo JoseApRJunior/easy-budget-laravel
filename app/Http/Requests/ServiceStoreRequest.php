@@ -79,7 +79,7 @@ class ServiceStoreRequest extends FormRequest
                 'integer',
                 'exists:categories,id',
             ],
-            'service_statuses_id' => [
+            'status' => [
                 'required',
                 'string',
                 'in:'.implode(',', array_map(fn ($case) => $case->value, ServiceStatus::cases())),
@@ -106,8 +106,8 @@ class ServiceStoreRequest extends FormRequest
             'budget_id.exists' => 'Orçamento não encontrado',
             'category_id.required' => 'Categoria é obrigatória',
             'category_id.exists' => 'Categoria não encontrada',
-            'service_statuses_id.required' => 'Status é obrigatório',
-            'service_statuses_id.in' => 'Status inválido selecionado',
+            'status.required' => 'Status é obrigatório',
+            'status.in' => 'Status inválido selecionado',
             'description.max' => 'Descrição não pode exceder 1000 caracteres',
             'due_date.after_or_equal' => 'Data de vencimento deve ser hoje ou posterior',
             'items.required' => 'Itens do serviço são obrigatórios',

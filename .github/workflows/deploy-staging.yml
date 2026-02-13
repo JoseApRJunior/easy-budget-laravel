@@ -1,0 +1,45 @@
+name: 🚀 Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Setup SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Pasta fornecida para staging
+            cd /home/easybudget-staging/htdocs/staging.easybudget.net.br
+
+            # Atualizar código da branch staging
+            git fetch origin staging
+            git reset --hard origin/staging
+
+            # Instalação e Migração
+            composer install --no-interaction --optimize-autoloader
+            php artisan migrate --force
+            php artisan db:seed --class=ResourceSeeder --force
+            php artisan db:seed --class=PlanSeeder --force
+
+            # Otimização
+            php artisan optimize:clear
+            php artisan optimize
+            php artisan queue:restart
+
+            # Permissões CloudPanel
+            chown -R easybudget-staging:easybudget-staging .
+            chmod -R 775 storage bootstrap/cache

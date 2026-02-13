@@ -8,6 +8,7 @@
     'message' => null,           // Mensagem customizada (opcional)
     'confirmLabel' => null,      // Label do botão de confirmar (opcional)
     'cancelLabel' => 'Cancelar', // Label do botão de cancelar
+    'feature' => null,           // Feature flag para controle de acesso (opcional)
 ])
 
 @php
@@ -79,6 +80,7 @@
                         type="submit"
                         :variant="$currentConfig['variant']"
                         :label="$confirmButtonLabel"
+                        :feature="$feature"
                     />
                 </form>
             </div>
