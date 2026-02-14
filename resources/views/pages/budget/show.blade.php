@@ -35,7 +35,7 @@
                     <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
                         variant="light" size="sm" icon="pencil" label="Editar" feature="budgets" />
                     @endif
-                    <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                    <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code])"
                         variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="budgets" />
                 </x-layout.h-stack>
             </x-slot:actions>
@@ -341,11 +341,11 @@
                     variant="primary" icon="pencil-fill" label="Editar" feature="budgets" />
                 @endif
 
-                <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code, 'pdf' => true])"
+                <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code])"
                     target="_blank"
                     variant="outline-secondary"
-                    icon="file-earmark-pdf"
-                    label="Imprimir PDF" feature="budgets" />
+                    icon="printer"
+                    label="Imprimir" feature="budgets" />
             </x-ui.button-group>
         </x-layout.actions-bar>
     </x-layout.v-stack>
