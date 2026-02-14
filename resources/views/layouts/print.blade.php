@@ -15,13 +15,13 @@
         body {
             font-size: 14px;
             background-color: #fff;
-            color: #000;
+            color: #333;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
 
         .print-header {
-            border-bottom: 2px solid #333;
+            border-bottom: 2px solid #dee2e6;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
@@ -34,13 +34,8 @@
             body {
                 font-size: 12px;
                 background-color: #fff !important;
-                color: #000 !important;
                 margin: 0;
                 padding: 0;
-            }
-
-            .text-muted, .text-secondary {
-                color: #222 !important;
             }
 
             .container {
@@ -51,45 +46,36 @@
             }
 
             .card {
-                border: 1px solid #666 !important;
+                border: 1px solid #dee2e6 !important;
                 break-inside: avoid;
             }
 
             .badge {
-                border: 1px solid #000;
+                border: 1px solid #dee2e6;
                 color: #000 !important;
-                font-weight: bold;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                background-color: transparent !important;
             }
 
             .info-box {
                 break-inside: avoid;
-                border: 1px solid #666 !important;
-            }
-
-            hr {
-                border-top: 1px solid #333 !important;
-                opacity: 1 !important;
             }
         }
 
         .info-box {
-            background-color: #dee2e6;
-            border: 1px solid #999;
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
         }
 
         .total-highlight {
-            background-color: #98dfb6;
-            border: 2px solid #1e7e34;
+            background-color: #d4edda;
+            border: 2px solid #28a745;
             border-radius: 8px;
             padding: 15px;
             text-align: center;
             margin: 20px 0;
-            color: #000;
         }
 
         @yield('styles')

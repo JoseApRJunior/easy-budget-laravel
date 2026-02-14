@@ -72,21 +72,36 @@
     <div class="mb-4">
         <h6 class="text-secondary border-bottom pb-2">DADOS DO CLIENTE</h6>
         <div class="row mt-3">
+            @php
+                $customer = $budget->customer;
+                $customerCommonData = $customer?->commonData;
+                $customerContact = $customer?->contact;
+            @endphp
             <div class="col-6">
-                <p class="fw-medium mb-1">{{ $budget->customer->first_name }} {{ $budget->customer->last_name }}</p>
-                @if( $budget->customer->cpf )
-                <p class="text-secondary small mb-1">CPF: {{ $budget->customer->cpf }}</p>
+                <p class="fw-medium mb-1">
+                    @if($customerCommonData)
+                        {{ $customerCommonData->display_name }}
+                    @else
+                        Cliente não identificado
+                    @endif
+                </p>
+                @if($customerCommonData?->cpf)
+                    <p class="text-secondary small mb-1">CPF: {{ \App\Helpers\MaskHelper::formatCPF($customerCommonData->cpf) }}</p>
                 @endif
-                @if( $budget->customer->cnpj )
-                <p class="text-secondary small mb-1">CNPJ: {{ $budget->customer->cnpj }}</p>
+                @if($customerCommonData?->cnpj)
+                    <p class="text-secondary small mb-1">CNPJ: {{ \App\Helpers\MaskHelper::formatCNPJ($customerCommonData->cnpj) }}</p>
                 @endif
             </div>
             <div class="col-6 text-end">
-                @if( $budget->customer->phone )
-                <p class="text-secondary small mb-1">Tel: {{ $budget->customer->phone }}</p>
+                @php
+                    $phone = $customerContact?->phone_personal ?? $customerContact?->phone_business;
+                    $email = $customerContact?->email_personal ?? $customerContact?->email_business;
+                @endphp
+                @if($phone)
+                    <p class="text-secondary small mb-1">Tel: {{ \App\Helpers\MaskHelper::formatPhone($phone) }}</p>
                 @endif
-                @if( $budget->customer->email )
-                <p class="text-secondary small mb-1">Email: {{ $budget->customer->email }}</p>
+                @if($email)
+                    <p class="text-secondary small mb-1">Email: {{ $email }}</p>
                 @endif
             </div>
         </div>
@@ -226,12 +241,6 @@
         </div>
     </div>
 
-    <!-- Print and Back Buttons -->
-    <div class="d-print-none text-end mt-4">
-        <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-2"></i>Imprimir</button>
-        <button onclick="history.back()" class="btn btn-outline-secondary ms-2"><i
-                class="bi bi-arrow-left me-2"></i>Voltar</button>
-    </div>
 </div>
 @endsection
 
