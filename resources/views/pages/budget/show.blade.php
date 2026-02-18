@@ -29,78 +29,123 @@
     </x-layout.page-header>
 
     <x-layout.v-stack gap="4">
-        <x-resource.resource-header-card
-            :title="'Orçamento ' . $budget->code"
-            :subtitle="'Criado em ' . $budget->created_at->format('d/m/Y')"
-            :status-item="$budget"
-            mb="mb-0">
+        {{-- Informações do Orçamento (Padrão Service) --}}
+        <x-resource.resource-header-card>
+            {{-- Primeira Linha: Informações Principais --}}
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Código do Orçamento"
+                    :subtitle="$budget->code"
+                    icon="hash" />
+            </x-layout.grid-col>
 
-            <x-slot:actions>
-                <x-layout.h-stack gap="2">
-                    @if ($budget->canBeEdited())
-                    <x-ui.button type="link" :href="route('provider.budgets.edit', $budget->code)"
-                        variant="light" size="sm" icon="pencil" label="Editar" feature="budgets" />
-                    @endif
-                    <x-ui.button type="link" :href="route('provider.budgets.print', ['code' => $budget->code])"
-                        variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="budgets" />
-                </x-layout.h-stack>
-            </x-slot:actions>
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Status Atual"
+                    icon="info-circle">
+                    <x-slot:subtitle>
+                        <x-ui.status-description :item="$budget" statusField="status" :useColor="false" class="text-dark fw-medium" />
+                    </x-slot:subtitle>
+                </x-resource.resource-info>
+            </x-layout.grid-col>
 
-            <x-resource.resource-header-section title="Informações do Cliente" icon="person-badge">
-                <x-layout.grid-col size="col-md-4">
+            <x-layout.grid-col size="col-md-4">
+                <x-resource.resource-info
+                    title="Total do Orçamento"
+                    :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)"
+                    icon="cash-stack"
+                    class="text-primary fw-bold" />
+            </x-layout.grid-col>
+
+            <x-resource.resource-header-divider />
+
+            {{-- Segunda Linha: Dados do Cliente --}}
+            <x-resource.resource-header-section title="Dados do Cliente" icon="people">
+                @if ($budget->customer)
+                <x-layout.grid-col size="col-md-3">
                     <x-resource.resource-info
-                        title="Cliente"
-                        :subtitle="$budget->customer->name ?? 'Não vinculado'"
-                        icon="person" />
+                        title="Nome/Razão Social"
+                        :subtitle="$budget->customer->name"
+                        icon="person-badge"
+                        :href="route('provider.customers.show', $budget->customer->id)"
+                        class="small" />
                 </x-layout.grid-col>
 
-                <x-layout.grid-col size="col-md-4">
+                <x-layout.grid-col size="col-md-3">
                     <x-resource.resource-info
-                        title="E-mail"
-                        :subtitle="$budget->customer->contact->email_personal ?? 'Não informado'"
-                        icon="envelope" />
+                        :title="$budget->customer->commonData?->cnpj ? 'CNPJ' : 'CPF'"
+                        :subtitle="$budget->customer->document"
+                        icon="card-text"
+                        class="small" />
                 </x-layout.grid-col>
 
-                <x-layout.grid-col size="col-md-4">
+                <x-layout.grid-col size="col-md-3">
                     <x-resource.resource-info
-                        title="Telefone"
-                        :subtitle="$budget->customer->contact->phone_primary ?? 'Não informado'"
-                        icon="telephone" />
+                        title="Contato Principal"
+                        :subtitle="$budget->customer->email ?? \App\Helpers\MaskHelper::formatPhone($budget->customer->phone ?? '') ?: '-'"
+                        icon="envelope"
+                        class="small" />
                 </x-layout.grid-col>
+
+                <x-layout.grid-col size="col-md-3">
+                    <x-resource.resource-info
+                        title="Endereço"
+                        :subtitle="$budget->customer->full_address ?: 'Não informado'"
+                        icon="geo-alt"
+                        class="small" />
+                </x-layout.grid-col>
+                @else
+                <x-layout.grid-col size="col-12">
+                    <p class="text-muted mb-0 italic small">Dados do cliente não vinculados a este orçamento.</p>
+                </x-layout.grid-col>
+                @endif
             </x-resource.resource-header-section>
 
             <x-resource.resource-header-divider />
 
-            <x-resource.resource-header-section title="Resumo Financeiro" icon="cash-stack">
-                <x-layout.grid-col size="col-md-3">
-                    <x-resource.resource-info
-                        title="Subtotal"
-                        :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0)"
-                        icon="calculator" />
+            {{-- Terceira Linha: Resumo e Histórico --}}
+            <x-resource.resource-header-section title="Resumo e Histórico" icon="clock-history">
+                <x-layout.grid-col size="col-md-8">
+                    <div class="row g-3">
+                        <x-layout.grid-col size="col-md-4">
+                            <x-resource.resource-info
+                                title="Criado em"
+                                :subtitle="$budget->created_at->format('d/m/Y H:i')"
+                                icon="calendar-plus"
+                                class="small" />
+                        </x-layout.grid-col>
+                        <x-layout.grid-col size="col-md-4">
+                            <x-resource.resource-info
+                                title="Última Atualização"
+                                :subtitle="$budget->updated_at?->format('d/m/Y H:i')"
+                                icon="clock-history"
+                                class="small" />
+                        </x-layout.grid-col>
+                        <x-layout.grid-col size="col-md-4">
+                            <x-resource.resource-info
+                                title="Validade"
+                                :subtitle="$budget->due_date ? $budget->due_date->format('d/m/Y') : 'Não informada'"
+                                icon="calendar-event"
+                                class="{{ $budget->due_date && $budget->due_date->isPast() ? 'text-danger' : 'small' }}" />
+                        </x-layout.grid-col>
+                    </div>
                 </x-layout.grid-col>
 
-                <x-layout.grid-col size="col-md-3">
-                    <x-resource.resource-info
-                        title="Desconto"
-                        :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->discount)"
-                        icon="percent"
-                        class="{{ $budget->discount > 0 ? 'text-danger' : '' }}" />
-                </x-layout.grid-col>
-
-                <x-layout.grid-col size="col-md-3">
-                    <x-resource.resource-info
-                        title="Total"
-                        :subtitle="'R$ ' . \App\Helpers\CurrencyHelper::format($budget->total)"
-                        icon="currency-dollar"
-                        class="fw-bold text-primary" />
-                </x-layout.grid-col>
-
-                <x-layout.grid-col size="col-md-3">
-                    <x-resource.resource-info
-                        title="Validade"
-                        :subtitle="$budget->due_date ? $budget->due_date->format('d/m/Y') : 'Não informada'"
-                        icon="calendar-event"
-                        class="{{ $budget->due_date && $budget->due_date->isPast() ? 'text-danger' : '' }}" />
+                <x-layout.grid-col size="col-md-4">
+                    <x-ui.box background="#f8fafc" border="border border-light-subtle">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small fw-medium">Subtotal:</span>
+                            <span class="text-dark fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($budget->services?->sum('total') ?? 0) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small fw-medium">Desconto:</span>
+                            <span class="text-danger fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($budget->discount) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top border-light-subtle">
+                            <span class="fw-bold text-dark">Total Final:</span>
+                            <span class="fw-bold text-success fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($budget->total) }}</span>
+                        </div>
+                    </x-ui.box>
                 </x-layout.grid-col>
             </x-resource.resource-header-section>
 
@@ -109,19 +154,19 @@
             <x-resource.resource-header-divider />
             <x-resource.resource-header-section title="Observações Adicionais" icon="chat-left-text">
                 @if ($budget->description)
-                    <x-layout.grid-col size="col-md-6">
-                        <x-resource.resource-info
-                            title="Descrição"
-                            :subtitle="$budget->description"
-                            class="small" />
+                    <x-layout.grid-col size="col-12">
+                        @if($budget->payment_terms)<h6 class="text-muted small fw-bold mb-2">Descrição</h6>@endif
+                        <x-ui.box>
+                            <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $budget->description }}</p>
+                        </x-ui.box>
                     </x-layout.grid-col>
                 @endif
                 @if ($budget->payment_terms)
-                    <x-layout.grid-col size="col-md-6">
-                        <x-resource.resource-info
-                            title="Condições de Pagamento"
-                            :subtitle="$budget->payment_terms"
-                            class="small" />
+                    <x-layout.grid-col size="col-12">
+                        <h6 class="text-muted small fw-bold mb-2">Condições de Pagamento</h6>
+                        <x-ui.box>
+                            <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $budget->payment_terms }}</p>
+                        </x-ui.box>
                     </x-layout.grid-col>
                 @endif
             </x-resource.resource-header-section>
