@@ -27,14 +27,17 @@ class SendBudgetToCustomerAction
     {
         try {
             // 0. Carregar relações iniciais
-            $budget->loadMissing(['customer.commonData', 'tenant.provider.commonData', 'tenant.provider.address', 'tenant.provider.contact']);
+            $budget->loadMissing(['customer.commonData', 'customer.contact', 'tenant.provider.commonData', 'tenant.provider.address', 'tenant.provider.contact']);
             $customer = $budget->customer;
 
-            if (! $customer || ! $customer->email) {
+            // Tentar obter e-mail do contato se não houver no cliente diretamente
+            $recipientEmail = $customer->email ?: $customer->contact?->email_personal ?: $customer->contact?->email_business;
+
+            if (! $customer || ! $recipientEmail) {
                 return ServiceResult::error('Cliente sem e-mail cadastrado.');
             }
 
-            $recipientName = $customer->commonData->name ?? $customer->email;
+            $recipientName = $customer->commonData->full_name ?? $customer->commonData->name ?? $recipientEmail;
 
             // Preparar dados da empresa (Tenant/Provider) para o e-mail
             $provider = $budget->tenant->provider;
@@ -80,12 +83,12 @@ class SendBudgetToCustomerAction
             $oldStatus = $budget->status->value;
 
             // Executar operações de banco dentro da transação
-            DB::transaction(function () use ($budget, $customer, $recipientName, &$publicUrl, &$pdfPath, $provider, $oldStatus, $customMessage) {
+            DB::transaction(function () use ($budget, $customer, $recipientEmail, $recipientName, &$publicUrl, &$pdfPath, $provider, $oldStatus, $customMessage) {
                 // 1. Gerar ou recuperar Token Público via BudgetShareService
                 $shareResult = $this->shareService->createShare([
                     'budget_id' => $budget->id,
                     'tenant_id' => $budget->tenant_id,
-                    'recipient_email' => $customer->email,
+                    'recipient_email' => $recipientEmail,
                     'recipient_name' => $recipientName,
                     'permissions' => ['view', 'comment', 'approve', 'reject', 'print'],
                     'expires_at' => now()->addDays(7)->toDateTimeString(),
@@ -137,8 +140,8 @@ class SendBudgetToCustomerAction
             });
 
             // 5. Enviar E-mail (FORA DA TRANSAÇÃO para evitar timeout de banco) usando fila
-            \Illuminate\Support\Facades\Log::info('[SendBudgetToCustomerAction] Enfileirando email', ['customMessage' => $customMessage]);
-            Mail::to($customer->email)->queue(new BudgetNotificationMail(
+            \Illuminate\Support\Facades\Log::info('[SendBudgetToCustomerAction] Enfileirando email', ['customMessage' => $customMessage, 'recipientEmail' => $recipientEmail]);
+            Mail::to($recipientEmail)->queue(new BudgetNotificationMail(
                 budget: $budget,
                 customer: $customer,
                 notificationType: 'sent',

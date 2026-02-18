@@ -7,6 +7,12 @@
     $isDraft = $budget->status->value === 'draft';
     $sendModalTitle = ($isSent && !$isDraft) ? 'Reenviar Orçamento' : 'Enviar Orçamento';
     $sendModalLabel = ($isSent && !$isDraft) ? 'Reenviar' : 'Enviar';
+
+    // Buscar e-mail de várias fontes
+    $customerEmail = $budget->customer->email
+        ?? $budget->customer->contact->email_personal
+        ?? $budget->customer->contact->email_business
+        ?? null;
 @endphp
 
 @section('content')
@@ -352,16 +358,16 @@
 </x-layout.page-container>
 
 <x-ui.modal id="sendToCustomerModal" :title="$sendModalTitle" icon="send-fill">
-    <form action="{{ route('provider.budgets.send-to-customer', $budget->code) }}" method="POST">
+    <form id="sendToCustomerForm" action="{{ route('provider.budgets.send-to-customer', $budget->code) }}" method="POST">
         @csrf
         <x-layout.v-stack gap="3">
             <x-ui.text variant="small">
-                O orçamento será enviado para o e-mail: <strong>{{ $budget->customer->contact->email_personal ?? 'E-mail não cadastrado' }}</strong>
+                O orçamento será enviado para o e-mail: <strong>{{ $customerEmail ?? 'E-mail não cadastrado' }}</strong>
             </x-ui.text>
 
-            @if(!($budget->customer->contact->email_personal))
+            @if(!$customerEmail)
             <x-ui.alert type="warning" icon="exclamation-triangle">
-                O cliente não possui e-mail pessoal cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
+                O cliente não possui e-mail cadastrado. Por favor, atualize o cadastro do cliente antes de enviar.
             </x-ui.alert>
             @endif
 
@@ -388,14 +394,14 @@
                 <strong>Reserva de Estoque:</strong> Conforme nossa política, os produtos serão reservados automaticamente apenas quando o serviço for movido para o status <strong>"Em Preparação"</strong>.
             </x-ui.alert>
         </x-layout.v-stack>
-
-        <x-slot:footer>
-            <x-layout.h-stack justify="end" gap="2">
-                <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
-                <x-ui.button type="submit" variant="primary" icon="send-fill" label="Confirmar e Enviar" feature="budgets" />
-            </x-layout.h-stack>
-        </x-slot:footer>
     </form>
+
+    <x-slot:footer>
+        <x-layout.h-stack justify="end" gap="2">
+            <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
+            <x-ui.button type="submit" form="sendToCustomerForm" variant="primary" icon="send-fill" label="Confirmar e Enviar" feature="budgets" :disabled="!$customerEmail" />
+        </x-layout.h-stack>
+    </x-slot:footer>
 </x-ui.modal>
 @endsection
 

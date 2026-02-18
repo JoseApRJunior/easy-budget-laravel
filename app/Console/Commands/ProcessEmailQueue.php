@@ -57,7 +57,7 @@ class ProcessEmailQueue extends Command
         ]);
 
         try {
-            $worker = app(Worker::class);
+            $worker = app('queue.worker');
             $worker->setCache(app('cache.store'));
 
             $options = new WorkerOptions;
@@ -70,37 +70,36 @@ class ProcessEmailQueue extends Command
             $options->stopWhenEmpty = false;
             $options->memory = 128; // MB
 
-            // Processa apenas a fila de emails
-            $worker->daemon('database', 'emails', $options, function ($job) {
-                $this->logJobProcessing($job);
-
-                try {
-                    $job->fire();
-
-                    Log::info('Email job processado com sucesso', [
-                        'job_id' => $job->getJobId(),
-                        'queue' => $job->getQueue(),
-                        'attempts' => $job->attempts(),
-                    ]);
-
-                    $this->info('✅ Email enviado com sucesso - Job ID: '.$job->getJobId());
-
-                } catch (\Throwable $e) {
-                    $this->handleJobFailure($job, $e);
-
-                    Log::error('Falha no processamento de email job', [
-                        'job_id' => $job->getJobId(),
-                        'queue' => $job->getQueue(),
-                        'attempts' => $job->attempts(),
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-
-                    $this->error('❌ Falha no email - Job ID: '.$job->getJobId().' - '.$e->getMessage());
-
-                    throw $e;
-                }
+            // Configura listeners para logging
+            $this->laravel['events']->listen(\Illuminate\Queue\Events\JobProcessing::class, function ($event) {
+                $this->logJobProcessing($event->job);
             });
+
+            $this->laravel['events']->listen(\Illuminate\Queue\Events\JobProcessed::class, function ($event) {
+                $this->info('✅ Email enviado com sucesso - Job ID: '.$event->job->getJobId());
+                Log::info('Email job processado com sucesso', [
+                    'job_id' => $event->job->getJobId(),
+                    'queue' => $event->job->getQueue(),
+                    'attempts' => $event->job->attempts(),
+                ]);
+            });
+
+            $this->laravel['events']->listen(\Illuminate\Queue\Events\JobExceptionOccurred::class, function ($event) {
+                $this->handleJobFailure($event->job, $event->exception);
+                
+                Log::error('Falha no processamento de email job', [
+                    'job_id' => $event->job->getJobId(),
+                    'queue' => $event->job->getQueue(),
+                    'attempts' => $event->job->attempts(),
+                    'error' => $event->exception->getMessage(),
+                    'trace' => $event->exception->getTraceAsString(),
+                ]);
+
+                $this->error('❌ Falha no email - Job ID: '.$event->job->getJobId().' - '.$event->exception->getMessage());
+            });
+
+            // Processa apenas a fila de emails
+            $worker->daemon('database', 'emails', $options);
 
         } catch (\Throwable $e) {
             Log::critical('Worker de email parado devido a erro crítico', [
