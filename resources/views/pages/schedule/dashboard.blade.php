@@ -135,6 +135,7 @@
                                 <x-slot:thead>
                                     <x-resource.table-row>
                                         <x-resource.table-cell header>Data/Hora</x-resource.table-cell>
+                                        <x-resource.table-cell header>Cód.</x-resource.table-cell>
                                         <x-resource.table-cell header>Cliente</x-resource.table-cell>
                                         <x-resource.table-cell header>Serviço</x-resource.table-cell>
                                         <x-resource.table-cell header>Status</x-resource.table-cell>
@@ -149,6 +150,9 @@
                                             <small class="text-muted small">
                                                 {{ \Carbon\Carbon::parse($sc->start_date_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($sc->end_date_time)->format('H:i') }}
                                             </small>
+                                        </x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <small class="text-muted">{{ $sc->code }}</small>
                                         </x-resource.table-cell>
                                         <x-resource.table-cell class="fw-medium">
                                             {{ $sc->service?->customer?->commonData?->first_name ?? 'Cliente N/A' }}

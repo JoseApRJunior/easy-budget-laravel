@@ -280,6 +280,7 @@
                         <x-resource.resource-table>
                             <x-slot:thead>
                                 <x-resource.table-row>
+                                    <x-resource.table-cell header>Código</x-resource.table-cell>
                                     <x-resource.table-cell header>Data</x-resource.table-cell>
                                     <x-resource.table-cell header>Horário</x-resource.table-cell>
                                     <x-resource.table-cell header>Localização</x-resource.table-cell>
@@ -290,6 +291,9 @@
                             <x-slot:tbody>
                                 @foreach ($service->schedules as $schedule)
                                 <x-resource.table-row>
+                                    <x-resource.table-cell>
+                                        <span class="badge bg-light text-dark border">{{ $schedule->code }}</span>
+                                    </x-resource.table-cell>
                                     <x-resource.table-cell class="fw-bold">
                                         {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
                                     </x-resource.table-cell>

@@ -69,9 +69,12 @@
                 icon="list-ul"
                 :total="$schedules instanceof \Illuminate\Pagination\LengthAwarePaginator ? $schedules->total() : $schedules->count()"
                 :actions="[]">
-                <x-resource.resource-table :headers="['Serviço', 'Cliente', 'Início', 'Fim', 'Local', 'Status', 'Ações']">
+                <x-resource.resource-table :headers="['Código', 'Serviço', 'Cliente', 'Início', 'Fim', 'Local', 'Status', 'Ações']">
                     @forelse($schedules as $schedule)
                     <x-resource.table-row>
+                        <x-resource.table-cell>
+                            <span class="badge bg-light text-dark border">{{ $schedule->code }}</span>
+                        </x-resource.table-cell>
                         <x-resource.table-cell>
                             <a href="{{ route('provider.services.show', $schedule->service->code) }}" class="fw-bold text-decoration-none">
                                 {{ $schedule->service->description ?? $schedule->service->code }}
