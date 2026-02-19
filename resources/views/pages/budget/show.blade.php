@@ -5,6 +5,14 @@
 @php
     $isSent = $budget->actionHistory()->whereIn('action', ['sent_and_reserved', 'sent'])->exists();
     $isDraft = $budget->status->value === 'draft';
+
+    // Define se o botão de enviar/reenviar deve aparecer
+    // Apenas Rascunho ou Pendente podem ser enviados/reenviados
+    $canSend = in_array($budget->status, [
+        \App\Enums\BudgetStatus::DRAFT,
+        \App\Enums\BudgetStatus::PENDING
+    ]);
+
     $sendModalTitle = ($isSent && !$isDraft) ? 'Reenviar Orçamento' : 'Enviar Orçamento';
     $sendModalLabel = ($isSent && !$isDraft) ? 'Reenviar' : 'Enviar';
 
@@ -194,12 +202,12 @@
             mobileTitle="Serviços"
             icon="tools"
             :total="$budget->services?->count() ?? 0">
-            <x-slot:actions>
+            <x-slot:headerActions>
                 @if ($budget->canBeEdited())
                 <x-ui.button type="link" :href="route('provider.budgets.services.create', $budget->code)"
                     variant="success" size="sm" icon="plus" label="Novo Serviço" feature="budgets" />
                 @endif
-            </x-slot:actions>
+            </x-slot:headerActions>
 
             @if ($budget->services && $budget->services->count())
             <x-slot:desktop>
@@ -246,29 +254,31 @@
                 @foreach ($budget->services as $service)
                 <x-resource.resource-mobile-item class="service-item">
                     <x-resource.resource-mobile-header
-                        :title="$service->code"
-                        :subtitle="$service->category?->name ?? 'Sem categoria'" />
+                        :subtitle="$service->category?->name ?? 'Sem categoria'">
+                        <a href="{{ route('provider.services.show', $service->code) }}" class="fw-bold text-primary text-decoration-none">
+                            {{ $service->code }}
+                        </a>
+                    </x-resource.resource-mobile-header>
 
                     <x-slot:description>
-                        <p class="text-muted small mb-2 text-truncate-2">{{ $service->description }}</p>
-                        <x-layout.grid-row class="g-2 mb-0">
-                            <x-resource.resource-mobile-field
-                                col="col-5"
-                                label="Total">
-                                <span class="fw-bold text-primary">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
-                            </x-resource.resource-mobile-field>
+                        <p class="text-muted small mb-3 text-truncate-2">{{ $service->description }}</p>
 
-                            <x-resource.resource-mobile-field
-                                col="col-7"
-                                align="end"
-                                label="Status">
-                                <x-ui.status-badge :item="$service" />
-                            </x-resource.resource-mobile-field>
-                        </x-layout.grid-row>
+                        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
+                            <div>
+                                <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Total</small>
+                                <span class="fw-bold text-dark">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
+                            </div>
+                            <div class="text-end flex-grow-1">
+                                <small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Status</small>
+                                <div class="d-inline-block" style="max-width: 100%; overflow-x: auto;">
+                                    <x-ui.status-badge :item="$service" />
+                                </div>
+                            </div>
+                        </div>
                     </x-slot:description>
 
                     <x-slot:actions>
-                        <x-resource.action-buttons
+                            <x-resource.action-buttons
                             :item="$service"
                             resource="services"
                             identifier="code"
@@ -324,12 +334,12 @@
                             </x-resource.table-cell>
                             <x-resource.table-cell class="small text-muted">
                                 @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
-                                <x-ui.badge label="Cliente (Link Público)" variant="info" />
-                                @elseif($history->user)
-                                {{ $history->user->name }}
-                                @else
-                                <span class="text-muted italic">Sistema</span>
-                                @endif
+                                <x-ui.badge label="Cliente (Link Público)" variant="primary" />
+                            @elseif($history->user)
+                                <x-ui.badge :label="$history->user->name" variant="secondary" />
+                            @else
+                                <x-ui.badge label="Sistema" variant="light" />
+                            @endif
                             </x-resource.table-cell>
                         </x-resource.table-row>
                         @endforeach
@@ -359,9 +369,9 @@
                     <x-slot:footer>
                         <x-layout.h-stack justify="end">
                             @if(isset($history->metadata['via']) && $history->metadata['via'] === 'public_share')
-                                <x-ui.badge label="Cliente (Link Público)" variant="info" pill />
+                                <x-ui.badge label="Cliente (Link Público)" variant="primary" pill />
                             @elseif($history->user)
-                                <x-ui.badge :label="$history->user->name" variant="secondary" pill />
+                                <x-ui.badge :label="$history->user->name" variant="secondary" pill class="text-wrap text-end w-100" style="white-space: normal; line-height: 1.2;" />
                             @else
                                 <x-ui.badge label="Sistema" variant="light" pill />
                             @endif
@@ -378,11 +388,21 @@
             <x-ui.back-button index-route="provider.budgets.index" class="w-100 w-md-auto px-md-4" />
 
             <x-ui.button-group gap="2" class="w-100 w-md-auto">
+                @if ($canSend)
                 <x-ui.button type="button"
                     variant="{{ ($isSent && !$isDraft) ? 'outline-info' : 'info' }}"
                     icon="send-fill"
                     :label="$sendModalLabel"
                     data-bs-toggle="modal" data-bs-target="#sendToCustomerModal" feature="budgets" />
+                @endif
+
+                @if ($budget->status->value !== 'cancelled' && $budget->status->value !== 'completed')
+                    <x-ui.button type="button"
+                        variant="danger"
+                        icon="x-circle"
+                        label="Cancelar"
+                        data-bs-toggle="modal" data-bs-target="#cancelBudgetModal" feature="budgets" />
+                @endif
 
                 <x-ui.button type="link" :href="route('provider.budgets.shares.create', ['budget_id' => $budget->id])"
                     variant="outline-secondary" icon="share-fill" label="Links" feature="budgets" />
@@ -424,7 +444,7 @@
                 placeholder="Olá, segue o orçamento solicitado..."
                 oninput="updateCharCount(this, 'charCountText')">
                 <x-slot:helpSlot>
-                    <x-ui.form.char-count id="charCountText" max="255" />
+                    <small id="charCountText" class="text-muted">0 / 255 caracteres</small>
                 </x-slot:helpSlot>
             </x-ui.form.textarea>
 
@@ -445,6 +465,30 @@
         <x-layout.h-stack justify="end" gap="2">
             <x-ui.button type="button" variant="light" label="Cancelar" data-bs-dismiss="modal" />
             <x-ui.button type="submit" form="sendToCustomerForm" variant="primary" icon="send-fill" label="Confirmar e Enviar" feature="budgets" :disabled="!$customerEmail" />
+        </x-layout.h-stack>
+    </x-slot:footer>
+</x-ui.modal>
+
+<x-ui.modal id="cancelBudgetModal" title="Cancelar Orçamento" icon="x-circle" variant="danger">
+    <form id="cancelBudgetForm" action="{{ route('provider.budgets.cancel', $budget->code) }}" method="POST">
+        @csrf
+        @method('PUT')
+        <div class="vstack gap-3">
+            <x-ui.alert type="danger" icon="exclamation-triangle">
+                Tem certeza que deseja cancelar este orçamento? Esta ação pode ser irreversível.
+            </x-ui.alert>
+
+            <div class="mb-3">
+                <label for="cancellation_reason" class="form-label">Motivo do Cancelamento (Obrigatório)</label>
+                <textarea class="form-control" id="cancellation_reason" name="cancellation_reason" rows="3" required placeholder="Informe o motivo..."></textarea>
+            </div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <x-layout.h-stack justify="end" gap="2">
+            <x-ui.button type="button" variant="light" label="Voltar" data-bs-dismiss="modal" />
+            <x-ui.button type="submit" form="cancelBudgetForm" variant="danger" icon="x-circle" label="Confirmar" />
         </x-layout.h-stack>
     </x-slot:footer>
 </x-ui.modal>

@@ -469,7 +469,7 @@
                         @if ($statusValue === 'completed' || $statusValue === 'partial')
                             <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
                                 variant="success" icon="receipt" label="Criar Fatura" feature="invoices" />
-                        @elseif (!in_array($statusValue, ['cancelled', 'not_performed', 'expired', 'draft']))
+                        @elseif (in_array($statusValue, ['in_progress', 'on_hold']))
                             @if($service->serviceItems && $service->serviceItems->count() > 0)
                                 <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
                                     variant="warning" icon="receipt" label="Criar Fatura Parcial" feature="invoices" />
@@ -551,7 +551,7 @@
                 <input type="hidden" name="service_type" value="{{ $service->category?->name ?? 'Serviço' }}">
 
                 <x-layout.grid-row g="3">
-                    <x-layout.grid-col size="col-md-5">
+                    <x-layout.grid-col size="col-md-4">
                         <x-ui.form.input
                             type="date"
                             name="service_date"
@@ -560,7 +560,7 @@
                             :value="$service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('Y-m-d') : date('Y-m-d')" />
                     </x-layout.grid-col>
 
-                    <x-layout.grid-col size="col-md-3">
+                    <x-layout.grid-col size="col-md-4">
                         <x-ui.form.input
                             type="time"
                             name="service_time"
