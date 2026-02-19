@@ -10,15 +10,7 @@
             'Serviços' => route('provider.services.dashboard'),
             $service->code => '#'
         ]">
-        <p class="text-muted mb-0">Visualize todas as informações do serviço {{ $service->code }}</p>
-        <x-slot:actions>
-            <x-layout.h-stack gap="2">
-                <x-ui.button type="link" :href="route('provider.services.edit', $service->code)"
-                    variant="light" size="sm" icon="pencil" label="Editar" feature="services" />
-                <x-ui.button type="link" :href="route('provider.services.print', ['service' => $service->code, 'pdf' => true])"
-                    variant="light" size="sm" icon="printer" label="Imprimir" target="_blank" feature="services" />
-            </x-layout.h-stack>
-        </x-slot:actions>
+        <p class="text-muted mb-0">Visualize todas as informações do serviço</p>
     </x-layout.page-header>
 
     {{-- Alerta de Faturas Existentes --}}
@@ -161,16 +153,20 @@
                 </x-layout.grid-col>
 
                 <x-layout.grid-col size="col-md-4">
-                    <div class="p-3 rounded-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <x-ui.box background="#f8fafc" border="border border-light-subtle">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small fw-medium">Subtotal:</span>
+                            <span class="text-dark fw-semibold small">R$ {{ \App\Helpers\CurrencyHelper::format($service->total + $service->discount) }}</span>
+                        </div>
                         <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted small fw-medium">Desconto:</span>
                             <span class="text-danger fw-semibold small">- R$ {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</span>
                         </div>
-                        <div class="d-flex justify-content-between pt-2 border-top" style="border-color: #e2e8f0 !important;">
+                        <div class="d-flex justify-content-between pt-2 border-top border-light-subtle">
                             <span class="fw-bold text-dark">Total Final:</span>
                             <span class="fw-bold text-success fs-5">R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</span>
                         </div>
-                    </div>
+                    </x-ui.box>
                 </x-layout.grid-col>
             </x-resource.resource-header-section>
 
@@ -179,9 +175,9 @@
                 <x-resource.resource-header-divider />
                 <x-resource.resource-header-section title="Descrição do Serviço" icon="text-paragraph">
                     <x-layout.grid-col size="col-12">
-                        <div class="p-3 rounded-3 bg-light border border-light-subtle">
+                        <x-ui.box>
                             <p class="mb-0 text-dark small" style="white-space: pre-wrap;">{{ $service->description }}</p>
-                        </div>
+                        </x-ui.box>
                     </x-layout.grid-col>
                 </x-resource.resource-header-section>
             @endif
@@ -262,12 +258,12 @@
                         </x-resource.resource-mobile-item>
                         @endforeach
 
-                        <div class="bg-light p-3 rounded-3 mt-3 border border-light-subtle">
+                        <x-ui.box class="mt-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold text-muted small">TOTAL DOS ITENS</span>
                                 <span class="h5 mb-0 text-success fw-bold">{{ \App\Helpers\CurrencyHelper::format($service->serviceItems->sum('total')) }}</span>
                             </div>
-                        </div>
+                        </x-ui.box>
                     </x-slot:mobile>
                 </x-resource.resource-list-card>
                 @endif
@@ -473,14 +469,12 @@
                         @if ($statusValue === 'completed' || $statusValue === 'partial')
                             <x-ui.button type="link" href="{{ route('provider.invoices.create.from-service', $service->code) }}"
                                 variant="success" icon="receipt" label="Criar Fatura" feature="invoices" />
-                        @elseif (!in_array($statusValue, ['cancelled', 'not_performed', 'expired', 'draft']))
+                        @elseif (in_array($statusValue, ['in_progress', 'on_hold']))
                             @if($service->serviceItems && $service->serviceItems->count() > 0)
                                 <x-ui.button type="link" href="{{ route('provider.invoices.create.partial-from-service', $service->code) }}"
                                     variant="warning" icon="receipt" label="Criar Fatura Parcial" feature="invoices" />
                             @endif
                         @endif
-
-                        <x-ui.button type="button" variant="secondary" onclick="window.print()" icon="printer" label="Imprimir" feature="services" />
                     </x-resource.quick-actions>
                 </x-layout.v-stack>
             </x-layout.grid-col>
@@ -508,6 +502,12 @@
                     icon="trash-fill"
                     label="Excluir"
                     feature="services" />
+
+                <x-ui.button type="link" :href="route('provider.services.print', ['service' => $service->code])"
+                    target="_blank"
+                    variant="outline-secondary"
+                    icon="printer"
+                    label="Imprimir" feature="services" />
             </x-ui.button-group>
         </x-layout.actions-bar>
 
@@ -551,7 +551,7 @@
                 <input type="hidden" name="service_type" value="{{ $service->category?->name ?? 'Serviço' }}">
 
                 <x-layout.grid-row g="3">
-                    <x-layout.grid-col size="col-md-5">
+                    <x-layout.grid-col size="col-md-4">
                         <x-ui.form.input
                             type="date"
                             name="service_date"
@@ -560,7 +560,7 @@
                             :value="$service->due_date ? \Carbon\Carbon::parse($service->due_date)->format('Y-m-d') : date('Y-m-d')" />
                     </x-layout.grid-col>
 
-                    <x-layout.grid-col size="col-md-3">
+                    <x-layout.grid-col size="col-md-4">
                         <x-ui.form.input
                             type="time"
                             name="service_time"
@@ -675,7 +675,7 @@
                 </div>
             </x-ui.alert>
 
-            <x-ui.card class="bg-light border-0 shadow-none mb-4">
+            <x-ui.card class="border-0 shadow-none mb-4" style="background-color: var(--border-color);">
                 <x-layout.v-stack gap="3">
                     <x-resource.resource-mobile-field
                         label="Data Proposta"

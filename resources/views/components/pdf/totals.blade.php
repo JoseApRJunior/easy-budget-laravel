@@ -18,7 +18,7 @@
                 <div style="font-size: 9px; color: {{ $pdfColors['text'] }}; text-transform: uppercase; margin-bottom: 2px;">{{ $discountLabel }}</div>
                 <div style="font-weight: bold; color: {{ $pdfColors['text'] }}; font-size: 11px;">- R$ {{ \App\Helpers\CurrencyHelper::format($discount) }}</div>
             </td>
-            <td style="width: 33.33%; padding: 8px 15px; text-align: right; vertical-align: middle;">
+            <td style="width: 33.33%; padding: 8px 15px; text-align: right; vertical-align: middle; background-color: #cfe2ff;">
                 <div style="font-size: 9px; font-weight: bold; color: {{ $pdfColors['text'] }}; text-transform: uppercase; margin-bottom: 2px;">{{ $totalLabel }}</div>
                 <div style="font-weight: bold; color: {{ $pdfColors['primary'] }}; font-size: 16px;">R$ {{ \App\Helpers\CurrencyHelper::format($total) }}</div>
             </td>

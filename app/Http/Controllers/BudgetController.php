@@ -246,6 +246,38 @@ class BudgetController extends Controller
     }
 
     /**
+     * Cancela o orçamento.
+     */
+    public function cancel(string $code, Request $request): RedirectResponse
+    {
+        $result = $this->budgetService->findByCode($code);
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        $budget = $result->getData();
+        // Usa a policy de update como base, mas idealmente teria uma policy específica 'cancel'
+        $this->authorize('update', $budget);
+
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:255',
+        ]);
+
+        $cancelResult = $this->budgetService->changeStatus(
+            $budget, 
+            \App\Enums\BudgetStatus::CANCELLED->value,
+            $request->input('cancellation_reason')
+        );
+
+        if ($cancelResult->isError()) {
+            return redirect()->back()->with('error', $cancelResult->getMessage());
+        }
+
+        return redirect()->route('provider.budgets.show', $code)
+            ->with('success', 'Orçamento cancelado com sucesso!');
+    }
+
+    /**
      * Imprimir ou gerar PDF do orçamento.
      */
     public function print(Request $request, string $code, ?string $token = null)
@@ -308,7 +340,8 @@ class BudgetController extends Controller
             ]);
         }
 
-        return view('pages.budget.pdf_budget', compact('budget', 'provider'));
+        // Se não for PDF, retorna a view de impressão HTML otimizada
+        return view('pages.budget.print', compact('budget', 'provider'));
     }
 
     /**

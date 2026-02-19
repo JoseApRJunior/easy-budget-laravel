@@ -317,6 +317,7 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/{code}', [BudgetController::class, 'show'])->name('show');
         Route::get('/{code}/edit', [BudgetController::class, 'edit'])->name('edit');
         Route::put('/{code}', [BudgetController::class, 'update'])->name('update');
+        Route::put('/{code}/cancel', [BudgetController::class, 'cancel'])->name('cancel');
         Route::post('/{code}/change-status', [BudgetController::class, 'changeStatus'])->name('change-status');
         Route::delete('/{code}', [BudgetController::class, 'destroy'])->name('destroy');
         Route::get('/{code}/print', [BudgetController::class, 'print'])->name('print');

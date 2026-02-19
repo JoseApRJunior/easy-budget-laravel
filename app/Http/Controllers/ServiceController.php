@@ -390,7 +390,7 @@ class ServiceController extends Controller
     /**
      * Versão para impressão do status do serviço.
      */
-    public function print(string $code, string $token): View
+    public function print(string $code, ?string $token = null): View
     {
         $result = $this->serviceService->findByCode($code, [
             'budget.customer',
@@ -404,15 +404,20 @@ class ServiceController extends Controller
 
         $service = $result->getData();
 
-        // Validar o token via BudgetShare
-        $budget = $service->budget;
-        $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
-            ->where('share_token', $token)
-            ->where('is_active', true)
-            ->first();
+        if ($token) {
+            // Validar o token via BudgetShare
+            $budget = $service->budget;
+            $share = \App\Models\BudgetShare::where('budget_id', $budget->id)
+                ->where('share_token', $token)
+                ->where('is_active', true)
+                ->first();
 
-        if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
-            abort(403, 'Acesso negado.');
+            if (! $share || ($share->expires_at && now()->gt($share->expires_at))) {
+                abort(403, 'Acesso negado.');
+            }
+        } else {
+            // Acesso via área do provider (autenticado)
+            $this->authorize('view', $service);
         }
 
         return view('pages.service.public.print', [

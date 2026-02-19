@@ -66,9 +66,9 @@
         <form action="{{ route('services.public.schedules.confirm.action', $token) }}" method="POST">
             @csrf
             <div class="d-grid gap-3">
-                <x-ui.button type="submit" variant="primary" size="lg" icon="check-lg" label="Confirmar Agendamento" class="rounded-pill py-3" feature="schedules" />
+                <x-ui.button type="submit" variant="primary" size="lg" icon="check-lg" label="Confirmar Agendamento" class="rounded-pill py-3" />
 
-                <x-ui.button type="link" href="{{ url('/') }}" variant="link" label="Não, cancelar e voltar" class="text-decoration-none text-muted" feature="schedules" />
+                <x-ui.button type="link" href="{{ url('/') }}" variant="link" label="Não, cancelar e voltar" class="text-decoration-none text-muted" />
             </div>
         </form>
 

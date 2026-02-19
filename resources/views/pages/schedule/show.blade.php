@@ -110,7 +110,7 @@
                                     <th class="text-muted small text-uppercase">Link Público</th>
                                     <td>
                                         <x-ui.button
-                                            href="{{ route('services.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}"
+                                            href="{{ route('services.public.view-status', ['code' => $schedule->service->code, 'token' => $schedule->userConfirmationToken->token]) }}"
                                             target="_blank"
                                             variant="outline-info"
                                             size="sm"
