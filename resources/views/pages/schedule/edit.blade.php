@@ -5,7 +5,7 @@
 @section('content')
     <x-layout.page-container>
         <x-layout.page-header
-            title="Editar Agendamento #{{ $schedule->id }}"
+            title="Editar Agendamento #{{ $schedule->code }}"
             icon="pencil"
             :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
@@ -26,7 +26,7 @@
                         </h5>
                     </x-slot:header>
 
-                    <form method="POST" action="{{ route('provider.schedules.update', $schedule) }}" id="scheduleForm">
+                    <form method="POST" action="{{ route('provider.schedules.update', $schedule->code) }}" id="scheduleForm">
                         @csrf
                         @method('PUT')
 
@@ -105,7 +105,7 @@
                         <!-- Footer -->
                         <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
                             <div class="d-flex align-items-center">
-                                <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="outline-secondary" icon="arrow-left" label="Voltar" class="me-2" feature="schedules" />
+                                <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->code)" variant="outline-secondary" icon="arrow-left" label="Voltar" class="me-2" feature="schedules" />
                                 <small class="text-muted d-none d-md-block">
                                     Serviço: <strong>{{ $schedule->service->code }}</strong>
                                 </small>

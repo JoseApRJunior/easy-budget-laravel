@@ -89,8 +89,8 @@ class QuickUpdateStatus extends Command
                                 $service->update(['status' => $serviceStatus]);
                                 $this->info("Serviço {$service->code} atualizado para: {$status}");
 
-                                // Se o status for 'draft', removemos os agendamentos e faturas vinculados
-                                if ($status === 'draft') {
+                                // Se o status for 'draft' ou 'scheduling', removemos os agendamentos e faturas vinculados
+                                if (in_array($status, ['draft', 'scheduling'])) {
                                     // Remover Agendamentos
                                     $deletedSchedules = \App\Models\Schedule::where('service_id', $service->id)->delete();
                                     if ($deletedSchedules > 0) {
@@ -109,7 +109,7 @@ class QuickUpdateStatus extends Command
 
                                         $invoiceCode = $invoice->code;
                                         // Forçar exclusão física (ignora SoftDeletes)
-                                        $invoice->forceDelete(); 
+                                        $invoice->forceDelete();
                                         $this->info("Fatura {$invoiceCode} do serviço {$service->code} removida fisicamente.");
                                     }
 
@@ -126,7 +126,7 @@ class QuickUpdateStatus extends Command
                                 }
                             }
                         } catch (\Exception $e) {
-                            $this->warn("Não foi possível atualizar status do serviço {$service->code}: " . $e->getMessage());
+                            $this->warn("Não foi possível atualizar status do serviço {$service->code}: ".$e->getMessage());
                         }
                     }
                 }
@@ -134,7 +134,7 @@ class QuickUpdateStatus extends Command
             case 'service':
                 $model = Service::where('id', $identifier)->orWhere('code', $identifier)->first();
 
-                if ($model && $status === 'draft') {
+                if ($model && in_array($status, ['draft', 'scheduling'])) {
                     $deletedCount = Schedule::where('service_id', $model->id)->delete();
                     if ($deletedCount > 0) {
                         $this->info("Agendamentos ({$deletedCount}) do serviço {$model->code} removidos.");
@@ -216,11 +216,11 @@ class QuickUpdateStatus extends Command
                     ->update([
                         'is_active' => false,
                         'status' => 'expired',
-                        'expires_at' => now()
+                        'expires_at' => now(),
                     ]);
                 $this->info('Tokens de compartilhamento (budget_shares) invalidados.');
             } catch (\Exception $e) {
-                $this->warn('Não foi possível invalidar budget_shares: ' . $e->getMessage());
+                $this->warn('Não foi possível invalidar budget_shares: '.$e->getMessage());
             }
 
             $this->info('Compartilhamentos (budget_shares) invalidados com sucesso.');
@@ -243,13 +243,17 @@ class QuickUpdateStatus extends Command
         $currentStatusValue = $currentStatus instanceof \UnitEnum ? $currentStatus->value : (string) $currentStatus;
 
         foreach ($service->serviceItems as $item) {
-            if (!$item->product_id) continue;
+            if (! $item->product_id) {
+                continue;
+            }
 
             $inventory = \App\Models\ProductInventory::where('product_id', $item->product_id)
                 ->where('tenant_id', $service->tenant_id)
                 ->first();
 
-            if (!$inventory) continue;
+            if (! $inventory) {
+                continue;
+            }
 
             // 1. Restaurar estoque físico se houve consumo (status era IN_PROGRESS ou posterior)
             $movements = \App\Models\InventoryMovement::where('reference_type', \App\Models\ServiceItem::class)

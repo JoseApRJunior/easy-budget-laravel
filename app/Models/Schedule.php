@@ -23,6 +23,33 @@ class Schedule extends Model
     {
         parent::boot();
         static::bootTenantScoped();
+
+        static::creating(function ($schedule) {
+            if (empty($schedule->code)) {
+                $year = date('Y');
+                $month = date('m');
+
+                // Busca o último agendamento deste mês para gerar sequencial
+                $lastSchedule = static::whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->where('code', 'LIKE', "AGD-{$year}-{$month}-%")
+                    ->latest('id')
+                    ->first();
+
+                $sequence = 1;
+                if ($lastSchedule && preg_match('/AGD-\d{4}-\d{2}-(\d+)/', $lastSchedule->code, $matches)) {
+                    $sequence = (int) $matches[1] + 1;
+                }
+
+                $schedule->code = sprintf('AGD-%s-%s-%06d', $year, $month, $sequence);
+
+                // Garante unicidade em caso de concorrência
+                while (static::where('code', $schedule->code)->exists()) {
+                    $sequence++;
+                    $schedule->code = sprintf('AGD-%s-%s-%06d', $year, $month, $sequence);
+                }
+            }
+        });
     }
 
     /**
@@ -39,6 +66,7 @@ class Schedule extends Model
      */
     protected $fillable = [
         'tenant_id',
+        'code',
         'service_id',
         'user_confirmation_token_id',
         'start_date_time',
@@ -83,6 +111,7 @@ class Schedule extends Model
     {
         return [
             'tenant_id' => 'required|integer|exists:tenants,id',
+            'code' => 'required|string|max:20|unique:schedules,code',
             'service_id' => 'required|integer|exists:services,id',
             'user_confirmation_token_id' => 'nullable|integer|exists:user_confirmation_tokens,id',
             'start_date_time' => 'required|date|after:now|date_format:Y-m-d H:i:s',
@@ -136,7 +165,7 @@ class Schedule extends Model
      */
     public function getUrl(): string
     {
-        return route('provider.schedules.show', $this->id, true);
+        return route('provider.schedules.show', $this->code, true);
     }
 
     /**

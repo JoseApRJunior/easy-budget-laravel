@@ -68,7 +68,7 @@ class ScheduleService extends AbstractBaseService
 
             // Prepara os dados para criação
             $data = $dto->toArrayWithoutNulls();
-            
+
             // Força o status inicial como PENDING para evitar aprovação automática acidental
             $data['status'] = ScheduleStatus::PENDING->value;
 
@@ -141,11 +141,15 @@ class ScheduleService extends AbstractBaseService
     /**
      * Atualiza agendamento com validações
      */
-    public function updateSchedule(int $scheduleId, ScheduleUpdateDTO $dto): ServiceResult
+    public function updateSchedule(int|string $scheduleId, ScheduleUpdateDTO $dto): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId, $dto) {
             // Verifica se o agendamento existe
-            $schedule = $this->scheduleRepository->find($scheduleId);
+            if (is_numeric($scheduleId)) {
+                $schedule = $this->scheduleRepository->find((int) $scheduleId);
+            } else {
+                $schedule = $this->scheduleRepository->findOneBy(['code' => $scheduleId]);
+            }
 
             if (! $schedule) {
                 return $this->error('Agendamento não encontrado.');
@@ -156,12 +160,13 @@ class ScheduleService extends AbstractBaseService
                 $startTime = $dto->start_date_time ?? $schedule->start_date_time->format('Y-m-d H:i:s');
                 $endTime = $dto->end_date_time ?? $schedule->end_date_time->format('Y-m-d H:i:s');
 
-                if ($this->scheduleRepository->hasConflict($startTime, $endTime, $scheduleId)) {
+                // Passa o ID para ignorar conflito com o próprio agendamento
+                if ($this->scheduleRepository->hasConflict($startTime, $endTime, $schedule->id)) {
                     return $this->error('Conflito de horário detectado.');
                 }
             }
 
-            $updated = $this->scheduleRepository->updateFromDTO($scheduleId, $dto);
+            $updated = $this->scheduleRepository->updateFromDTO($schedule->id, $dto);
 
             return $this->success($updated, 'Agendamento atualizado com sucesso.');
         }, 'Erro ao atualizar agendamento.');
@@ -170,22 +175,26 @@ class ScheduleService extends AbstractBaseService
     /**
      * Cancela agendamento
      */
-    public function cancelSchedule(int $scheduleId, ?string $reason = null): ServiceResult
+    public function cancelSchedule(int|string $scheduleId, ?string $reason = null): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId, $reason) {
-            $schedule = $this->scheduleRepository->find($scheduleId);
+            if (is_numeric($scheduleId)) {
+                $schedule = $this->scheduleRepository->find((int) $scheduleId);
+            } else {
+                $schedule = $this->scheduleRepository->findOneBy(['code' => $scheduleId]);
+            }
 
             if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
             }
 
             // Verifica se já está cancelado
-            if ($schedule->status === 'cancelled') {
+            if ($schedule->status === ScheduleStatus::CANCELLED) {
                 return $this->error(OperationStatus::CONFLICT, 'Agendamento já está cancelado.');
             }
 
-            $success = $this->scheduleRepository->update($scheduleId, [
-                'status' => 'cancelled',
+            $success = $this->scheduleRepository->update($schedule->id, [
+                'status' => ScheduleStatus::CANCELLED->value,
                 'cancellation_reason' => $reason,
                 'cancelled_at' => now(),
             ]);
@@ -201,10 +210,14 @@ class ScheduleService extends AbstractBaseService
     /**
      * Atualiza o status de um agendamento
      */
-    public function updateScheduleStatus(int $id, string $status, ?int $userId = null): ServiceResult
+    public function updateScheduleStatus(int|string $id, string $status, ?int $userId = null): ServiceResult
     {
         return $this->safeExecute(function () use ($id, $status) {
-            $schedule = $this->scheduleRepository->find($id);
+            if (is_numeric($id)) {
+                $schedule = $this->scheduleRepository->find((int) $id);
+            } else {
+                $schedule = $this->scheduleRepository->findOneBy(['code' => $id]);
+            }
 
             if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
@@ -212,20 +225,20 @@ class ScheduleService extends AbstractBaseService
 
             $data = ['status' => $status];
 
-            if ($status === 'confirmed') {
+            if ($status === ScheduleStatus::CONFIRMED->value) {
                 $data['confirmed_at'] = now();
             }
-            if ($status === 'completed') {
+            if ($status === ScheduleStatus::COMPLETED->value) {
                 $data['completed_at'] = now();
             }
-            if ($status === 'no_show') {
+            if ($status === ScheduleStatus::NO_SHOW->value) {
                 $data['no_show_at'] = now();
             }
-            if ($status === 'cancelled') {
+            if ($status === ScheduleStatus::CANCELLED->value) {
                 $data['cancelled_at'] = now();
             }
 
-            $success = $this->scheduleRepository->update($id, $data);
+            $success = $this->scheduleRepository->update($schedule->id, $data);
 
             if (! $success) {
                 return $this->error('Falha ao atualizar status do agendamento.');
@@ -287,10 +300,14 @@ class ScheduleService extends AbstractBaseService
     /**
      * Confirma agendamento
      */
-    public function confirmSchedule(int $scheduleId): ServiceResult
+    public function confirmSchedule(int|string $scheduleId): ServiceResult
     {
         return $this->safeExecute(function () use ($scheduleId) {
-            $schedule = $this->scheduleRepository->find($scheduleId);
+            if (is_numeric($scheduleId)) {
+                $schedule = $this->scheduleRepository->find((int) $scheduleId);
+            } else {
+                $schedule = $this->scheduleRepository->findOneBy(['code' => $scheduleId]);
+            }
 
             if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
@@ -300,7 +317,7 @@ class ScheduleService extends AbstractBaseService
                 return $this->success($schedule, 'Agendamento já estava confirmado.');
             }
 
-            $success = $this->scheduleRepository->update($scheduleId, [
+            $success = $this->scheduleRepository->update($schedule->id, [
                 'status' => ScheduleStatus::CONFIRMED->value,
                 'confirmed_at' => now(),
             ]);
@@ -361,12 +378,38 @@ class ScheduleService extends AbstractBaseService
     }
 
     /**
-     * Busca um agendamento específico.
+     * Exclui um agendamento
      */
-    public function getSchedule(int $id): ServiceResult
+    public function deleteSchedule(int|string $scheduleId): ServiceResult
+    {
+        return $this->safeExecute(function () use ($scheduleId) {
+            if (is_numeric($scheduleId)) {
+                $schedule = $this->scheduleRepository->find((int) $scheduleId);
+            } else {
+                $schedule = $this->scheduleRepository->findOneBy(['code' => $scheduleId]);
+            }
+
+            if (! $schedule) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');
+            }
+
+            $this->scheduleRepository->delete($schedule->id);
+
+            return $this->success(null, 'Agendamento excluído com sucesso.');
+        }, 'Erro ao excluir agendamento.');
+    }
+
+    /**
+     * Busca um agendamento específico por ID ou Código.
+     */
+    public function getSchedule(int|string $id): ServiceResult
     {
         return $this->safeExecute(function () use ($id) {
-            $schedule = $this->scheduleRepository->find($id);
+            if (is_numeric($id)) {
+                $schedule = $this->scheduleRepository->find((int) $id);
+            } else {
+                $schedule = $this->scheduleRepository->findOneBy(['code' => $id]);
+            }
 
             if (! $schedule) {
                 return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado.');

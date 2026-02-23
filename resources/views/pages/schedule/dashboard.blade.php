@@ -135,6 +135,7 @@
                                 <x-slot:thead>
                                     <x-resource.table-row>
                                         <x-resource.table-cell header>Data/Hora</x-resource.table-cell>
+                                        <x-resource.table-cell header>Cód.</x-resource.table-cell>
                                         <x-resource.table-cell header>Cliente</x-resource.table-cell>
                                         <x-resource.table-cell header>Serviço</x-resource.table-cell>
                                         <x-resource.table-cell header>Status</x-resource.table-cell>
@@ -150,6 +151,9 @@
                                                 {{ \Carbon\Carbon::parse($sc->start_date_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($sc->end_date_time)->format('H:i') }}
                                             </small>
                                         </x-resource.table-cell>
+                                        <x-resource.table-cell>
+                                            <small class="text-muted">{{ $sc->code }}</small>
+                                        </x-resource.table-cell>
                                         <x-resource.table-cell class="fw-medium">
                                             {{ $sc->service?->customer?->commonData?->first_name ?? 'Cliente N/A' }}
                                         </x-resource.table-cell>
@@ -160,7 +164,7 @@
                                             <x-ui.status-badge :item="$sc" />
                                         </x-resource.table-cell>
                                         <x-resource.table-cell align="center">
-                                            <x-ui.button type="link" :href="route('provider.schedules.show', $sc->id)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" feature="schedules" />
+                                            <x-ui.button type="link" :href="route('provider.schedules.show', $sc->code)" variant="outline-primary" size="sm" icon="eye" title="Visualizar" feature="schedules" />
                                         </x-resource.table-cell>
                                     </x-resource.table-row>
                                 @endforeach
@@ -170,7 +174,7 @@
                         <x-slot:mobile>
                             @foreach ($recent as $sc)
                                 <x-resource.resource-mobile-item
-                                    :href="route('provider.schedules.show', $sc->id)"
+                                    :href="route('provider.schedules.show', $sc->code)"
                                 >
                                     <x-resource.resource-mobile-header
                                         :title="$sc->service?->customer?->commonData?->first_name ?? 'Cliente N/A'"

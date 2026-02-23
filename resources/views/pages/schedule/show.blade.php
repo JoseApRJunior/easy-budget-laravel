@@ -5,7 +5,7 @@
 @section('content')
 <x-layout.page-container>
     <x-layout.page-header
-        title="Detalhes do Agendamento #{{ $schedule->id }}"
+        title="Detalhes do Agendamento {{ $schedule->code }}"
         icon="calendar-check"
         :breadcrumb-items="[
                 'Dashboard' => route('provider.dashboard'),
@@ -23,8 +23,8 @@
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <tr>
-                                    <th class="w-50 text-muted small text-uppercase">ID</th>
-                                    <td class="fw-bold">{{ $schedule->id }}</td>
+                                    <th class="w-50 text-muted small text-uppercase">Código</th>
+                                    <td class="fw-bold">{{ $schedule->code }}</td>
                                 </tr>
                                 <tr>
                                     <th class="text-muted small text-uppercase">Data/Hora Início</th>
@@ -139,7 +139,7 @@
                     <div class="d-flex gap-2">
                         @can('update', $schedule)
                         <x-ui.button
-                            href="{{ route('provider.schedules.edit', $schedule) }}"
+                            href="{{ route('provider.schedules.edit', $schedule->code) }}"
                             variant="warning"
                             icon="pencil"
                             label="Editar"
@@ -153,8 +153,8 @@
                             label="Excluir"
                             data-bs-toggle="modal"
                             data-bs-target="#deleteModal"
-                            data-delete-url="{{ route('provider.schedules.destroy', $schedule) }}"
-                            data-item-name="o agendamento #{{ $schedule->id }}"
+                            data-delete-url="{{ route('provider.schedules.destroy', $schedule->code) }}"
+                            data-item-name="o agendamento {{ $schedule->code }}"
                             feature="schedules" />
                         @endcan
                     </div>

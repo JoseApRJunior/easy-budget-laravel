@@ -280,6 +280,7 @@
                         <x-resource.resource-table>
                             <x-slot:thead>
                                 <x-resource.table-row>
+                                    <x-resource.table-cell header>Código</x-resource.table-cell>
                                     <x-resource.table-cell header>Data</x-resource.table-cell>
                                     <x-resource.table-cell header>Horário</x-resource.table-cell>
                                     <x-resource.table-cell header>Localização</x-resource.table-cell>
@@ -290,6 +291,9 @@
                             <x-slot:tbody>
                                 @foreach ($service->schedules as $schedule)
                                 <x-resource.table-row>
+                                    <x-resource.table-cell>
+                                        <span class="badge bg-light text-dark border">{{ $schedule->code }}</span>
+                                    </x-resource.table-cell>
                                     <x-resource.table-cell class="fw-bold">
                                         {{ \Carbon\Carbon::parse($schedule->start_date_time)->format('d/m/Y') }}
                                     </x-resource.table-cell>
@@ -310,7 +314,7 @@
                                         <x-ui.status-badge :item="$schedule" statusField="status" />
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="end">
-                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" feature="schedules" />
+                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->code)" variant="info" size="sm" icon="eye" title="Visualizar" feature="schedules" />
                                     </x-resource.table-cell>
                                 </x-resource.table-row>
                                 @endforeach
@@ -337,7 +341,7 @@
                             <x-slot:footer>
                                 <div class="d-flex justify-content-between align-items-center w-100">
                                     <x-ui.status-badge :item="$schedule" statusField="status" />
-                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" feature="schedules" />
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->code)" variant="light" size="sm" icon="eye" label="Ver Detalhes" feature="schedules" />
                                 </div>
                             </x-slot:footer>
                         </x-resource.resource-mobile-item>

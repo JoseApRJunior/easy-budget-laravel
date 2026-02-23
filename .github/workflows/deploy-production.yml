@@ -16,7 +16,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.PROD_SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           port: 22
           script: |
             # Pasta fornecida para produção
