@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Abstracts\Controller;
 use App\Http\Requests\ScheduleRequest;
+use App\Http\Requests\ScheduleUpdateRequest;
 use App\Models\User;
 use App\Repositories\ServiceRepository;
 use App\Services\Domain\ScheduleService;
@@ -207,7 +208,7 @@ class ScheduleController extends Controller
      */
     public function show(string $id): View
     {
-        $result = $this->scheduleService->getSchedule((int) $id);
+        $result = $this->scheduleService->getSchedule($id);
 
         if (! $result->isSuccess()) {
             abort(404, 'Agendamento não encontrado');
@@ -233,7 +234,7 @@ class ScheduleController extends Controller
         ]);
 
         $result = $this->scheduleService->updateScheduleStatus(
-            (int) $id,
+            $id,
             $request->input('status'),
             (int) Auth::id()
         );
@@ -257,7 +258,7 @@ class ScheduleController extends Controller
      */
     public function cancel(string $id): RedirectResponse
     {
-        $result = $this->scheduleService->cancelSchedule((int) $id);
+        $result = $this->scheduleService->cancelSchedule($id);
 
         if ($result->isError()) {
             return redirect()->back()->with('error', $result->getMessage());
@@ -322,5 +323,97 @@ class ScheduleController extends Controller
             'success' => true,
             'data' => $result->getData(),
         ]);
+    }
+
+    /**
+     * Exibe o formulário de edição de agendamento
+     */
+    public function edit(string $id): View
+    {
+        $result = $this->scheduleService->getSchedule($id);
+
+        if (! $result->isSuccess()) {
+            abort(404, 'Agendamento não encontrado');
+        }
+
+        $schedule = $result->getData();
+        $this->authorize('update', $schedule);
+
+        return view('pages.schedule.edit', [
+            'schedule' => $schedule,
+        ]);
+    }
+
+    /**
+     * Atualiza um agendamento
+     */
+    public function update(ScheduleUpdateRequest $request, string $id): RedirectResponse
+    {
+        $dto = \App\DTOs\Schedule\ScheduleUpdateDTO::fromRequest($request->validated());
+
+        $result = $this->scheduleService->updateSchedule($id, $dto);
+
+        if ($result->isError()) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $result->getMessage());
+        }
+
+        return redirect()->route('provider.schedules.index')
+            ->with('success', 'Agendamento atualizado com sucesso!');
+    }
+
+    /**
+     * Remove um agendamento
+     */
+    public function destroy(string $id): RedirectResponse
+    {
+        $result = $this->scheduleService->deleteSchedule($id);
+
+        if ($result->isError()) {
+            return redirect()->back()->with('error', $result->getMessage());
+        }
+
+        return redirect()->route('provider.schedules.index')
+            ->with('success', 'Agendamento excluído com sucesso!');
+    }
+
+    /**
+     * Retorna dados para o calendário (JSON)
+     */
+    public function getCalendarData(Request $request): JsonResponse
+    {
+        $start = DateHelper::toCarbon($request->input('start'));
+        $end = DateHelper::toCarbon($request->input('end'));
+
+        if (! $start || ! $end) {
+            return response()->json([]);
+        }
+
+        $result = $this->scheduleService->getSchedulesByPeriod($start, $end);
+
+        if ($result->isError()) {
+            return response()->json(['error' => $result->getMessage()], 400);
+        }
+
+        $schedules = $result->getData();
+
+        $events = $schedules->map(function ($schedule) {
+            return [
+                'id' => $schedule->code,
+                'title' => ($schedule->customer?->name ?? 'Cliente') . ' - ' . $schedule->service->name,
+                'start' => $schedule->start_date_time->toIso8601String(),
+                'end' => $schedule->end_date_time->toIso8601String(),
+                'url' => route('provider.schedules.show', $schedule->code),
+                'backgroundColor' => $schedule->status->getColor(),
+                'borderColor' => $schedule->status->getColor(),
+                'extendedProps' => [
+                    'location' => $schedule->location,
+                    'status' => $schedule->status->label(),
+                ]
+            ];
+        });
+
+        return response()->json($events);
     }
 }

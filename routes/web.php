@@ -279,6 +279,8 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::get('/dashboard', [ScheduleController::class, 'dashboard'])->name('dashboard');
         Route::get('/', [ScheduleController::class, 'index'])->name('index');
         Route::get('/calendar', [ScheduleController::class, 'calendar'])->name('calendar');
+        Route::get('/calendar/data', [ScheduleController::class, 'getCalendarData'])->name('calendar.data');
+        Route::get('/check-conflicts', [ScheduleController::class, 'checkConflicts'])->name('check-conflicts');
         Route::get('/create/{service}', [ScheduleController::class, 'create'])->name('create');
         Route::post('/{service}', [ScheduleController::class, 'store'])->name('store');
         Route::get('/{schedule}', [ScheduleController::class, 'show'])->name('show');
@@ -286,8 +288,6 @@ Route::prefix('p')->name('provider.')->middleware(['auth', 'verified', 'provider
         Route::put('/{schedule}', [ScheduleController::class, 'update'])->name('update');
         Route::post('/{schedule}/cancel', [ScheduleController::class, 'cancel'])->name('cancel');
         Route::delete('/{schedule}', [ScheduleController::class, 'destroy'])->name('destroy');
-        Route::get('/calendar/data', [ScheduleController::class, 'getCalendarData'])->name('calendar.data');
-        Route::get('/check-conflicts', [ScheduleController::class, 'checkConflicts'])->name('check-conflicts');
     });
 
     // Budgets

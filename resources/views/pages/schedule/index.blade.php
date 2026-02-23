@@ -101,8 +101,8 @@
                         </x-resource.table-cell>
                         <x-resource.table-cell>
                             <x-resource.action-buttons>
-                                <x-ui.button :href="route('provider.schedules.show', $schedule->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="schedules" />
-                                <x-ui.button :href="route('provider.schedules.edit', $schedule->id)" variant="primary" outline size="sm" icon="pencil" title="Editar" feature="schedules" />
+                                <x-ui.button :href="route('provider.schedules.show', $schedule->code)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="schedules" />
+                                <x-ui.button :href="route('provider.schedules.edit', $schedule->code)" variant="primary" outline size="sm" icon="pencil" title="Editar" feature="schedules" />
                                 <x-ui.button
                                     type="button"
                                     variant="danger"
@@ -113,7 +113,7 @@
                                     feature="schedules"
                                     data-bs-toggle="modal"
                                     data-bs-target="#deleteModal"
-                                    data-delete-url="{{ route('provider.schedules.destroy', $schedule->id) }}"
+                                    data-delete-url="{{ route('provider.schedules.destroy', $schedule->code) }}"
                                     data-item-name="{{ $schedule->service->description ?? $schedule->service->code }}" />
                             </x-resource.action-buttons>
                         </x-resource.table-cell>
@@ -149,7 +149,7 @@
 
                 <div class="list-group list-group-flush">
                     @foreach ($upcomingSchedules as $schedule)
-                    <a href="{{ route('provider.schedules.show', $schedule) }}"
+                    <a href="{{ route('provider.schedules.show', $schedule->code) }}"
                         class="list-group-item list-group-item-action border-0 px-0">
                         <div class="d-flex w-100 justify-content-between align-items-start">
                             <div class="flex-grow-1">

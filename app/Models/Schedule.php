@@ -165,7 +165,7 @@ class Schedule extends Model
      */
     public function getUrl(): string
     {
-        return route('provider.schedules.show', $this->id, true);
+        return route('provider.schedules.show', $this->code, true);
     }
 
     /**

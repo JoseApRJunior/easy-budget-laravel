@@ -139,7 +139,7 @@
                     <div class="d-flex gap-2">
                         @can('update', $schedule)
                         <x-ui.button
-                            href="{{ route('provider.schedules.edit', $schedule) }}"
+                            href="{{ route('provider.schedules.edit', $schedule->code) }}"
                             variant="warning"
                             icon="pencil"
                             label="Editar"
@@ -153,7 +153,7 @@
                             label="Excluir"
                             data-bs-toggle="modal"
                             data-bs-target="#deleteModal"
-                            data-delete-url="{{ route('provider.schedules.destroy', $schedule) }}"
+                            data-delete-url="{{ route('provider.schedules.destroy', $schedule->code) }}"
                             data-item-name="o agendamento {{ $schedule->code }}"
                             feature="schedules" />
                         @endcan

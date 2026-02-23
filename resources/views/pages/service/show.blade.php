@@ -314,7 +314,7 @@
                                         <x-ui.status-badge :item="$schedule" statusField="status" />
                                     </x-resource.table-cell>
                                     <x-resource.table-cell align="end">
-                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="info" size="sm" icon="eye" title="Visualizar" feature="schedules" />
+                                        <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->code)" variant="info" size="sm" icon="eye" title="Visualizar" feature="schedules" />
                                     </x-resource.table-cell>
                                 </x-resource.table-row>
                                 @endforeach
@@ -341,7 +341,7 @@
                             <x-slot:footer>
                                 <div class="d-flex justify-content-between align-items-center w-100">
                                     <x-ui.status-badge :item="$schedule" statusField="status" />
-                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->id)" variant="light" size="sm" icon="eye" label="Ver Detalhes" feature="schedules" />
+                                    <x-ui.button type="link" :href="route('provider.schedules.show', $schedule->code)" variant="light" size="sm" icon="eye" label="Ver Detalhes" feature="schedules" />
                                 </div>
                             </x-slot:footer>
                         </x-resource.resource-mobile-item>
