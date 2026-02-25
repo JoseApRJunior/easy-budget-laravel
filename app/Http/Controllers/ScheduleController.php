@@ -188,7 +188,8 @@ class ScheduleController extends Controller
 
             // Fallback para show service se o service_id estiver disponível
             if ($dto->service_id) {
-                return redirect()->route('provider.services.show', $dto->service_id)
+                $service = \App\Models\Service::find($dto->service_id);
+                return redirect()->route('provider.services.show', $service?->code ?? $dto->service_id)
                     ->with('success', 'Agendamento criado com sucesso!');
             }
 

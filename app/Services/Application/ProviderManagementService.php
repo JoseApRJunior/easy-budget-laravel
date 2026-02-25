@@ -94,8 +94,8 @@ class ProviderManagementService
             $financialResult = $this->financialSummary->getMonthlySummary($user->tenant_id ?? $this->ensureTenantId());
             $financialSummary = $financialResult->isSuccess() ? $financialResult->getData() : [];
 
-            // Buscar compromissos do dia
-            $events = $this->scheduleRepository->getTodayEvents(5);
+            // Buscar compromissos da semana
+            $events = $this->scheduleRepository->getWeeklyEvents(5);
 
             // Buscar itens com estoque baixo
             $lowStockItems = $this->inventoryRepository->getLowStockItems(5);

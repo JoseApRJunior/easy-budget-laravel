@@ -75,7 +75,7 @@
 
             {{-- Compromissos --}}
             <x-dashboard.stat-card
-                title="Compromissos Hoje"
+                title="Compromissos da Semana"
                 :value="count($events ?? [])"
                 icon="calendar-check"
                 variant="info"
@@ -83,7 +83,7 @@
             >
                 <x-slot:description>
                     <small class="text-info">
-                        <i class="bi bi-clock"></i> {{ now()->format('H:i') }}
+                        <i class="bi bi-calendar3"></i> Próximos 7 dias
                     </small>
                 </x-slot:description>
             </x-dashboard.stat-card>

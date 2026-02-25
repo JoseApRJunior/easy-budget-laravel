@@ -104,6 +104,14 @@ class Service extends Model
     }
 
     /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'code';
+    }
+
+    /**
      * Regras de validação para o modelo Service.
      */
     public static function businessRules(): array

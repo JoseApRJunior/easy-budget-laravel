@@ -51,7 +51,7 @@ class ScheduleRepository extends AbstractTenantRepository
     {
         return $this->model
             ->where('start_date_time', '>', now())
-            ->with(['service', 'service.customer'])
+            ->with(['service', 'service.customer.commonData'])
             ->orderBy('start_date_time', 'asc')
             ->limit($limit)
             ->get();
@@ -64,7 +64,7 @@ class ScheduleRepository extends AbstractTenantRepository
     {
         return $this->model
             ->whereBetween('start_date_time', [$startDate, $endDate])
-            ->with(['service', 'service.customer'])
+            ->with(['service', 'service.customer.commonData'])
             ->orderBy('start_date_time', 'asc')
             ->get();
     }
@@ -76,7 +76,7 @@ class ScheduleRepository extends AbstractTenantRepository
     {
         $query = $this->model
             ->whereBetween('start_date_time', [$startDate, $endDate])
-            ->with(['service', 'service.customer', 'userConfirmationToken']);
+            ->with(['service', 'service.customer.commonData', 'userConfirmationToken']);
 
         $this->applyAllScheduleFilters($query, $filters);
 
@@ -103,13 +103,29 @@ class ScheduleRepository extends AbstractTenantRepository
     }
 
     /**
+     * Busca eventos da semana (de hoje até os próximos 7 dias).
+     */
+    public function getWeeklyEvents(int $limit = 10): Collection
+    {
+        return $this->model
+            ->whereBetween('start_date_time', [
+                now()->startOfDay()->toDateTimeString(),
+                now()->addDays(7)->endOfDay()->toDateTimeString()
+            ])
+            ->with(['service', 'service.customer.commonData'])
+            ->orderBy('start_date_time', 'asc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Busca eventos de hoje.
      */
     public function getTodayEvents(int $limit = 5): Collection
     {
         return $this->model
             ->whereDate('start_date_time', now()->toDateString())
-            ->with(['service', 'service.customer'])
+            ->with(['service', 'service.customer.commonData'])
             ->orderBy('start_date_time', 'asc')
             ->limit($limit)
             ->get();
@@ -139,7 +155,7 @@ class ScheduleRepository extends AbstractTenantRepository
             ->where('start_date_time', '>=', now()->subDays(1))
             ->orderBy('start_date_time')
             ->limit($limit)
-            ->with(['service.customer', 'service'])
+            ->with(['service.customer.commonData', 'service'])
             ->get();
     }
 

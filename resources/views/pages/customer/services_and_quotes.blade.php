@@ -62,18 +62,18 @@
                                 </x-resource.table-cell>
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
-                                        <x-ui.button :href="route('provider.services.show', $servico->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="services" />
-                                        <x-ui.button :href="route('provider.services.edit', $servico->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="services" />
-                                        <x-ui.button 
-                                            type="button" 
-                                            variant="danger" 
-                                            outline 
-                                            size="sm" 
-                                            icon="trash" 
+                                        <x-ui.button :href="route('provider.services.show', $servico->code)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="services" />
+                                        <x-ui.button :href="route('provider.services.edit', $servico->code)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="services" />
+                                         <x-ui.button
+                                            type="button"
+                                            variant="danger"
+                                            outline
+                                            size="sm"
+                                            icon="trash"
                                             title="Excluir"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteModal" 
-                                            data-delete-url="{{ route('provider.services.destroy', $servico->id) }}"
+                                            class="btn-delete"
+                                            data-id="{{ $servico->id }}"
+                                            data-delete-url="{{ route('provider.services.destroy', $servico->code) }}"
                                             data-item-name="{{ $servico->nome }}"
                                             feature="services"
                                         />
@@ -139,15 +139,15 @@
                                     <x-resource.action-buttons>
                                         <x-ui.button :href="route('provider.budgets.show', $orcamento->code ?? $orcamento->id)" variant="info" outline size="sm" icon="eye" title="Visualizar" feature="budgets" />
                                         <x-ui.button :href="route('provider.budgets.edit', $orcamento->code ?? $orcamento->id)" variant="primary" outline size="sm" icon="pencil-square" title="Editar" feature="budgets" />
-                                        <x-ui.button 
-                                            type="button" 
-                                            variant="danger" 
-                                            outline 
-                                            size="sm" 
-                                            icon="trash" 
+                                        <x-ui.button
+                                            type="button"
+                                            variant="danger"
+                                            outline
+                                            size="sm"
+                                            icon="trash"
                                             title="Excluir"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteModal" 
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
                                             data-delete-url="{{ route('provider.budgets.destroy', $orcamento->id) }}"
                                             data-item-name="{{ $orcamento->code ?? $orcamento->id }}"
                                             feature="budgets"
@@ -169,14 +169,14 @@
         </x-layout.grid-row>
     </x-layout.page-container>
 
-    <x-ui.confirm-modal 
-        id="deleteModal" 
-        title="Confirmar Exclusão" 
-        message="Tem certeza que deseja excluir <strong id='deleteModalItemName'></strong>?" 
+    <x-ui.confirm-modal
+        id="deleteModal"
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir <strong id='deleteModalItemName'></strong>?"
         submessage="Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         variant="danger"
-        type="delete" 
+        type="delete"
         resource="item"
     />
 @endsection

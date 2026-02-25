@@ -132,6 +132,7 @@ class ScheduleService extends AbstractBaseService
             // Atualiza o status do agendamento
             $this->scheduleRepository->update($schedule->id, [
                 'status' => ScheduleStatus::CONFIRMED->value,
+                'confirmed_at' => now(),
             ]);
 
             return $this->success($schedule->fresh(), 'Agendamento confirmado com sucesso.');

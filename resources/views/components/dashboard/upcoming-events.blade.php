@@ -17,15 +17,30 @@
         @else
             <ul class="list-group list-group-flush">
                 @foreach ($events as $event)
-                    <li class="list-group-item d-flex justify-content-between align-items-center border-light px-4">
-                        <div>
-                            <h6 class="mb-1 fw-semibold text-dark">{{ $event->service->name ?? 'Serviço' }}</h6>
-                            <small class="text-muted">
-                                <i class="bi bi-clock me-1"></i>
-                                {{ \Carbon\Carbon::parse($event->start_date_time)->format('d/m/Y H:i') }}
-                            </small>
+                    @php
+                        $customer = $event->service->customer ?? null;
+                        $commonData = $customer?->commonData;
+                        $customerName = $commonData ? $commonData->full_name : 'Cliente não identificado';
+                        $serviceTitle = $event->service->description ? \Illuminate\Support\Str::limit($event->service->description, 40) : 'Serviço #' . $event->service->code;
+                    @endphp
+                    <li class="list-group-item border-light px-4 py-3">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="flex-grow-1">
+                                <a href="{{ route('provider.services.show', $event->service->code) }}" class="text-decoration-none">
+                                    <h6 class="mb-0 fw-bold text-primary">{{ $customerName }}</h6>
+                                    <p class="mb-1 text-dark small">{{ $serviceTitle }}</p>
+                                </a>
+                            </div>
+                            <span class="badge bg-{{ $event->status->color() ?? 'primary' }} bg-opacity-10 text-{{ $event->status->color() ?? 'primary' }} small">
+                                {{ $event->status->label() }}
+                            </span>
                         </div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary">Agendado</span>
+                        <div class="d-flex align-items-center text-muted small">
+                            <i class="bi bi-calendar3 me-2"></i>
+                            <span class="me-3">{{ \Carbon\Carbon::parse($event->start_date_time)->format('d/m/Y') }}</span>
+                            <i class="bi bi-clock me-2"></i>
+                            <span>{{ \Carbon\Carbon::parse($event->start_date_time)->format('H:i') }}</span>
+                        </div>
                     </li>
                 @endforeach
             </ul>
