@@ -294,8 +294,9 @@ class InventoryController extends Controller
 
         $movements = $movementsQuery
             ->with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->latest()
+            ->take(10)
+            ->get();
 
         return view('pages.inventory.show', [
             'product' => $product,

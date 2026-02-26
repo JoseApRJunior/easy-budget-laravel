@@ -205,31 +205,14 @@
             <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center py-3">
                 <h6 class="mb-0 fw-bold"><i class="bi bi-arrow-left-right me-2"></i>Histórico de Movimentações</h6>
                 <div class="d-flex gap-2">
-                    <div class="dropdown">
-                        <x-ui.button variant="secondary" size="sm" icon="download" label="Exportar" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportHistoryDropdown" feature="inventory" />
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportHistoryDropdown">
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-movements', ['sku' => $product->sku, 'format' => 'xlsx']) }}">
-                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.inventory.export-movements', ['sku' => $product->sku, 'format' => 'pdf']) }}">
-                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <x-ui.button 
-                href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}" 
-                variant="primary" 
-                size="sm"
-                icon="bi bi-list-ul"
-                feature="inventory">
-                Ver Tudo
-            </x-ui.button>
+                    <x-ui.button
+                        href="{{ route('provider.inventory.movements', ['sku' => $product->sku]) }}"
+                        variant="primary"
+                        size="sm"
+                        icon="bi bi-list-ul"
+                        label="Ver Tudo"
+                        feature="inventory"
+                    />
                 </div>
             </div>
             <div class="card-body">
@@ -285,7 +268,7 @@
                                     <div class="d-flex justify-content-between align-items-start mb-1">
                                         <div>
                                             @php
-                                                $badgeClass = match($m->type) {
+                                                $mobileBadgeClass = match($m->type) {
                                                     'entry' => 'text-success',
                                                     'exit' => 'text-danger',
                                                     'adjustment' => 'text-info',
@@ -298,7 +281,7 @@
                                                     default => $m->type
                                                 };
                                             @endphp
-                                            <h6 class="mb-0 {{ $badgeClass }}">{{ $typeName }}</h6>
+                                            <h6 class="mb-0 {{ $mobileBadgeClass }}">{{ $typeName }}</h6>
                                             <small class="text-muted">{{ \Carbon\Carbon::parse($m->created_at)->format('d/m/Y H:i') }}</small>
                                         </div>
                                         <span class="badge bg-light text-dark border fw-bold">{{ $m->quantity }}</span>
@@ -311,15 +294,6 @@
                             @endforeach
                         </div>
                     </div>
-
-                    @if ($movements instanceof \Illuminate\Pagination\LengthAwarePaginator && $movements->hasPages())
-                        <div class="mt-4">
-                            @include('partials.components.paginator', [
-                                'p' => $movements,
-                                'show_info' => true,
-                            ])
-                        </div>
-                    @endif
                 @else
                     <div class="card-body">
                         <div class="text-center py-5">
@@ -372,12 +346,12 @@
                         <p class="text-muted small mb-4">
                             Defina os níveis mínimo e máximo para receber alertas automáticos de reposição e excesso de estoque.
                         </p>
-                        
+
                         <div class="mb-3">
                             <label for="min_quantity" class="form-label fw-bold">Estoque Mínimo (Alerta de Baixa)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-arrow-down-circle text-danger"></i></span>
-                                <input type="number" class="form-control" id="min_quantity" name="min_quantity" 
+                                <input type="number" class="form-control" id="min_quantity" name="min_quantity"
                                     value="{{ old('min_quantity', $inventory?->min_quantity ?? 0) }}" min="0" required>
                             </div>
                             <div class="form-text">Você será notificado quando o estoque estiver igual ou abaixo deste valor.</div>
@@ -387,7 +361,7 @@
                             <label for="max_quantity" class="form-label fw-bold">Estoque Máximo (Opcional)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light"><i class="bi bi-arrow-up-circle text-success"></i></span>
-                                <input type="number" class="form-control" id="max_quantity" name="max_quantity" 
+                                <input type="number" class="form-control" id="max_quantity" name="max_quantity"
                                     value="{{ old('max_quantity', $inventory?->max_quantity) }}" min="0">
                             </div>
                             <div class="form-text">Define o limite ideal de armazenamento para este produto. Deixe vazio para não limitar.</div>
