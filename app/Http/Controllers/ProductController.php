@@ -70,7 +70,7 @@ class ProductController extends Controller
 
         return $this->view('pages.product.index', $result, 'products', [
             'filters' => $filters,
-            'categories' => $this->categoryService->getActive()->getData(),
+            'categories' => $this->categoryService->getActive(orderBy: ['name' => 'asc'])->getData(),
         ]);
     }
 
@@ -83,7 +83,7 @@ class ProductController extends Controller
     {
         $this->authorize('create', Product::class);
 
-        $result = $this->categoryService->getActive();
+        $result = $this->categoryService->getActive(orderBy: ['name' => 'asc']);
         $nextSkuResult = $this->productService->generateNextSku();
 
         if ($result->isError() || $nextSkuResult->isError()) {
@@ -150,7 +150,7 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         return $this->view('pages.product.edit', $result, 'product', [
-            'categories' => $this->categoryService->getActive()->getData(),
+            'categories' => $this->categoryService->getActive(orderBy: ['name' => 'asc'])->getData(),
         ]);
     }
 

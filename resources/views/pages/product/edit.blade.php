@@ -34,21 +34,21 @@
                         <x-layout.grid-row>
                             <!-- Nome -->
                             <x-layout.grid-col size="col-md-6">
-                                <x-ui.form.input 
-                                    name="name" 
-                                    label="Nome do Produto" 
-                                    required 
-                                    :value="old('name', $product->name)" 
+                                <x-ui.form.input
+                                    name="name"
+                                    label="Nome do Produto"
+                                    required
+                                    :value="old('name', $product->name)"
                                 />
                             </x-layout.grid-col>
 
                             <!-- SKU (Visualização Apenas) -->
                             <x-layout.grid-col size="col-md-3">
-                                <x-ui.form.input 
-                                    name="sku" 
-                                    label="SKU" 
-                                    :value="$product->sku" 
-                                    readonly 
+                                <x-ui.form.input
+                                    name="sku"
+                                    label="SKU"
+                                    :value="$product->sku"
+                                    readonly
                                     class="bg-light"
                                     help="Código único - não editável"
                                 />
@@ -94,9 +94,9 @@
 
                             <!-- Categoria -->
                             <x-layout.grid-col size="col-md-6">
-                                <x-ui.form.select 
-                                    name="category_id" 
-                                    label="Categoria" 
+                                <x-ui.form.select
+                                    name="category_id"
+                                    label="Categoria"
                                     id="category_id"
                                     :selected="old('category_id', $product->category_id)"
                                 >
@@ -104,12 +104,18 @@
                                     @foreach ($categories as $category)
                                         @if ($category->parent_id === null)
                                             @if ($category->children->isEmpty())
-                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                                <option value="{{ $category->id }}" @selected(old('category_id', $product->category_id) == $category->id)>
+                                                    {{ $category->name }}
+                                                </option>
                                             @else
                                                 <optgroup label="{{ $category->name }}">
-                                                    <option value="{{ $category->id }}">{{ $category->name }} (Geral)</option>
+                                                    <option value="{{ $category->id }}" @selected(old('category_id', $product->category_id) == $category->id)>
+                                                        {{ $category->name }} (Geral)
+                                                    </option>
                                                     @foreach ($category->children as $subcategory)
-                                                        <option value="{{ $subcategory->id }}">{{ $subcategory->name }}</option>
+                                                        <option value="{{ $subcategory->id }}" @selected(old('category_id', $product->category_id) == $subcategory->id)>
+                                                            {{ $subcategory->name }}
+                                                        </option>
                                                     @endforeach
                                                 </optgroup>
                                             @endif
@@ -135,10 +141,10 @@
 
                             <!-- Descrição -->
                             <x-layout.grid-col size="col-12">
-                                <x-ui.form.textarea 
-                                    name="description" 
-                                    label="Descrição" 
-                                    rows="4" 
+                                <x-ui.form.textarea
+                                    name="description"
+                                    label="Descrição"
+                                    rows="4"
                                     placeholder="Detalhes técnicos, benefícios e especificações..."
                                 >{{ old('description', $product->description) }}</x-ui.form.textarea>
                             </x-layout.grid-col>
@@ -163,7 +169,7 @@
                                 <div class="d-flex align-items-center p-3 border rounded bg-light">
                                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                                         class="img-thumbnail shadow-sm me-3"
-                                        style="width: 80px; height: 80px; object-fit: cover;">
+                                        style="width: 80px; height: 80px; object-fit: contain; background: #fff;">
                                     <div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="remove_image"
@@ -258,7 +264,7 @@
                 if (price > 0) {
                     const profit = price - costPrice;
                     const margin = (profit / price) * 100;
-                    
+
                     marginPreview.classList.remove('d-none');
                     if (profit < 0) {
                         marginPreview.className = 'form-text mt-1 text-danger fw-bold';

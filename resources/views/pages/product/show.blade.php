@@ -18,13 +18,10 @@
     <x-layout.grid-row>
         <!-- Coluna Esquerda: Imagem e Status -->
         <x-layout.grid-col md="4" class="mb-4">
-            <div class="card border-0 shadow-sm overflow-hidden">
-                <div class="position-relative">
+            <div class="card border-0 shadow-sm overflow-hidden h-100">
+                <div class="position-relative bg-white d-flex align-items-center justify-content-center p-3" style="height: 300px;">
                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
-                        class="img-fluid w-100" style="max-height: 400px; object-fit: cover;">
-                    <div class="position-absolute top-0 end-0 m-3">
-                        <x-ui.status-badge :item="$product" />
-                    </div>
+                        class="img-fluid h-100 w-100" style="object-fit: contain;">
                 </div>
                 <div class="card-body bg-light bg-opacity-50 border-top">
                     <div class="d-grid gap-2">
@@ -230,7 +227,7 @@
                             <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-10 d-flex align-items-center mb-0">
                                 <i class="bi bi-info-circle-fill fs-5 me-3 text-info"></i>
                                 <div>
-                                    Para ver o histórico completo de movimentações, acesse o 
+                                    Para ver o histórico completo de movimentações, acesse o
                                     <a href="{{ route('provider.inventory.show', $product->sku) }}" class="alert-link fw-bold">Painel de Inventário</a> deste produto.
                                 </div>
                             </div>
@@ -372,12 +369,12 @@
                     <p class="text-muted small mb-4">
                         Defina os níveis mínimo e máximo para receber alertas automáticos de reposição e excesso de estoque.
                     </p>
-                    
+
                     <div class="mb-3">
                         <label for="min_quantity" class="form-label fw-bold">Estoque Mínimo (Alerta de Baixa)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-arrow-down-circle text-danger"></i></span>
-                            <input type="number" class="form-control" id="min_quantity" name="min_quantity" 
+                            <input type="number" class="form-control" id="min_quantity" name="min_quantity"
                                 value="{{ old('min_quantity', $inventory?->min_quantity ?? 0) }}" min="0" required>
                         </div>
                         <div class="form-text">Você será notificado quando o estoque estiver igual ou abaixo deste valor.</div>
@@ -387,7 +384,7 @@
                         <label for="max_quantity" class="form-label fw-bold">Estoque Máximo (Opcional)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-arrow-up-circle text-success"></i></span>
-                            <input type="number" class="form-control" id="max_quantity" name="max_quantity" 
+                            <input type="number" class="form-control" id="max_quantity" name="max_quantity"
                                 value="{{ old('max_quantity', $inventory?->max_quantity) }}" min="0">
                         </div>
                         <div class="form-text">Define o limite ideal de armazenamento para este produto. Deixe vazio para não limitar.</div>

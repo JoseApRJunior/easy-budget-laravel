@@ -141,24 +141,6 @@
         >
             <x-slot:headerActions>
                 <div class="d-flex justify-content-end gap-2">
-                    <div class="dropdown">
-                        <x-ui.button variant="outline-secondary" size="sm" icon="download" label="Exportar"
-                            class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="exportDropdown" feature="customers" />
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.customers.export', array_merge(request()->query(), ['format' => 'xlsx'])) }}">
-                                    <i class="bi bi-file-earmark-excel me-2 text-success"></i> Excel (.xlsx)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item"
-                                    href="{{ route('provider.customers.export', array_merge(request()->query(), ['format' => 'pdf'])) }}">
-                                    <i class="bi bi-file-earmark-pdf me-2 text-danger"></i> PDF (.pdf)
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
                     <x-ui.button type="link" :href="route('provider.customers.create')" size="sm" icon="plus" label="Novo" feature="customers" />
                 </div>
             </x-slot:headerActions>

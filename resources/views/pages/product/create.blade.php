@@ -100,12 +100,18 @@
                                     @foreach ($categories as $category)
                                         @if ($category->parent_id === null)
                                             @if ($category->children->isEmpty())
-                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                                <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
+                                                    {{ $category->name }}
+                                                </option>
                                             @else
                                                 <optgroup label="{{ $category->name }}">
-                                                    <option value="{{ $category->id }}">{{ $category->name }} (Geral)</option>
+                                                    <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
+                                                        {{ $category->name }} (Geral)
+                                                    </option>
                                                     @foreach ($category->children as $subcategory)
-                                                        <option value="{{ $subcategory->id }}">{{ $subcategory->name }}</option>
+                                                        <option value="{{ $subcategory->id }}" @selected(old('category_id') == $subcategory->id)>
+                                                            {{ $subcategory->name }}
+                                                        </option>
                                                     @endforeach
                                                 </optgroup>
                                             @endif

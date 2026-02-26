@@ -97,6 +97,7 @@
                         resource="categories"
                         :filters="$filters"
                         createLabel="Nova"
+                        :showExport="false"
                     />
                 </x-slot:headerActions>
 
