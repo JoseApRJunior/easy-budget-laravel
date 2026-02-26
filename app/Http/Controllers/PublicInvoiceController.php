@@ -61,7 +61,15 @@ class PublicInvoiceController extends Controller
             }
         }
 
-        $invoice->load(['customer.commonData', 'customer.contact', 'service', 'userConfirmationToken', 'invoiceItems.product']);
+        $invoice->load([
+            'customer.commonData',
+            'customer.contact',
+            'service',
+            'userConfirmationToken',
+            'invoiceItems.product',
+            'tenant.provider.commonData',
+            'tenant.provider.contact',
+        ]);
 
         return view('pages.public.invoice.show', [
             'invoice' => $invoice,

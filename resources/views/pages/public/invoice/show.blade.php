@@ -162,7 +162,7 @@
 
                     </div>
                     <div class="card-footer text-center text-muted small">
-                        Fatura gerada por EasyBudget para {{ $invoice->tenant_company_name }}.
+                        Fatura gerada por {{ $invoice->tenant_company_name }} através do EasyBudget.
                     </div>
                 </div>
             </div>

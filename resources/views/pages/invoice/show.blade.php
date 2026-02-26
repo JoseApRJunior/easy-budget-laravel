@@ -29,7 +29,6 @@
                                 Gerada em {{ $invoice->created_at->format('d/m/Y H:i') }}
                             </p>
                         </div>
-                        <x-ui.status-description :item="$invoice" />
                     </div>
 
                     <!-- Dados do Cliente e Empresa -->
@@ -66,17 +65,8 @@
                         <div class="col-md-4">
                             <h6 class="text-muted">Data de Vencimento</h6>
                             <p class="mb-0">
-                                {{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}
-                                @if ($invoice->due_date && $invoice->status === 'pending')
-                                    @if ($invoice->due_date < now())
-                                        <span class="badge bg-danger ms-2">Vencida</span>
-                                    @elseif($invoice->due_date->diffInDays(now()) <= 7)
-                                        <span class="badge bg-warning ms-2">
-                                            Vence em {{ $invoice->due_date->diffInDays(now()) }} dias
-                                        </span>
-                                    @endif
-                                @endif
-                            </p>
+                            {{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}
+                        </p>
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-muted">Valor Total</h6>
@@ -204,14 +194,9 @@
                     </h6>
                 </div>
                 <div class="card-body p-4">
-                    <div class="mb-4">
-                        <x-ui.status-badge :item="$invoice" class="w-100 py-2 fs-6 mb-1" />
-                        <x-ui.status-description :item="$invoice" class="mt-1" />
-                    </div>
-
                     @if ($invoice->due_date)
-                        @if ($invoice->status === 'pending')
-                            @if ($invoice->due_date < now())
+                        @if ($invoice->status->value === 'pending' || $invoice->status->value === 'overdue')
+                            @if ($invoice->due_date < now() || $invoice->status->value === 'overdue')
                                 <div class="alert alert-danger py-2 mb-4">
                                     <i class="bi bi-exclamation-triangle me-2"></i>
                                     Vencida há {{ $invoice->due_date->diffInDays(now()) }} dias
@@ -222,16 +207,21 @@
                                     Vence em {{ $invoice->due_date->diffInDays(now()) }} dias
                                 </div>
                             @endif
-                        @elseif($invoice->status === 'paid')
+                        @elseif($invoice->status->value === 'paid')
                             <div class="alert alert-success py-2 mb-4">
                                 <i class="bi bi-check-circle me-2"></i>
                                 Paga em {{ $invoice->updated_at->format('d/m/Y') }}
+                            </div>
+                        @elseif($invoice->status->value === 'cancelled')
+                            <div class="alert alert-secondary py-2 mb-4">
+                                <i class="bi bi-x-circle me-2"></i>
+                                Fatura Cancelada em {{ $invoice->updated_at->format('d/m/Y') }}
                             </div>
                         @endif
                     @endif
 
                     <div class="d-grid gap-2">
-                        @if ($invoice->status === 'pending')
+                        @if ($invoice->status->value === 'pending')
                             <x-ui.button type="button" variant="success" onclick="changeStatus('paid')" feature="invoices">
                                 <i class="bi bi-check-circle me-2"></i>Marcar como Paga
                             </x-ui.button>
@@ -244,18 +234,20 @@
                             <i class="bi bi-printer me-2"></i>Imprimir Fatura
                         </x-ui.button>
 
-                        @if ($invoice->status === 'pending')
+                        @if ($invoice->status->value === 'pending')
                             <x-ui.button href="{{ route('provider.invoices.edit', $invoice->code) }}" variant="outline-secondary" feature="invoices">
                                 <i class="bi bi-pencil me-2"></i>Editar Fatura
                             </x-ui.button>
                         @endif
 
-                        <x-ui.button type="button" variant="link" class="text-danger text-decoration-none p-0 mt-2 small" onclick="deleteInvoice()" feature="invoices">
-                            <i class="bi bi-trash me-1"></i>Excluir Fatura
-                        </x-ui.button>
+                        @if ($invoice->status->value !== 'paid')
+                            <x-ui.button type="button" variant="link" class="text-danger text-decoration-none p-0 mt-2 small" onclick="deleteInvoice()" feature="invoices">
+                                <i class="bi bi-trash me-1"></i>Excluir Fatura
+                            </x-ui.button>
+                        @endif
                     </div>
 
-                    @if ($invoice->status !== 'paid' && $invoice->status !== 'cancelled')
+                    @if ($invoice->status->value !== 'paid' && $invoice->status->value !== 'cancelled')
                         <hr class="my-4">
                         <div class="bg-light p-3 rounded">
                             <h6 class="small fw-bold mb-2">

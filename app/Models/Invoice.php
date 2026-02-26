@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property float $subtotal
  * @property float $discount
  * @property float $total
+ * @property \Illuminate\Support\Carbon|null $issue_date
  * @property \Illuminate\Support\Carbon $due_date
  * @property string|null $payment_method
  * @property string|null $payment_id
@@ -68,6 +69,7 @@ class Invoice extends Model
         'subtotal',
         'discount',
         'total',
+        'issue_date',
         'due_date',
         'payment_method',
         'payment_id',
@@ -91,6 +93,7 @@ class Invoice extends Model
         'code' => 'string',
         'subtotal' => 'decimal:2',
         'total' => 'decimal:2',
+        'issue_date' => 'date',
         'due_date' => 'date',
         'transaction_date' => 'datetime',
         'payment_method' => 'string',
@@ -118,6 +121,7 @@ class Invoice extends Model
             'subtotal' => 'required|numeric|min:0|max:999999.99',
             'discount' => 'required|numeric|min:0|max:999999.99',
             'total' => 'required|numeric|min:0|max:999999.99',
+            'issue_date' => 'nullable|date',
             'due_date' => 'nullable|date|after:today',
             'payment_method' => 'nullable|string|max:50',
             'payment_id' => 'nullable|string|max:255',
@@ -323,7 +327,9 @@ class Invoice extends Model
      */
     public function getProviderCompanyNameAttribute(): ?string
     {
-        return $this->tenant?->company_name ?? $this->tenant?->name;
+        return $this->tenant?->provider?->commonData?->company_name 
+            ?? $this->tenant?->provider?->commonData?->full_name 
+            ?? $this->tenant?->name;
     }
 
     /**
@@ -331,7 +337,7 @@ class Invoice extends Model
      */
     public function getProviderNameAttribute(): ?string
     {
-        return $this->tenant?->name;
+        return $this->tenant?->provider?->commonData?->full_name ?? $this->tenant?->name;
     }
 
     /**
@@ -339,7 +345,9 @@ class Invoice extends Model
      */
     public function getProviderEmailAttribute(): ?string
     {
-        return $this->tenant?->email;
+        return $this->tenant?->provider?->contact?->email_business 
+            ?? $this->tenant?->provider?->contact?->email_personal 
+            ?? $this->tenant?->email;
     }
 
     /**
@@ -347,7 +355,9 @@ class Invoice extends Model
      */
     public function getProviderPhoneAttribute(): ?string
     {
-        return $this->tenant?->phone;
+        return $this->tenant?->provider?->contact?->phone_business 
+            ?? $this->tenant?->provider?->contact?->phone_personal 
+            ?? $this->tenant?->phone;
     }
 
     /**
@@ -355,7 +365,9 @@ class Invoice extends Model
      */
     public function getTenantCompanyNameAttribute(): ?string
     {
-        return $this->tenant?->company_name ?? $this->tenant?->name;
+        return $this->tenant?->provider?->commonData?->company_name 
+            ?? $this->tenant?->provider?->commonData?->full_name 
+            ?? $this->tenant?->name;
     }
 
     /**
