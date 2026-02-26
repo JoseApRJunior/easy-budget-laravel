@@ -61,34 +61,34 @@
                                 <x-resource.table-cell>
                                     <x-resource.action-buttons>
                                         <x-ui.button :href="route('provider.budgets.shares.show', $share)" variant="primary" outline size="sm" icon="eye" title="Ver detalhes" feature="budgets" />
-                                        
+
                                         <x-ui.button :href="route('budgets.public.shared.view', $share->token)" target="_blank" variant="info" outline size="sm" icon="box-arrow-up-right" title="Ver link público" feature="budgets" />
 
                                         @if(!($share->expires_at && \Carbon\Carbon::parse($share->expires_at)->isPast()))
-                                            <x-ui.button 
-                                                type="button" 
-                                                variant="warning" 
-                                                outline 
-                                                size="sm" 
-                                                icon="slash-circle" 
+                                            <x-ui.button
+                                                type="button"
+                                                variant="warning"
+                                                outline
+                                                size="sm"
+                                                icon="slash-circle"
                                                 title="Revogar acesso"
-                                                data-bs-toggle="modal" 
-                                                data-bs-target="#revokeModal" 
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#revokeModal"
                                                 data-action-url="{{ route('provider.budgets.shares.revoke', $share) }}"
                                                 data-item-name="{{ $share->budget->code }}"
                                                 feature="budgets"
                                             />
                                         @endif
 
-                                        <x-ui.button 
-                                            type="button" 
-                                            variant="danger" 
-                                            outline 
-                                            size="sm" 
-                                            icon="trash" 
+                                        <x-ui.button
+                                            type="button"
+                                            variant="danger"
+                                            outline
+                                            size="sm"
+                                            icon="trash"
                                             title="Excluir"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#deleteModal" 
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
                                             data-delete-url="{{ route('provider.budgets.shares.destroy', $share) }}"
                                             data-item-name="{{ $share->budget->code }}"
                                             feature="budgets"
@@ -116,26 +116,26 @@
         </x-layout.grid-row>
     </x-layout.page-container>
 
-    <x-ui.confirm-modal 
-        id="revokeModal" 
-        title="Confirmar Revogação" 
-        message="Tem certeza que deseja revogar o compartilhamento do orçamento <strong id='revokeModalItemName'></strong>?" 
+    <x-ui.confirm-modal
+        id="revokeModal"
+        title="Confirmar Revogação"
+        message="Tem certeza que deseja revogar o compartilhamento do orçamento <strong id='revokeModalItemName'></strong>?"
         submessage="O link de acesso será invalidado e não poderá mais ser usado."
         confirmLabel="Revogar Compartilhamento"
         variant="warning"
-        type="confirm" 
+        type="confirm"
         method="POST"
         resource="compartilhamento"
     />
 
-    <x-ui.confirm-modal 
-        id="deleteModal" 
-        title="Confirmar Exclusão" 
-        message="Tem certeza que deseja excluir o compartilhamento do orçamento <strong id='deleteModalItemName'></strong>?" 
+    <x-ui.confirm-modal
+        id="deleteModal"
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir o compartilhamento do orçamento <strong id='deleteModalItemName'></strong>?"
         submessage="Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         variant="danger"
-        type="delete" 
+        type="delete"
         resource="compartilhamento"
     />
 @endsection
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const icon = this.querySelector('i');
                 const originalClass = icon.className;
                 icon.className = 'bi bi-check-lg text-success';
-                
+
                 setTimeout(() => {
                     icon.className = originalClass;
                 }, 2000);
