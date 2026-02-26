@@ -15,228 +15,155 @@
         <p class="text-muted mb-0">Visualize as informações completas do produto</p>
     </x-layout.page-header>
 
-    <x-layout.grid-row>
-        <!-- Coluna Esquerda: Imagem e Status -->
-        <x-layout.grid-col md="4" class="mb-4">
-            <div class="card border-0 shadow-sm overflow-hidden h-100">
-                <div class="position-relative bg-white d-flex align-items-center justify-content-center p-3" style="height: 300px;">
+    <x-layout.v-stack gap="4">
+        {{-- Card de Informações Unificado --}}
+        <x-resource.resource-header-card
+            :title="$product->name"
+            :subtitle="'SKU: ' . $product->sku"
+        >
+            <x-slot:actions>
+                <div class="d-flex align-items-center gap-2">
+                    <x-ui.status-badge :item="$product" statusField="active" />
+                    <x-ui.button type="link" :href="route('provider.inventory.show', $product->sku)" variant="outline-primary" size="sm" icon="bi bi-arrow-right-circle" label="Painel de Inventário" feature="inventory" />
+                </div>
+            </x-slot:actions>
+
+            {{-- Seção Superior: Imagem e Estoque --}}
+            <x-layout.grid-col md="3">
+                <div class="position-relative bg-white d-flex align-items-center justify-content-center p-2 rounded border shadow-sm" style="height: 180px;">
                     <img src="{{ $product->image_url }}" alt="{{ $product->name }}"
                         class="img-fluid h-100 w-100" style="object-fit: contain;">
                 </div>
-                <div class="card-body bg-light bg-opacity-50 border-top">
-                    <div class="d-grid gap-2">
-                        @if ($product->deleted_at)
-                            <div class="alert alert-danger py-2 mb-0 text-center border-0 shadow-sm">
-                                <i class="bi bi-trash-fill me-1"></i> Produto Deletado
-                            </div>
-                        @elseif ($product->active)
-                            <div class="alert alert-success py-2 mb-0 text-center border-0 shadow-sm">
-                                <i class="bi bi-check-circle-fill me-1"></i> Produto Ativo
-                            </div>
-                        @else
-                            <div class="alert alert-warning py-2 mb-0 text-center border-0 shadow-sm">
-                                <i class="bi bi-x-circle-fill me-1"></i> Produto Inativo
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </x-layout.grid-col>
+            </x-layout.grid-col>
 
-        <!-- Coluna Direita: Detalhes e Abas -->
-        <x-layout.grid-col md="8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header p-0 border-bottom-0">
-                    <ul class="nav nav-tabs" id="productTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active py-3 px-4 border-0 fw-semibold" id="details-tab" data-bs-toggle="tab"
-                                data-bs-target="#details" type="button" role="tab" aria-selected="true">
-                                <i class="bi bi-info-circle me-1"></i> Detalhes
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link py-3 px-4 border-0 fw-semibold" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory"
-                                type="button" role="tab" aria-selected="false">
-                                <i class="bi bi-boxes me-1"></i> Inventário
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body p-4">
-                    <div class="tab-content" id="productTabsContent">
-                        <!-- Aba Detalhes -->
-                        <div class="tab-pane fade show active" id="details" role="tabpanel">
-                            <x-layout.grid-row class="g-4">
-                                <x-layout.grid-col md="4">
-                                    <x-resource.resource-info
-                                        title="Preço de Venda"
-                                        :subtitle="$product->formatted_price"
-                                        icon="cash-stack"
-                                        iconClass="text-success"
-                                        titleClass="text-uppercase small fw-bold"
-                                        subtitleClass="h4 text-success mb-0"
-                                    />
-                                </x-layout.grid-col>
-                                <x-layout.grid-col md="4">
-                                    <x-resource.resource-info
-                                        title="Preço de Custo"
-                                        :subtitle="$product->formatted_cost_price"
-                                        icon="receipt"
-                                        iconClass="text-muted"
-                                        titleClass="text-uppercase small fw-bold"
-                                        subtitleClass="h4 text-muted mb-0"
-                                    />
-                                </x-layout.grid-col>
-                                <x-layout.grid-col md="4">
-                                    @php
-                                        $marginColor = $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger');
-                                        $marginValue = $product->cost_price > 0 ? number_format($product->profit_margin_percentage, 1, ',', '.') . '%' : 'N/A';
-                                    @endphp
-                                    <x-resource.resource-info
-                                        title="Margem de Lucro"
-                                        :subtitle="$marginValue"
-                                        icon="percent"
-                                        iconClass="text-{{ $marginColor }}"
-                                        titleClass="text-uppercase small fw-bold"
-                                        subtitleClass="h4 text-{{ $marginColor }} mb-0"
-                                    />
-                                </x-layout.grid-col>
+            <x-layout.grid-col md="9">
+                <div class="h-100 d-flex flex-column justify-content-between">
+                    <!-- Informações de Estoque Rápido -->
+                    @php
+                        $inventory = $product->inventory->first();
+                        $quantity = $inventory ? $inventory->quantity : 0;
+                        $minQuantity = $inventory ? $inventory->min_quantity : 0;
+                        $statusClass = $quantity <= 0 ? 'danger' : ($quantity <= $minQuantity ? 'warning' : 'success');
+                        $statusLabel = $quantity <= 0 ? 'Sem Estoque' : ($quantity <= $minQuantity ? 'Estoque Baixo' : 'Em Estoque');
+                    @endphp
 
-                                <x-layout.grid-col md="6">
-                                    <x-resource.resource-info
-                                        title="Categoria"
-                                        icon="folder2-open"
-                                        iconClass="text-primary"
-                                        titleClass="text-uppercase small fw-bold"
-                                    >
-                                        <x-slot:subtitle>
-                                            @if ($product->category)
-                                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 border border-primary border-opacity-10">
-                                                    {{ $product->category->parent_id ? $product->category->getFormattedHierarchy() : $product->category->name }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">Sem categoria</span>
-                                            @endif
-                                        </x-slot:subtitle>
-                                    </x-resource.resource-info>
-                                </x-layout.grid-col>
-
-                                <x-layout.grid-col md="6">
-                                    <x-resource.resource-info
-                                        title="Unidade"
-                                        :subtitle="$product->unit ?? 'N/A'"
-                                        icon="rulers"
-                                        iconClass="text-info"
-                                        titleClass="text-uppercase small fw-bold"
-                                        subtitleClass="h5 mb-0"
-                                    />
-                                </x-layout.grid-col>
-
-                                <x-layout.grid-col md="6">
-                                    <x-resource.resource-info
-                                        title="Criado em"
-                                        :subtitle="$product->created_at->format('d/m/Y H:i')"
-                                        icon="calendar-plus"
-                                        titleClass="text-uppercase small fw-bold"
-                                    />
-                                </x-layout.grid-col>
-
-                                <x-layout.grid-col cols="12">
-                                    <x-resource.resource-info
-                                        title="Descrição"
-                                        icon="card-text"
-                                        titleClass="text-uppercase small fw-bold"
-                                    >
-                                        <x-slot:subtitle>
-                                            <div class="mt-2 p-3 rounded bg-light border border-light-subtle">
-                                                {{ $product->description ?? 'Nenhuma descrição informada.' }}
-                                            </div>
-                                        </x-slot:subtitle>
-                                    </x-resource.resource-info>
-                                </x-layout.grid-col>
-                            </x-layout.grid-row>
+                    <div class="d-flex align-items-center p-3 rounded bg-{{ $statusClass }} bg-opacity-10 border border-{{ $statusClass }} border-opacity-10 mb-3">
+                        <div class="avatar-circle bg-{{ $statusClass }} me-3 shadow-sm" style="width: 40px; height: 40px;">
+                            <i class="bi bi-box-seam text-white fs-5"></i>
                         </div>
+                        <div>
+                            <small class="text-muted text-uppercase fw-bold x-small d-block mb-0">Saldo em Estoque</small>
+                            <div class="d-flex align-items-center">
+                                <h4 class="mb-0 fw-bold text-{{ $statusClass }} me-3">{{ $quantity }} <small class="h6 mb-0 text-muted fw-normal">{{ $product->unit ?? 'un' }}</small></h4>
+                                <span class="badge bg-{{ $statusClass }} rounded-pill px-3 py-1 small">
+                                    {{ $statusLabel }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <!-- Aba Inventário -->
-                        <div class="tab-pane fade" id="inventory" role="tabpanel">
+                    <x-layout.grid-row class="g-3">
+                        <x-layout.grid-col md="4">
+                            <x-resource.resource-info
+                                title="Preço de Venda"
+                                :subtitle="$product->formatted_price"
+                                icon="cash-stack"
+                                iconClass="text-success"
+                                titleClass="text-uppercase small fw-bold"
+                                subtitleClass="h5 text-success mb-0"
+                            />
+                        </x-layout.grid-col>
+                        <x-layout.grid-col md="4">
+                            <x-resource.resource-info
+                                title="Preço de Custo"
+                                :subtitle="$product->formatted_cost_price"
+                                icon="receipt"
+                                iconClass="text-muted"
+                                titleClass="text-uppercase small fw-bold"
+                                subtitleClass="h5 text-muted mb-0"
+                            />
+                        </x-layout.grid-col>
+                        <x-layout.grid-col md="4">
                             @php
-                                $inventory = $product->inventory->first();
-                                $quantity = $inventory ? $inventory->quantity : 0;
-                                $minQuantity = $inventory ? $inventory->min_quantity : 0;
-                                $maxQuantity = $inventory ? $inventory->max_quantity : null;
-
-                                $statusClass = 'success';
-                                $statusLabel = 'Estoque OK';
-
-                                if ($quantity <= 0) {
-                                    $statusClass = 'danger';
-                                    $statusLabel = 'Sem Estoque';
-                                } elseif ($quantity <= $minQuantity) {
-                                    $statusClass = 'warning';
-                                    $statusLabel = 'Estoque Baixo';
-                                }
+                                $marginColor = $product->profit_margin_percentage >= 30 ? 'success' : ($product->profit_margin_percentage >= 15 ? 'warning' : 'danger');
+                                $marginValue = $product->cost_price > 0 ? number_format($product->profit_margin_percentage, 1, ',', '.') . '%' : 'N/A';
                             @endphp
-
-                            <x-layout.grid-row class="mb-4 g-4 align-items-center">
-                                <x-layout.grid-col md="4" class="text-center">
-                                    <div class="p-4 bg-{{ $statusClass }} bg-opacity-10 rounded-4 border border-{{ $statusClass }} border-opacity-10">
-                                        <small class="text-muted text-uppercase fw-bold letter-spacing-1 d-block mb-2">Quantidade Atual</small>
-                                        <h2 class="display-4 fw-bold text-{{ $statusClass }} mb-2">
-                                            {{ $quantity }}
-                                        </h2>
-                                        <span class="badge bg-{{ $statusClass }} px-3 py-2 rounded-pill">
-                                            {{ $statusLabel }}
-                                        </span>
-                                    </div>
-                                </x-layout.grid-col>
-                                <x-layout.grid-col md="8">
-                                    <x-layout.grid-row class="g-3">
-                                        <x-layout.grid-col sm="6">
-                                            <div class="p-3 bg-light rounded border border-light-subtle position-relative">
-                                                <small class="text-muted text-uppercase fw-bold x-small d-block mb-1">Limite Mínimo</small>
-                                                <p class="h4 mb-0 fw-bold text-dark">{{ $minQuantity }}</p>
-                                                @can('adjustInventory', $product)
-                                                    <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 end-0 m-1 p-1" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </button>
-                                                @endcan
-                                            </div>
-                                        </x-layout.grid-col>
-                                        <x-layout.grid-col sm="6">
-                                            <div class="p-3 bg-light rounded border border-light-subtle position-relative">
-                                                <small class="text-muted text-uppercase fw-bold x-small d-block mb-1">Limite Máximo</small>
-                                                <p class="h4 mb-0 fw-bold text-dark">{{ $maxQuantity ?? '∞' }}</p>
-                                                @can('adjustInventory', $product)
-                                                    <button type="button" class="btn btn-sm btn-link text-primary position-absolute top-0 end-0 m-1 p-1" data-bs-toggle="modal" data-bs-target="#updateLimitsModal" title="Editar Limites">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </button>
-                                                @endcan
-                                            </div>
-                                        </x-layout.grid-col>
-                                        <x-layout.grid-col cols="12">
-                                            <div class="d-flex gap-2 mt-2">
-                                                <x-ui.button type="link" :href="route('provider.inventory.entry', $product->sku)" variant="success" class="flex-grow-1" icon="arrow-down-circle" label="Entrada" feature="inventory" />
-                                                <x-ui.button type="link" :href="route('provider.inventory.exit', $product->sku)" variant="warning" class="flex-grow-1" icon="arrow-up-circle" label="Saída" feature="inventory" />
-                                                <x-ui.button type="link" :href="route('provider.inventory.adjust', $product->sku)" variant="secondary" class="flex-grow-1" icon="sliders" label="Ajustar" feature="inventory" />
-                                            </div>
-                                        </x-layout.grid-col>
-                                    </x-layout.grid-row>
-                                </x-layout.grid-col>
-                            </x-layout.grid-row>
-
-                            <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-10 d-flex align-items-center mb-0">
-                                <i class="bi bi-info-circle-fill fs-5 me-3 text-info"></i>
-                                <div>
-                                    Para ver o histórico completo de movimentações, acesse o
-                                    <a href="{{ route('provider.inventory.show', $product->sku) }}" class="alert-link fw-bold">Painel de Inventário</a> deste produto.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                            <x-resource.resource-info
+                                title="Margem de Lucro"
+                                :subtitle="$marginValue"
+                                icon="percent"
+                                iconClass="text-{{ $marginColor }}"
+                                titleClass="text-uppercase small fw-bold"
+                                subtitleClass="h5 text-{{ $marginColor }} mb-0"
+                            />
+                        </x-layout.grid-col>
+                    </x-layout.grid-row>
                 </div>
-            </div>
-        </x-layout.grid-col>
-    </x-layout.grid-row>
+            </x-layout.grid-col>
+
+            <x-resource.resource-header-divider />
+
+            {{-- Seção Intermediária: Categorização e Unidade --}}
+            <x-layout.grid-col md="4">
+                <x-resource.resource-info
+                    title="Categoria"
+                    icon="folder2-open"
+                    iconClass="text-primary"
+                    titleClass="text-uppercase small fw-bold"
+                >
+                    <x-slot:subtitle>
+                        @if ($product->category)
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 border border-primary border-opacity-10 small">
+                                {{ $product->category->parent_id ? $product->category->getFormattedHierarchy() : $product->category->name }}
+                            </span>
+                        @else
+                            <span class="text-muted">Sem categoria</span>
+                        @endif
+                    </x-slot:subtitle>
+                </x-resource.resource-info>
+            </x-layout.grid-col>
+
+            <x-layout.grid-col md="4">
+                <x-resource.resource-info
+                    title="Unidade de Medida"
+                    :subtitle="$product->unit ?? 'Não informada'"
+                    icon="rulers"
+                    iconClass="text-info"
+                    titleClass="text-uppercase small fw-bold"
+                    subtitleClass="text-dark"
+                />
+            </x-layout.grid-col>
+
+            <x-layout.grid-col md="4">
+                <x-resource.resource-info
+                    title="Data de Cadastro"
+                    :subtitle="$product->created_at->format('d/m/Y H:i')"
+                    icon="calendar-plus"
+                    iconClass="text-muted"
+                    titleClass="text-uppercase small fw-bold"
+                    subtitleClass="text-dark"
+                />
+            </x-layout.grid-col>
+
+            <x-resource.resource-header-divider />
+
+            {{-- Seção Inferior: Descrição --}}
+            <x-layout.grid-col cols="12">
+                <x-resource.resource-info
+                    title="Descrição do Produto"
+                    icon="card-text"
+                    iconClass="text-secondary"
+                    titleClass="text-uppercase small fw-bold"
+                >
+                    <x-slot:subtitle>
+                        <div class="mt-2 p-3 rounded bg-light border border-light-subtle text-dark">
+                            {{ $product->description ?? 'Nenhuma descrição detalhada informada para este produto.' }}
+                        </div>
+                    </x-slot:subtitle>
+                </x-resource.resource-info>
+            </x-layout.grid-col>
+        </x-resource.resource-header-card>
+    </x-layout.v-stack>
 
     <!-- Footer com Ações -->
     <div class="mt-4 pt-3 border-top">
