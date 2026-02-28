@@ -29,7 +29,7 @@
                     @if($providerCommonData)
                         {{ $providerCommonData->display_name }}
                     @else
-                        {{ $service->tenant->name ?? 'Easy Budget' }}
+                        {{ $service->tenant->name }}
                     @endif
                 </h5>
                 <div class="text-secondary small">
@@ -145,24 +145,29 @@
     <!-- Service Items -->
     @if( $service->serviceItems && $service->serviceItems->count() > 0 )
         <div class="mb-4">
-            <h6 class="text-secondary border-bottom pb-2">ITENS DO SERVIÇO</h6>
-            <div class="table-responsive mt-3">
-                <table class="table table-sm table-striped">
-                    <thead>
+            <h6 class="text-secondary border-bottom pb-2 text-uppercase fw-bold small">Itens do Serviço</h6>
+            <div class="table-responsive mt-2">
+                <table class="table table-sm table-striped border">
+                    <thead class="table-dark">
                         <tr>
                             <th>Produto/Serviço</th>
-                            <th class="text-center">Qtd</th>
-                            <th class="text-end">Vlr. Unitário</th>
-                            <th class="text-end">Total</th>
+                            <th class="text-center" style="width: 80px;">Qtd</th>
+                            <th class="text-end" style="width: 120px;">Unitário</th>
+                            <th class="text-end" style="width: 120px;">Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach( $service->serviceItems as $item )
                             <tr>
-                                <td>{{ $item->product?->name ?? 'Item não identificado' }}</td>
+                                <td>
+                                    <span class="fw-bold text-dark">{{ $item->product?->name ?? 'Item não identificado' }}</span>
+                                    @if($item->description)
+                                        <br><small class="text-muted">{{ $item->description }}</small>
+                                    @endif
+                                </td>
                                 <td class="text-center">{{ $item->quantity }}</td>
-                                <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
-                                <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
+                                <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, true) }}</td>
+                                <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total, 2, true) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -172,16 +177,26 @@
     @endif
 
     <!-- Financial Summary -->
-    <div class="mb-4">
-        <h6 class="text-secondary border-bottom pb-2">RESUMO FINANCEIRO</h6>
-        <div class="row mt-3">
-            <div class="col-6">
-                <p class="mb-1"><strong>Subtotal:</strong> R$ {{ \App\Helpers\CurrencyHelper::format($service->total) }}</p>
-                <p class="mb-1"><strong>Desconto:</strong> R$ {{ \App\Helpers\CurrencyHelper::format($service->discount) }}</p>
-            </div>
-            <div class="col-6 text-end">
-                <div class="p-3 border rounded bg-light">
-                    <h5 class="mb-0 fw-bold">Total Final: R$ {{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount) }}</h5>
+    <div class="row justify-content-end mb-4">
+        <div class="col-5">
+            <div class="p-3 border rounded bg-light">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary small fw-bold text-uppercase">Subtotal</span>
+                    <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($service->total, 2, true) }}</span>
+                </div>
+                
+                @if($service->discount > 0)
+                    <div class="d-flex justify-content-between mb-2 text-danger">
+                        <span class="small fw-bold text-uppercase">Desconto</span>
+                        <span class="fw-bold">- {{ \App\Helpers\CurrencyHelper::format($service->discount, 2, true) }}</span>
+                    </div>
+                @endif
+                
+                <hr class="my-2">
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-primary fw-black text-uppercase h6 mb-0">Total Final</span>
+                    <span class="text-primary fw-black h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($service->total - $service->discount, 2, true) }}</span>
                 </div>
             </div>
         </div>
@@ -205,6 +220,22 @@
         </div>
     @endif
 </div>
+@endsection
+
+@section('styles')
+<style>
+    .fw-black { font-weight: 900; }
+    .print-content { font-size: 0.9rem; color: #333; }
+    .table-dark { background-color: #212529 !important; color: #fff !important; }
+    
+    @media print {
+        .btn, .actions-container { display: none !important; }
+        .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+        .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0,0,0,.05) !important; }
+        .text-primary { color: #0d6efd !important; }
+        .badge { border: 1px solid #dee2e6 !important; color: #000 !important; }
+    }
+</style>
 @endsection
 
 @section('footer')

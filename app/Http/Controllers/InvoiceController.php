@@ -510,7 +510,12 @@ class InvoiceController extends Controller
     public function print(string $code): View
     {
         $result = $this->invoiceService->findByCode($code, [
+            'tenant.users',
+            'tenant.provider.commonData',
+            'tenant.provider.contact',
             'customer.commonData',
+            'customer.contact',
+            'customer.address',
             'service',
             'invoiceItems.product',
         ]);

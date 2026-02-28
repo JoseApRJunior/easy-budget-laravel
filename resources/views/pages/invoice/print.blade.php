@@ -9,180 +9,208 @@
 @endsection
 
 @section('content')
-    <div class="invoice-container">
-        @php
-            // Prestador (Tenant/Provider)
-            $provider = $invoice->tenant;
-            $providerCommonData = null;
-            // Se houver uma forma de obter common_datas do tenant, ajustar aqui. 
-            // Por enquanto usamos os accessors do modelo Invoice ou dados diretos do tenant.
-            
-            // Cliente
-            $customer = $invoice->customer;
-            $customerCommonData = $customer?->commonData;
-            $customerContact = $customer?->contact;
-        @endphp
+<div class="print-content">
+    @php
+        // Prestador (Tenant/Provider)
+        $provider = $invoice->tenant->provider;
+        $providerCommonData = $provider?->commonData;
+        $providerContact = $provider?->contact;
 
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-            <div>
-                @if($invoice->tenant->user?->logo)
-                    <img src="{{ asset('storage/' . $invoice->tenant->user->logo) }}" alt="Logo" style="max-height: 80px;">
-                @else
-                    <h1 class="text-primary fw-bold mb-0">{{ config('app.name') }}</h1>
-                @endif
+        // Cliente
+        $customer = $invoice->customer;
+        $customerCommonData = $customer?->commonData;
+        $customerContact = $customer?->contact;
+        $customerAddress = $customer?->address;
+    @endphp
+
+    <!-- Header -->
+    <div class="mb-4">
+        <div class="row align-items-center">
+            <!-- Company Data -->
+            <div class="col-6">
+                <h5 class="fw-bold mb-1">
+                    @if($providerCommonData)
+                        {{ $providerCommonData->display_name }}
+                    @else
+                        {{ $invoice->tenant->name }}
+                    @endif
+                </h5>
+
+                <div class="text-secondary small">
+                    @if($providerContact)
+                        @php $email = $providerContact->email_business ?? $providerContact->email_personal; @endphp
+                        @if($email) <p class="mb-1">{{ $email }}</p> @endif
+
+                        @php $phone = $providerContact->phone_business ?? $providerContact->phone_personal; @endphp
+                        @if($phone) <p class="mb-1">Tel: {{ \App\Helpers\MaskHelper::formatPhone($phone) }}</p> @endif
+
+                        @if($providerContact->website) <p class="mb-0">{{ $providerContact->website }}</p> @endif
+                    @else
+                        <p class="mb-1">{{ $invoice->tenant->users->first()?->email }}</p>
+                    @endif
+                </div>
             </div>
-            <div class="text-end">
-                <h1 class="text-uppercase h3 fw-black mb-0">Fatura</h1>
-                <p class="text-muted fw-bold mb-0">#{{ $invoice->code }}</p>
+
+            <!-- Invoice Number and Info -->
+            <div class="col-6 text-end">
+                <h4 class="text-primary mb-2 text-uppercase">Fatura #{{ $invoice->code }}</h4>
+                <div class="text-secondary small mb-2">
+                    <p class="mb-1">Emissão: {{ $invoice->created_at->format('d/m/Y') }}</p>
+                    @if($invoice->due_date)
+                        <p class="mb-1">Vencimento: {{ $invoice->due_date->format('d/m/Y') }}</p>
+                    @endif
+                </div>
+                <span class="badge" style="background-color: {{ $invoice->status->getColor() }};">
+                    {{ $invoice->status->label() }}
+                </span>
             </div>
         </div>
+    </div>
 
-        <!-- Info Grid -->
-        <div class="row g-4 mb-4">
-            <div class="col-6">
-                <h6 class="text-muted text-uppercase fw-bold border-bottom pb-2 mb-3">Prestador</h6>
-                <h5 class="fw-bold mb-2">{{ $invoice->tenant_company_name }}</h5>
-                <p class="text-secondary small mb-1">{{ $invoice->tenant->email }}</p>
-                @if($invoice->tenant->phone)
-                    <p class="text-secondary small mb-1">Tel: {{ \App\Helpers\MaskHelper::formatPhone($invoice->tenant->phone) }}</p>
-                @endif
-            </div>
+    <hr class="my-4">
 
-            <div class="col-6">
-                <h6 class="text-muted text-uppercase fw-bold border-bottom pb-2 mb-3">Cliente</h6>
-                <h5 class="fw-bold mb-2">
+    <!-- Grid de Dados (Cliente e Serviço) -->
+    <div class="row mb-4">
+        <!-- Customer Data -->
+        <div class="col-6">
+            <h6 class="text-secondary border-bottom pb-2 text-uppercase fw-bold small">Dados do Cliente</h6>
+            <div class="mt-2">
+                <p class="fw-bold mb-1">
                     @if($customerCommonData)
                         {{ $customerCommonData->display_name }}
                     @else
-                        {{ $invoice->customer->user->name ?? 'Cliente não identificado' }}
+                        {{ $customer->user->name ?? 'Cliente não identificado' }}
                     @endif
-                </h5>
-                
+                </p>
+
                 @if($customerCommonData?->cpf)
                     <p class="text-secondary small mb-1">CPF: {{ \App\Helpers\MaskHelper::formatCPF($customerCommonData->cpf) }}</p>
                 @endif
                 @if($customerCommonData?->cnpj)
                     <p class="text-secondary small mb-1">CNPJ: {{ \App\Helpers\MaskHelper::formatCNPJ($customerCommonData->cnpj) }}</p>
                 @endif
-                
-                @php $email = $customerCommonData?->email_business ?? $invoice->customer->user->email; @endphp
-                @if($email)
-                    <p class="text-secondary small mb-1">{{ $email }}</p>
+
+                @if($customerAddress)
+                    <p class="text-secondary small mb-1">
+                        {{ $customerAddress->address }}, {{ $customerAddress->address_number }}<br>
+                        {{ $customerAddress->neighborhood }} - {{ $customerAddress->city }}/{{ $customerAddress->state }}
+                    </p>
                 @endif
-                
-                @php $phone = $customerContact?->phone_business ?? $customerContact?->phone; @endphp
-                @if($phone)
-                    <p class="text-secondary small mb-0">Tel: {{ \App\Helpers\MaskHelper::formatPhone($phone) }}</p>
+
+                @php
+                    $cPhone = $customerContact?->phone_business ?? $customerContact?->phone_personal;
+                    $cEmail = $customerContact?->email_business ?? $customerContact?->email_personal;
+                @endphp
+
+                @if($cPhone)
+                    <p class="text-secondary small mb-1">Tel: {{ \App\Helpers\MaskHelper::formatPhone($cPhone) }}</p>
+                @endif
+                @if($cEmail)
+                    <p class="text-secondary small mb-0">Email: {{ $cEmail }}</p>
                 @endif
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-4">
-                <div class="info-box h-100 bg-light p-3 border rounded">
-                    <span class="text-muted small text-uppercase fw-bold d-block mb-1">Data de Emissão</span>
-                    <span class="fw-bold">{{ $invoice->created_at->format('d/m/Y') }}</span>
+        <!-- Associated Service -->
+        <div class="col-6">
+            @if($invoice->service)
+                <h6 class="text-secondary border-bottom pb-2 text-uppercase fw-bold small">Serviço Associado</h6>
+                <div class="mt-2">
+                    <p class="mb-1"><strong>Código:</strong> #{{ $invoice->service->code }}</p>
+                    @if($invoice->service->description)
+                        <p class="text-secondary small mb-0"><strong>Descrição:</strong><br>{{ $invoice->service->description }}</p>
+                    @endif
                 </div>
-            </div>
-            <div class="col-4">
-                <div class="info-box h-100 bg-light p-3 border rounded">
-                    <span class="text-muted small text-uppercase fw-bold d-block mb-1">Data de Vencimento</span>
-                    <span class="fw-bold">{{ $invoice->due_date?->format('d/m/Y') ?? 'N/A' }}</span>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="info-box h-100 bg-light p-3 border rounded text-center">
-                    <span class="text-muted small text-uppercase fw-bold d-block mb-1">Status</span>
-                    <span class="badge" style="background-color: {{ $invoice->status->getColor() }}">
-                        {{ $invoice->status->label() }}
-                    </span>
-                </div>
-            </div>
+            @endif
         </div>
+    </div>
 
-        @if($invoice->service)
-            <div class="info-box border-start border-4 border-primary bg-light p-3 mb-4 rounded">
-                <h6 class="text-muted text-uppercase fw-bold mb-2">Serviço Associado</h6>
-                <p class="mb-0"><strong>{{ $invoice->service->code }}</strong> - {{ $invoice->service->description }}</p>
-            </div>
-        @endif
-
-        <!-- Table Items -->
-        <div class="mb-4">
-            <table class="table table-striped border">
+    <!-- Items Table -->
+    <div class="mb-4">
+        <h6 class="text-secondary border-bottom pb-2 text-uppercase fw-bold small">Itens da Fatura</h6>
+        <div class="table-responsive mt-2">
+            <table class="table table-sm table-striped border">
                 <thead class="table-dark">
                     <tr>
-                        <th width="50%">Descrição do Item</th>
-                        <th class="text-center" width="10%">Qtd</th>
-                        <th class="text-end" width="20%">Vlr. Unitário</th>
-                        <th class="text-end" width="20%">Total</th>
+                        <th>Produto/Serviço</th>
+                        <th class="text-center" style="width: 80px;">Qtd</th>
+                        <th class="text-end" style="width: 120px;">Unitário</th>
+                        <th class="text-end" style="width: 120px;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($invoice->invoiceItems as $item)
                         <tr>
                             <td>
-                                <strong>{{ $item->product->name ?? 'Item' }}</strong>
+                                <span class="fw-bold text-dark">{{ $item->product->name ?? 'Item' }}</span>
                                 @if($item->description)
                                     <br><small class="text-muted">{{ $item->description }}</small>
                                 @endif
                             </td>
                             <td class="text-center">{{ $item->quantity }}</td>
-                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_price) }}</td>
-                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
+                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->unit_price, 2, true) }}</td>
+                            <td class="text-end">{{ \App\Helpers\CurrencyHelper::format($item->total, 2, true) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center">Nenhum item encontrado nesta fatura.</td>
+                            <td colspan="4" class="text-center py-3 text-muted">Nenhum item encontrado.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+    </div>
 
-        <!-- Totals -->
-        <div class="row justify-content-end mb-4">
-            <div class="col-4">
+    <!-- Financial Summary -->
+    <div class="row justify-content-end">
+        <div class="col-5">
+            <div class="p-3 border rounded bg-light">
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Subtotal:</span>
-                    <span class="fw-bold">{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal ?? $invoice->invoiceItems->sum('total')) }}</span>
+                    <span class="text-secondary small fw-bold text-uppercase">Subtotal</span>
+                    <span class="fw-bold text-dark">{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal, 2, true) }}</span>
                 </div>
+
                 @if($invoice->discount > 0)
                     <div class="d-flex justify-content-between mb-2 text-danger">
-                        <span>Desconto:</span>
-                        <span class="fw-bold">- {{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}</span>
+                        <span class="small fw-bold text-uppercase">Desconto</span>
+                        <span class="fw-bold">- {{ \App\Helpers\CurrencyHelper::format($invoice->discount, 2, true) }}</span>
                     </div>
                 @endif
-                <div class="d-flex justify-content-between border-top pt-3 mt-2 h4 text-primary">
-                    <span class="fw-black">Total Geral:</span>
-                    <span class="fw-black">{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</span>
+
+                <hr class="my-2">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-primary fw-black text-uppercase h6 mb-0">Total Final</span>
+                    <span class="text-primary fw-black h5 mb-0">{{ \App\Helpers\CurrencyHelper::format($invoice->total, 2, true) }}</span>
                 </div>
             </div>
         </div>
-
-        @if($invoice->notes)
-            <div class="info-box bg-light border-warning mb-4">
-                <h6 class="text-warning-emphasis text-uppercase fw-bold mb-2">Observações</h6>
-                <p class="mb-0 fst-italic">{{ $invoice->notes }}</p>
-            </div>
-        @endif
     </div>
+
+    <!-- Notes -->
+    @if($invoice->notes)
+        <div class="mt-4 pt-4 border-top">
+            <h6 class="text-secondary text-uppercase fw-bold small mb-2">Observações</h6>
+            <div class="p-3 bg-light rounded small text-muted fst-italic">
+                {{ $invoice->notes }}
+            </div>
+        </div>
+    @endif
+</div>
 @endsection
 
 @section('styles')
 <style>
     .fw-black { font-weight: 900; }
+    .print-content { font-size: 0.9rem; color: #333; }
+    .table-dark { background-color: #212529 !important; color: #fff !important; }
+
     @media print {
-        .table-dark {
-            background-color: #212529 !important;
-            color: #fff !important;
-        }
-        .badge {
-            border: 1px solid #dee2e6 !important;
-            background-color: transparent !important;
-            color: #000 !important;
-        }
+        .btn, .actions-container { display: none !important; }
+        .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+        .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0,0,0,.05) !important; }
+        .text-primary { color: #0d6efd !important; }
+        .badge { border: 1px solid #dee2e6 !important; color: #000 !important; }
     }
 </style>
 @endsection
