@@ -53,6 +53,9 @@ Thumbs.db
 /google-service-account.json
 /oauth-debug.log
 cloudflare-tunnel-config.yml
+prompt.md
+
+
 
 # Laravel Sail
 docker-compose.override.yml
