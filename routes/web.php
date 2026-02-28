@@ -103,6 +103,7 @@ Route::group([], function () {
         Route::prefix('schedules')->name('schedules.')->group(function () {
             Route::get('/confirm/{token}', [ScheduleController::class, 'publicConfirm'])->name('confirm');
             Route::post('/confirm/{token}', [ScheduleController::class, 'publicConfirmAction'])->name('confirm.action');
+            Route::post('/cancel/{token}', [ScheduleController::class, 'publicCancelAction'])->name('confirm.cancel.action');
         });
     });
 

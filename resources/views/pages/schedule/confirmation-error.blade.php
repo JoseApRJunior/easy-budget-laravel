@@ -25,19 +25,33 @@
                         {{ $error ?? 'O link de confirmação é inválido ou já expirou.' }}
                     </p>
                     
-                    <div class="alert alert-info mb-4 text-start">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-info-circle me-3 fs-3"></i>
-                            <div>
-                                <strong>Por que isso aconteceu?</strong>
-                                <ul class="mb-0 mt-1 small">
-                                    <li>O link pode ter expirado (validade de 7 dias)</li>
-                                    <li>O agendamento pode ter sido cancelado ou alterado</li>
-                                    <li>O token de confirmação não é mais válido</li>
-                                </ul>
+                    @if(isset($status) && $status->value === 'forbidden')
+                        <div class="alert alert-warning mb-4 text-start">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-shield-lock me-3 fs-3 text-warning"></i>
+                                <div>
+                                    <strong>Ação Não Permitida</strong>
+                                    <p class="mb-0 mt-1 small">
+                                        Este serviço já foi processado (Concluído ou Cancelado) e não permite mais alterações via link público.
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @else
+                        <div class="alert alert-info mb-4 text-start">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle me-3 fs-3"></i>
+                                <div>
+                                    <strong>Por que isso aconteceu?</strong>
+                                    <ul class="mb-0 mt-1 small">
+                                        <li>O link pode ter expirado (validade de 7 dias)</li>
+                                        <li>O agendamento pode ter sido cancelado ou alterado</li>
+                                        <li>O token de confirmação não é mais válido</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                     
                     <div class="d-grid gap-2">
                         <a href="{{ url('/') }}" class="btn btn-primary">

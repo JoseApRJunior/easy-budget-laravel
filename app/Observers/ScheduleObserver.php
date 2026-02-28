@@ -31,6 +31,23 @@ class ScheduleObserver
             $oldStatus = $schedule->getOriginal('status');
             $newStatus = $schedule->status;
 
+            // Se o agendamento foi cancelado, sincronizar status do serviço se for apropriado
+            if ($newStatus === \App\Enums\ScheduleStatus::CANCELLED && $schedule->service) {
+                // SÓ cancela o serviço se ele estiver em SCHEDULING ou SCHEDULED
+                // Se já estiver IN_PROGRESS ou COMPLETED, NÃO alteramos o serviço
+                $serviceStatus = $schedule->service->status;
+                if (in_array($serviceStatus, [\App\Enums\ServiceStatus::SCHEDULING, \App\Enums\ServiceStatus::SCHEDULED])) {
+                    Log::info('Schedule cancelled, updating service status to CANCELLED', [
+                        'schedule_id' => $schedule->id,
+                        'service_id' => $schedule->service->id,
+                        'service_current_status' => $serviceStatus->value,
+                    ]);
+                    
+                    $schedule->service->suppressStatusNotification = true;
+                    $schedule->service->update(['status' => \App\Enums\ServiceStatus::CANCELLED->value]);
+                }
+            }
+
             // Sincronizar status do serviço se o agendamento for confirmado
             // IMPORTANTE: Só atualiza o serviço para SCHEDULED se o agendamento foi CONFIRMADO
             if ($newStatus === \App\Enums\ScheduleStatus::CONFIRMED && $schedule->service) {

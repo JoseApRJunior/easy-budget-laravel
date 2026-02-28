@@ -140,6 +140,59 @@ class ScheduleService extends AbstractBaseService
     }
 
     /**
+     * Cancela um agendamento via token
+     */
+    public function cancelScheduleByToken(string $token, ?string $reason = 'Cancelado pelo cliente via link público.'): ServiceResult
+    {
+        return $this->safeExecute(function () use ($token, $reason) {
+            // Valida o token
+            $tokenResult = $this->tokenService->validateToken($token, TokenType::SCHEDULE_CONFIRMATION);
+
+            if ($tokenResult->isError()) {
+                return $tokenResult;
+            }
+
+            $tokenRecord = $tokenResult->getData();
+
+            // Busca o agendamento vinculado ao token
+            $schedule = $this->scheduleRepository->findOneBy(['user_confirmation_token_id' => $tokenRecord->id]);
+
+            if (! $schedule) {
+                return $this->error(OperationStatus::NOT_FOUND, 'Agendamento não encontrado para este token.');
+            }
+
+            // Validação de segurança: Não permitir cancelar se o serviço associado já estiver finalizado
+            if ($schedule->service && $schedule->service->status->isFinished()) {
+                return $this->error(
+                    OperationStatus::FORBIDDEN,
+                    'Este agendamento não pode ser cancelado pois o serviço associado já foi finalizado (Concluído/Cancelado).'
+                );
+            }
+
+            // Se já estiver cancelado, apenas retorna sucesso
+            if ($schedule->status === ScheduleStatus::CANCELLED) {
+                return $this->success($schedule, 'Agendamento já estava cancelado.');
+            }
+
+            // Atualiza o status do agendamento para CANCELLED
+            $updated = $this->scheduleRepository->update($schedule->id, [
+                'status' => ScheduleStatus::CANCELLED->value,
+                'cancellation_reason' => $reason,
+                'cancelled_at' => now(),
+            ]);
+
+            if (! $updated) {
+                return $this->error(OperationStatus::ERROR, 'Falha ao atualizar o status do agendamento.');
+            }
+
+            // Consome o token para invalidá-lo após o cancelamento
+            $this->tokenService->consumeToken($token);
+
+            return $this->success($schedule->fresh(), 'Agendamento cancelado com sucesso.');
+        }, 'Erro ao cancelar agendamento.');
+    }
+
+    /**
      * Atualiza agendamento com validações
      */
     public function updateSchedule(int|string $scheduleId, ScheduleUpdateDTO $dto): ServiceResult

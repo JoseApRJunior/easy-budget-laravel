@@ -63,14 +63,66 @@
             </div>
         </x-ui.card>
 
-        <form action="{{ route('services.public.schedules.confirm.action', $token) }}" method="POST">
-            @csrf
-            <div class="d-grid gap-3">
-                <x-ui.button type="submit" variant="primary" size="lg" icon="check-lg" label="Confirmar Agendamento" class="rounded-pill py-3" />
+        <div class="d-grid gap-3">
+            <form id="confirm-form" action="{{ route('services.public.schedules.confirm.action', $token) }}" method="POST">
+                @csrf
+                <x-ui.button type="button" variant="primary" size="lg" icon="check-lg" label="Confirmar Agendamento" class="rounded-pill py-3 w-100" onclick="confirmAction()" />
+            </form>
 
-                <x-ui.button type="link" href="{{ url('/') }}" variant="link" label="Não, cancelar e voltar" class="text-decoration-none text-muted" />
-            </div>
-        </form>
+            <form id="cancel-form" action="{{ route('services.public.schedules.confirm.cancel.action', $token) }}" method="POST">
+                @csrf
+                <x-ui.button type="button" variant="outline-danger" label="Cancelar Agendamento e Fechar" icon="x-lg" class="rounded-pill py-3 w-100" onclick="cancelAction()" />
+            </form>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function confirmAction() {
+                Swal.fire({
+                    title: 'Confirmar Agendamento?',
+                    text: "Deseja realmente confirmar este agendamento?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sim, Confirmar',
+                    cancelButtonText: 'Voltar',
+                    reverseButtons: true,
+                    width: '400px',
+                    customClass: {
+                        confirmButton: 'rounded-pill px-4',
+                        cancelButton: 'rounded-pill px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('confirm-form').submit();
+                    }
+                });
+            }
+
+            function cancelAction() {
+                Swal.fire({
+                    title: 'Cancelar Agendamento?',
+                    text: "Tem certeza que deseja cancelar este agendamento?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sim, Cancelar',
+                    cancelButtonText: 'Voltar',
+                    reverseButtons: true,
+                    width: '400px',
+                    customClass: {
+                        confirmButton: 'rounded-pill px-4',
+                        cancelButton: 'rounded-pill px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('cancel-form').submit();
+                    }
+                });
+            }
+        </script>
 
         <div class="text-center mt-4 pt-3 border-top">
             <small class="text-muted">

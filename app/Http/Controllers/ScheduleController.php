@@ -75,10 +75,30 @@ class ScheduleController extends Controller
         if ($result->isError()) {
             return view('pages.schedule.confirmation-error', [
                 'error' => $result->getMessage(),
+                'status' => $result->getStatus(),
             ]);
         }
 
         return view('pages.schedule.confirmation-success', [
+            'schedule' => $result->getData(),
+        ]);
+    }
+
+    /**
+     * Processa o cancelamento do agendamento (via POST)
+     */
+    public function publicCancelAction(Request $request, string $token): View
+    {
+        $result = $this->scheduleService->cancelScheduleByToken($token);
+
+        if ($result->isError()) {
+            return view('pages.schedule.confirmation-error', [
+                'error' => $result->getMessage(),
+                'status' => $result->getStatus(),
+            ]);
+        }
+
+        return view('pages.schedule.confirmation-cancelled', [
             'schedule' => $result->getData(),
         ]);
     }
