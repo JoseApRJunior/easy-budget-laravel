@@ -41,7 +41,7 @@
                                     <i class="bi bi-envelope me-1"></i>{{ $invoice->customer->email }}<br>
                                 @endif
                                 @if ($invoice->customer->phone)
-                                    <i class="bi bi-telephone me-1"></i>{{ $invoice->customer->phone }}
+                                    <i class="bi bi-telephone me-1"></i>{{ \App\Helpers\MaskHelper::formatPhone($invoice->customer_phone_business ?? $invoice->customer->phone) }}
                                 @endif
                             </div>
                         </div>
@@ -60,7 +60,7 @@
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <h6 class="text-muted">Data de Emissão</h6>
-                            <p class="mb-0">{{ $invoice->issue_date?->format('d/m/Y') ?? 'N/A' }}</p>
+                            <p class="mb-0">{{ $invoice->issue_date?->format('d/m/Y') ?? $invoice->created_at->format('d/m/Y') }}</p>
                         </div>
                         <div class="col-md-4">
                             <h6 class="text-muted">Data de Vencimento</h6>
@@ -71,7 +71,7 @@
                         <div class="col-md-4">
                             <h6 class="text-muted">Valor Total</h6>
                             <p class="mb-0 fs-5 text-success fw-bold">
-                                {{ \App\Helpers\CurrencyHelper::format($invoice->total) }}
+                                {{ \App\Helpers\CurrencyHelper::format($invoice->total, 2, true) }}
                             </p>
                         </div>
                     </div>
@@ -103,9 +103,9 @@
                                                 </td>
                                                 <td class="text-center">{{ $item->quantity }}</td>
                                                 <td class="text-end">
-                                                    {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</td>
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, true) }}</td>
                                                 <td class="text-end fw-bold">
-                                                    {{ \App\Helpers\CurrencyHelper::format($item->total) }}</td>
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->total, 2, true) }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -113,7 +113,7 @@
                                         <tr class="table-light">
                                             <th colspan="3" class="text-end">Subtotal:</th>
                                             <th class="text-end">
-                                                {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}
+                                                {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal, 2, true) }}
                                             </th>
                                         </tr>
                                     </tfoot>
@@ -133,10 +133,10 @@
                                                 <div class="small text-muted mb-2">
                                                     <span class="me-3"><strong>Qtd:</strong> {{ $item->quantity }}</span>
                                                     <span><strong>Unit:</strong>
-                                                        {{ \App\Helpers\CurrencyHelper::format($item->unit_value) }}</span>
+                                                        {{ \App\Helpers\CurrencyHelper::format($item->unit_value, 2, true) }}</span>
                                                 </div>
                                                 <div class="text-success fw-semibold">Total:
-                                                    {{ \App\Helpers\CurrencyHelper::format($item->total) }}</div>
+                                                    {{ \App\Helpers\CurrencyHelper::format($item->total, 2, true) }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -145,7 +145,7 @@
                                     <div class="d-flex justify-content-between align-items-center">
                                         <strong>Subtotal:</strong>
                                         <strong class="text-success">
-                                            {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</strong>
+                                            {{ \App\Helpers\CurrencyHelper::format($invoice->subtotal, 2, true) }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -172,16 +172,16 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal:</span>
-                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal) }}</span>
+                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->subtotal, 2, true) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Desconto:</span>
-                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->discount) }}</span>
+                        <span>{{ \App\Helpers\CurrencyHelper::format($invoice->discount, 2, true) }}</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between fw-bold">
                         <span>Total:</span>
-                        <span class="text-success">{{ \App\Helpers\CurrencyHelper::format($invoice->total) }}</span>
+                        <span class="text-success">{{ \App\Helpers\CurrencyHelper::format($invoice->total, 2, true) }}</span>
                     </div>
                 </div>
             </div>

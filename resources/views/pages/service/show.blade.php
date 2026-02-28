@@ -15,7 +15,15 @@
 
     {{-- Alerta de Faturas Existentes --}}
     @if ($service->invoices && $service->invoices->count() > 0 && Gate::check('invoices'))
-    <x-ui.alert type="message" :message="'Este serviço já possui ' . $service->invoices->count() . ' fatura(s). <a href=\"' . route('provider.invoices.index', ['search'=> $service->code]) . '\" class=\"alert-link\">Ver faturas</a>'" />
+    <x-ui.alert type="message">
+        @if ($service->invoices->count() === 1)
+            Este serviço já possui 1 fatura.
+            <a href="{{ route('provider.invoices.show', $service->invoices->first()->code) }}" class="alert-link">Ver fatura</a>
+        @else
+            Este serviço já possui {{ $service->invoices->count() }} fatura(s).
+            <a href="{{ route('provider.invoices.index', ['search' => $service->code]) }}" class="alert-link">Ver faturas</a>
+        @endif
+    </x-ui.alert>
     @endif
 
         @php
