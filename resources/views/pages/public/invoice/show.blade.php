@@ -34,7 +34,7 @@
                                 <h6 class="text-uppercase text-muted small">Faturado para</h6>
                                 <p class="mb-1"><strong>{{ $invoice->customer_name }} </strong></p>
                                 <p class="mb-1">{{ $invoice->customer_email_business ?? $invoice->customer_email }}</p>
-                                <p class="mb-0">{{ $invoice->customer_phone_business ?? $invoice->customer_phone }}</p>
+                                <p class="mb-0">{{ \App\Helpers\MaskHelper::formatPhone($invoice->customer_phone_business ?? $invoice->customer_phone) }}</p>
                             </div>
                             <div class="col-md-6 text-md-end">
                                 <h6 class="text-uppercase text-muted small">De</h6>
@@ -42,7 +42,7 @@
                                     <strong>{{ $invoice->provider_company_name ?? $invoice->provider_name }}</strong>
                                 </p>
                                 <p class="mb-1">{{ $invoice->provider_email }}</p>
-                                <p class="mb-0">{{ $invoice->provider_phone }}</p>
+                                <p class="mb-0">{{ \App\Helpers\MaskHelper::formatPhone($invoice->provider_phone) }}</p>
                             </div>
                         </div>
 
